@@ -40,13 +40,37 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
         var childMap = visible.Keys.ToDictionary(key => key, _ => new List<LayoutNode>(), StringComparer.Ordinal);
         var roots = new List<LayoutNode>();
 
-        foreach (var node in visible.Values)
+        foreach (var node in visible.Values.ToArray())
         {
             var itemOverride = GetOverride(layout, node.Key);
             var parentKey = !string.IsNullOrWhiteSpace(itemOverride.ParentKey) ? itemOverride.ParentKey : node.BaseParentKey;
-            if (parentKey is not null && visible.ContainsKey(parentKey) && !IsDescendant(flat, layout, node.Key, parentKey))
+            if (parentKey is null || IsDescendant(flat, layout, node.Key, parentKey))
+            {
+                roots.Add(node);
+                continue;
+            }
+
+            if (visible.ContainsKey(parentKey))
             {
                 childMap[parentKey].Add(node);
+                continue;
+            }
+
+            if (includeHidden)
+            {
+                roots.Add(node);
+                continue;
+            }
+
+            if (GetOverride(layout, parentKey).Hidden)
+            {
+                continue;
+            }
+
+            var placeholderParent = EnsurePlaceholderParent(parentKey, layout, visible, childMap, roots);
+            if (placeholderParent is not null)
+            {
+                childMap[placeholderParent.Key].Add(node);
             }
             else
             {
@@ -63,6 +87,8 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
         var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
         Flatten(baseMenu.Items, null, flat);
         FlattenCustom(layout, flat);
+
+        SnapshotKnownItems(layout, flat);
 
         if (!flat.TryGetValue(itemKey, out var node) || itemKey == parentKey || IsDescendant(flat, layout, itemKey, parentKey))
         {
@@ -204,6 +230,80 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
         return false;
     }
 
+    private static LayoutNode? EnsurePlaceholderParent(
+        string parentKey,
+        BlazingAdminMenuLayoutDocument layout,
+        Dictionary<string, LayoutNode> visible,
+        Dictionary<string, List<LayoutNode>> childMap,
+        List<LayoutNode> roots)
+    {
+        if (visible.TryGetValue(parentKey, out var existing))
+        {
+            return existing;
+        }
+
+        var itemOverride = GetOverride(layout, parentKey);
+        if (string.IsNullOrWhiteSpace(itemOverride.Text))
+        {
+            return null;
+        }
+
+        var classes = string.IsNullOrWhiteSpace(itemOverride.IconClass)
+            ? []
+            : itemOverride.IconClass.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(value => "icon-class-" + value)
+                .ToArray();
+
+        var node = new LayoutNode(
+            parentKey,
+            new NavigationItem(itemOverride.Text, parentKey, null, null, null, null, null, classes, []),
+            null,
+            itemOverride.Order ?? 0);
+
+        visible[parentKey] = node;
+        childMap[parentKey] = [];
+
+        var grandParentKey = itemOverride.ParentKey;
+        if (string.IsNullOrWhiteSpace(grandParentKey) || GetOverride(layout, grandParentKey).Hidden)
+        {
+            roots.Add(node);
+            return node;
+        }
+
+        var placeholderParent = EnsurePlaceholderParent(grandParentKey, layout, visible, childMap, roots);
+        if (placeholderParent is not null)
+        {
+            childMap[placeholderParent.Key].Add(node);
+        }
+        else
+        {
+            roots.Add(node);
+        }
+
+        return node;
+    }
+
+    private static void SnapshotKnownItems(BlazingAdminMenuLayoutDocument layout, Dictionary<string, LayoutNode> flat)
+    {
+        foreach (var node in flat.Values)
+        {
+            var item = GetOrCreateOverride(layout, node.Key);
+            item.Text = node.Item.Text;
+            item.IconClass = GetIconClass(node.Item);
+        }
+    }
+
+    private static string? GetIconClass(NavigationItem item)
+    {
+        var iconClasses = item.Classes
+            .Where(className => className.StartsWith("icon-class-", StringComparison.OrdinalIgnoreCase))
+            .Select(className => className["icon-class-".Length..])
+            .Where(className => !string.IsNullOrWhiteSpace(className))
+            .ToArray();
+
+        return iconClasses.Length == 0 ? null : string.Join(" ", iconClasses);
+    }
+
     private static void FlattenCustom(BlazingAdminMenuLayoutDocument layout, Dictionary<string, LayoutNode> flat)
     {
         var index = 100000;
@@ -276,6 +376,8 @@ public sealed class BlazingAdminMenuLayoutItem
     public string? ParentKey { get; set; }
     public int? Order { get; set; }
     public bool Hidden { get; set; }
+    public string? Text { get; set; }
+    public string? IconClass { get; set; }
 }
 
 public sealed class BlazingAdminMenuCustomItem
