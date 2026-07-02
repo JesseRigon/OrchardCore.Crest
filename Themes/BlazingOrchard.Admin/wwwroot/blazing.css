@@ -57,3 +57,59 @@
 .admin-menu-sidebar .admin-menu-sidebar__item--level-2 > .rz-navigation-item-wrapper .rz-navigation-item-icon {
     display: none;
 }
+
+.admin-menu-sidebar__item-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-menu-sidebar__fa-icon {
+    text-align: center;
+}
+
+.admin-menu-node__icon {
+    width: 1.25rem;
+    text-align: center;
+    color: var(--rz-text-secondary-color, #6b7280);
+}
+
+.admin-menu-tree__item {
+    position: relative;
+}
+
+.admin-menu-node {
+    position: relative;
+    border-radius: var(--rz-border-radius, 4px);
+}
+
+.admin-menu-node--dragging > .admin-menu-node {
+    opacity: 0.55;
+}
+
+.admin-menu-node--drop-before > .admin-menu-node::before,
+.admin-menu-node--drop-after > .admin-menu-node::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--rz-primary, #2f6f4e);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--rz-primary, #2f6f4e) 20%, transparent);
+    z-index: 2;
+}
+
+.admin-menu-node--drop-before > .admin-menu-node::before {
+    top: -0.35rem;
+}
+
+.admin-menu-node--drop-after > .admin-menu-node::after {
+    bottom: -0.35rem;
+}
+
+.admin-menu-node--drop-inside > .admin-menu-node {
+    outline: 2px dashed var(--rz-primary, #2f6f4e);
+    outline-offset: 3px;
+    background: color-mix(in srgb, var(--rz-primary, #2f6f4e) 8%, transparent);
+}

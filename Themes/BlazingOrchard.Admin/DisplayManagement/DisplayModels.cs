@@ -7,6 +7,7 @@ public sealed record DisplayMenu(string Name, DisplayMenuItem[] Items)
 
 public sealed record DisplayMenuItem(
     string Text,
+    string Key,
     string? Id,
     string? Href,
     string? Url,
@@ -17,6 +18,7 @@ public sealed record DisplayMenuItem(
     DisplayMenuItem[] Items)
 {
     public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
+    public string StableKey => Key;
     public bool HasLink => !string.IsNullOrWhiteSpace(Link);
     public bool HasChildren => Items.Length > 0;
 }

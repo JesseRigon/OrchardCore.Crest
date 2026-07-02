@@ -102,6 +102,16 @@ public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine)
         });
     }
 
+    public async Task RefreshAdminMenuAsync()
+    {
+        await RunAsync(async () =>
+        {
+            AdminMenu = ToDisplayMenu(await api.Blazing.Rest.Navigation.GetAdminMenuAsync());
+            ErrorMessage = null;
+            return true;
+        });
+    }
+
     public async Task<SiteSettings?> UpdateSiteAsync(SiteSettingsUpdate update)
     {
         return await RunAsync(async () =>
@@ -162,6 +172,7 @@ public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine)
 
     private static DisplayMenuItem ToDisplayMenuItem(NavigationItem item) => new(
         item.Text,
+        item.Key,
         item.Id,
         item.Href,
         item.Url,

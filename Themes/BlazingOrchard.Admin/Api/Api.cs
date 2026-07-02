@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
@@ -26,6 +28,7 @@ public interface IRestApi
     IRolesApi Roles { get; }
     IThemeApi Theme { get; }
     IThemesApi Themes { get; }
+    IAdminMenusApi AdminMenus { get; }
 }
 
 public interface IAppApi
@@ -94,6 +97,21 @@ public interface IThemesApi
     Task<bool> ResetAdminThemeAsync();
 }
 
+public interface IAdminMenusApi
+{
+    Task<AdminMenusState> ListAsync();
+    Task<AdminMenuSummary?> GetAsync(string menuId);
+    Task<AdminMenuSummary?> CreateMenuAsync(AdminMenuEditModel model);
+    Task<AdminMenuSummary?> ToggleMenuAsync(string menuId);
+    Task<AdminMenuSummary?> DuplicateMenuAsync(string menuId);
+    Task<bool> DeleteMenuAsync(string menuId);
+    Task<AdminMenuSummary?> CreateNodeAsync(string menuId, AdminMenuNodeEditModel model);
+    Task<AdminMenuSummary?> UpdateNodeAsync(string menuId, string nodeId, AdminMenuNodeEditModel model);
+    Task<AdminMenuSummary?> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model);
+    Task<AdminMenuSummary?> ToggleNodeAsync(string menuId, string nodeId);
+    Task<AdminMenuSummary?> DeleteNodeAsync(string menuId, string nodeId);
+}
+
 public sealed class Api(HttpClient http) : IApi
 {
     public IBlazingArea Blazing { get; } = new BlazingArea(http);
@@ -115,6 +133,7 @@ public sealed class RestApi(HttpClient http) : IRestApi
     public IRolesApi Roles { get; } = new RolesApi(http);
     public IThemeApi Theme { get; } = new ThemeApi(http);
     public IThemesApi Themes { get; } = new ThemesApi(http);
+    public IAdminMenusApi AdminMenus { get; } = new AdminMenusApi(http);
 }
 
 public sealed class AuthApi(HttpClient http) : IAuthApi
@@ -358,6 +377,89 @@ public sealed class ThemesApi(HttpClient http) : IThemesApi
     }
 }
 
+public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
+{
+    public async Task<AdminMenusState> ListAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/blazing/admin-menus")));
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"Admin menus API returned {(int)response.StatusCode} {response.ReasonPhrase}.");
+        }
+
+        return await response.Content.ReadFromJsonAsync<AdminMenusState>() ?? AdminMenusState.Empty;
+    }
+
+    public async Task<AdminMenuSummary?> GetAsync(string menuId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    public async Task<AdminMenuSummary?> CreateMenuAsync(AdminMenuEditModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, "api/blazing/admin-menus")
+        {
+            Content = JsonContent.Create(model),
+        }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    public async Task<AdminMenuSummary?> ToggleMenuAsync(string menuId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/toggle")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    public async Task<AdminMenuSummary?> DuplicateMenuAsync(string menuId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/duplicate")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    public async Task<bool> DeleteMenuAsync(string menuId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Delete, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}")));
+        return response.IsSuccessStatusCode;
+    }
+
+    public Task<AdminMenuSummary?> CreateNodeAsync(string menuId, AdminMenuNodeEditModel model) =>
+        SendNodeAsync(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/nodes", model);
+
+    public Task<AdminMenuSummary?> UpdateNodeAsync(string menuId, string nodeId, AdminMenuNodeEditModel model) =>
+        SendNodeAsync(HttpMethod.Put, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}", model);
+
+    public Task<AdminMenuSummary?> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model) =>
+        SendNodeAsync(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/move", model);
+
+    public Task<AdminMenuSummary?> ToggleNodeAsync(string menuId, string nodeId) =>
+        SendNodeAsync(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/toggle", null);
+
+    public async Task<AdminMenuSummary?> DeleteNodeAsync(string menuId, string nodeId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Delete, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    private async Task<AdminMenuSummary?> SendNodeAsync(HttpMethod method, string uri, object? model)
+    {
+        using var request = WithCredentials(new(method, uri));
+        if (model is not null)
+        {
+            request.Content = JsonContent.Create(model);
+        }
+
+        using var response = await http.SendAsync(request);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
+    {
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return request;
+    }
+}
+
 public sealed record LoginModel(string UserName, string Password, bool RememberMe);
 
 public sealed record AuthUser(bool IsAuthenticated, string? UserName, string[] Roles)
@@ -429,7 +531,17 @@ public sealed record NavigationItem(
     string? Position,
     string? Icon,
     string[] Classes,
-    NavigationItem[] Items);
+    NavigationItem[] Items)
+{
+    public string Key => !string.IsNullOrWhiteSpace(Id) ? Id : StableKey(Text, Link);
+    public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
+
+    private static string StableKey(string text, string? link)
+    {
+        var input = $"{text}|{link}";
+        return "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
+    }
+}
 
 public sealed record ContentType(
     string Name,
@@ -501,6 +613,45 @@ public sealed record ThemeSummary(
     bool IsCurrent,
     bool Enabled,
     string PreviewImageUrl);
+
+public sealed record AdminMenusState(AdminMenuSummary[] Menus)
+{
+    public static AdminMenusState Empty { get; } = new([]);
+}
+
+public sealed record AdminMenuSummary(string Id, string Name, bool Enabled, bool IsDefault, AdminMenuNodeSummary[] Nodes);
+
+public sealed record AdminMenuEditModel(string? Name, bool Enabled);
+
+public sealed record AdminMenuNodeSummary(
+    string Id,
+    string Type,
+    string Text,
+    string? Url,
+    string? IconClass,
+    bool Enabled,
+    int Priority,
+    string? DisplayPosition,
+    string? ParentId,
+    int Depth,
+    int Order,
+    string[] PermissionNames,
+    bool IsCustom,
+    AdminMenuNodeSummary[] Items);
+
+public sealed record AdminMenuNodeEditModel(
+    string Type,
+    string Text,
+    string? Url,
+    string? IconClass,
+    bool Enabled,
+    int Priority,
+    string? DisplayPosition,
+    string[]? PermissionNames,
+    string? ParentNodeId,
+    int? Position);
+
+public sealed record AdminMenuNodeMoveModel(string? ParentNodeId, int? Position);
 
 public sealed record BlazingThemeSettings(string RadzenTheme, Dictionary<string, string> Tokens)
 {

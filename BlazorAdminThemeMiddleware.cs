@@ -135,7 +135,7 @@ public sealed class BlazorAdminThemeMiddleware
         }
 
         var value = requestPath.Value;
-        return value is "/blazing.css" or "/blazing.theme.js" or "/favicon.ico";
+        return !string.IsNullOrWhiteSpace(value) && Path.HasExtension(value);
     }
 
     private static string GetAdminRelativePath(PathString adminRemainder)

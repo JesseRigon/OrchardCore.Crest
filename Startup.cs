@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using BlazingOrchard.Services;
 using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.DisplayManagement.Theming;
 using OrchardCore.Modules;
@@ -26,6 +27,7 @@ public sealed class Startup : StartupBase
 
         services.AddHttpContextAccessor();
         services.AddScoped<IThemeSelector, LegacyFrameThemeSelector>();
+        services.AddScoped<BlazingAdminMenuLayoutService>();
         services.Configure<BlazorAdminThemeOptions>(options => { });
     }
 

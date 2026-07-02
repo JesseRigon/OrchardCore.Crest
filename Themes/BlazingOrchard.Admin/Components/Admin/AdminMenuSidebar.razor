@@ -1,6 +1,7 @@
 @using BlazingOrchard.Admin.DisplayManagement
 @using Radzen
 @using Radzen.Blazor
+@inject NavigationManager Navigation
 
 <RadzenSidebar class="admin-menu-sidebar">
     <RadzenStack Gap="0.75rem" class="admin-menu-sidebar__content">
@@ -17,7 +18,7 @@
         else
         {
             <RadzenPanelMenu class="admin-menu-sidebar__menu">
-                <AdminMenuPanelItems Items="Menu.Items" />
+                <AdminMenuPanelItems Items="Menu.Items" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" />
             </RadzenPanelMenu>
 
             @if (Menu.Items.Length == 0)
@@ -32,5 +33,89 @@
     [CascadingParameter]
     public DisplayManager? DisplayManager { get; set; }
 
+    private readonly HashSet<string> ExpandedItemKeys = [];
+    private DisplayMenu? LastMenu;
+
     private DisplayMenu? Menu => DisplayManager?.AdminMenu;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(Menu, LastMenu))
+        {
+            LastMenu = Menu;
+            SyncExpandedItemsWithMenu();
+        }
+    }
+
+    private void SetExpanded(string key, bool expanded)
+    {
+        if (expanded)
+        {
+            ExpandedItemKeys.Add(key);
+        }
+        else
+        {
+            ExpandedItemKeys.Remove(key);
+        }
+    }
+
+    private void SyncExpandedItemsWithMenu()
+    {
+        if (Menu is null)
+        {
+            ExpandedItemKeys.Clear();
+            return;
+        }
+
+        var visibleKeys = Flatten(Menu.Items).Select(item => item.StableKey).ToHashSet(StringComparer.Ordinal);
+        ExpandedItemKeys.RemoveWhere(key => !visibleKeys.Contains(key));
+        ExpandActiveAncestors(Menu.Items);
+    }
+
+    private bool ExpandActiveAncestors(IEnumerable<DisplayMenuItem> items)
+    {
+        var hasActiveItem = false;
+
+        foreach (var item in items)
+        {
+            var childIsActive = ExpandActiveAncestors(item.Items);
+            var itemIsActive = IsActive(item);
+
+            if (childIsActive || itemIsActive)
+            {
+                hasActiveItem = true;
+                if (item.HasChildren)
+                {
+                    ExpandedItemKeys.Add(item.StableKey);
+                }
+            }
+        }
+
+        return hasActiveItem;
+    }
+
+    private bool IsActive(DisplayMenuItem item)
+    {
+        if (!item.HasLink)
+        {
+            return false;
+        }
+
+        var current = '/' + Navigation.ToBaseRelativePath(Navigation.Uri).TrimStart('/');
+        var link = item.Link!.StartsWith('/') ? item.Link : '/' + item.Link;
+        return current.Equals(link, StringComparison.OrdinalIgnoreCase)
+            || current.StartsWith(link.TrimEnd('/') + '/', StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IEnumerable<DisplayMenuItem> Flatten(IEnumerable<DisplayMenuItem> items)
+    {
+        foreach (var item in items)
+        {
+            yield return item;
+            foreach (var child in Flatten(item.Items))
+            {
+                yield return child;
+            }
+        }
+    }
 }

@@ -26,6 +26,8 @@
 
   <ItemGroup>
     <PackageReference Include="OrchardCore.Admin.Abstractions" />
+    <PackageReference Include="OrchardCore.AdminMenu" />
+    <PackageReference Include="OrchardCore.AdminMenu.Abstractions" />
     <PackageReference Include="OrchardCore.ContentManagement" />
     <PackageReference Include="OrchardCore.Module.Targets" />
     <PackageReference Include="OrchardCore.Roles.Abstractions" />

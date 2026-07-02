@@ -1,12 +1,17 @@
+using BlazingOrchard.Services;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Navigation;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace BlazingOrchard.Controllers;
 
 [ApiController]
 [IgnoreAntiforgeryToken]
 [Route("api/blazing/navigation")]
-public sealed class NavigationController(INavigationManager navigationManager) : ControllerBase
+public sealed class NavigationController(
+    INavigationManager navigationManager,
+    BlazingAdminMenuLayoutService layoutService) : ControllerBase
 {
     [HttpGet("admin")]
     public Task<ActionResult<NavigationMenu>> GetAdminMenu() => GetMenu("admin");
@@ -16,11 +21,18 @@ public sealed class NavigationController(INavigationManager navigationManager) :
     {
         var items = await navigationManager.BuildMenuAsync(menuName, ControllerContext);
 
-        return Ok(new NavigationMenu(
+        var menu = new NavigationMenu(
             menuName,
             items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
                 .Select(NavigationItem.From)
-                .ToArray()));
+                .ToArray());
+
+        if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
+        {
+            menu = await layoutService.ApplyAsync(menu);
+        }
+
+        return Ok(menu);
     }
 }
 
@@ -37,6 +49,9 @@ public sealed record NavigationItem(
     string[] Classes,
     NavigationItem[] Items)
 {
+    public string Key => !string.IsNullOrWhiteSpace(Id) ? Id : StableKey(Text, Link);
+    public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
+
     public static NavigationItem From(MenuItem item) => new(
         item.Text.Value,
         item.Id,
@@ -49,6 +64,12 @@ public sealed record NavigationItem(
         item.Items.OrderBy(child => child.Position, NavigationPositionComparer.Instance)
             .Select(From)
             .ToArray());
+
+    private static string StableKey(string text, string? link)
+    {
+        var input = $"{text}|{link}";
+        return "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
+    }
 }
 
 internal static class NavigationIconResolver

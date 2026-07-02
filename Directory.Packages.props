@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <PackageVersion Include="OrchardCore.Admin.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.AdminMenu" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.AdminMenu.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.ContentManagement" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.DisplayManagement" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Email.Abstractions" Version="3.0.0" />

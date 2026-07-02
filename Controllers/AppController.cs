@@ -1,3 +1,4 @@
+using BlazingOrchard.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OrchardCore.Admin;
@@ -20,7 +21,8 @@ public sealed class AppController(
     IExtensionManager extensionManager,
     ISiteService siteService,
     INavigationManager navigationManager,
-    IOptions<AdminOptions> adminOptions) : ControllerBase
+    IOptions<AdminOptions> adminOptions,
+    BlazingAdminMenuLayoutService layoutService) : ControllerBase
 {
     [HttpGet("manifest")]
     public async Task<ActionResult<AppManifest>> GetManifest()
@@ -30,6 +32,9 @@ public sealed class AppController(
         var featureIds = descriptor.Features.Select(feature => feature.Id).Order(StringComparer.Ordinal).ToArray();
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
         var adminItems = await navigationManager.BuildMenuAsync("admin", ControllerContext);
+        var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
+            .Select(NavigationItem.From)
+            .ToArray()));
 
         return Ok(new AppManifest(
             Tenant.From(shellSettings),
@@ -38,9 +43,7 @@ public sealed class AppController(
             descriptor.SerialNumber,
             ComputeFeatureHash(descriptor.SerialNumber, featureIds),
             featureIds.Select(id => Feature.From(id, featureInfos.GetValueOrDefault(id))).ToArray(),
-            new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
-                .Select(NavigationItem.From)
-                .ToArray())));
+            adminMenu));
     }
 
     private static string NormalizeAdminPath(string? adminUrlPrefix)

@@ -3,15 +3,33 @@
 
 @foreach (var item in Items)
 {
-    <RadzenPanelMenuItem Text="@item.Text"
+    <RadzenPanelMenuItem @key="item.StableKey"
+                         Text="@item.Text"
+                         Value="@item.StableKey"
                          Path="@GetPath(item)"
                          Target="@item.Target"
-                         Icon="@GetIcon(item)"
+                         Expanded="@IsExpanded(item)"
+                         ExpandedChanged="@(expanded => SetExpanded(item, expanded))"
                          Class="@GetItemClass()">
-        @if (item.HasChildren)
-        {
-            <AdminMenuPanelItems Items="item.Items" Level="@(Level + 1)" />
-        }
+        <Template>
+            <span class="admin-menu-sidebar__item-content">
+                @if (GetFontAwesomeIconClasses(item) is { } fontAwesomeIconClasses)
+                {
+                    <i class="rz-navigation-item-icon admin-menu-sidebar__fa-icon @fontAwesomeIconClasses" aria-hidden="true"></i>
+                }
+                else if (GetMaterialIcon(item) is { } materialIcon)
+                {
+                    <RadzenIcon Icon="@materialIcon" class="rz-navigation-item-icon" />
+                }
+                <span class="rz-navigation-item-text">@item.Text</span>
+            </span>
+        </Template>
+        <ChildContent>
+            @if (item.HasChildren)
+            {
+                <AdminMenuPanelItems Items="item.Items" Level="@(Level + 1)" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="ExpandedChanged" />
+            }
+        </ChildContent>
     </RadzenPanelMenuItem>
 }
 
@@ -21,6 +39,22 @@
 
     [Parameter]
     public int Level { get; set; }
+
+    [Parameter]
+    public ISet<string> ExpandedItemKeys { get; set; } = new HashSet<string>();
+
+    [Parameter]
+    public Action<string, bool>? ExpandedChanged { get; set; }
+
+    private bool IsExpanded(DisplayMenuItem item) => item.HasChildren && ExpandedItemKeys.Contains(item.StableKey);
+
+    private void SetExpanded(DisplayMenuItem item, bool expanded)
+    {
+        if (item.HasChildren)
+        {
+            ExpandedChanged?.Invoke(item.StableKey, expanded);
+        }
+    }
 
     private static string? GetPath(DisplayMenuItem item)
     {
@@ -32,7 +66,23 @@
         return item.Link;
     }
 
-    private string? GetIcon(DisplayMenuItem item) => Level < 2 ? item.Icon : null;
+    private string? GetMaterialIcon(DisplayMenuItem item) => Level < 2 ? item.Icon : null;
+
+    private string? GetFontAwesomeIconClasses(DisplayMenuItem item)
+    {
+        if (Level >= 2)
+        {
+            return null;
+        }
+
+        var iconClasses = item.Classes
+            .Where(className => className.StartsWith("icon-class-", StringComparison.OrdinalIgnoreCase))
+            .Select(className => className["icon-class-".Length..])
+            .Where(className => !string.IsNullOrWhiteSpace(className))
+            .ToArray();
+
+        return iconClasses.Length == 0 ? null : string.Join(" ", iconClasses);
+    }
 
     private string GetItemClass() => $"admin-menu-sidebar__item admin-menu-sidebar__item--level-{Level}";
 }

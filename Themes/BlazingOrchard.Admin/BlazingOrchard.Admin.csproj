@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Compile Include="Api\**\*.cs" />
+    <Compile Include="Components\**\*.cs" />
     <Compile Include="DisplayManagement\**\*.cs" />
     <Compile Include="Options\**\*.cs" />
     <Compile Include="Theme\**\*.cs" />
