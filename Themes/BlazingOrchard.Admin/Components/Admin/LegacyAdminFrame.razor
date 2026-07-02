@@ -3,11 +3,8 @@
 @inject NavigationManager Navigation
 
 <BlazingAppContainer>
-    <div class="admin-dashboard">
-        <AdminMenuSidebar />
-
-        <main class="admin-dashboard__main legacy-admin-frame-page">
-            <RadzenStack Gap="1rem" Style="height: 100%; min-height: 0;">
+    <div class="legacy-admin-frame-page">
+        <RadzenStack Gap="1rem" Style="height: 100%; min-height: 0;">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                     <RadzenStack Gap="0.25rem">
                         <RadzenText TextStyle="TextStyle.H4" Text="@Title" />
@@ -17,8 +14,7 @@
                 </RadzenStack>
 
                 <iframe class="legacy-admin-frame" src="@FrameUrl" title="@Title"></iframe>
-            </RadzenStack>
-        </main>
+        </RadzenStack>
     </div>
 </BlazingAppContainer>
 

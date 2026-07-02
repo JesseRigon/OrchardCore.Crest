@@ -1,21 +1,9 @@
 @using BlazingOrchard.Admin.Api
 @using BlazingOrchard.Admin.DisplayManagement
-@using BlazingOrchard.Admin.Options
 @using Radzen
 @using Radzen.Blazor
-@inject BlazingRoutingOptions Routing
-@inject NavigationManager Navigation
 
-<div class="admin-dashboard">
-    <AdminMenuSidebar />
-
-    <main class="admin-dashboard__main">
-        <RadzenStack Gap="1rem">
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                <ShapeView Shape="@AdminStatusShape" />
-                <RadzenButton Text="Logout" Click="LogoutAsync" Disabled="@(DisplayManager?.IsBusy == true)" />
-            </RadzenStack>
-
+<RadzenStack Gap="1rem">
             <RadzenTabs>
                 <Tabs>
             <RadzenTabsItem Text="App">
@@ -96,9 +84,7 @@
             </RadzenTabsItem>
                 </Tabs>
             </RadzenTabs>
-        </RadzenStack>
-    </main>
-</div>
+</RadzenStack>
 
 @code {
     [CascadingParameter]
@@ -108,10 +94,6 @@
     private string ContentHandle { get; set; } = "alias:main-menu";
     private bool IsLoading { get; set; }
     private string? Status { get; set; }
-
-    private Shape? AdminStatusShape => DisplayManager?.NewShape(
-        nameof(AdminStatus),
-        shape => shape.Properties[nameof(AdminStatus.UserName)] = DisplayManager.User.UserName);
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -169,15 +151,6 @@
         }
 
         IsLoading = false;
-    }
-
-    private async Task LogoutAsync()
-    {
-        if (DisplayManager is not null)
-        {
-            await DisplayManager.LogoutAsync();
-            Navigation.NavigateTo(Routing.LoginPath);
-        }
     }
 
     private void BindEditableSite()

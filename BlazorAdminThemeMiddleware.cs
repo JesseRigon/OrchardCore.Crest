@@ -71,9 +71,10 @@ public sealed class BlazorAdminThemeMiddleware
 
         var isAdminRoute = requestPath.StartsWithSegments(adminPath, out var adminRemainder);
         var isBlazorAssetRoute = IsBlazorAssetRoute(requestPath);
+        var isBlazorPageRoute = IsPageRequest(requestPath) && IsBlazorRoute(options, requestPath);
         var isBlazingAdminThemePreviewRoute = requestPath.Equals(BlazingAdminThemePreviewPath);
 
-        if (!isAdminRoute && !isBlazorAssetRoute && !isBlazingAdminThemePreviewRoute)
+        if (!isAdminRoute && !isBlazorAssetRoute && !isBlazorPageRoute && !isBlazingAdminThemePreviewRoute)
         {
             await _next(context);
             return;
@@ -122,6 +123,11 @@ public sealed class BlazorAdminThemeMiddleware
             {
                 return;
             }
+        }
+
+        if (await TryServeStaticWebAssetFallbackAsync(context, relativePath))
+        {
+            return;
         }
 
         await _next(context);
@@ -303,6 +309,66 @@ public sealed class BlazorAdminThemeMiddleware
 
         return candidates.Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase);
     }
+
+    private async Task<bool> TryServeStaticWebAssetFallbackAsync(HttpContext context, string relativePath)
+    {
+        if (relativePath.StartsWith("_content/Radzen.Blazor/", StringComparison.OrdinalIgnoreCase))
+        {
+            var packageRoot = ResolveNuGetPackageStaticWebAssets("radzen.blazor");
+            if (packageRoot is not null && await TryServeFileAsync(context, packageRoot, relativePath["_content/Radzen.Blazor/".Length..]))
+            {
+                return true;
+            }
+        }
+
+        if (relativePath.StartsWith("_framework/Microsoft.DotNet.HotReload.WebAssembly.Browser.", StringComparison.OrdinalIgnoreCase)
+            && relativePath.EndsWith(".lib.module.js", StringComparison.OrdinalIgnoreCase))
+        {
+            var sdkAsset = ResolveDotNetSdkWebAssemblyAsset("Microsoft.DotNet.HotReload.WebAssembly.Browser.lib.module.js");
+            if (sdkAsset is not null)
+            {
+                return await TryServeFileAsync(context, Path.GetDirectoryName(sdkAsset)!, Path.GetFileName(sdkAsset));
+            }
+        }
+
+        return false;
+    }
+
+    private static string? ResolveNuGetPackageStaticWebAssets(string packageId)
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var packageRoot = Path.Combine(home, ".nuget", "packages", packageId);
+        if (!Directory.Exists(packageRoot))
+        {
+            return null;
+        }
+
+        return Directory.GetDirectories(packageRoot)
+            .Select(directory => new { Directory = directory, Version = ParseVersion(Path.GetFileName(directory)) })
+            .OrderByDescending(candidate => candidate.Version)
+            .Select(candidate => Path.Combine(candidate.Directory, "staticwebassets"))
+            .FirstOrDefault(Directory.Exists);
+    }
+
+    private static string? ResolveDotNetSdkWebAssemblyAsset(string fileName)
+    {
+        var sdkRoot = Path.Combine(Path.GetPathRoot(AppContext.BaseDirectory) ?? "/", "usr", "share", "dotnet", "sdk");
+        if (!Directory.Exists(sdkRoot))
+        {
+            sdkRoot = "/usr/share/dotnet/sdk";
+        }
+
+        return Directory.Exists(sdkRoot)
+            ? Directory.GetDirectories(sdkRoot)
+                .Select(directory => new { Directory = directory, Version = ParseVersion(Path.GetFileName(directory)) })
+                .OrderByDescending(candidate => candidate.Version)
+                .Select(candidate => Path.Combine(candidate.Directory, "Sdks", "Microsoft.NET.Sdk.WebAssembly", "tools", "net10.0", "wwwroot", fileName))
+                .FirstOrDefault(File.Exists)
+            : null;
+    }
+
+    private static Version ParseVersion(string? value)
+        => Version.TryParse(value, out var version) ? version : new Version(0, 0);
 
     private async Task<bool> TryServeFileAsync(HttpContext context, string webRoot, string relativePath)
     {

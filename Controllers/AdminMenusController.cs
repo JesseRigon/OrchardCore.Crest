@@ -252,6 +252,24 @@ public sealed class AdminMenusController(
         return Ok(AdminMenuSummary.From(menu));
     }
 
+    [HttpPost("{menuId}/nodes/{nodeId}/rename")]
+    public async Task<ActionResult<AdminMenuSummary>> RenameNodeAsync(string menuId, string nodeId, AdminMenuNodeRenameModel model)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        if (menuId != BlazingAdminMenuLayoutService.DefaultMenuId)
+        {
+            return BadRequest("Sidebar renames are only supported on the generated Sidebar menu.");
+        }
+
+        var baseMenu = await BuildDefaultNavigationMenuAsync();
+        await layoutService.RenameAsync(baseMenu, nodeId, model.Text);
+        return Ok(await GetDefaultMenuSummaryAsync());
+    }
+
     [HttpPost("{menuId}/nodes/{nodeId}/move")]
     public async Task<ActionResult<AdminMenuSummary>> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model)
     {
@@ -593,6 +611,7 @@ public sealed record AdminMenuNodeSummary(
     int Order,
     string[] PermissionNames,
     bool IsCustom,
+    string? OriginalText,
     AdminMenuNodeSummary[] Items)
 {
     public static AdminMenuNodeSummary From(AdminNode node, string? parentId, int depth, int order) => new(
@@ -609,6 +628,7 @@ public sealed record AdminMenuNodeSummary(
         order,
         GetPermissionNames(node),
         false,
+        null,
         node.Items.OfType<AdminNode>().Select((child, index) => From(child, node.UniqueId, depth + 1, index)).ToArray());
 
     private static string GetText(AdminNode node) => node switch
@@ -625,21 +645,30 @@ public sealed record AdminMenuNodeSummary(
         _ => null,
     };
 
-    public static AdminMenuNodeSummary From(NavigationItem item, BlazingAdminMenuLayoutDocument layout, BlazingAdminMenuLayoutService layoutService, string? parentId, int depth, int order) => new(
-        item.Key,
-        item.Items.Length > 0 ? nameof(PlaceholderAdminNode) : nameof(LinkAdminNode),
-        item.Text,
-        item.Link,
-        GetIconClass(item),
-        !layoutService.IsHidden(layout, item.Key),
-        0,
-        item.Position,
-        parentId,
-        depth,
-        order,
-        [],
-        item.Id?.StartsWith("custom-", StringComparison.Ordinal) == true,
-        item.Items.Select((child, index) => From(child, layout, layoutService, item.Key, depth + 1, index)).ToArray());
+    public static AdminMenuNodeSummary From(NavigationItem item, BlazingAdminMenuLayoutDocument layout, BlazingAdminMenuLayoutService layoutService, string? parentId, int depth, int order)
+    {
+        var itemOverride = layout.Items.FirstOrDefault(layoutItem => string.Equals(layoutItem.ItemKey, item.Key, StringComparison.Ordinal));
+        var originalText = !string.IsNullOrWhiteSpace(itemOverride?.DisplayText) && !string.Equals(itemOverride.Text, item.Text, StringComparison.Ordinal)
+            ? itemOverride.Text
+            : null;
+
+        return new(
+            item.Key,
+            item.Items.Length > 0 ? nameof(PlaceholderAdminNode) : nameof(LinkAdminNode),
+            item.Text,
+            item.Link,
+            GetIconClass(item),
+            !layoutService.IsHidden(layout, item.Key),
+            0,
+            item.Position,
+            parentId,
+            depth,
+            order,
+            [],
+            item.Key.StartsWith("custom-", StringComparison.Ordinal) == true,
+            originalText,
+            item.Items.Select((child, index) => From(child, layout, layoutService, item.Key, depth + 1, index)).ToArray());
+    }
 
     private static string[] GetPermissionNames(AdminNode node) => node switch
     {
@@ -675,3 +704,5 @@ public sealed record AdminMenuNodeEditModel(
     int? Position);
 
 public sealed record AdminMenuNodeMoveModel(string? ParentNodeId, int? Position);
+
+public sealed record AdminMenuNodeRenameModel(string? Text);

@@ -1,6 +1,7 @@
 @page "/login"
 @using BlazingOrchard.Admin.DisplayManagement
 @using BlazingOrchard.Admin.Options
+@using Microsoft.AspNetCore.Components
 @using Radzen
 @using Radzen.Blazor
 @inject DisplayManager DisplayManager
@@ -35,10 +36,25 @@
 @code {
     private LoginForm _login = new();
 
+    [SupplyParameterFromQuery(Name = "switchUser")]
+    public bool SwitchUser { get; set; }
+
+    [SupplyParameterFromQuery(Name = "userName")]
+    public string? UserName { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await DisplayManager.EnsureInitializedAsync();
-        if (DisplayManager.IsAuthenticated)
+        if (!string.IsNullOrWhiteSpace(UserName))
+        {
+            _login.UserName = UserName;
+        }
+
+        if (DisplayManager.IsAuthenticated && SwitchUser)
+        {
+            await DisplayManager.LogoutAsync();
+        }
+        else if (DisplayManager.IsAuthenticated)
         {
             Navigation.NavigateTo(Routing.AdminPath);
         }

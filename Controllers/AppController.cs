@@ -1,12 +1,15 @@
 using BlazingOrchard.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrchardCore.Admin;
 using OrchardCore.Environment.Extensions;
 using OrchardCore.Environment.Shell;
 using OrchardCore.Environment.Shell.Descriptor;
+using OrchardCore.Environment.Shell.Scope;
 using OrchardCore.Navigation;
 using OrchardCore.Settings;
+using OrchardCore.Users.Services;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -17,6 +20,7 @@ namespace BlazingOrchard.Controllers;
 [Route("api/blazing/app")]
 public sealed class AppController(
     ShellSettings shellSettings,
+    IShellHost shellHost,
     IShellDescriptorManager shellDescriptorManager,
     IExtensionManager extensionManager,
     ISiteService siteService,
@@ -31,6 +35,7 @@ public sealed class AppController(
         var site = await siteService.GetSiteSettingsAsync();
         var featureIds = descriptor.Features.Select(feature => feature.Id).Order(StringComparer.Ordinal).ToArray();
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
+        var tenants = await GetAvailableTenantsAsync();
         var adminItems = await navigationManager.BuildMenuAsync("admin", ControllerContext);
         var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
@@ -38,12 +43,52 @@ public sealed class AppController(
 
         return Ok(new AppManifest(
             Tenant.From(shellSettings),
+            tenants,
             SiteSettings.From(site),
             new AdminDescriptor(NormalizeAdminPath(adminOptions.Value.AdminUrlPrefix)),
             descriptor.SerialNumber,
             ComputeFeatureHash(descriptor.SerialNumber, featureIds),
             featureIds.Select(id => Feature.From(id, featureInfos.GetValueOrDefault(id))).ToArray(),
             adminMenu));
+    }
+
+    private async Task<Tenant[]> GetAvailableTenantsAsync()
+    {
+        var userName = User.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            return [Tenant.From(shellSettings)];
+        }
+
+        var tenants = new List<Tenant>();
+        foreach (var settings in shellHost.GetAllSettings().OrderBy(settings => settings.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            if (string.Equals(settings.Name, shellSettings.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                tenants.Add(Tenant.From(settings));
+                continue;
+            }
+
+            try
+            {
+                await (await shellHost.GetScopeAsync(settings)).UsingServiceScopeAsync(async scope =>
+                {
+                    var userService = scope.ServiceProvider.GetService<IUserService>();
+                    if (userService is not null && await userService.GetUserAsync(userName) is not null)
+                    {
+                        tenants.Add(Tenant.From(settings));
+                    }
+                });
+            }
+            catch
+            {
+                // Ignore tenants that are unavailable or do not have Users enabled.
+            }
+        }
+
+        return tenants
+            .DistinctBy(tenant => tenant.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private static string NormalizeAdminPath(string? adminUrlPrefix)
@@ -61,6 +106,7 @@ public sealed class AppController(
 
 public sealed record AppManifest(
     Tenant Tenant,
+    Tenant[] Tenants,
     SiteSettings Site,
     AdminDescriptor Admin,
     int FeatureSerialNumber,

@@ -7,11 +7,7 @@
 @inject NotificationService Notifications
 
 <BlazingAppContainer>
-    <div class="admin-dashboard">
-        <AdminMenuSidebar />
-
-        <main class="admin-dashboard__main">
-            <RadzenStack Gap="1rem">
+    <RadzenStack Gap="1rem">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                     <RadzenStack Gap="0.25rem">
                         <RadzenText TextStyle="TextStyle.H4" Text="Themes" />
@@ -205,9 +201,7 @@
                         }
                     </RadzenStack>
                 }
-            </RadzenStack>
-        </main>
-    </div>
+    </RadzenStack>
 </BlazingAppContainer>
 
 <style>

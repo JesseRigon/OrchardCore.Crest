@@ -16,13 +16,29 @@
 else if (DisplayManager.IsAuthenticated)
 {
     <CascadingValue Value="DisplayManager">
-        @ChildContent
+        <div class="admin-shell">
+            <AdminTitleBar ToggleSidebar="ToggleSidebar" />
+            <div class="@DashboardClass">
+                <AdminMenuSidebar />
+                @if (IsSidebarOpen)
+                {
+                    <button type="button" class="admin-dashboard__backdrop" aria-label="Close navigation menu" @onclick="CloseSidebar"></button>
+                }
+                <main class="admin-dashboard__main" @onclick="CloseSidebar">
+                    @ChildContent
+                </main>
+            </div>
+        </div>
     </CascadingValue>
 }
 
 @code {
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    private bool IsSidebarOpen { get; set; }
+
+    private string DashboardClass => IsSidebarOpen ? "admin-dashboard admin-dashboard--sidebar-open" : "admin-dashboard";
 
     protected override async Task OnInitializedAsync()
     {
@@ -35,6 +51,10 @@ else if (DisplayManager.IsAuthenticated)
     {
         DisplayManager.Changed -= StateHasChanged;
     }
+
+    private void ToggleSidebar() => IsSidebarOpen = !IsSidebarOpen;
+
+    private void CloseSidebar() => IsSidebarOpen = false;
 
     private void EnsureAuthenticated()
     {

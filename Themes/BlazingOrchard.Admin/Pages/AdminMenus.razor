@@ -4,6 +4,7 @@
 @using BlazingOrchard.Admin.Api
 @using BlazingOrchard.Admin.Components.Admin
 @using BlazingOrchard.Admin.DisplayManagement
+@using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
 @using Radzen
 @using Radzen.Blazor
@@ -14,12 +15,8 @@
 @inject DisplayManager DisplayManager
 
 <BlazingAppContainer>
-    <div class="admin-dashboard">
-        <AdminMenuSidebar />
-
-        <main class="admin-dashboard__main">
-            <CascadingValue Value="DragDrop">
-                <RadzenStack Gap="1rem">
+    <CascadingValue Value="DragDrop">
+        <RadzenStack Gap="1rem">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                         <RadzenStack Gap="0.25rem">
                             <RadzenText TextStyle="TextStyle.H4" Text="Admin Menus" />
@@ -94,7 +91,10 @@
                                                     </RadzenStack>
                                                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                                                         <RadzenButton Text="@(AllNodesCollapsed ? "Expand All" : "Collapse All")" Icon="@(AllNodesCollapsed ? "unfold_more" : "unfold_less")" ButtonStyle="ButtonStyle.Light" Click="ToggleCollapseAll" Disabled="@(IsBusy || SelectedMenu.Nodes.Length == 0)" />
-                                                        <RadzenButton Text="Add node" Icon="add" Click="AddNode" Disabled="@IsBusy" />
+                                                        @if (!SelectedMenu.IsDefault)
+                                                        {
+                                                            <RadzenButton Text="Add node" Icon="add" Click="AddNode" Disabled="@IsBusy" />
+                                                        }
                                                     </RadzenStack>
                                                 </RadzenStack>
 
@@ -196,10 +196,8 @@
                             </RadzenColumn>
                         </RadzenRow>
                     }
-                </RadzenStack>
-            </CascadingValue>
-        </main>
-    </div>
+        </RadzenStack>
+    </CascadingValue>
 </BlazingAppContainer>
 
 <style>
@@ -303,6 +301,23 @@
         background: color-mix(in srgb, var(--rz-primary) 8%, var(--rz-base-background-color));
         box-shadow: 0 0 0 3px color-mix(in srgb, var(--rz-primary) 18%, transparent);
     }
+
+    .admin-menu-node__rename {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+    }
+
+    .admin-menu-node__rename-input {
+        width: min(24rem, 55vw);
+    }
+
+    .admin-menu-node__original-text {
+        color: var(--rz-text-secondary-color);
+        text-decoration: line-through;
+        opacity: 0.75;
+    }
 </style>
 
 @code {
@@ -334,6 +349,8 @@
     private bool ShouldInitializeTree { get; set; }
     private string? EditingNodeId { get; set; }
     private AdminMenuNodeFormModel? EditingModel { get; set; }
+    private string? RenamingNodeId { get; set; }
+    private string? RenameText { get; set; }
 
     private IReadOnlyList<ParentOption> ParentOptions => SelectedMenu is null
         ? []
@@ -350,7 +367,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (SelectedMenu is not null)
+        if (SelectedMenu is not null && (firstRender || ShouldInitializeTree))
         {
             DotNetRef ??= DotNetObjectReference.Create(this);
             await Js.InvokeVoidAsync("blazingAdminMenus.init", ".admin-menu-tree", DotNetRef);
@@ -405,7 +422,7 @@
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
-                if (IsBusy || EditingModel is not null)
+                if (IsBusy || EditingModel is not null || RenamingNodeId is not null)
                 {
                     continue;
                 }
@@ -432,6 +449,8 @@
 
         EditingNodeId = null;
         EditingModel = null;
+        RenamingNodeId = null;
+        RenameText = null;
         ShouldInitializeTree = true;
     }
 
@@ -491,7 +510,7 @@
         <div class="admin-menu-node">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
-                    <span class="admin-menu-node__handle" draggable="true" title="Drag to move" @ondragstart="@(() => StartDrag(node))">
+                    <span class="admin-menu-node__handle" draggable="true" title="Drag to move">
                         <RadzenIcon Icon="drag_indicator" />
                     </span>
                     @if (node.Items.Length > 0)
@@ -514,7 +533,23 @@
                             {
                                 <i class="admin-menu-node__icon @node.IconClass" aria-hidden="true"></i>
                             }
-                            <RadzenText TextStyle="TextStyle.Subtitle2" Text="@node.Text" />
+                            @if (SelectedMenu?.IsDefault == true && RenamingNodeId == node.Id)
+                            {
+                                <span class="admin-menu-node__rename">
+                                    <RadzenTextBox @bind-Value="RenameText" class="admin-menu-node__rename-input" @onkeydown="HandleRenameKeyDownAsync" />
+                                    <span class="admin-menu-node__original-text">@OriginalNodeText(node)</span>
+                                    <RadzenButton Size="ButtonSize.Small" Icon="check" ButtonStyle="ButtonStyle.Primary" Click="SaveRenameAsync" Disabled="@IsBusy" />
+                                    <RadzenButton Size="ButtonSize.Small" Icon="close" ButtonStyle="ButtonStyle.Light" Click="CancelRename" Disabled="@IsBusy" />
+                                </span>
+                            }
+                            else
+                            {
+                                <RadzenText TextStyle="TextStyle.Subtitle2" Text="@node.Text" />
+                                @if (!string.IsNullOrWhiteSpace(node.OriginalText))
+                                {
+                                    <span class="admin-menu-node__original-text">@node.OriginalText</span>
+                                }
+                            }
                             <RadzenBadge Text="@NodeTypeLabel(node.Type)" BadgeStyle="BadgeStyle.Info" />
                             @if (!node.Enabled)
                             {
@@ -526,9 +561,9 @@
                 </RadzenStack>
 
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.35rem">
-                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditNode(node))" Disabled="@(IsBusy || (SelectedMenu?.IsDefault == true && !node.IsCustom))" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditOrRenameNode(node))" Disabled="@IsBusy" />
                     <RadzenButton Size="ButtonSize.Small" Icon="@(node.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Click="@(() => ToggleNodeAsync(node))" Disabled="@IsBusy" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@(IsBusy || (SelectedMenu?.IsDefault == true && !node.IsCustom))" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@(IsBusy || SelectedMenu?.IsDefault == true)" />
                 </RadzenStack>
             </RadzenStack>
         </div>
@@ -543,11 +578,6 @@
             </ol>
         }
     </li>;
-
-    private void StartDrag(AdminMenuNodeSummary node)
-    {
-        DragDrop.Payload = node.Id;
-    }
 
     private bool IsCollapsed(string nodeId) => CollapsedNodeIds.Contains(nodeId);
 
@@ -602,7 +632,6 @@
         }
 
         await ApplyMenuResultAsync(await Api.Blazing.Rest.AdminMenus.MoveNodeAsync(SelectedMenu.Id, nodeId, new(parentNodeId, position)));
-        DragDrop.Payload = null;
     }
 
     private void AddNode()
@@ -617,8 +646,29 @@
         };
     }
 
+    private void EditOrRenameNode(AdminMenuNodeSummary node)
+    {
+        if (SelectedMenu?.IsDefault == true)
+        {
+            StartRename(node);
+            return;
+        }
+
+        EditNode(node);
+    }
+
+    private void StartRename(AdminMenuNodeSummary node)
+    {
+        RenamingNodeId = node.Id;
+        RenameText = node.Text;
+        EditingNodeId = null;
+        EditingModel = null;
+    }
+
     private void EditNode(AdminMenuNodeSummary node)
     {
+        RenamingNodeId = null;
+        RenameText = null;
         EditingNodeId = node.Id;
         EditingModel = new AdminMenuNodeFormModel
         {
@@ -640,6 +690,45 @@
         EditingNodeId = null;
         EditingModel = null;
     }
+
+    private void CancelRename()
+    {
+        RenamingNodeId = null;
+        RenameText = null;
+    }
+
+    private async Task HandleRenameKeyDownAsync(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await SaveRenameAsync();
+        }
+        else if (args.Key == "Escape")
+        {
+            CancelRename();
+        }
+    }
+
+    private async Task SaveRenameAsync()
+    {
+        if (SelectedMenu is null || string.IsNullOrWhiteSpace(RenamingNodeId))
+        {
+            return;
+        }
+
+        IsBusy = true;
+        var result = await Api.Blazing.Rest.AdminMenus.RenameNodeAsync(SelectedMenu.Id, RenamingNodeId, new(RenameText));
+        await ApplyMenuResultAsync(result);
+        if (result is not null)
+        {
+            CancelRename();
+            Notifications.Notify(NotificationSeverity.Success, "Sidebar item renamed", "The sidebar display text was updated.");
+        }
+
+        IsBusy = false;
+    }
+
+    private static string OriginalNodeText(AdminMenuNodeSummary node) => string.IsNullOrWhiteSpace(node.OriginalText) ? node.Text : node.OriginalText;
 
     private async Task SaveNodeAsync(AdminMenuNodeFormModel model)
     {

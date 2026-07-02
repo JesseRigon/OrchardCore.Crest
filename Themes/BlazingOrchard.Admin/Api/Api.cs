@@ -107,6 +107,7 @@ public interface IAdminMenusApi
     Task<bool> DeleteMenuAsync(string menuId);
     Task<AdminMenuSummary?> CreateNodeAsync(string menuId, AdminMenuNodeEditModel model);
     Task<AdminMenuSummary?> UpdateNodeAsync(string menuId, string nodeId, AdminMenuNodeEditModel model);
+    Task<AdminMenuSummary?> RenameNodeAsync(string menuId, string nodeId, AdminMenuNodeRenameModel model);
     Task<AdminMenuSummary?> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model);
     Task<AdminMenuSummary?> ToggleNodeAsync(string menuId, string nodeId);
     Task<AdminMenuSummary?> DeleteNodeAsync(string menuId, string nodeId);
@@ -429,6 +430,9 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
     public Task<AdminMenuSummary?> UpdateNodeAsync(string menuId, string nodeId, AdminMenuNodeEditModel model) =>
         SendNodeAsync(HttpMethod.Put, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}", model);
 
+    public Task<AdminMenuSummary?> RenameNodeAsync(string menuId, string nodeId, AdminMenuNodeRenameModel model) =>
+        SendNodeAsync(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/rename", model);
+
     public Task<AdminMenuSummary?> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model) =>
         SendNodeAsync(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/move", model);
 
@@ -469,6 +473,7 @@ public sealed record AuthUser(bool IsAuthenticated, string? UserName, string[] R
 
 public sealed record AppManifest(
     Tenant Tenant,
+    Tenant[] Tenants,
     SiteSettings Site,
     AdminDescriptor Admin,
     int FeatureSerialNumber,
@@ -637,6 +642,7 @@ public sealed record AdminMenuNodeSummary(
     int Order,
     string[] PermissionNames,
     bool IsCustom,
+    string? OriginalText,
     AdminMenuNodeSummary[] Items);
 
 public sealed record AdminMenuNodeEditModel(
@@ -652,6 +658,8 @@ public sealed record AdminMenuNodeEditModel(
     int? Position);
 
 public sealed record AdminMenuNodeMoveModel(string? ParentNodeId, int? Position);
+
+public sealed record AdminMenuNodeRenameModel(string? Text);
 
 public sealed record BlazingThemeSettings(string RadzenTheme, Dictionary<string, string> Tokens)
 {

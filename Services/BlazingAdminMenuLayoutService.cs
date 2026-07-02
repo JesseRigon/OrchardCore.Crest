@@ -168,6 +168,29 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
         return baseMenu with { Items = Apply(baseMenu.Items, layout) };
     }
 
+    public async Task<NavigationMenu> RenameAsync(NavigationMenu baseMenu, string key, string? text)
+    {
+        var layout = await LoadAsync();
+        var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
+        Flatten(baseMenu.Items, null, flat);
+        FlattenCustom(layout, flat);
+        SnapshotKnownItems(layout, flat);
+
+        if (!flat.TryGetValue(key, out var node))
+        {
+            return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        }
+
+        var item = GetOrCreateOverride(layout, key);
+        var renamedText = text?.Trim();
+        item.DisplayText = string.IsNullOrWhiteSpace(renamedText) || string.Equals(renamedText, node.Item.Text, StringComparison.Ordinal)
+            ? null
+            : renamedText;
+
+        await SaveAsync(layout);
+        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+    }
+
     public async Task<NavigationMenu> DeleteCustomAsync(NavigationMenu baseMenu, string key)
     {
         var layout = await LoadAsync();
@@ -196,7 +219,12 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
 
     private static NavigationItem[] Build(List<LayoutNode> nodes, Dictionary<string, List<LayoutNode>> childMap, BlazingAdminMenuLayoutDocument layout) => nodes
         .OrderBy(node => GetOverride(layout, node.Key).Order ?? node.BaseOrder)
-        .Select(node => node.Item with { Items = Build(childMap[node.Key], childMap, layout) })
+        .Select(node =>
+        {
+            var itemOverride = GetOverride(layout, node.Key);
+            var text = string.IsNullOrWhiteSpace(itemOverride.DisplayText) ? node.Item.Text : itemOverride.DisplayText;
+            return node.Item with { Text = text, Items = Build(childMap[node.Key], childMap, layout) };
+        })
         .ToArray();
 
     private static void Flatten(IEnumerable<NavigationItem> items, string? parentKey, Dictionary<string, LayoutNode> flat)
@@ -256,7 +284,7 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
 
         var node = new LayoutNode(
             parentKey,
-            new NavigationItem(itemOverride.Text, parentKey, null, null, null, null, null, classes, []),
+            new NavigationItem(string.IsNullOrWhiteSpace(itemOverride.DisplayText) ? itemOverride.Text : itemOverride.DisplayText, parentKey, null, null, null, null, null, classes, []),
             null,
             itemOverride.Order ?? 0);
 
@@ -377,6 +405,7 @@ public sealed class BlazingAdminMenuLayoutItem
     public int? Order { get; set; }
     public bool Hidden { get; set; }
     public string? Text { get; set; }
+    public string? DisplayText { get; set; }
     public string? IconClass { get; set; }
 }
 
