@@ -1,14 +1,21 @@
 # BlazingOrchard.Admin
 
-BlazingOrchard.Admin is the Blazor WebAssembly admin UI for BlazingOrchard.
+BlazingOrchard.Admin registers the Orchard admin theme and contains the Blazor WebAssembly admin UI.
 
-The Orchard server-side theme manifest is provided by the sibling project:
+Layout:
 
 ```text
-../BlazingOrchard.Admin.Manifest
+BlazingOrchard.Admin/
+  BlazingOrchard.Admin.csproj   # server-side Orchard theme manifest assembly
+  Manifest.cs                   # Orchard theme metadata for BlazingOrchard.Admin
+  wasm/                         # browser-wasm Blazor application
+    BlazingOrchard.Admin.Wasm.csproj
+    Pages/
+    Components/
+    wwwroot/
 ```
 
-This split keeps the browser-wasm Blazor app separate from the server-side Orchard theme manifest because browser-wasm projects cannot reference the Orchard server runtime stack.
+The manifest and WebAssembly app remain separate projects because browser-wasm cannot reference the Orchard server runtime stack, but they now live under one theme folder.
 
 ## Versioning
 

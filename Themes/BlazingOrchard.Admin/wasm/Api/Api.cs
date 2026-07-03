@@ -85,6 +85,7 @@ public interface IAuthApi
 public interface IThemeApi
 {
     Task<BlazingThemeSettings> GetAsync();
+    Task<BlazingThemeSettings?> UpdateAsync(BlazingThemeSettings settings);
 }
 
 public interface IThemesApi
@@ -337,6 +338,16 @@ public sealed class ThemeApi(HttpClient http) : IThemeApi
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<BlazingThemeSettings>() ?? BlazingThemeSettings.Default
             : BlazingThemeSettings.Default;
+    }
+
+    public async Task<BlazingThemeSettings?> UpdateAsync(BlazingThemeSettings settings)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Put, "api/blazing/theme")
+        {
+            Content = JsonContent.Create(settings),
+        }));
+
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<BlazingThemeSettings>() : null;
     }
 
     private static HttpRequestMessage WithCredentials(HttpRequestMessage request)

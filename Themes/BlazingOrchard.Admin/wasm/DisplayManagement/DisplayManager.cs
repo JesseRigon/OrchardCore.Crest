@@ -112,6 +112,22 @@ public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine)
         });
     }
 
+    public async Task<BlazingThemeSettings?> UpdateThemeAsync(BlazingThemeSettings settings)
+    {
+        return await RunAsync(async () =>
+        {
+            var saved = await api.Blazing.Rest.Theme.UpdateAsync(settings);
+            if (saved is not null)
+            {
+                Theme = saved;
+                await themeEngine.ApplyAsync(saved);
+            }
+
+            ErrorMessage = saved is null ? "Unable to save design system settings." : null;
+            return saved;
+        });
+    }
+
     public async Task<SiteSettings?> UpdateSiteAsync(SiteSettingsUpdate update)
     {
         return await RunAsync(async () =>

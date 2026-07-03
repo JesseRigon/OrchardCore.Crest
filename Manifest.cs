@@ -17,3 +17,11 @@ using OrchardCore.Modules.Manifest;
     Dependencies = ["OrchardCore.Settings", "OrchardCore.Themes", "OrchardCore.Users", "BlazingOrchard.LegacyFrame"],
     IsAlwaysEnabled = true
 )]
+
+[assembly: Feature(
+    Id = "BlazingOrchard.DesignSystem",
+    Name = "Blazing Design System",
+    Description = "Adds tenant-level design token editing for Blazing Orchard without switching Orchard themes.",
+    Category = "Blazing",
+    Dependencies = ["OrchardCore.Settings", "OrchardCore.Themes"]
+)]

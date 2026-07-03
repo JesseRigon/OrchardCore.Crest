@@ -18,7 +18,7 @@
             @if (DisplayManager.Manifest?.AdminSettings.DisplayMenuFilter == true)
             {
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-menu-sidebar__filter-row">
-                    <RadzenTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="Filter admin menu..." Style="width: 100%;" />
+                    <RadzenTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="Search Menu" Style="width: 100%;" />
                     @if (HasQuickAddItems)
                     {
                         <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" class="admin-menu-sidebar__quickadd-button" Click="OpenQuickAdd" title="Quick Add" />

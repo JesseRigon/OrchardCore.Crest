@@ -4,6 +4,7 @@ using BlazingOrchard.Services;
 using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.DisplayManagement.Theming;
 using OrchardCore.Modules;
+using OrchardCore.Navigation;
 
 namespace BlazingOrchard;
 
@@ -35,5 +36,14 @@ public sealed class Startup : StartupBase
     {
         app.UseMiddleware<BlazorAdminThemeMiddleware>();
         app.UseCors(BlazingWebCors);
+    }
+}
+
+[Feature("BlazingOrchard.DesignSystem")]
+public sealed class DesignSystemStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddNavigationProvider<BlazingAdminMenu>();
     }
 }

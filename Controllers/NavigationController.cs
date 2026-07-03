@@ -88,6 +88,7 @@ internal static class NavigationIconResolver
         ["debugging"] = "bug_report",
         ["deployments"] = "cloud_upload",
         ["design"] = "desktop_windows",
+        ["designsystem"] = "design_services",
         ["features"] = "extension",
         ["general"] = "settings_applications",
         ["indexes"] = "storage",
