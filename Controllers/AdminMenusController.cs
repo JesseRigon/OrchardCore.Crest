@@ -69,6 +69,42 @@ public sealed class AdminMenusController(
         return Ok(AdminMenuSummary.From(menu));
     }
 
+    [HttpPost("{menuId}/rename")]
+    public async Task<ActionResult<AdminMenuSummary>> RenameMenuAsync(string menuId, AdminMenuEditModel model)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        if (menuId == BlazingAdminMenuLayoutService.DefaultMenuId)
+        {
+            return BadRequest("The Sidebar Layout menu cannot be renamed.");
+        }
+
+        var name = model.Name?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return BadRequest("Menu name is required.");
+        }
+
+        var list = await adminMenuService.LoadAdminMenuListAsync();
+        var menu = adminMenuService.GetAdminMenuById(list, menuId);
+        if (menu is null)
+        {
+            return NotFound();
+        }
+
+        menu.Name = name;
+        foreach (var node in menu.MenuItems.OfType<AdminNode>())
+        {
+            SetMenuName(node, name);
+        }
+
+        await adminMenuService.SaveAsync(menu);
+        return Ok(AdminMenuSummary.From(menu));
+    }
+
     [HttpPost("{menuId}/toggle")]
     public async Task<ActionResult<AdminMenuSummary>> ToggleMenuAsync(string menuId)
     {
@@ -163,8 +199,13 @@ public sealed class AdminMenusController(
 
         if (menuId == BlazingAdminMenuLayoutService.DefaultMenuId)
         {
+            if (!IsPlaceholderNodeType(model.Type))
+            {
+                return BadRequest("Sidebar Layout only supports custom placeholder nodes.");
+            }
+
             var baseMenu = await BuildDefaultNavigationMenuAsync();
-            await layoutService.CreateCustomAsync(baseMenu, model.Text.Trim(), model.Url?.Trim(), model.IconClass?.Trim(), model.ParentNodeId, model.Position);
+            await layoutService.CreateCustomAsync(baseMenu, model.Text.Trim(), null, model.IconClass?.Trim(), model.ParentNodeId, model.Position);
             return Ok(await GetDefaultMenuSummaryAsync());
         }
 
@@ -216,7 +257,7 @@ public sealed class AdminMenusController(
                 return BadRequest("Only custom Sidebar nodes can be edited.");
             }
 
-            await layoutService.UpdateCustomAsync(baseMenu, nodeId, model.Text.Trim(), model.Url?.Trim(), model.IconClass?.Trim());
+            await layoutService.UpdateCustomAsync(baseMenu, nodeId, model.Text.Trim(), null, model.IconClass?.Trim());
             if (model.ParentNodeId is not null)
             {
                 await layoutService.MoveAsync(baseMenu, nodeId, model.ParentNodeId, model.Position);
@@ -440,6 +481,19 @@ public sealed class AdminMenusController(
         return clone;
     }
 
+    private static bool IsPlaceholderNodeType(string type) =>
+        string.Equals(type, nameof(PlaceholderAdminNode), StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(type, "placeholder", StringComparison.OrdinalIgnoreCase);
+
+    private static void SetMenuName(AdminNode node, string menuName)
+    {
+        node.MenuName = menuName;
+        foreach (var child in node.Items.OfType<AdminNode>())
+        {
+            SetMenuName(child, menuName);
+        }
+    }
+
     private static AdminNode? CreateNode(string type) => type switch
     {
         nameof(LinkAdminNode) or "link" => new LinkAdminNode(),
@@ -654,7 +708,7 @@ public sealed record AdminMenuNodeSummary(
 
         return new(
             item.Key,
-            item.Items.Length > 0 ? nameof(PlaceholderAdminNode) : nameof(LinkAdminNode),
+            item.Items.Length > 0 || string.IsNullOrWhiteSpace(item.Link) ? nameof(PlaceholderAdminNode) : nameof(LinkAdminNode),
             item.Text,
             item.Link,
             GetIconClass(item),

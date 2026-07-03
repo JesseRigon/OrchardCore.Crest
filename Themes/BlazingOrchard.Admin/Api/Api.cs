@@ -102,6 +102,7 @@ public interface IAdminMenusApi
     Task<AdminMenusState> ListAsync();
     Task<AdminMenuSummary?> GetAsync(string menuId);
     Task<AdminMenuSummary?> CreateMenuAsync(AdminMenuEditModel model);
+    Task<AdminMenuSummary?> RenameMenuAsync(string menuId, AdminMenuEditModel model);
     Task<AdminMenuSummary?> ToggleMenuAsync(string menuId);
     Task<AdminMenuSummary?> DuplicateMenuAsync(string menuId);
     Task<bool> DeleteMenuAsync(string menuId);
@@ -406,6 +407,15 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
     }
 
+    public async Task<AdminMenuSummary?> RenameMenuAsync(string menuId, AdminMenuEditModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/rename")
+        {
+            Content = JsonContent.Create(model),
+        }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
     public async Task<AdminMenuSummary?> ToggleMenuAsync(string menuId)
     {
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/admin-menus/{Uri.EscapeDataString(menuId)}/toggle")));
@@ -475,6 +485,7 @@ public sealed record AppManifest(
     Tenant Tenant,
     Tenant[] Tenants,
     SiteSettings Site,
+    AdminSettingsDto AdminSettings,
     AdminDescriptor Admin,
     int FeatureSerialNumber,
     string FeatureHash,
@@ -490,6 +501,12 @@ public sealed record Tenant(
     string? RequestUrlPrefix);
 
 public sealed record AdminDescriptor(string BasePath);
+
+public sealed record AdminSettingsDto(
+    bool DisplayThemeToggler,
+    bool DisplayMenuFilter,
+    bool DisplayNewMenu,
+    bool DisplayTitlesInTopbar);
 
 public sealed record SiteSettings(
     string SiteName,

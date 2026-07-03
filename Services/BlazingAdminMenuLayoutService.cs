@@ -7,7 +7,7 @@ namespace BlazingOrchard.Services;
 public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminMenuLayoutDocument> documents)
 {
     public const string DefaultMenuId = "__blazing_default_admin_menu";
-    public const string DefaultMenuName = "Sidebar";
+    public const string DefaultMenuName = "Sidebar Layout";
 
     public async Task<BlazingAdminMenuLayoutDocument> GetAsync() => await documents.GetOrCreateImmutableAsync();
 

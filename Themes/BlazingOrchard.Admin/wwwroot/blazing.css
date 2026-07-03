@@ -21,6 +21,19 @@
     min-width: 0;
 }
 
+.admin-titlebar__page-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 1rem;
+    overflow: hidden;
+    color: var(--rz-text-title-color, var(--rz-text-color));
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .admin-titlebar__menu-button {
     display: none !important;
 }
@@ -104,19 +117,10 @@
     white-space: nowrap;
 }
 
-.rz-context-menu .admin-titlebar__tenant-add-item,
 .rz-context-menu .admin-titlebar__profile-separator {
     border-top: 1px solid var(--rz-border-color, #e5e7eb);
     margin-top: 0.25rem;
     padding-top: 0.25rem;
-}
-
-.rz-context-menu .admin-titlebar__tenant-add-item {
-    border-top: 0;
-    border-bottom: 1px solid var(--rz-border-color, #e5e7eb);
-    margin-top: 0;
-    margin-bottom: 0.25rem;
-    padding-bottom: 0.25rem;
 }
 
 .admin-titlebar__icon-button {
@@ -176,7 +180,72 @@
 }
 
 .admin-menu-sidebar__content {
+    position: relative;
     padding: 1rem;
+    min-height: calc(100vh - 4rem);
+}
+
+.admin-menu-sidebar__filter-row {
+    width: 100%;
+}
+
+.admin-menu-sidebar__quickadd-button {
+    width: 2.25rem;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 !important;
+}
+
+.admin-menu-sidebar__quickadd-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 2.5rem;
+    border: 0;
+    border-radius: var(--rz-border-radius, 4px);
+    padding: 0.5rem 0.65rem;
+    color: var(--rz-text-color, #1f2937);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-menu-sidebar__quickadd-row:hover,
+.admin-menu-sidebar__quickadd-row:focus-visible {
+    background: var(--rz-menu-item-hover-background-color, color-mix(in srgb, var(--rz-primary, #2f6f4e) 8%, transparent));
+    outline: none;
+}
+
+.admin-menu-sidebar__quickadd-add-icon {
+    color: var(--rz-primary, #2f6f4e);
+}
+
+.admin-menu-sidebar__quickadd-popover {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--rz-sidebar-background-color, var(--rz-base-background-color, #fff));
+}
+
+.admin-menu-sidebar__quickadd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 2.5rem;
+    padding: 0.25rem 0.35rem;
+    border-bottom: 1px solid var(--rz-border-color, #e5e7eb);
+}
+
+.admin-menu-sidebar__quickadd-menu {
+    flex: 1 1 auto;
+    overflow: auto;
 }
 
 .admin-menu-sidebar__menu {
@@ -316,6 +385,10 @@
         box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.18);
     }
 
+    .admin-menu-sidebar__content {
+        min-height: calc(100vh - 3.5rem);
+    }
+
     .admin-dashboard--sidebar-open .admin-menu-sidebar {
         transform: translateX(0);
     }
@@ -331,6 +404,12 @@
 }
 
 @media (max-width: 640px) {
+    .admin-menu-sidebar__quickadd-popover {
+        position: fixed;
+        inset: 3.5rem 0 0 0;
+        z-index: 21;
+    }
+
     .admin-titlebar__tenant-trigger {
         max-width: 34vw;
     }

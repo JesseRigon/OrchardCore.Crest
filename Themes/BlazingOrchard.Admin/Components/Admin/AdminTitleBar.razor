@@ -29,8 +29,16 @@
         </RadzenProfileMenu>
     </RadzenStack>
 
+    @if (DisplayManager?.Manifest?.AdminSettings.DisplayTitlesInTopbar == true && !string.IsNullOrWhiteSpace(CurrentTitle))
+    {
+        <div class="admin-titlebar__page-title">@CurrentTitle</div>
+    }
+
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem" class="admin-titlebar__right">
-        <RadzenButton Icon="@ThemeToggleIcon" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ToggleThemeAsync" class="admin-titlebar__icon-button" title="Toggle dark/light mode" aria-label="Toggle dark/light mode" />
+        @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
+        {
+            <RadzenButton Icon="@ThemeToggleIcon" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ToggleThemeAsync" class="admin-titlebar__icon-button" title="Toggle dark/light mode" aria-label="Toggle dark/light mode" />
+        }
 
         <RadzenProfileMenu class="admin-titlebar__icon-menu" ShowIcon="false" ToggleAriaLabel="Open admin actions">
             <Template>
@@ -72,6 +80,7 @@
 
     private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? "Tenant";
     private string UserName => DisplayManager?.User.UserName ?? "User";
+    private string? CurrentTitle => FindCurrentTitle(DisplayManager?.AdminMenu?.Items);
     private string TenantInitial => string.IsNullOrWhiteSpace(SelectedTenantName) ? "?" : SelectedTenantName[..1].ToUpperInvariant();
     private string UserInitials => GetInitials(UserName);
     private LocalUser[] KnownUsers { get; set; } = [];
@@ -109,6 +118,43 @@
     }
 
     private bool IsSelectedTenant(Tenant tenant) => tenant.Name.Equals(SelectedTenantName, StringComparison.OrdinalIgnoreCase);
+
+    private string? FindCurrentTitle(IEnumerable<DisplayMenuItem>? items)
+    {
+        if (items is null)
+        {
+            return null;
+        }
+
+        foreach (var item in items)
+        {
+            var childTitle = FindCurrentTitle(item.Items);
+            if (!string.IsNullOrWhiteSpace(childTitle))
+            {
+                return childTitle;
+            }
+
+            if (IsActive(item))
+            {
+                return item.Text;
+            }
+        }
+
+        return null;
+    }
+
+    private bool IsActive(DisplayMenuItem item)
+    {
+        if (!item.HasLink)
+        {
+            return false;
+        }
+
+        var current = '/' + Navigation.ToBaseRelativePath(Navigation.Uri).TrimStart('/');
+        var link = item.Link!.StartsWith('/') ? item.Link : '/' + item.Link;
+        return current.Equals(link, StringComparison.OrdinalIgnoreCase)
+            || current.StartsWith(link.TrimEnd('/') + '/', StringComparison.OrdinalIgnoreCase);
+    }
 
     private void SelectTenant(Tenant tenant)
     {

@@ -60,10 +60,20 @@
                                                 @foreach (var menu in FilteredMenus)
                                                 {
                                                     <div class="admin-menu-list-item @(menu.Id == SelectedMenuId ? "admin-menu-list-item--selected" : null) @(!menu.Enabled ? "admin-menu-list-item--disabled" : null)">
-                                                        <RadzenButton Text="@(menu.IsDefault ? $"{menu.Name} (built-in)" : menu.Name)" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
-                                                        <RadzenButton Size="ButtonSize.Small" Icon="@(menu.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@(menu.Enabled ? "Hide menu" : "Show menu")" />
-                                                        <RadzenButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="Duplicate menu" />
-                                                        <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="Delete menu" />
+                                                        @if (RenamingMenuId == menu.Id)
+                                                        {
+                                                            <RadzenTextBox @bind-Value="MenuRenameText" class="admin-menu-list-item__rename-input" @oninput="UpdateMenuRenameText" @onkeydown="HandleMenuRenameKeyDownAsync" />
+                                                            <RadzenButton Size="ButtonSize.Small" Icon="check" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Text" Click="SaveMenuRenameAsync" Disabled="@IsBusy" title="Save menu name" />
+                                                            <RadzenButton Size="ButtonSize.Small" Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="CancelMenuRename" Disabled="@IsBusy" title="Cancel rename" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <RadzenButton Text="@(menu.IsDefault ? $"{menu.Name} (built-in)" : menu.Name)" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
+                                                            <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="Rename menu" />
+                                                            <RadzenButton Size="ButtonSize.Small" Icon="@(menu.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@(menu.Enabled ? "Hide menu" : "Show menu")" />
+                                                            <RadzenButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="Duplicate menu" />
+                                                            <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="Delete menu" />
+                                                        }
                                                     </div>
                                                 }
                                             </RadzenStack>
@@ -91,10 +101,7 @@
                                                     </RadzenStack>
                                                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                                                         <RadzenButton Text="@(AllNodesCollapsed ? "Expand All" : "Collapse All")" Icon="@(AllNodesCollapsed ? "unfold_more" : "unfold_less")" ButtonStyle="ButtonStyle.Light" Click="ToggleCollapseAll" Disabled="@(IsBusy || SelectedMenu.Nodes.Length == 0)" />
-                                                        @if (!SelectedMenu.IsDefault)
-                                                        {
-                                                            <RadzenButton Text="Add node" Icon="add" Click="AddNode" Disabled="@IsBusy" />
-                                                        }
+                                                        <RadzenButton Text="Add node" Icon="add" Click="AddNode" Disabled="@IsBusy" />
                                                     </RadzenStack>
                                                 </RadzenStack>
 
@@ -102,7 +109,7 @@
                                                     @if (SelectedMenu.IsDefault)
                                                     {
                                                         <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                                                            Sidebar is the generated Orchard admin sidebar plus Blazing layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar layout.
+                                                            Sidebar Layout is the generated Orchard admin sidebar plus Blazing layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar layout. Add node creates lightweight placeholder groups only.
                                                         </RadzenAlert>
                                                     }
                                                     @if (SelectedMenu.Nodes.Length == 0)
@@ -137,7 +144,7 @@
                                                         <RadzenRow Gap="1rem">
                                                             <RadzenColumn Size="12" SizeMD="6">
                                                                 <RadzenLabel Text="Node type" />
-                                                                <RadzenDropDown TValue="string" Data="@NodeTypes" TextProperty="Text" ValueProperty="Value" @bind-Value="EditingModel.Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" />
+                                                                <RadzenDropDown TValue="string" Data="@AvailableNodeTypes" TextProperty="Text" ValueProperty="Value" @bind-Value="EditingModel.Type" Disabled="@(EditingNodeId is not null || SelectedMenu?.IsDefault == true)" Style="width: 100%;" />
                                                             </RadzenColumn>
                                                             <RadzenColumn Size="12" SizeMD="6">
                                                                 <RadzenLabel Text="Parent Node" />
@@ -153,7 +160,7 @@
                                                             </RadzenColumn>
                                                             <RadzenColumn Size="12" SizeMD="6">
                                                                 <RadzenLabel Text="Url" />
-                                                                <RadzenTextBox @bind-Value="EditingModel.Url" Disabled="@(EditingModel.Type != LinkNodeType)" Placeholder="/Admin/MyPage" Style="width: 100%;" />
+                                                                <RadzenTextBox @bind-Value="EditingModel.Url" Disabled="@(SelectedMenu?.IsDefault == true || EditingModel.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? "Sidebar Layout placeholders do not link" : "/Admin/MyPage")" Style="width: 100%;" />
                                                             </RadzenColumn>
                                                         </RadzenRow>
 
@@ -217,6 +224,11 @@
 
     .admin-menu-list-item--disabled {
         opacity: 0.55;
+    }
+
+    .admin-menu-list-item__rename-input {
+        flex: 1;
+        min-width: 0;
     }
 
     .admin-menu-list-item .rz-button,
@@ -339,6 +351,7 @@
         ? State.Menus
         : State.Menus.Where(menu => menu.Name.Contains(MenuSearch, StringComparison.OrdinalIgnoreCase)).ToArray();
     private AdminMenuSummary? SelectedMenu => State.Menus.FirstOrDefault(menu => menu.Id == SelectedMenuId) ?? State.Menus.FirstOrDefault();
+    private NodeTypeOption[] AvailableNodeTypes => SelectedMenu?.IsDefault == true ? [new(PlaceholderNodeType, "Placeholder")] : NodeTypes;
     private bool AllNodesCollapsed => SelectedMenu is not null && Flatten(SelectedMenu.Nodes).Where(node => node.Items.Length > 0).All(node => CollapsedNodeIds.Contains(node.Id));
     private bool IsLoading { get; set; } = true;
     private bool IsBusy { get; set; }
@@ -349,6 +362,8 @@
     private bool ShouldInitializeTree { get; set; }
     private string? EditingNodeId { get; set; }
     private AdminMenuNodeFormModel? EditingModel { get; set; }
+    private string? RenamingMenuId { get; set; }
+    private string? MenuRenameText { get; set; }
     private string? RenamingNodeId { get; set; }
     private string? RenameText { get; set; }
 
@@ -422,7 +437,7 @@
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
-                if (IsBusy || EditingModel is not null || RenamingNodeId is not null)
+                if (IsBusy || EditingModel is not null || RenamingNodeId is not null || RenamingMenuId is not null)
                 {
                     continue;
                 }
@@ -451,6 +466,8 @@
         EditingModel = null;
         RenamingNodeId = null;
         RenameText = null;
+        RenamingMenuId = null;
+        MenuRenameText = null;
         ShouldInitializeTree = true;
     }
 
@@ -471,6 +488,77 @@
             SelectedMenuId = menu.Id;
             Notifications.Notify(NotificationSeverity.Success, "Admin menu created", name);
         }
+    }
+
+    private void StartMenuRename(AdminMenuSummary menu)
+    {
+        if (menu.IsDefault)
+        {
+            return;
+        }
+
+        SelectedMenuId = menu.Id;
+        RenamingMenuId = menu.Id;
+        MenuRenameText = menu.Name;
+        EditingNodeId = null;
+        EditingModel = null;
+        RenamingNodeId = null;
+        RenameText = null;
+    }
+
+    private void CancelMenuRename()
+    {
+        RenamingMenuId = null;
+        MenuRenameText = null;
+    }
+
+    private void UpdateMenuRenameText(ChangeEventArgs args)
+    {
+        MenuRenameText = args.Value?.ToString();
+    }
+
+    private async Task HandleMenuRenameKeyDownAsync(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await SaveMenuRenameAsync();
+        }
+        else if (args.Key == "Escape")
+        {
+            CancelMenuRename();
+        }
+    }
+
+    private async Task SaveMenuRenameAsync()
+    {
+        if (string.IsNullOrWhiteSpace(RenamingMenuId))
+        {
+            return;
+        }
+
+        var current = State.Menus.FirstOrDefault(menu => menu.Id == RenamingMenuId);
+        if (current is null)
+        {
+            CancelMenuRename();
+            return;
+        }
+
+        IsBusy = true;
+        var updated = await Api.Blazing.Rest.AdminMenus.RenameMenuAsync(RenamingMenuId, new(MenuRenameText, current.Enabled));
+        if (updated is not null)
+        {
+            State = new(State.Menus.Select(existing => existing.Id == updated.Id ? updated : existing).ToArray());
+            SelectedMenuId = updated.Id;
+            CancelMenuRename();
+            Notifications.Notify(NotificationSeverity.Success, "Admin menu renamed", updated.Name);
+            await DisplayManager.RefreshAdminMenuAsync();
+        }
+        else
+        {
+            Notifications.Notify(NotificationSeverity.Error, "Admin menu rename failed", "The server could not update the menu name.");
+        }
+
+        IsBusy = false;
     }
 
     private async Task ToggleMenuAsync(AdminMenuSummary menu)
@@ -536,7 +624,7 @@
                             @if (SelectedMenu?.IsDefault == true && RenamingNodeId == node.Id)
                             {
                                 <span class="admin-menu-node__rename">
-                                    <RadzenTextBox @bind-Value="RenameText" class="admin-menu-node__rename-input" @onkeydown="HandleRenameKeyDownAsync" />
+                                    <RadzenTextBox @bind-Value="RenameText" class="admin-menu-node__rename-input" @oninput="UpdateRenameText" @onkeydown="HandleRenameKeyDownAsync" />
                                     <span class="admin-menu-node__original-text">@OriginalNodeText(node)</span>
                                     <RadzenButton Size="ButtonSize.Small" Icon="check" ButtonStyle="ButtonStyle.Primary" Click="SaveRenameAsync" Disabled="@IsBusy" />
                                     <RadzenButton Size="ButtonSize.Small" Icon="close" ButtonStyle="ButtonStyle.Light" Click="CancelRename" Disabled="@IsBusy" />
@@ -639,9 +727,9 @@
         EditingNodeId = null;
         EditingModel = new AdminMenuNodeFormModel
         {
-            Type = LinkNodeType,
+            Type = SelectedMenu?.IsDefault == true ? PlaceholderNodeType : LinkNodeType,
             Text = string.Empty,
-            Url = "/Admin/",
+            Url = SelectedMenu?.IsDefault == true ? null : "/Admin/",
             Enabled = true,
         };
     }
@@ -695,6 +783,11 @@
     {
         RenamingNodeId = null;
         RenameText = null;
+    }
+
+    private void UpdateRenameText(ChangeEventArgs args)
+    {
+        RenameText = args.Value?.ToString();
     }
 
     private async Task HandleRenameKeyDownAsync(KeyboardEventArgs args)

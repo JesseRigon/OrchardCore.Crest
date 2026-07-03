@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrchardCore.Admin;
+using OrchardCore.Admin.Models;
 using OrchardCore.Environment.Extensions;
 using OrchardCore.Environment.Shell;
 using OrchardCore.Environment.Shell.Descriptor;
+using OrchardCore.Entities;
 using OrchardCore.Environment.Shell.Scope;
 using OrchardCore.Navigation;
 using OrchardCore.Settings;
@@ -45,6 +47,7 @@ public sealed class AppController(
             Tenant.From(shellSettings),
             tenants,
             SiteSettings.From(site),
+            AdminSettingsDto.From(site.GetOrCreate<AdminSettings>()),
             new AdminDescriptor(NormalizeAdminPath(adminOptions.Value.AdminUrlPrefix)),
             descriptor.SerialNumber,
             ComputeFeatureHash(descriptor.SerialNumber, featureIds),
@@ -108,6 +111,7 @@ public sealed record AppManifest(
     Tenant Tenant,
     Tenant[] Tenants,
     SiteSettings Site,
+    AdminSettingsDto AdminSettings,
     AdminDescriptor Admin,
     int FeatureSerialNumber,
     string FeatureHash,
@@ -132,3 +136,16 @@ public sealed record Tenant(
 }
 
 public sealed record AdminDescriptor(string BasePath);
+
+public sealed record AdminSettingsDto(
+    bool DisplayThemeToggler,
+    bool DisplayMenuFilter,
+    bool DisplayNewMenu,
+    bool DisplayTitlesInTopbar)
+{
+    public static AdminSettingsDto From(AdminSettings settings) => new(
+        settings.DisplayThemeToggler,
+        settings.DisplayMenuFilter,
+        settings.DisplayNewMenu,
+        settings.DisplayTitlesInTopbar);
+}
