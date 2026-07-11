@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>obj\BlazingOrchard.Admin\</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin\BlazingOrchard.Admin\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

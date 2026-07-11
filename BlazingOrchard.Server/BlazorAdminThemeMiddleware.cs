@@ -17,8 +17,8 @@ public sealed class BlazorAdminThemeOptions
     public string AdminPath { get; set; } = "/admin";
     public string BlazorThemeTag { get; set; } = "blazor";
     public string BlazorAdminThemeId { get; set; } = "BlazingOrchard.Admin";
-    public string AdminThemeSourceWebRoot { get; set; } = "modules/BlazingOrchard.OrchardCoreModule/Components/Themes/BlazingOrchard.Admin/wasm/wwwroot";
-    public string AdminThemeBuildWebRoot { get; set; } = "modules/BlazingOrchard.OrchardCoreModule/Components/Themes/BlazingOrchard.Admin/wasm/bin/BlazingOrchard.Admin/Debug/net10.0/wwwroot";
+    public string AdminThemeSourceWebRoot { get; set; } = "modules/BlazingOrchard.OrchardCoreModule/BlazingOrchard.Components/Themes/BlazingOrchard.Admin/wasm/wwwroot";
+    public string AdminThemeBuildWebRoot { get; set; } = "modules/BlazingOrchard.OrchardCoreModule/BlazingOrchard.Components/Themes/BlazingOrchard.Admin/wasm/bin/BlazingOrchard.Admin/Debug/net10.0/wwwroot";
     public HashSet<string> BlazorRoutes { get; set; } = new(StringComparer.OrdinalIgnoreCase)
     {
         "/admin",
@@ -27,7 +27,7 @@ public sealed class BlazorAdminThemeOptions
 
     public string[] BlazorRouteSourceDirectories { get; set; } =
     [
-        "modules/BlazingOrchard.OrchardCoreModule/Components/Themes/BlazingOrchard.Admin/wasm/Pages",
+        "modules/BlazingOrchard.OrchardCoreModule/BlazingOrchard.Components/Themes/BlazingOrchard.Admin/wasm/Pages",
     ];
 }
 

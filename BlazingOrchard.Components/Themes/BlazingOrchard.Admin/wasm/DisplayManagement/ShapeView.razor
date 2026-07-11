@@ -1,0 +1,12 @@
+@namespace BlazingOrchard.Admin.DisplayManagement
+@inject DisplayManager DisplayManager
+
+@if (Shape is not null)
+{
+    @DisplayManager.RenderShape(Shape)
+}
+
+@code {
+    [Parameter]
+    public Shape? Shape { get; set; }
+}

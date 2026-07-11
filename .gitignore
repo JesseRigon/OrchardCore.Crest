@@ -57,6 +57,3 @@ Localization/
 *.sqlite
 *.sqlite3
 *.db
-
-# Stale directory entry left by failed submodule move recovery
-.BlazingOrchard.Components.stale/

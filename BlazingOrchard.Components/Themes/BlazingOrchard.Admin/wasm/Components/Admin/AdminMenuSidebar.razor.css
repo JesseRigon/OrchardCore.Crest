@@ -1,0 +1,30 @@
+.admin-menu-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    width: 18rem;
+    min-width: 18rem;
+    min-height: calc(100vh - 4rem);
+    border-right: 1px solid var(--rz-border-color, #e5e7eb);
+    background: var(--rz-sidebar-background-color, var(--rz-base-background-color, #fff));
+}
+
+.admin-menu-sidebar__content {
+    padding: 1rem;
+}
+
+.admin-menu-sidebar__title {
+    margin-bottom: 0.25rem;
+}
+
+.admin-menu-sidebar__menu {
+    width: 100%;
+}
+
+.admin-menu-sidebar ::deep(.rz-expander.rz-state-collapsed) {
+    overflow: hidden;
+}
+
+.admin-menu-sidebar ::deep(.rz-expander.rz-state-collapsed .rz-expander-content) {
+    overflow: hidden;
+}

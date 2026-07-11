@@ -1,0 +1,40 @@
+@using BlazingOrchard.Admin.Api
+@using Radzen
+@using Radzen.Blazor
+
+@if (Items.Length == 0)
+{
+    <RadzenText TextStyle="TextStyle.Body2" Text="No menu items returned." />
+}
+else
+{
+    <ul class="navigation-items">
+        @foreach (var item in Items)
+        {
+            <li>
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText Text="@item.Text" />
+                    <RadzenText TextStyle="TextStyle.Caption" Text="@GetDetails(item)" />
+                    @if (item.Items.Length > 0)
+                    {
+                        <NavigationItems Items="item.Items" />
+                    }
+                </RadzenStack>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public NavigationItem[] Items { get; set; } = [];
+
+    private static string GetDetails(NavigationItem item)
+    {
+        var href = !string.IsNullOrWhiteSpace(item.Href) ? item.Href : item.Url;
+        var position = !string.IsNullOrWhiteSpace(item.Position) ? $"position: {item.Position}" : null;
+        var id = !string.IsNullOrWhiteSpace(item.Id) ? $"id: {item.Id}" : null;
+
+        return string.Join(" · ", new[] { href, position, id }.Where(value => !string.IsNullOrWhiteSpace(value)));
+    }
+}

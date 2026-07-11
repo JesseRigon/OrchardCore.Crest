@@ -1,0 +1,254 @@
+@using BlazingOrchard.Admin.Api
+@using BlazingOrchard.Admin.DisplayManagement
+@using BlazingOrchard.Admin.Options
+@using Microsoft.JSInterop
+@using Radzen
+@using Radzen.Blazor
+@inject NavigationManager Navigation
+@inject BlazingRoutingOptions Routing
+@inject IJSRuntime Js
+
+<header class="admin-titlebar">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-titlebar__left">
+        <RadzenButton Icon="menu" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ToggleSidebar" class="admin-titlebar__menu-button" aria-label="Open navigation menu" />
+        <div class="admin-titlebar__logo" aria-hidden="true">@TenantInitial</div>
+
+        <RadzenProfileMenu class="admin-titlebar__tenant-menu" ShowIcon="false" ToggleAriaLabel="Select tenant">
+            <Template>
+                <span class="admin-titlebar__tenant-trigger">
+                    <span class="admin-titlebar__tenant-name">@SelectedTenantName</span>
+                    <RadzenIcon Icon="keyboard_arrow_down" class="admin-titlebar__tenant-arrow" />
+                </span>
+            </Template>
+            <ChildContent>
+                @foreach (var tenant in TenantOptions)
+                {
+                    <RadzenProfileMenuItem Text="@tenant.Name" Icon="@(IsSelectedTenant(tenant) ? "check" : "apartment")" Click="@(() => SelectTenant(tenant))" />
+                }
+            </ChildContent>
+        </RadzenProfileMenu>
+    </RadzenStack>
+
+    @if (DisplayManager?.Manifest?.AdminSettings.DisplayTitlesInTopbar == true && !string.IsNullOrWhiteSpace(CurrentTitle))
+    {
+        <div class="admin-titlebar__page-title">@CurrentTitle</div>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem" class="admin-titlebar__right">
+        @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
+        {
+            <RadzenButton Icon="@ThemeToggleIcon" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ToggleThemeAsync" class="admin-titlebar__icon-button" title="Toggle dark/light mode" aria-label="Toggle dark/light mode" />
+        }
+
+        <RadzenProfileMenu class="admin-titlebar__icon-menu" ShowIcon="false" ToggleAriaLabel="Open admin actions">
+            <Template>
+                <RadzenIcon Icon="more_vert" class="admin-titlebar__action-icon" />
+            </Template>
+            <ChildContent>
+                <RadzenProfileMenuItem Text="Admin dashboard" Icon="dashboard" Path="/Admin" />
+                <RadzenProfileMenuItem Text="Open site" Icon="open_in_new" Path="/" />
+            </ChildContent>
+        </RadzenProfileMenu>
+
+        <RadzenProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="Open user menu">
+            <Template>
+                <span class="admin-titlebar__avatar" title="@UserName">@UserInitials</span>
+            </Template>
+            <ChildContent>
+                <RadzenProfileMenuItem Text="@UserName" Icon="person" Path="/Admin/Profile" />
+                <RadzenProfileMenuItem Text="Sign in as another user" Icon="switch_account" Click="SignInAsAnotherUserAsync" class="admin-titlebar__profile-separator" />
+                @foreach (var user in OtherKnownUsers)
+                {
+                    <RadzenProfileMenuItem Text="@UserLabel(user)" Icon="account_circle" Click="@(() => SignInAsUserAsync(user))" />
+                }
+                <RadzenProfileMenuItem Text="Logout" Icon="logout" Click="LogoutAsync" class="admin-titlebar__profile-separator" />
+            </ChildContent>
+        </RadzenProfileMenu>
+    </RadzenStack>
+</header>
+
+@code {
+    [CascadingParameter]
+    public DisplayManager? DisplayManager { get; set; }
+
+    [Parameter]
+    public EventCallback ToggleSidebar { get; set; }
+
+    private Tenant[] TenantOptions => DisplayManager?.Manifest?.Tenants is { Length: > 0 } tenants
+        ? tenants
+        : DisplayManager?.Manifest?.Tenant is { } tenant ? [tenant] : [];
+
+    private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? "Tenant";
+    private string UserName => DisplayManager?.User.UserName ?? "User";
+    private string? CurrentTitle => FindCurrentTitle(DisplayManager?.AdminMenu?.Items);
+    private string TenantInitial => string.IsNullOrWhiteSpace(SelectedTenantName) ? "?" : SelectedTenantName[..1].ToUpperInvariant();
+    private string UserInitials => GetInitials(UserName);
+    private LocalUser[] KnownUsers { get; set; } = [];
+    private IEnumerable<LocalUser> OtherKnownUsers => KnownUsers
+        .Where(user => !user.UserName.Equals(UserName, StringComparison.OrdinalIgnoreCase));
+    private string ThemeToggleIcon { get; set; } = "dark_mode";
+    private string? LastRememberedUserContext { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var shouldRender = false;
+        if (firstRender)
+        {
+            var isDark = await Js.InvokeAsync<bool>("blazingTheme.isDarkMode");
+            ThemeToggleIcon = isDark ? "light_mode" : "dark_mode";
+            shouldRender = true;
+        }
+
+        if (DisplayManager?.IsAuthenticated == true)
+        {
+            var tenantPrefix = DisplayManager.Manifest?.Tenant.RequestUrlPrefix ?? string.Empty;
+            var context = $"{UserName}|{SelectedTenantName}|{tenantPrefix}";
+            if (!string.Equals(context, LastRememberedUserContext, StringComparison.Ordinal))
+            {
+                KnownUsers = await Js.InvokeAsync<LocalUser[]>("blazingTheme.rememberSignedInUser", UserName, SelectedTenantName, tenantPrefix);
+                LastRememberedUserContext = context;
+                shouldRender = true;
+            }
+        }
+
+        if (shouldRender)
+        {
+            StateHasChanged();
+        }
+    }
+
+    private bool IsSelectedTenant(Tenant tenant) => tenant.Name.Equals(SelectedTenantName, StringComparison.OrdinalIgnoreCase);
+
+    private string? FindCurrentTitle(IEnumerable<DisplayMenuItem>? items)
+    {
+        if (items is null)
+        {
+            return null;
+        }
+
+        foreach (var item in items)
+        {
+            var childTitle = FindCurrentTitle(item.Items);
+            if (!string.IsNullOrWhiteSpace(childTitle))
+            {
+                return childTitle;
+            }
+
+            if (IsActive(item))
+            {
+                return item.Text;
+            }
+        }
+
+        return null;
+    }
+
+    private bool IsActive(DisplayMenuItem item)
+    {
+        if (!item.HasLink)
+        {
+            return false;
+        }
+
+        var current = '/' + Navigation.ToBaseRelativePath(Navigation.Uri).TrimStart('/');
+        var link = item.Link!.StartsWith('/') ? item.Link : '/' + item.Link;
+        return current.Equals(link, StringComparison.OrdinalIgnoreCase)
+            || current.StartsWith(link.TrimEnd('/') + '/', StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void SelectTenant(Tenant tenant)
+    {
+        if (tenant.Name.Equals(SelectedTenantName, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var path = string.IsNullOrWhiteSpace(tenant.RequestUrlPrefix) ? "/Admin" : $"/{tenant.RequestUrlPrefix.Trim('/')}/Admin";
+        Navigation.NavigateTo(path, forceLoad: true);
+    }
+
+    private async Task ToggleThemeAsync()
+    {
+        var isDark = await Js.InvokeAsync<bool>("blazingTheme.toggleMode");
+        ThemeToggleIcon = isDark ? "light_mode" : "dark_mode";
+    }
+
+    private async Task SignInAsAnotherUserAsync()
+    {
+        if (DisplayManager is not null)
+        {
+            await DisplayManager.LogoutAsync();
+        }
+
+        Navigation.NavigateTo(BuildLoginPath(DisplayManager?.Manifest?.Tenant.RequestUrlPrefix, null), forceLoad: true);
+    }
+
+    private async Task SignInAsUserAsync(LocalUser user)
+    {
+        if (DisplayManager is not null)
+        {
+            await DisplayManager.LogoutAsync();
+        }
+
+        Navigation.NavigateTo(BuildLoginPath(user.LastTenantPrefix, user.UserName), forceLoad: true);
+    }
+
+    private async Task LogoutAsync()
+    {
+        if (DisplayManager is null)
+        {
+            return;
+        }
+
+        await DisplayManager.LogoutAsync();
+        Navigation.NavigateTo(Routing.LoginPath);
+    }
+
+    private static string BuildLoginPath(string? tenantPrefix, string? userName)
+    {
+        var path = string.IsNullOrWhiteSpace(tenantPrefix) ? "/login" : $"/{tenantPrefix.Trim('/')}/login";
+        var query = new List<string> { "switchUser=1" };
+        if (!string.IsNullOrWhiteSpace(userName))
+        {
+            query.Add($"userName={Uri.EscapeDataString(userName)}");
+        }
+
+        return path + "?" + string.Join("&", query);
+    }
+
+    private static string UserLabel(LocalUser user) => string.IsNullOrWhiteSpace(user.LastTenantName)
+        ? user.UserName
+        : $"{user.UserName} · {user.LastTenantName}";
+
+    private static string GetInitials(string value)
+    {
+        var parts = value.Split([' ', '.', '_', '-'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length >= 2)
+        {
+            return string.Concat(parts[0][0], parts[1][0]).ToUpperInvariant();
+        }
+
+        return value.Length switch
+        {
+            0 => "?",
+            1 => value[..1].ToUpperInvariant(),
+            _ => value[..2].ToUpperInvariant(),
+        };
+    }
+
+    private sealed class LocalUser
+    {
+        public string UserName { get; set; } = string.Empty;
+        public string LastTenantName { get; set; } = string.Empty;
+        public string LastTenantPrefix { get; set; } = string.Empty;
+        public string LastSeenUtc { get; set; } = string.Empty;
+        public LocalTenantContext[] Tenants { get; set; } = [];
+    }
+
+    private sealed class LocalTenantContext
+    {
+        public string TenantName { get; set; } = string.Empty;
+        public string TenantPrefix { get; set; } = string.Empty;
+        public string LastSeenUtc { get; set; } = string.Empty;
+    }
+}

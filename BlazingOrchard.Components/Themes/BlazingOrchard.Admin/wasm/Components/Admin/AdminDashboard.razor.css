@@ -1,0 +1,11 @@
+.admin-dashboard {
+    display: flex;
+    min-height: 100vh;
+    background: var(--rz-body-background-color, #f7f8f6);
+}
+
+.admin-dashboard__main {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 2rem;
+}
