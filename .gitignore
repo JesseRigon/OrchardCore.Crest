@@ -59,4 +59,4 @@ Localization/
 *.db
 
 # Stale directory entry left by failed submodule move recovery
-/BlazingOrchard.Components/
+.BlazingOrchard.Components.stale/
