@@ -11,7 +11,8 @@ namespace BlazingOrchard.Controllers;
 [Route("api/blazing/navigation")]
 public sealed class NavigationController(
     INavigationManager navigationManager,
-    BlazingAdminMenuLayoutService layoutService) : ControllerBase
+    BlazingAdminMenuLayoutService layoutService,
+    BlazingIconController iconController) : ControllerBase
 {
     [HttpGet("admin")]
     public Task<ActionResult<NavigationMenu>> GetAdminMenu() => GetMenu("admin");
@@ -32,11 +33,13 @@ public sealed class NavigationController(
             menu = await layoutService.ApplyAsync(menu);
         }
 
-        return Ok(menu);
+        return Ok(await iconController.ResolveMenuIconsAsync(menu, HttpContext.RequestAborted));
     }
 }
 
 public sealed record NavigationMenu(string Name, NavigationItem[] Items);
+
+public sealed record NavigationIcon(string Library, string? Version, string Name, string? SvgMarkup);
 
 public sealed record NavigationItem(
     string Text,
@@ -45,7 +48,7 @@ public sealed record NavigationItem(
     string? Url,
     string? Target,
     string? Position,
-    string? Icon,
+    NavigationIcon? Icon,
     string[] Classes,
     NavigationItem[] Items)
 {
@@ -59,7 +62,7 @@ public sealed record NavigationItem(
         item.Url,
         item.Target,
         item.Position,
-        NavigationIconResolver.Resolve(item),
+        null,
         item.Classes.ToArray(),
         item.Items.OrderBy(child => child.Position, NavigationPositionComparer.Instance)
             .Select(From)
@@ -70,87 +73,6 @@ public sealed record NavigationItem(
         var input = $"{text}|{link}";
         return "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
     }
-}
-
-internal static class NavigationIconResolver
-{
-    private static readonly Dictionary<string, string> Icons = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["accesscontrol"] = "lock",
-        ["admin"] = "dashboard",
-        ["adminmenus"] = "menu_open",
-        ["content"] = "edit_square",
-        ["contentdefinition"] = "deployed_code",
-        ["contentitems"] = "article",
-        ["contentparts"] = "view_module",
-        ["contenttypes"] = "category",
-        ["cultures"] = "translate",
-        ["debugging"] = "bug_report",
-        ["deployments"] = "cloud_upload",
-        ["design"] = "desktop_windows",
-        ["designsystem"] = "design_services",
-        ["features"] = "extension",
-        ["general"] = "settings_applications",
-        ["indexes"] = "storage",
-        ["library"] = "photo_library",
-        ["localization"] = "language",
-        ["media"] = "perm_media",
-        ["menus"] = "menu",
-        ["multitenancy"] = "business",
-        ["placements"] = "low_priority",
-        ["profiles"] = "tune",
-        ["queries"] = "manage_search",
-        ["recipes"] = "restaurant_menu",
-        ["roles"] = "admin_panel_settings",
-        ["search"] = "search",
-        ["security"] = "lock",
-        ["settings"] = "settings",
-        ["shortcodes"] = "code",
-        ["templates"] = "description",
-        ["themes"] = "palette",
-        ["tools"] = "construction",
-        ["users"] = "group",
-        ["widgets"] = "widgets",
-        ["workflows"] = "account_tree",
-        ["elsa"] = "account_tree",
-        ["zones"] = "grid_view"
-    };
-
-    public static string? Resolve(MenuItem item)
-    {
-        foreach (var key in GetKeys(item))
-        {
-            if (Icons.TryGetValue(key, out var icon))
-            {
-                return icon;
-            }
-        }
-
-        return null;
-    }
-
-    private static IEnumerable<string> GetKeys(MenuItem item)
-    {
-        if (!string.IsNullOrWhiteSpace(item.Id))
-        {
-            yield return Normalize(item.Id);
-        }
-
-        foreach (var className in item.Classes)
-        {
-            if (!string.IsNullOrWhiteSpace(className))
-            {
-                yield return Normalize(className);
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(item.Text.Value))
-        {
-            yield return Normalize(item.Text.Value);
-        }
-    }
-
-    private static string Normalize(string value) => new(value.Where(char.IsLetterOrDigit).ToArray());
 }
 
 internal sealed class NavigationPositionComparer : IComparer<string?>

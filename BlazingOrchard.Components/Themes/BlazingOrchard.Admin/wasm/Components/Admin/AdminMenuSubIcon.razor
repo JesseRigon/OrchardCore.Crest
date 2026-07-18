@@ -1,0 +1,27 @@
+@using BlazingOrchard.Admin.Components.Shared
+@using BlazingOrchard.Admin.DisplayManagement
+
+@if (!string.IsNullOrWhiteSpace(Icon?.SvgMarkup))
+{
+    <OrchardIcon Name="@Icon?.Name"
+                 Library="@Icon?.Library"
+                 Version="@Icon?.Version"
+                 SvgMarkup="@Icon?.SvgMarkup"
+                 Alt="@Alt"
+                 Size="1rem"
+                 BoxSize="1.25rem"
+                 Opacity="0.8"
+                 Class="rz-navigation-item-icon admin-menu-sidebar__icon" />
+}
+else
+{
+    <span class="rz-navigation-item-icon admin-menu-sidebar__icon admin-menu-sidebar__icon-placeholder" aria-hidden="true"></span>
+}
+
+@code {
+    [Parameter]
+    public DisplayIcon? Icon { get; set; }
+
+    [Parameter]
+    public string? Alt { get; set; }
+}

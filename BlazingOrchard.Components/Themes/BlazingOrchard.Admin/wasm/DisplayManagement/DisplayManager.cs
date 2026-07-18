@@ -194,9 +194,13 @@ public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine)
         item.Url,
         item.Target,
         item.Position,
-        item.Icon,
+        ToDisplayIcon(item.Icon),
         item.Classes,
         item.Items.Select(ToDisplayMenuItem).ToArray());
+
+    private static DisplayIcon? ToDisplayIcon(NavigationIcon? icon) => icon is null
+        ? null
+        : new DisplayIcon(icon.Library, icon.Version, icon.Name, icon.SvgMarkup);
 
     private async Task<T> RunAsync<T>(Func<Task<T>> action)
     {

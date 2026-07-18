@@ -1,0 +1,20 @@
+@using BlazingOrchard.Admin.Components.Shared
+@using BlazingOrchard.Admin.DisplayManagement
+
+<OrchardIcon Name="@Icon?.Name"
+             Library="@Icon?.Library"
+             Version="@Icon?.Version"
+             SvgMarkup="@Icon?.SvgMarkup"
+             Alt="@Alt"
+             Size="1.25rem"
+             BoxSize="1.5rem"
+             Opacity="1"
+             Class="rz-navigation-item-icon admin-menu-sidebar__icon" />
+
+@code {
+    [Parameter]
+    public DisplayIcon? Icon { get; set; }
+
+    [Parameter]
+    public string? Alt { get; set; }
+}

@@ -1,8 +1,12 @@
 @using BlazingOrchard.Admin.DisplayManagement
+@using BlazingOrchard.Admin.Components.Shared
 @using Radzen.Blazor
 
-@foreach (var item in Items)
+@for (var index = 0; index < Items.Length; index++)
 {
+    var item = Items[index];
+    var icon = item.Icon;
+
     <RadzenPanelMenuItem @key="item.StableKey"
                          Text="@item.Text"
                          Value="@item.StableKey"
@@ -13,13 +17,13 @@
                          Class="@GetItemClass()">
         <Template>
             <span class="admin-menu-sidebar__item-content">
-                @if (GetFontAwesomeIconClasses(item) is { } fontAwesomeIconClasses)
+                @if (Level == 0)
                 {
-                    <i class="rz-navigation-item-icon admin-menu-sidebar__fa-icon @fontAwesomeIconClasses" aria-hidden="true"></i>
+                    <AdminMenuIcon Icon="@icon" />
                 }
-                else if (GetMaterialIcon(item) is { } materialIcon)
+                else
                 {
-                    <RadzenIcon Icon="@materialIcon" class="rz-navigation-item-icon" />
+                    <AdminMenuSubIcon Icon="@icon" />
                 }
                 <span class="rz-navigation-item-text">@item.Text</span>
             </span>
@@ -64,24 +68,6 @@
         }
 
         return item.Link;
-    }
-
-    private string? GetMaterialIcon(DisplayMenuItem item) => Level < 2 ? item.Icon : null;
-
-    private string? GetFontAwesomeIconClasses(DisplayMenuItem item)
-    {
-        if (Level >= 2)
-        {
-            return null;
-        }
-
-        var iconClasses = item.Classes
-            .Where(className => className.StartsWith("icon-class-", StringComparison.OrdinalIgnoreCase))
-            .Select(className => className["icon-class-".Length..])
-            .Where(className => !string.IsNullOrWhiteSpace(className))
-            .ToArray();
-
-        return iconClasses.Length == 0 ? null : string.Join(" ", iconClasses);
     }
 
     private string GetItemClass() => $"admin-menu-sidebar__item admin-menu-sidebar__item--level-{Level}";

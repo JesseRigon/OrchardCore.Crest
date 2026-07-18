@@ -1,0 +1,156 @@
+@namespace BlazingOrchard.Admin.Components.Shared
+@using BlazingOrchard.Admin.Api
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject IJSRuntime Js
+
+<div class="icon-selector">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+        <RadzenTextBox Value="@Value" ValueChanged="SetValueAsync" Placeholder="fa-solid fa-gear" Style="width: 100%;" />
+        <RadzenButton Icon="apps" ButtonStyle="ButtonStyle.Light" Click="ToggleOpenAsync" ButtonType="ButtonType.Button" title="Choose icon" />
+        @if (!string.IsNullOrWhiteSpace(Value))
+        {
+            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ClearAsync" ButtonType="ButtonType.Button" title="Clear icon" />
+        }
+    </RadzenStack>
+
+    @if (IsOpen)
+    {
+        <div class="icon-selector__popover" role="dialog" aria-label="Choose icon">
+            <RadzenStack Gap="0.65rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenTextBox Value="@SearchText" @oninput="SearchInputAsync" Placeholder="Search all icons..." Style="width: 100%;" />
+                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="Close" ButtonType="ButtonType.Button" title="Close" />
+                </RadzenStack>
+
+                <div class="icon-selector__tabs">
+                    <button type="button" class="icon-selector__tab @(SelectedLibrary is null ? "icon-selector__tab--active" : null)" @onclick="@(() => SelectLibraryAsync(null))">All</button>
+                    @foreach (var library in Libraries)
+                    {
+                        <button type="button" class="icon-selector__tab @(SelectedLibrary == library.Id ? "icon-selector__tab--active" : null)" @onclick="@(() => SelectLibraryAsync(library.Id))">@LibraryLabel(library)</button>
+                    }
+                </div>
+
+                <div class="icon-selector__grid" @ref="GridElement" @onscroll="OnScrollAsync">
+                    @if (IsLoading && Items.Count == 0)
+                    {
+                        <div class="icon-selector__status">Loading icons...</div>
+                    }
+                    else if (Items.Count == 0)
+                    {
+                        <div class="icon-selector__status">No icons found.</div>
+                    }
+                    else
+                    {
+                        @foreach (var icon in Items)
+                        {
+                            <button type="button" class="icon-selector__item @(Value == icon.IconClass ? "icon-selector__item--selected" : null)" title="@icon.IconClass" @onclick="@(() => ChooseAsync(icon))">
+                                <span class="icon-selector__preview">@((MarkupString)(icon.SvgMarkup ?? string.Empty))</span>
+                                <span class="icon-selector__name">@icon.Name</span>
+                            </button>
+                        }
+                        @if (IsLoading)
+                        {
+                            <div class="icon-selector__status icon-selector__status--wide">Loading more...</div>
+                        }
+                    }
+                </div>
+            </RadzenStack>
+        </div>
+    }
+</div>
+
+@code {
+    private const int PageSize = 200;
+    private readonly List<IconCatalogItem> Items = [];
+    private IconLibrary[] Libraries = [];
+    private ElementReference GridElement;
+    private bool IsOpen;
+    private bool IsLoading;
+    private int Total;
+    private string? SearchText;
+    private string? SelectedLibrary;
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    private async Task ToggleOpenAsync()
+    {
+        IsOpen = !IsOpen;
+        if (IsOpen && Items.Count == 0)
+        {
+            await LoadNextPageAsync();
+        }
+    }
+
+    private void Close() => IsOpen = false;
+
+    private async Task SetValueAsync(string? value) => await ValueChanged.InvokeAsync(value);
+
+    private async Task ClearAsync() => await ValueChanged.InvokeAsync(null);
+
+    private async Task SearchInputAsync(ChangeEventArgs args)
+    {
+        SearchText = args.Value?.ToString();
+        await LoadFirstPageAsync();
+    }
+
+    private async Task SelectLibraryAsync(string? library)
+    {
+        SelectedLibrary = library;
+        await LoadFirstPageAsync();
+    }
+
+    private async Task ChooseAsync(IconCatalogItem icon)
+    {
+        await ValueChanged.InvokeAsync(icon.IconClass);
+        IsOpen = false;
+    }
+
+    private async Task LoadFirstPageAsync()
+    {
+        Items.Clear();
+        Total = 0;
+        await LoadNextPageAsync();
+    }
+
+    private async Task LoadNextPageAsync()
+    {
+        if (IsLoading || (Total > 0 && Items.Count >= Total))
+        {
+            return;
+        }
+
+        IsLoading = true;
+        try
+        {
+            var result = await Api.Blazing.Rest.Icons.SearchAsync(SelectedLibrary, SearchText, Items.Count, PageSize);
+            Libraries = result.Libraries;
+            Total = result.Total;
+            Items.AddRange(result.Items);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task OnScrollAsync()
+    {
+        if (IsLoading || Items.Count >= Total)
+        {
+            return;
+        }
+
+        var remainingItems = await Js.InvokeAsync<int>("blazingIconSelector.remainingItems", GridElement, 4);
+        if (remainingItems <= 25)
+        {
+            await LoadNextPageAsync();
+        }
+    }
+
+    private static string LibraryLabel(IconLibrary library) => library.Version is null ? library.Name : library.Name.Replace("fontawesome-free-", "FA ");
+}

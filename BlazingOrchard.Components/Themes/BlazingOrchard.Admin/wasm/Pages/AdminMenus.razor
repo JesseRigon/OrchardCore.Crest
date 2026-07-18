@@ -3,6 +3,7 @@
 @page "/Admin/AdminMenu/List"
 @using BlazingOrchard.Admin.Api
 @using BlazingOrchard.Admin.Components.Admin
+@using BlazingOrchard.Admin.Components.Shared
 @using BlazingOrchard.Admin.DisplayManagement
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
@@ -111,6 +112,10 @@
                                                             Sidebar Layout is the generated Orchard admin sidebar plus Blazing layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar layout. Add node creates lightweight placeholder groups only.
                                                         </RadzenAlert>
                                                     }
+                                                    @if (EditingModel is not null && EditingNodeId is null)
+                                                    {
+                                                        @NodeEditor("Add admin menu node", EditingModel)
+                                                    }
                                                     @if (SelectedMenu.Nodes.Length == 0)
                                                     {
                                                         <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
@@ -129,74 +134,6 @@
                                                 </div>
                                             </RadzenStack>
                                         </RadzenCard>
-
-                                        @if (EditingModel is not null)
-                                        {
-                                            <RadzenCard>
-                                                <RadzenTemplateForm TItem="AdminMenuNodeFormModel" Data="@EditingModel" Submit="SaveNodeAsync">
-                                                    <RadzenStack Gap="1rem">
-                                                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                                                            <RadzenText TextStyle="TextStyle.H6" Text="@(EditingNodeId is null ? "Add admin menu node" : "Edit admin menu node")" />
-                                                            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" ButtonType="ButtonType.Button" />
-                                                        </RadzenStack>
-
-                                                        <RadzenRow Gap="1rem">
-                                                            <RadzenColumn Size="12" SizeMD="6">
-                                                                <RadzenLabel Text="Node type" />
-                                                                <RadzenDropDown TValue="string" Data="@AvailableNodeTypes" TextProperty="Text" ValueProperty="Value" @bind-Value="EditingModel.Type" Disabled="@(EditingNodeId is not null || SelectedMenu?.IsDefault == true)" Style="width: 100%;" />
-                                                            </RadzenColumn>
-                                                            <RadzenColumn Size="12" SizeMD="6">
-                                                                <RadzenLabel Text="Parent Node" />
-                                                                <RadzenDropDown TValue="string" Data="@ParentOptions" TextProperty="Text" ValueProperty="Value" @bind-Value="EditingModel.ParentNodeId" Placeholder="Root level" Style="width: 100%;" />
-                                                            </RadzenColumn>
-                                                        </RadzenRow>
-
-                                                        <RadzenRow Gap="1rem">
-                                                            <RadzenColumn Size="12" SizeMD="6">
-                                                                <RadzenLabel Text="Text" />
-                                                                <RadzenTextBox @bind-Value="EditingModel.Text" Name="Text" Style="width: 100%;" />
-                                                                <RadzenRequiredValidator Component="Text" Text="Text is required" />
-                                                            </RadzenColumn>
-                                                            <RadzenColumn Size="12" SizeMD="6">
-                                                                <RadzenLabel Text="Url" />
-                                                                <RadzenTextBox @bind-Value="EditingModel.Url" Disabled="@(SelectedMenu?.IsDefault == true || EditingModel.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? "Sidebar Layout placeholders do not link" : "/Admin/MyPage")" Style="width: 100%;" />
-                                                            </RadzenColumn>
-                                                        </RadzenRow>
-
-                                                        <RadzenRow Gap="1rem">
-                                                            <RadzenColumn Size="12" SizeMD="4">
-                                                                <RadzenLabel Text="Icon class" />
-                                                                <RadzenTextBox @bind-Value="EditingModel.IconClass" Placeholder="fa fa-cog" Style="width: 100%;" />
-                                                            </RadzenColumn>
-                                                            <RadzenColumn Size="12" SizeMD="4">
-                                                                <RadzenLabel Text="Priority" />
-                                                                <RadzenNumeric TValue="int" @bind-Value="EditingModel.Priority" Style="width: 100%;" />
-                                                            </RadzenColumn>
-                                                            <RadzenColumn Size="12" SizeMD="4">
-                                                                <RadzenLabel Text="Position" />
-                                                                <RadzenNumeric TValue="int?" @bind-Value="EditingModel.Position" Placeholder="Append" Style="width: 100%;" />
-                                                            </RadzenColumn>
-                                                        </RadzenRow>
-
-                                                        <RadzenRow Gap="1rem">
-                                                            <RadzenColumn Size="12" SizeMD="8">
-                                                                <RadzenLabel Text="Permissions" />
-                                                                <RadzenTextBox @bind-Value="EditingModel.PermissionNamesText" Placeholder="Permission names, comma-separated" Style="width: 100%;" />
-                                                            </RadzenColumn>
-                                                            <RadzenColumn Size="12" SizeMD="4">
-                                                                <RadzenCheckBox @bind-Value="EditingModel.Enabled" TValue="bool" />
-                                                                <RadzenLabel Text="Enabled" Style="margin-left: .5rem;" />
-                                                            </RadzenColumn>
-                                                        </RadzenRow>
-
-                                                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                                                            <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsBusy" />
-                                                            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" ButtonType="ButtonType.Button" />
-                                                        </RadzenStack>
-                                                    </RadzenStack>
-                                                </RadzenTemplateForm>
-                                            </RadzenCard>
-                                        }
                                     </RadzenStack>
                                 }
                             </RadzenColumn>
@@ -329,6 +266,17 @@
         text-decoration: line-through;
         opacity: 0.75;
     }
+
+    .admin-menu-node-editor {
+        position: relative;
+        z-index: 5;
+        margin: 0.5rem 0 0.75rem 2.25rem;
+        padding: 1rem;
+        border: 1px solid var(--rz-primary);
+        border-radius: var(--rz-border-radius);
+        background: var(--rz-base-background-color, #fff);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    }
 </style>
 
 @code {
@@ -408,6 +356,11 @@
                 SelectedMenuId = State.Menus.FirstOrDefault()?.Id;
             }
 
+            if (showLoading)
+            {
+                CollapseSelectedMenuNodes();
+            }
+
             ShouldInitializeTree = true;
             await DisplayManager.RefreshAdminMenuAsync();
         }
@@ -467,6 +420,7 @@
         RenameText = null;
         RenamingMenuId = null;
         MenuRenameText = null;
+        CollapseSelectedMenuNodes();
         ShouldInitializeTree = true;
     }
 
@@ -616,10 +570,7 @@
                     }
                     <RadzenStack Gap="0.15rem">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.45rem">
-                            @if (!string.IsNullOrWhiteSpace(node.IconClass))
-                            {
-                                <i class="admin-menu-node__icon @node.IconClass" aria-hidden="true"></i>
-                            }
+                            <BlazingOrchard.Admin.Components.Shared.OrchardIcon IconClass="@node.IconClass" Size="1rem" BoxSize="1.25rem" Color="var(--rz-text-secondary-color, #6b7280)" Class="admin-menu-node__icon" />
                             @if (SelectedMenu?.IsDefault == true && RenamingNodeId == node.Id)
                             {
                                 <span class="admin-menu-node__rename">
@@ -655,6 +606,11 @@
             </RadzenStack>
         </div>
 
+        @if (EditingModel is not null && EditingNodeId == node.Id)
+        {
+            @NodeEditor($"Edit admin menu node: {node.Text}", EditingModel)
+        }
+
         @if (node.Items.Length > 0 && !IsCollapsed(node.Id))
         {
             <ol class="admin-menu-tree__list">
@@ -673,6 +629,20 @@
         if (!CollapsedNodeIds.Add(nodeId))
         {
             CollapsedNodeIds.Remove(nodeId);
+        }
+    }
+
+    private void CollapseSelectedMenuNodes()
+    {
+        if (SelectedMenu is null)
+        {
+            return;
+        }
+
+        CollapsedNodeIds.Clear();
+        foreach (var nodeId in Flatten(SelectedMenu.Nodes).Where(node => node.Items.Length > 0).Select(node => node.Id))
+        {
+            CollapsedNodeIds.Add(nodeId);
         }
     }
 
@@ -735,12 +705,6 @@
 
     private void EditOrRenameNode(AdminMenuNodeSummary node)
     {
-        if (SelectedMenu?.IsDefault == true)
-        {
-            StartRename(node);
-            return;
-        }
-
         EditNode(node);
     }
 
@@ -771,6 +735,71 @@
             Position = node.Order,
         };
     }
+
+    private RenderFragment NodeEditor(string title, AdminMenuNodeFormModel model) => @<div class="admin-menu-node-editor">
+        <RadzenTemplateForm TItem="AdminMenuNodeFormModel" Data="@model" Submit="SaveNodeAsync">
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                    <RadzenText TextStyle="TextStyle.H6" Text="@title" />
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" ButtonType="ButtonType.Button" />
+                </RadzenStack>
+
+                <RadzenRow Gap="1rem">
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenLabel Text="Node type" />
+                        <RadzenDropDown TValue="string" Data="@AvailableNodeTypes" TextProperty="Text" ValueProperty="Value" @bind-Value="model.Type" Disabled="@(EditingNodeId is not null || SelectedMenu?.IsDefault == true)" Style="width: 100%;" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenLabel Text="Parent Node" />
+                        <RadzenDropDown TValue="string" Data="@ParentOptions" TextProperty="Text" ValueProperty="Value" @bind-Value="model.ParentNodeId" Placeholder="Root level" Style="width: 100%;" />
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <RadzenRow Gap="1rem">
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenLabel Text="Text" />
+                        <RadzenTextBox @bind-Value="model.Text" Name="Text" Style="width: 100%;" />
+                        <RadzenRequiredValidator Component="Text" Text="Text is required" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenLabel Text="Url" />
+                        <RadzenTextBox @bind-Value="model.Url" Disabled="@(SelectedMenu?.IsDefault == true || model.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? "Sidebar Layout placeholders do not link" : "/Admin/MyPage")" Style="width: 100%;" />
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <RadzenRow Gap="1rem">
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenLabel Text="Icon" />
+                        <IconSelector @bind-Value="model.IconClass" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenLabel Text="Priority" />
+                        <RadzenNumeric TValue="int" @bind-Value="model.Priority" Style="width: 100%;" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenLabel Text="Position" />
+                        <RadzenNumeric TValue="int?" @bind-Value="model.Position" Placeholder="Append" Style="width: 100%;" />
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <RadzenRow Gap="1rem">
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenLabel Text="Permissions" />
+                        <RadzenTextBox @bind-Value="model.PermissionNamesText" Placeholder="Permission names, comma-separated" Style="width: 100%;" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenCheckBox @bind-Value="model.Enabled" TValue="bool" />
+                        <RadzenLabel Text="Enabled" Style="margin-left: .5rem;" />
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsBusy" />
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" ButtonType="ButtonType.Button" />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenTemplateForm>
+    </div>;
 
     private void CancelEdit()
     {

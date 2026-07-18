@@ -168,6 +168,41 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
         return baseMenu with { Items = Apply(baseMenu.Items, layout) };
     }
 
+    public async Task<NavigationMenu> UpdateItemAsync(NavigationMenu baseMenu, string key, string? text, string? iconClass, string? parentKey, int? position)
+    {
+        var layout = await LoadAsync();
+        var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
+        Flatten(baseMenu.Items, null, flat);
+        FlattenCustom(layout, flat);
+        SnapshotKnownItems(layout, flat);
+
+        if (!flat.TryGetValue(key, out var node) || key == parentKey || IsDescendant(flat, layout, key, parentKey))
+        {
+            return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        }
+
+        var item = GetOrCreateOverride(layout, key);
+        var displayText = text?.Trim();
+        item.DisplayText = string.IsNullOrWhiteSpace(displayText) || string.Equals(displayText, node.Item.Text, StringComparison.Ordinal)
+            ? null
+            : displayText;
+        item.IconClass = string.IsNullOrWhiteSpace(iconClass) ? null : iconClass.Trim();
+
+        if (parentKey is not null || position.HasValue)
+        {
+            if (!string.IsNullOrWhiteSpace(parentKey) && !flat.ContainsKey(parentKey))
+            {
+                parentKey = null;
+            }
+
+            item.ParentKey = parentKey;
+            item.Order = position;
+        }
+
+        await SaveAsync(layout);
+        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+    }
+
     public async Task<NavigationMenu> RenameAsync(NavigationMenu baseMenu, string key, string? text)
     {
         var layout = await LoadAsync();
@@ -223,7 +258,8 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
         {
             var itemOverride = GetOverride(layout, node.Key);
             var text = string.IsNullOrWhiteSpace(itemOverride.DisplayText) ? node.Item.Text : itemOverride.DisplayText;
-            return node.Item with { Text = text, Items = Build(childMap[node.Key], childMap, layout) };
+            var classes = string.IsNullOrWhiteSpace(itemOverride.IconClass) ? node.Item.Classes : ToIconClasses(itemOverride.IconClass);
+            return node.Item with { Text = text, Classes = classes, Items = Build(childMap[node.Key], childMap, layout) };
         })
         .ToArray();
 
@@ -276,11 +312,7 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
             return null;
         }
 
-        var classes = string.IsNullOrWhiteSpace(itemOverride.IconClass)
-            ? []
-            : itemOverride.IconClass.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(value => "icon-class-" + value)
-                .ToArray();
+        var classes = string.IsNullOrWhiteSpace(itemOverride.IconClass) ? [] : ToIconClasses(itemOverride.IconClass);
 
         var node = new LayoutNode(
             parentKey,
@@ -311,25 +343,18 @@ public sealed class BlazingAdminMenuLayoutService(IDocumentManager<BlazingAdminM
         return node;
     }
 
+    private static string[] ToIconClasses(string iconClass) =>
+        iconClass.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select((value, index) => index == 0 ? "icon-class-" + value : value)
+            .ToArray();
+
     private static void SnapshotKnownItems(BlazingAdminMenuLayoutDocument layout, Dictionary<string, LayoutNode> flat)
     {
         foreach (var node in flat.Values)
         {
             var item = GetOrCreateOverride(layout, node.Key);
             item.Text = node.Item.Text;
-            item.IconClass = GetIconClass(node.Item);
         }
-    }
-
-    private static string? GetIconClass(NavigationItem item)
-    {
-        var iconClasses = item.Classes
-            .Where(className => className.StartsWith("icon-class-", StringComparison.OrdinalIgnoreCase))
-            .Select(className => className["icon-class-".Length..])
-            .Where(className => !string.IsNullOrWhiteSpace(className))
-            .ToArray();
-
-        return iconClasses.Length == 0 ? null : string.Join(" ", iconClasses);
     }
 
     private static void FlattenCustom(BlazingAdminMenuLayoutDocument layout, Dictionary<string, LayoutNode> flat)

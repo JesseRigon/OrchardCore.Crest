@@ -1,0 +1,108 @@
+@namespace BlazingOrchard.Admin.Components.Shared
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+@if (!string.IsNullOrWhiteSpace(SvgMarkup))
+{
+    <span class="@CssClass"
+          style="@CssStyle"
+          role="@Role"
+          aria-label="@AriaLabel"
+          aria-hidden="@AriaHidden"
+          data-icon-library="@Library"
+          data-icon-version="@Version"
+          data-icon-name="@Name"
+          @attributes="AdditionalAttributes">
+        @((MarkupString)SvgMarkup)
+    </span>
+}
+
+@code {
+    [Parameter]
+    public string? Name { get; set; }
+
+    [Parameter]
+    public string? Library { get; set; }
+
+    [Parameter]
+    public string? Version { get; set; }
+
+    [Parameter]
+    public string? SvgMarkup { get; set; }
+
+    [Parameter]
+    public string? Alt { get; set; }
+
+    [Parameter]
+    public string? Size { get; set; }
+
+    [Parameter]
+    public string? BoxSize { get; set; }
+
+    [Parameter]
+    public string? Color { get; set; }
+
+    [Parameter]
+    public string? Opacity { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.Equals(Library, "missing", StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(SvgMarkup)))
+        {
+            await JS.InvokeVoidAsync("console.error", $"Missing SVG icon: library='{Library}', version='{Version}', name='{Name}'.");
+        }
+    }
+
+    private string CssClass => string.Join(" ", new[] { "orchard-icon", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string CssStyle
+    {
+        get
+        {
+            var styles = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(Size))
+            {
+                styles.Add($"--orchard-icon-size: {Size}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(BoxSize))
+            {
+                styles.Add($"--orchard-icon-box-size: {BoxSize}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(Color))
+            {
+                styles.Add($"--orchard-icon-color: {Color}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(Opacity))
+            {
+                styles.Add($"--orchard-icon-opacity: {Opacity}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(Style))
+            {
+                styles.Add(Style.Trim().TrimEnd(';'));
+            }
+
+            return string.Join("; ", styles);
+        }
+    }
+
+    private bool HasAlt => !string.IsNullOrWhiteSpace(Alt);
+    private string? Role => HasAlt ? "img" : null;
+    private string? AriaLabel => HasAlt ? Alt : null;
+    private string? AriaHidden => HasAlt ? null : "true";
+}

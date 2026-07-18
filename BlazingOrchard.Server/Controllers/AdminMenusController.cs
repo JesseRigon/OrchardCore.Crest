@@ -16,7 +16,8 @@ public sealed class AdminMenusController(
     IAuthorizationService authorizationService,
     IAdminMenuService adminMenuService,
     INavigationManager navigationManager,
-    BlazingAdminMenuLayoutService layoutService) : ControllerBase
+    BlazingAdminMenuLayoutService layoutService,
+    BlazingIconController iconController) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<AdminMenusState>> ListAsync()
@@ -252,15 +253,17 @@ public sealed class AdminMenusController(
         if (menuId == BlazingAdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
-            if (!await layoutService.IsCustomAsync(nodeId))
+            if (await layoutService.IsCustomAsync(nodeId))
             {
-                return BadRequest("Only custom Sidebar nodes can be edited.");
+                await layoutService.UpdateCustomAsync(baseMenu, nodeId, model.Text.Trim(), null, model.IconClass?.Trim());
+                if (model.ParentNodeId is not null)
+                {
+                    await layoutService.MoveAsync(baseMenu, nodeId, model.ParentNodeId, model.Position);
+                }
             }
-
-            await layoutService.UpdateCustomAsync(baseMenu, nodeId, model.Text.Trim(), null, model.IconClass?.Trim());
-            if (model.ParentNodeId is not null)
+            else
             {
-                await layoutService.MoveAsync(baseMenu, nodeId, model.ParentNodeId, model.Position);
+                await layoutService.UpdateItemAsync(baseMenu, nodeId, model.Text, model.IconClass, model.ParentNodeId, model.Position);
             }
 
             return Ok(await GetDefaultMenuSummaryAsync());
@@ -436,9 +439,11 @@ public sealed class AdminMenusController(
     private async Task<NavigationMenu> BuildDefaultNavigationMenuAsync()
     {
         var items = await navigationManager.BuildMenuAsync("admin", ControllerContext);
-        return new NavigationMenu("admin", items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
+        var menu = new NavigationMenu("admin", items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
             .ToArray());
+
+        return await iconController.ResolveMenuIconsAsync(menu, HttpContext.RequestAborted);
     }
 
     private async Task<AdminMenu?> LoadMenuForUpdateAsync(string menuId)
@@ -733,14 +738,62 @@ public sealed record AdminMenuNodeSummary(
 
     private static string? GetIconClass(NavigationItem item)
     {
-        var iconClasses = item.Classes
-            .Where(className => className.StartsWith("icon-class-", StringComparison.OrdinalIgnoreCase))
-            .Select(className => className["icon-class-".Length..])
-            .Where(className => !string.IsNullOrWhiteSpace(className))
-            .ToArray();
+        var iconClasses = GetIconClasses(item.Classes);
+        if (iconClasses.Length > 0)
+        {
+            return string.Join(" ", iconClasses);
+        }
 
-        return iconClasses.Length == 0 ? null : string.Join(" ", iconClasses);
+        return item.Icon is null ? null : GetIconClass(item.Icon);
     }
+
+    private static string? GetIconClass(NavigationIcon icon)
+    {
+        if (string.IsNullOrWhiteSpace(icon.Name))
+        {
+            return null;
+        }
+
+        var style = icon.Version?.StartsWith("5", StringComparison.Ordinal) == true ? "fa" : "fa-solid";
+        return $"{style} fa-{icon.Name}";
+    }
+
+    private static string[] GetIconClasses(string[] classes)
+    {
+        var hasIconMarker = false;
+        var iconClasses = new List<string>();
+
+        foreach (var className in classes.SelectMany(value => value.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)))
+        {
+            if (className.StartsWith("icon-class-", StringComparison.OrdinalIgnoreCase))
+            {
+                hasIconMarker = true;
+                var iconClass = className["icon-class-".Length..];
+                if (!string.IsNullOrWhiteSpace(iconClass))
+                {
+                    iconClasses.Add(iconClass);
+                }
+
+                continue;
+            }
+
+            if (hasIconMarker && IsFontAwesomeClass(className))
+            {
+                iconClasses.Add(className);
+            }
+        }
+
+        return hasIconMarker ? iconClasses.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() : [];
+    }
+
+    private static bool IsFontAwesomeClass(string className) =>
+        className.Equals("fa", StringComparison.OrdinalIgnoreCase) ||
+        className.Equals("fas", StringComparison.OrdinalIgnoreCase) ||
+        className.Equals("far", StringComparison.OrdinalIgnoreCase) ||
+        className.Equals("fab", StringComparison.OrdinalIgnoreCase) ||
+        className.Equals("fal", StringComparison.OrdinalIgnoreCase) ||
+        className.Equals("fad", StringComparison.OrdinalIgnoreCase) ||
+        className.StartsWith("fa-", StringComparison.OrdinalIgnoreCase);
 }
 
 public sealed record AdminMenuEditModel(string? Name, bool Enabled);

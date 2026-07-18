@@ -28,7 +28,8 @@ public sealed class AppController(
     ISiteService siteService,
     INavigationManager navigationManager,
     IOptions<AdminOptions> adminOptions,
-    BlazingAdminMenuLayoutService layoutService) : ControllerBase
+    BlazingAdminMenuLayoutService layoutService,
+    BlazingIconController iconController) : ControllerBase
 {
     [HttpGet("manifest")]
     public async Task<ActionResult<AppManifest>> GetManifest()
@@ -39,9 +40,9 @@ public sealed class AppController(
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
         var tenants = await GetAvailableTenantsAsync();
         var adminItems = await navigationManager.BuildMenuAsync("admin", ControllerContext);
-        var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
+        var adminMenu = await iconController.ResolveMenuIconsAsync(await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
-            .ToArray()));
+            .ToArray())), HttpContext.RequestAborted);
 
         return Ok(new AppManifest(
             Tenant.From(shellSettings),

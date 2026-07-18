@@ -5,6 +5,8 @@ public sealed record DisplayMenu(string Name, DisplayMenuItem[] Items)
     public static DisplayMenu Empty(string name) => new(name, []);
 }
 
+public sealed record DisplayIcon(string Library, string? Version, string Name, string? SvgMarkup);
+
 public sealed record DisplayMenuItem(
     string Text,
     string Key,
@@ -13,7 +15,7 @@ public sealed record DisplayMenuItem(
     string? Url,
     string? Target,
     string? Position,
-    string? Icon,
+    DisplayIcon? Icon,
     string[] Classes,
     DisplayMenuItem[] Items)
 {

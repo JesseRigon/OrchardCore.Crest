@@ -29,6 +29,8 @@ public sealed class Startup : StartupBase
         services.AddHttpContextAccessor();
         services.AddScoped<IThemeSelector, LegacyFrameThemeSelector>();
         services.AddScoped<BlazingAdminMenuLayoutService>();
+        services.AddSingleton<BlazingIconSourceStore>();
+        services.AddScoped<BlazingIconController>();
         services.Configure<BlazorAdminThemeOptions>(options => { });
     }
 

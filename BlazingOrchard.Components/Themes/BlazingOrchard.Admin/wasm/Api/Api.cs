@@ -29,6 +29,7 @@ public interface IRestApi
     IThemeApi Theme { get; }
     IThemesApi Themes { get; }
     IAdminMenusApi AdminMenus { get; }
+    IIconsApi Icons { get; }
 }
 
 public interface IAppApi
@@ -98,6 +99,11 @@ public interface IThemesApi
     Task<bool> ResetAdminThemeAsync();
 }
 
+public interface IIconsApi
+{
+    Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200);
+}
+
 public interface IAdminMenusApi
 {
     Task<AdminMenusState> ListAsync();
@@ -137,6 +143,7 @@ public sealed class RestApi(HttpClient http) : IRestApi
     public IThemeApi Theme { get; } = new ThemeApi(http);
     public IThemesApi Themes { get; } = new ThemesApi(http);
     public IAdminMenusApi AdminMenus { get; } = new AdminMenusApi(http);
+    public IIconsApi Icons { get; } = new IconsApi(http);
 }
 
 public sealed class AuthApi(HttpClient http) : IAuthApi
@@ -390,6 +397,40 @@ public sealed class ThemesApi(HttpClient http) : IThemesApi
     }
 }
 
+public sealed class IconsApi(HttpClient http) : IIconsApi
+{
+    public async Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200)
+    {
+        var url = new StringBuilder("api/blazing/icons?")
+            .Append("skip=").Append(skip)
+            .Append("&take=").Append(take);
+
+        if (!string.IsNullOrWhiteSpace(library))
+        {
+            url.Append("&library=").Append(Uri.EscapeDataString(library));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            url.Append("&query=").Append(Uri.EscapeDataString(query));
+        }
+
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, url.ToString())));
+        if (!response.IsSuccessStatusCode)
+        {
+            return IconSearchResult.Empty;
+        }
+
+        return await response.Content.ReadFromJsonAsync<IconSearchResult>() ?? IconSearchResult.Empty;
+    }
+
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
+    {
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return request;
+    }
+}
+
 public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
 {
     public async Task<AdminMenusState> ListAsync()
@@ -555,6 +596,8 @@ public sealed record NavigationMenu(string Name, NavigationItem[] Items)
     public static NavigationMenu Empty(string name) => new(name, []);
 }
 
+public sealed record NavigationIcon(string Library, string? Version, string Name, string? SvgMarkup);
+
 public sealed record NavigationItem(
     string Text,
     string? Id,
@@ -562,7 +605,7 @@ public sealed record NavigationItem(
     string? Url,
     string? Target,
     string? Position,
-    string? Icon,
+    NavigationIcon? Icon,
     string[] Classes,
     NavigationItem[] Items)
 {
@@ -646,6 +689,15 @@ public sealed record ThemeSummary(
     bool IsCurrent,
     bool Enabled,
     string PreviewImageUrl);
+
+public sealed record IconSearchResult(IconLibrary[] Libraries, IconCatalogItem[] Items, int Total, int Skip, int Take)
+{
+    public static IconSearchResult Empty { get; } = new([], [], 0, 0, 200);
+}
+
+public sealed record IconLibrary(string Id, string Name, string? Version);
+
+public sealed record IconCatalogItem(string Library, string? Version, string Name, string IconClass, string? SvgMarkup);
 
 public sealed record AdminMenusState(AdminMenuSummary[] Menus)
 {

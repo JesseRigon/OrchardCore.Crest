@@ -1,4 +1,5 @@
 @using BlazingOrchard.Admin.DisplayManagement
+@using BlazingOrchard.Admin.Components.Shared
 @using Radzen
 @using Radzen.Blazor
 @inject NavigationManager Navigation
@@ -29,10 +30,10 @@
             {
                 <button type="button" class="admin-menu-sidebar__quickadd-row" @onclick="OpenQuickAdd" title="Quick Add">
                     <span class="admin-menu-sidebar__item-content">
-                        <RadzenIcon Icon="celebration" class="rz-navigation-item-icon" />
+                        <BlazingOrchard.Admin.Components.Shared.OrchardIcon Name="champagne-glasses" Library="fontawesome" Size="1.25rem" BoxSize="1.5rem" Class="rz-navigation-item-icon admin-menu-sidebar__icon" />
                         <span class="rz-navigation-item-text">Quick Add</span>
                     </span>
-                    <RadzenIcon Icon="add" class="admin-menu-sidebar__quickadd-add-icon" />
+                    <BlazingOrchard.Admin.Components.Shared.OrchardIcon Name="plus" Library="fontawesome" Size="1rem" BoxSize="1.25rem" Class="admin-menu-sidebar__quickadd-add-icon" Alt="Open Quick Add" />
                 </button>
             }
 
@@ -50,7 +51,7 @@
                 <div class="admin-menu-sidebar__quickadd-popover" role="dialog" aria-modal="true" aria-label="Quick Add">
                     <div class="admin-menu-sidebar__quickadd-header">
                         <span class="admin-menu-sidebar__item-content">
-                            <RadzenIcon Icon="celebration" class="rz-navigation-item-icon" />
+                            <BlazingOrchard.Admin.Components.Shared.OrchardIcon Name="champagne-glasses" Library="fontawesome" Size="1.25rem" BoxSize="1.5rem" Class="rz-navigation-item-icon admin-menu-sidebar__icon" />
                             <span class="rz-navigation-item-text">Quick Add</span>
                         </span>
                         <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" class="admin-menu-sidebar__quickadd-button" Click="CloseQuickAdd" title="Close Quick Add" />
