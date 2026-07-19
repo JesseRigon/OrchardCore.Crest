@@ -1,6 +1,16 @@
 # BlazingOrchard
 
-BlazingOrchard is an Orchard Core module/theme package. It plugs into an Orchard host and provides a Blazor-based admin shell, but Orchard remains the authority for tenants, users, permissions, content, features, settings, themes, and navigation.
+`BlazingOrchard.Server` is the backend overlay on top of Orchard Core for the Blazing admin experience. It plugs into an Orchard host, serves the Blazor-based admin shell when the Blazing admin theme is active, exposes Blazor-admin-specific JSON adapters, and keeps Orchard as the authority for tenants, users, permissions, content, features, settings, themes, and navigation.
+
+UI code belongs in `BlazingOrchard.Components` for now, including the Admin and Site theme projects. `BlazingOrchard.Server` should remain focused on Orchard integration, middleware, controllers, services, permissions, and backend adapter logic.
+
+## Current rendering model
+
+BlazingOrchard is currently a **Blazor WebAssembly admin system** served from Orchard. The admin shell and Blazing components run in the browser and call Orchard or thin `api/blazing/*` JSON adapters from this server module for data and actions.
+
+It is not currently a Blazor Hybrid, MAUI, or server-side/backend-rendered component system. Those models are possible future directions, especially for sharing more UI across native, web, and Orchard-hosted experiences, but the current implementation should be documented, designed, and tested as WASM-first.
+
+Orchard's MVC/Razor/shape system still remains in place for the Orchard host and modules. BlazingOrchard adapts Orchard data, menus, auth, permissions, themes, and content to a WASM Blazor admin shell; it does not replace Orchard's backend rendering pipeline.
 
 ## Versioning
 
@@ -36,7 +46,7 @@ Preferred order for Blazing Admin data access:
 3. Add or extend Orchard GraphQL schema/mutations when a typed Blazor contract is useful and belongs to Orchard data.
 4. Keep a small `api/blazing/*` adapter only when Orchard exposes the behavior as MVC/Razor admin UI, service APIs, or shape/menu builders rather than a stable JSON endpoint.
 
-Any `api/blazing/*` endpoint must be a thin adapter over Orchard services. It must not own duplicate state or bypass Orchard authorization.
+Any `api/blazing/*` endpoint must be a thin Blazor-admin adapter over Orchard services. It must not own duplicate state, implement parallel CMS/auth concepts, or bypass Orchard authorization.
 
 ```text
 Blazing Admin UI
@@ -64,6 +74,14 @@ Current controllers are mostly thin adapters over Orchard services. The main cle
 | `RolesController` | List roles | Orchard roles services/admin | Keep as read-only adapter only if no stock JSON role endpoint is available. Must enforce Orchard role-management permissions before mutating or exposing admin-only role details. |
 | `SiteController` | Read/update site settings | Orchard settings services/admin | Keep only as a settings adapter if stock settings APIs are not suitable. Must enforce Orchard settings permissions for reads/writes. |
 | `ThemesController` | List/select/enable/disable site/admin themes | Orchard themes services/admin | Keep. Orchard's standard Themes admin is MVC/Razor; this adapter mirrors it as JSON and already checks `OrchardCore.Themes.Permissions.ApplyTheme`. |
+
+## Server/UI boundary rules
+
+- Keep backend overlay logic in `BlazingOrchard.Server`: Orchard middleware, controllers, services, permissions, theme selection, and legacy frame selection.
+- Keep UI logic in `BlazingOrchard.Components`: Blazor components, Radzen UI, the Admin WASM shell, the included Site theme, CSS, JavaScript, and static assets.
+- Do not add Radzen or browser-specific component code to `BlazingOrchard.Server`.
+- Do not add Orchard server dependencies or direct CMS state management to browser component projects.
+- Theme projects may split into their own repositories/packages later; until then, they remain under `BlazingOrchard.Components` as UI/theme code.
 
 ## Rules for adding endpoints
 
