@@ -1,5 +1,6 @@
 @using BlazingOrchard.Admin.DisplayManagement
 @using BlazingOrchard.Admin.Components.Shared
+@using Microsoft.AspNetCore.Components.Web
 @using Radzen
 @using Radzen.Blazor
 @inject NavigationManager Navigation
@@ -38,7 +39,7 @@
             }
 
             <RadzenPanelMenu class="admin-menu-sidebar__menu">
-                <AdminMenuPanelItems Items="VisibleMenuItems" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" />
+                <AdminMenuPanelItems Items="VisibleMenuItems" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" FlyoutOpened="OpenFlyout" FlyoutCloseRequested="CloseFlyoutSoon" />
             </RadzenPanelMenu>
 
             @if (VisibleMenuItems.Length == 0)
@@ -57,13 +58,26 @@
                         <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" class="admin-menu-sidebar__quickadd-button" Click="CloseQuickAdd" title="Close Quick Add" />
                     </div>
                     <RadzenPanelMenu class="admin-menu-sidebar__menu admin-menu-sidebar__quickadd-menu">
-                        <AdminMenuPanelItems Items="QuickAddItems" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" />
+                        <AdminMenuPanelItems Items="QuickAddItems" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" FlyoutOpened="OpenFlyout" FlyoutCloseRequested="CloseFlyoutSoon" />
                     </RadzenPanelMenu>
                 </div>
             }
         }
     </RadzenStack>
 </RadzenSidebar>
+
+<Flyout IsOpen="@(ActiveFlyoutItem is not null)"
+        Left="FlyoutLeft"
+        Top="FlyoutTop"
+        Class="admin-menu-sidebar__flyout admin-menu-sidebar__flyout--detached"
+        Role="menu"
+        OnMouseEnter="@(_ => KeepFlyoutOpen())"
+        OnMouseLeave="@(_ => CloseFlyout())">
+    @if (ActiveFlyoutItem is not null)
+    {
+        <AdminMenuFlyoutItems Items="ActiveFlyoutItem.Items" />
+    }
+</Flyout>
 
 @code {
     [CascadingParameter]
@@ -73,6 +87,10 @@
     private DisplayMenu? LastMenu;
     private string? MenuFilter { get; set; }
     private bool IsQuickAddOpen { get; set; }
+    private DisplayMenuItem? ActiveFlyoutItem { get; set; }
+    private double FlyoutLeft { get; set; }
+    private double FlyoutTop { get; set; }
+    private CancellationTokenSource? FlyoutCloseDelay { get; set; }
 
     private DisplayMenu? Menu => DisplayManager?.AdminMenu;
     private DisplayMenuItem? QuickAddSource => Menu is null ? null : FindQuickAddSource(Menu.Items);
@@ -92,6 +110,49 @@
         if (!HasQuickAddItems)
         {
             IsQuickAddOpen = false;
+        }
+    }
+
+    private void OpenFlyout(DisplayMenuItem item, MouseEventArgs args)
+    {
+        KeepFlyoutOpen();
+        ActiveFlyoutItem = item;
+        FlyoutLeft = Math.Max(args.ClientX + 12, 292);
+        FlyoutTop = Math.Max(args.ClientY - 18, 72);
+        StateHasChanged();
+    }
+
+    private void KeepFlyoutOpen()
+    {
+        FlyoutCloseDelay?.Cancel();
+    }
+
+    private void CloseFlyout()
+    {
+        FlyoutCloseDelay?.Cancel();
+        ActiveFlyoutItem = null;
+        StateHasChanged();
+    }
+
+    private async Task CloseFlyoutSoon()
+    {
+        FlyoutCloseDelay?.Cancel();
+        var delay = new CancellationTokenSource();
+        FlyoutCloseDelay = delay;
+
+        try
+        {
+            await Task.Delay(250, delay.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (!delay.IsCancellationRequested)
+        {
+            ActiveFlyoutItem = null;
+            await InvokeAsync(StateHasChanged);
         }
     }
 

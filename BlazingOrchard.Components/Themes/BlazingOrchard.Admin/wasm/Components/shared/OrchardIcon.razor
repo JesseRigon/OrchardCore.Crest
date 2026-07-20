@@ -1,20 +1,21 @@
 @namespace BlazingOrchard.Admin.Components.Shared
 @using Microsoft.AspNetCore.Components
 @using Microsoft.JSInterop
+@using BlazingOrchard.Icons
 @inject IJSRuntime JS
 
-@if (!string.IsNullOrWhiteSpace(SvgMarkup))
+@if (!string.IsNullOrWhiteSpace(EffectiveSvgMarkup))
 {
     <span class="@CssClass"
           style="@CssStyle"
           role="@Role"
           aria-label="@AriaLabel"
           aria-hidden="@AriaHidden"
-          data-icon-library="@Library"
-          data-icon-version="@Version"
-          data-icon-name="@Name"
+          data-icon-library="@EffectiveLibrary"
+          data-icon-version="@EffectiveVersion"
+          data-icon-name="@EffectiveName"
           @attributes="AdditionalAttributes">
-        @((MarkupString)SvgMarkup)
+        @((MarkupString)EffectiveSvgMarkup)
     </span>
 }
 
@@ -30,6 +31,9 @@
 
     [Parameter]
     public string? SvgMarkup { get; set; }
+
+    [Parameter]
+    public string? IconClass { get; set; }
 
     [Parameter]
     public string? Alt { get; set; }
@@ -57,11 +61,28 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (string.Equals(Library, "missing", StringComparison.OrdinalIgnoreCase) ||
-            (!string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(SvgMarkup)))
+        if (string.Equals(EffectiveLibrary, "missing", StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(EffectiveName) && string.IsNullOrWhiteSpace(EffectiveSvgMarkup)))
         {
-            await JS.InvokeVoidAsync("console.error", $"Missing SVG icon: library='{Library}', version='{Version}', name='{Name}'.");
+            await JS.InvokeVoidAsync("console.error", $"Missing SVG icon: library='{EffectiveLibrary}', version='{EffectiveVersion}', name='{EffectiveName}'.");
         }
+    }
+
+    private ResolvedIcon? Resolved => ResolveIcon();
+    private string? EffectiveLibrary => !string.IsNullOrWhiteSpace(SvgMarkup) ? Library : Resolved?.Library ?? Library;
+    private string? EffectiveVersion => !string.IsNullOrWhiteSpace(SvgMarkup) ? Version : Resolved?.Version ?? Version;
+    private string? EffectiveName => !string.IsNullOrWhiteSpace(SvgMarkup) ? Name : Resolved?.Name ?? Name;
+    private string? EffectiveSvgMarkup => !string.IsNullOrWhiteSpace(SvgMarkup) ? SvgMarkup : Resolved?.SvgMarkup;
+
+    private ResolvedIcon? ResolveIcon()
+    {
+        if (!string.IsNullOrWhiteSpace(IconClass) && IconRegistry.TryResolveIconClass(IconClass, out var classIcon))
+        {
+            return classIcon;
+        }
+
+        var libraryReference = string.IsNullOrWhiteSpace(Version) ? Library : $"{Library}/{Version}";
+        return IconRegistry.TryResolve(Name, libraryReference, out var namedIcon) ? namedIcon : null;
     }
 
     private string CssClass => string.Join(" ", new[] { "orchard-icon", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));

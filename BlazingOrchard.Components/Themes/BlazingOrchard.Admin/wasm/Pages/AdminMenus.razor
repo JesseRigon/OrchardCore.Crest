@@ -97,7 +97,7 @@
                                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                                                     <RadzenStack Gap="0.2rem">
                                                         <RadzenText TextStyle="TextStyle.H5" Text="@SelectedMenu.Name" />
-                                                        <RadzenText TextStyle="TextStyle.Caption" Text="Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child." />
+                                                        <RadzenText TextStyle="TextStyle.Caption" Text="Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child. Admin menus support up to 4 tiers." />
                                                     </RadzenStack>
                                                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                                                         <RadzenButton Text="@(AllNodesCollapsed ? "Expand All" : "Collapse All")" Icon="@(AllNodesCollapsed ? "unfold_more" : "unfold_less")" ButtonStyle="ButtonStyle.Light" Click="ToggleCollapseAll" Disabled="@(IsBusy || SelectedMenu.Nodes.Length == 0)" />
@@ -282,6 +282,8 @@
 @code {
     private const string LinkNodeType = "LinkAdminNode";
     private const string PlaceholderNodeType = "PlaceholderAdminNode";
+    private const int MaxMenuTiers = 4;
+    private const int MaxNodeDepth = MaxMenuTiers - 1;
 
     private readonly DragDropManager DragDrop = new();
     private readonly HashSet<string> CollapsedNodeIds = [];
@@ -314,11 +316,28 @@
     private string? RenamingNodeId { get; set; }
     private string? RenameText { get; set; }
 
-    private IReadOnlyList<ParentOption> ParentOptions => SelectedMenu is null
-        ? []
-        : [new ParentOption(string.Empty, "Root level"), .. Flatten(SelectedMenu.Nodes)
-            .Where(node => node.Id != EditingNodeId && !IsDescendantOf(node, EditingNodeId))
-            .Select(node => new ParentOption(node.Id, $"{new string('—', node.Depth)} {node.Text} ({NodeTypeLabel(node.Type)})"))];
+    private IReadOnlyList<ParentOption> ParentOptions
+    {
+        get
+        {
+            if (SelectedMenu is null)
+            {
+                return [];
+            }
+
+            var options = new List<ParentOption>();
+            if (CanPlaceNodeUnder(EditingNodeId, null))
+            {
+                options.Add(new ParentOption(string.Empty, "Root level"));
+            }
+
+            options.AddRange(Flatten(SelectedMenu.Nodes)
+                .Where(node => node.Id != EditingNodeId && !IsDescendantOf(node, EditingNodeId) && CanPlaceNodeUnder(EditingNodeId, node.Id))
+                .Select(node => new ParentOption(node.Id, $"{new string('—', node.Depth)} {node.Text} ({NodeTypeLabel(node.Type)})")));
+
+            return options;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -688,6 +707,12 @@
             return;
         }
 
+        if (!CanPlaceNodeUnder(nodeId, parentNodeId))
+        {
+            ShowTierLimitError();
+            return;
+        }
+
         await ApplyMenuResultAsync(await Api.Blazing.Rest.AdminMenus.MoveNodeAsync(SelectedMenu.Id, nodeId, new(parentNodeId, position)));
     }
 
@@ -858,6 +883,12 @@
             return;
         }
 
+        if (!CanPlaceNodeUnder(EditingNodeId, model.ParentNodeId))
+        {
+            ShowTierLimitError();
+            return;
+        }
+
         IsBusy = true;
         var editModel = model.ToEditModel();
         var result = EditingNodeId is null
@@ -926,6 +957,36 @@
 
     private static bool IsDescendantOf(AdminMenuNodeSummary node, string? candidateId) =>
         !string.IsNullOrWhiteSpace(candidateId) && Flatten(node.Items).Any(child => child.Id == candidateId);
+
+    private bool CanPlaceNodeUnder(string? movingNodeId, string? parentNodeId)
+    {
+        if (SelectedMenu is null)
+        {
+            return false;
+        }
+
+        var normalizedParentNodeId = string.IsNullOrWhiteSpace(parentNodeId) ? null : parentNodeId;
+        var parentDepth = normalizedParentNodeId is null ? -1 : FindNode(SelectedMenu.Nodes, normalizedParentNodeId)?.Depth;
+        if (parentDepth is null)
+        {
+            return false;
+        }
+
+        var movingNode = string.IsNullOrWhiteSpace(movingNodeId) ? null : FindNode(SelectedMenu.Nodes, movingNodeId);
+        var subtreeHeight = movingNode is null ? 0 : GetSubtreeHeight(movingNode);
+        var targetDepth = parentDepth.Value + 1;
+
+        return targetDepth + subtreeHeight <= MaxNodeDepth;
+    }
+
+    private static int GetSubtreeHeight(AdminMenuNodeSummary node) =>
+        node.Items.Length == 0 ? 0 : 1 + node.Items.Max(GetSubtreeHeight);
+
+    private void ShowTierLimitError()
+    {
+        ErrorMessage = $"Admin menus support a maximum of {MaxMenuTiers} tiers. Move the item to a higher level before saving.";
+        Notifications.Notify(NotificationSeverity.Error, "Admin menu depth limit", ErrorMessage);
+    }
 
     private static string NodeTypeLabel(string type) => type switch
     {
