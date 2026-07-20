@@ -47,12 +47,20 @@ public sealed class BlazingIconSourceStore(ILogger<BlazingIconSourceStore> logge
         var libraries = GetLibraries();
         var items = _catalog.Values
             .Where(item => string.IsNullOrWhiteSpace(library) || string.Equals(GetLibraryId(item.Version), library, StringComparison.OrdinalIgnoreCase))
-            .Where(item => string.IsNullOrWhiteSpace(normalizedQuery) || item.Name.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) || item.IconClass.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase))
+            .Where(item => string.IsNullOrWhiteSpace(normalizedQuery) || item.Name.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) || item.IconClass.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase));
+
+        if (string.IsNullOrWhiteSpace(library))
+        {
+            items = RemoveCrossVersionDuplicates(items);
+        }
+
+        var orderedItems = items
             .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(item => item.Version, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => GetVersionRank(item.Version))
+            .ThenBy(item => item.IconClass, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        return new BlazingIconSearchResult(libraries, items.Skip(skip).Take(take).ToArray(), items.Length, skip, take);
+        return new BlazingIconSearchResult(libraries, orderedItems.Skip(skip).Take(take).ToArray(), orderedItems.Length, skip, take);
     }
 
     public async ValueTask<string?> ResolveNavigationItemIconClassAsync(string? itemId, CancellationToken cancellationToken = default)
@@ -203,6 +211,29 @@ public sealed class BlazingIconSourceStore(ILogger<BlazingIconSourceStore> logge
             _icons.TryAdd($"fontawesome|{version}|{alias}|{name}", icon);
         }
     }
+
+    private static IEnumerable<BlazingIconCatalogItem> RemoveCrossVersionDuplicates(IEnumerable<BlazingIconCatalogItem> items) => items
+        .GroupBy(GetCrossVersionDuplicateKey, StringComparer.OrdinalIgnoreCase)
+        .Select(group => group
+            .OrderBy(item => GetVersionRank(item.Version))
+            .ThenBy(item => item.IconClass, StringComparer.OrdinalIgnoreCase)
+            .First());
+
+    private static string GetCrossVersionDuplicateKey(BlazingIconCatalogItem item)
+    {
+        var style = item.IconClass.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault(IsFontAwesomeStyleClass) ?? string.Empty;
+
+        return $"fontawesome|{NormalizeFontAwesomeStyle(style) ?? style}|{item.Name}";
+    }
+
+    private static int GetVersionRank(string? version)
+    {
+        var index = Array.IndexOf(VersionSearchOrder, version);
+        return index < 0 ? VersionSearchOrder.Length : index;
+    }
+
+    private static bool IsFontAwesomeStyleClass(string value) => NormalizeFontAwesomeStyle(value) is not null;
 
     private static BlazingIconLibrary[] GetLibraries() => Sources
         .Select(source => new BlazingIconLibrary(GetLibraryId(source.Version), source.Name, source.Version))

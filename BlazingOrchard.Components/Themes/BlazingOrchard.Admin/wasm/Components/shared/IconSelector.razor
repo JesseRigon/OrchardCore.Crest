@@ -71,6 +71,7 @@
     private bool IsOpen;
     private bool IsLoading;
     private int Total;
+    private int Loaded;
     private string? SearchText;
     private string? SelectedLibrary;
 
@@ -114,12 +115,13 @@
     {
         Items.Clear();
         Total = 0;
+        Loaded = 0;
         await LoadNextPageAsync();
     }
 
     private async Task LoadNextPageAsync()
     {
-        if (IsLoading || (Total > 0 && Items.Count >= Total))
+        if (IsLoading || (Total > 0 && Loaded >= Total))
         {
             return;
         }
@@ -127,10 +129,11 @@
         IsLoading = true;
         try
         {
-            var result = await Api.Blazing.Rest.Icons.SearchAsync(SelectedLibrary, SearchText, Items.Count, PageSize);
+            var result = await Api.Blazing.Rest.Icons.SearchAsync(SelectedLibrary, SearchText, Loaded, PageSize);
             Libraries = result.Libraries;
             Total = result.Total;
-            Items.AddRange(result.Items);
+            Loaded += result.Items.Length;
+            Items.AddRange(FilterDuplicateIcons(result.Items));
         }
         finally
         {
@@ -140,7 +143,7 @@
 
     private async Task OnScrollAsync()
     {
-        if (IsLoading || Items.Count >= Total)
+        if (IsLoading || Loaded >= Total)
         {
             return;
         }
@@ -151,6 +154,31 @@
             await LoadNextPageAsync();
         }
     }
+
+    private IEnumerable<IconCatalogItem> FilterDuplicateIcons(IEnumerable<IconCatalogItem> icons)
+    {
+        if (!string.IsNullOrWhiteSpace(SelectedLibrary))
+        {
+            return icons;
+        }
+
+        var existingKeys = Items.Select(GetDuplicateKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return icons.Where(icon => existingKeys.Add(GetDuplicateKey(icon))).ToArray();
+    }
+
+    private static string GetDuplicateKey(IconCatalogItem icon)
+    {
+        var style = icon.IconClass.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? string.Empty;
+        return $"{icon.Library.Split('-', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}|{NormalizeStyle(style)}|{icon.Name}";
+    }
+
+    private static string NormalizeStyle(string style) => style.ToLowerInvariant() switch
+    {
+        "fa" or "fas" or "fa-solid" => "solid",
+        "far" or "fa-regular" => "regular",
+        "fab" or "fa-brands" => "brands",
+        _ => style,
+    };
 
     private static string LibraryLabel(IconLibrary library) => library.Version is null ? library.Name : library.Name.Replace("fontawesome-free-", "FA ");
 }
