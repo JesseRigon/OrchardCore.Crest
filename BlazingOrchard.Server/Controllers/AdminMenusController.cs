@@ -754,8 +754,7 @@ public sealed record AdminMenuNodeSummary(
             return null;
         }
 
-        var style = icon.Version?.StartsWith("5", StringComparison.Ordinal) == true ? "fa" : "fa-solid";
-        return $"{style} fa-{icon.Name}";
+        return icon.Key;
     }
 
     private static string[] GetIconClasses(string[] classes)
@@ -777,7 +776,7 @@ public sealed record AdminMenuNodeSummary(
                 continue;
             }
 
-            if (hasIconMarker && IsFontAwesomeClass(className))
+            if (hasIconMarker)
             {
                 iconClasses.Add(className);
             }
@@ -785,15 +784,6 @@ public sealed record AdminMenuNodeSummary(
 
         return hasIconMarker ? iconClasses.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() : [];
     }
-
-    private static bool IsFontAwesomeClass(string className) =>
-        className.Equals("fa", StringComparison.OrdinalIgnoreCase) ||
-        className.Equals("fas", StringComparison.OrdinalIgnoreCase) ||
-        className.Equals("far", StringComparison.OrdinalIgnoreCase) ||
-        className.Equals("fab", StringComparison.OrdinalIgnoreCase) ||
-        className.Equals("fal", StringComparison.OrdinalIgnoreCase) ||
-        className.Equals("fad", StringComparison.OrdinalIgnoreCase) ||
-        className.StartsWith("fa-", StringComparison.OrdinalIgnoreCase);
 }
 
 public sealed record AdminMenuEditModel(string? Name, bool Enabled);

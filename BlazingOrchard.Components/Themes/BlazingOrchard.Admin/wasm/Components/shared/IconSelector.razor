@@ -9,7 +9,7 @@
 
 <div class="icon-selector">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-        <RadzenTextBox Value="@Value" ValueChanged="SetValueAsync" Placeholder="fa-solid fa-gear" Style="width: 100%;" />
+        <RadzenTextBox Value="@Value" ValueChanged="SetValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
         <RadzenButton Icon="apps" ButtonStyle="ButtonStyle.Light" Click="ToggleOpenAsync" ButtonType="ButtonType.Button" title="Choose icon" />
         @if (!string.IsNullOrWhiteSpace(Value))
         {
@@ -19,46 +19,100 @@
 
     @if (IsOpen)
     {
-        <div class="icon-selector__popover" role="dialog" aria-label="Choose icon">
-            <RadzenStack Gap="0.65rem">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                    <RadzenTextBox Value="@SearchText" @oninput="SearchInputAsync" Placeholder="Search all icons..." Style="width: 100%;" />
+        <div class="icon-selector__modal-backdrop" role="presentation" @onclick="Close">
+            <div class="icon-selector__dialog" role="dialog" aria-modal="true" aria-label="Choose icon" @onclick:stopPropagation="true">
+                <div class="icon-selector__dialog-header">
+                    <RadzenStack Gap="0.2rem">
+                        <RadzenText TextStyle="TextStyle.H5" Text="Choose icon" />
+                        <RadzenText TextStyle="TextStyle.Caption" Text="@("Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references.")" />
+                    </RadzenStack>
                     <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="Close" ButtonType="ButtonType.Button" title="Close" />
-                </RadzenStack>
-
-                <div class="icon-selector__tabs">
-                    <button type="button" class="icon-selector__tab @(SelectedLibrary is null ? "icon-selector__tab--active" : null)" @onclick="@(() => SelectLibraryAsync(null))">All</button>
-                    @foreach (var library in Libraries)
-                    {
-                        <button type="button" class="icon-selector__tab @(SelectedLibrary == library.Id ? "icon-selector__tab--active" : null)" @onclick="@(() => SelectLibraryAsync(library.Id))">@LibraryLabel(library)</button>
-                    }
                 </div>
 
-                <div class="icon-selector__grid" @ref="GridElement" @onscroll="OnScrollAsync">
-                    @if (IsLoading && Items.Count == 0)
-                    {
-                        <div class="icon-selector__status">Loading icons...</div>
-                    }
-                    else if (Items.Count == 0)
-                    {
-                        <div class="icon-selector__status">No icons found.</div>
-                    }
-                    else
-                    {
-                        @foreach (var icon in Items)
-                        {
-                            <button type="button" class="icon-selector__item @(Value == icon.IconClass ? "icon-selector__item--selected" : null)" title="@icon.IconClass" @onclick="@(() => ChooseAsync(icon))">
-                                <span class="icon-selector__preview">@((MarkupString)(icon.SvgMarkup ?? string.Empty))</span>
-                                <span class="icon-selector__name">@icon.Name</span>
+                <div class="icon-selector__dialog-body">
+                    <aside class="icon-selector__filters" aria-label="Icon filters">
+                        <div class="icon-selector__filter-section">
+                            <div class="icon-selector__filter-heading-row">
+                                <span class="icon-selector__filter-heading">Style</span>
+                                <button type="button" class="icon-selector__filter-link" @onclick="@(() => SelectLibraryAsync(null))">All style packs</button>
+                            </div>
+                            <button type="button" class="icon-selector__style-pack @(SelectedLibrary is null ? "icon-selector__style-pack--active" : null)" @onclick="@(() => SelectLibraryAsync(null))">
+                                <span>💙</span>
+                                <span>All style packs</span>
+                                <span aria-hidden="true">›</span>
                             </button>
-                        }
-                        @if (IsLoading)
+                            <div class="icon-selector__library-list">
+                                @foreach (var library in Libraries)
+                                {
+                                    <button type="button" class="icon-selector__library-chip @(SelectedLibrary == library.Id ? "icon-selector__library-chip--active" : null)" @onclick="@(() => SelectLibraryAsync(library.Id))">@LibraryLabel(library)</button>
+                                }
+                            </div>
+                        </div>
+
+                        @foreach (var group in FilterGroups)
                         {
-                            <div class="icon-selector__status icon-selector__status--wide">Loading more...</div>
+                            <div class="icon-selector__filter-section">
+                                <div class="icon-selector__filter-heading">@group.Label</div>
+                                <div class="@group.CssClass">
+                                    @foreach (var option in group.Options)
+                                    {
+                                        <button type="button" class="@GetFilterButtonClass(option)" @onclick="@(() => ToggleFilterAsync(option))">
+                                            @if (!string.IsNullOrWhiteSpace(option.Icon))
+                                            {
+                                                <span aria-hidden="true">@option.Icon</span>
+                                            }
+                                            <span>@option.Label</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
                         }
-                    }
+                    </aside>
+
+                    <section class="icon-selector__results">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="icon-selector__search-row">
+                            <RadzenTextBox Value="@SearchText" @oninput="SearchInputAsync" Placeholder="Search all icons..." Style="width: 100%;" />
+                            @if (ActiveFilterValues.Count > 0 || SelectedLibrary is not null || !string.IsNullOrWhiteSpace(SearchText))
+                            {
+                                <RadzenButton Text="Clear" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Light" Click="ClearFiltersAsync" ButtonType="ButtonType.Button" />
+                            }
+                        </RadzenStack>
+
+                        <div class="icon-selector__result-meta">
+                            <span>@ResultSummary</span>
+                            @if (ActiveFilterValues.Count > 0)
+                            {
+                                <span>Filters: @string.Join(", ", ActiveFilterValues.Select(FilterLabel))</span>
+                            }
+                        </div>
+
+                        <div class="icon-selector__grid" @ref="GridElement" @onscroll="OnScrollAsync">
+                            @if (IsLoading && Items.Count == 0)
+                            {
+                                <div class="icon-selector__status">Loading icons...</div>
+                            }
+                            else if (Items.Count == 0)
+                            {
+                                <div class="icon-selector__status">No icons found.</div>
+                            }
+                            else
+                            {
+                                @foreach (var icon in Items)
+                                {
+                                    <button type="button" class="icon-selector__item @(Value == ToProviderReference(icon) ? "icon-selector__item--selected" : null)" title="@ToProviderReference(icon)" @onclick="@(() => ChooseAsync(icon))">
+                                        <span class="icon-selector__preview">@((MarkupString)(icon.SvgMarkup ?? string.Empty))</span>
+                                        <span class="icon-selector__name">@icon.Name</span>
+                                    </button>
+                                }
+                                @if (IsLoading)
+                                {
+                                    <div class="icon-selector__status icon-selector__status--wide">Loading more...</div>
+                                }
+                            }
+                        </div>
+                    </section>
                 </div>
-            </RadzenStack>
+            </div>
         </div>
     }
 </div>
@@ -66,17 +120,75 @@
 @code {
     private const int PageSize = 200;
     private readonly List<IconCatalogItem> Items = [];
+    private readonly HashSet<string> ActiveFilterValues = new(StringComparer.OrdinalIgnoreCase);
     private IconLibrary[] Libraries = [];
     private ElementReference GridElement;
     private bool IsOpen;
     private bool IsLoading;
+    private bool ReloadAfterLoad;
     private int Total;
     private int Loaded;
     private string? SearchText;
     private string? SelectedLibrary;
 
+    private static readonly FilterGroup[] FilterGroups =
+    [
+        new("Animation", "icon-selector__chip-list", [
+            new("static", "Static"),
+            new("animated", "Animated")
+        ]),
+        new("OS", "icon-selector__chip-list", [
+            new("android", "Android", "🤖"),
+            new("ios", "iOS", ""),
+            new("windows", "Windows", "🪟"),
+            new("macos", "macOS", "🖥️")
+        ]),
+        new("Technique", "icon-selector__chip-list", [
+            new("3d", "3D", "🌈"),
+            new("filled", "Filled", "●"),
+            new("line", "Line", "○"),
+            new("hand-drawn", "Hand-drawn", "◌")
+        ]),
+        new("Colors", "icon-selector__chip-list", [
+            new("multi", "Multi", "🌈"),
+            new("duo", "Duo", "◒"),
+            new("mono", "Mono", "●"),
+            new("gradient", "Gradient", "🟣")
+        ]),
+        new("Corners", "icon-selector__chip-list", [
+            new("round", "Round", "⌒"),
+            new("sharp", "Sharp", "⌜")
+        ]),
+        new("Filter Size", "icon-selector__size-list", [
+            new("small", "Small", "⌂"),
+            new("medium", "Medium", "⌂"),
+            new("large", "Large", "⌂")
+        ]),
+        new("Aesthetic", "icon-selector__chip-list", [
+            new("professional", "Professional"),
+            new("decorative", "Decorative"),
+            new("games", "Games"),
+            new("classic", "Classic"),
+            new("kids", "Kids")
+        ]),
+        new("Stroke", "icon-selector__chip-list", [
+            new("stroke-1", "1"),
+            new("stroke-1.4", "1.4"),
+            new("stroke-1.5", "1.5"),
+            new("stroke-2", "2"),
+            new("stroke-2.5", "2.5"),
+            new("stroke-3", "3"),
+            new("stroke-4", "4"),
+            new("stroke-6", "6"),
+            new("stroke-8", "8"),
+            new("stroke-10", "10")
+        ])
+    ];
+
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    private string ResultSummary => Total == 0 ? "Browse icons or enter a search term." : $"{Total:n0} matching icons";
 
     private async Task ToggleOpenAsync()
     {
@@ -105,9 +217,27 @@
         await LoadFirstPageAsync();
     }
 
+    private async Task ToggleFilterAsync(FilterOption option)
+    {
+        if (!ActiveFilterValues.Add(option.Value))
+        {
+            ActiveFilterValues.Remove(option.Value);
+        }
+
+        await LoadFirstPageAsync();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        SearchText = null;
+        SelectedLibrary = null;
+        ActiveFilterValues.Clear();
+        await LoadFirstPageAsync();
+    }
+
     private async Task ChooseAsync(IconCatalogItem icon)
     {
-        await ValueChanged.InvokeAsync(icon.IconClass);
+        await ValueChanged.InvokeAsync(ToProviderReference(icon));
         IsOpen = false;
     }
 
@@ -116,6 +246,12 @@
         Items.Clear();
         Total = 0;
         Loaded = 0;
+        if (IsLoading)
+        {
+            ReloadAfterLoad = true;
+            return;
+        }
+
         await LoadNextPageAsync();
     }
 
@@ -129,7 +265,7 @@
         IsLoading = true;
         try
         {
-            var result = await Api.Blazing.Rest.Icons.SearchAsync(SelectedLibrary, SearchText, Loaded, PageSize);
+            var result = await Api.Blazing.Rest.Icons.SearchAsync(SelectedLibrary, BuildQuery(), Loaded, PageSize);
             Libraries = result.Libraries;
             Total = result.Total;
             Loaded += result.Items.Length;
@@ -138,6 +274,11 @@
         finally
         {
             IsLoading = false;
+            if (ReloadAfterLoad)
+            {
+                ReloadAfterLoad = false;
+                await LoadFirstPageAsync();
+            }
         }
     }
 
@@ -168,17 +309,42 @@
 
     private static string GetDuplicateKey(IconCatalogItem icon)
     {
-        var style = icon.IconClass.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? string.Empty;
-        return $"{icon.Library.Split('-', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}|{NormalizeStyle(style)}|{icon.Name}";
+        return $"{icon.Library}|{icon.Style}|{icon.Name}";
     }
 
-    private static string NormalizeStyle(string style) => style.ToLowerInvariant() switch
-    {
-        "fa" or "fas" or "fa-solid" => "solid",
-        "far" or "fa-regular" => "regular",
-        "fab" or "fa-brands" => "brands",
-        _ => style,
-    };
+    private static string LibraryLabel(IconLibrary library) => library.Version is null ? library.Name : library.Name;
 
-    private static string LibraryLabel(IconLibrary library) => library.Version is null ? library.Name : library.Name.Replace("fontawesome-free-", "FA ");
+    private static string ToProviderReference(IconCatalogItem icon)
+    {
+        if (string.Equals(icon.ProviderId, "iconify", StringComparison.OrdinalIgnoreCase) && icon.Library.StartsWith("iconify.", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"@iconify:{icon.Library["iconify.".Length..]}:{icon.Name}";
+        }
+
+        return $"@{icon.ProviderId ?? icon.Library}:{icon.Library}:{icon.Name}";
+    }
+
+    private string? BuildQuery()
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            parts.Add(SearchText.Trim());
+        }
+
+        parts.AddRange(ActiveFilterValues.Select(FilterSearchTerm));
+        return parts.Count == 0 ? null : string.Join(' ', parts.Where(value => !string.IsNullOrWhiteSpace(value)));
+    }
+
+    private string GetFilterButtonClass(FilterOption option) =>
+        $"icon-selector__filter-chip {(ActiveFilterValues.Contains(option.Value) ? "icon-selector__filter-chip--active" : null)}";
+
+    private static string FilterLabel(string value) =>
+        FilterGroups.SelectMany(group => group.Options).FirstOrDefault(option => string.Equals(option.Value, value, StringComparison.OrdinalIgnoreCase))?.Label ?? value;
+
+    private static string FilterSearchTerm(string value) => value.StartsWith("stroke-", StringComparison.OrdinalIgnoreCase) ? value["stroke-".Length..] : value;
+
+    private sealed record FilterGroup(string Label, string CssClass, FilterOption[] Options);
+
+    private sealed record FilterOption(string Value, string Label, string? Icon = null);
 }

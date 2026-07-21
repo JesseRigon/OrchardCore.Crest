@@ -5,13 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.9" />
     <PackageVersion Include="OrchardCore.Admin.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.AdminMenu" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.AdminMenu.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.ContentManagement" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.DisplayManagement" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Email.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Features" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.FileStorage.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Menu" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Media.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Module.Targets" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.ResourceManagement" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Roles.Abstractions" Version="3.0.0" />

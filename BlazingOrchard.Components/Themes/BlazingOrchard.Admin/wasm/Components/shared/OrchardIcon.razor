@@ -3,6 +3,7 @@
 @using Microsoft.JSInterop
 @using BlazingOrchard.Icons
 @inject IJSRuntime JS
+@inject ClientIconRegistry ClientIcons
 
 @if (!string.IsNullOrWhiteSpace(EffectiveSvgMarkup))
 {
@@ -20,6 +21,9 @@
 }
 
 @code {
+    [Parameter]
+    public string? IconKey { get; set; }
+
     [Parameter]
     public string? Name { get; set; }
 
@@ -76,13 +80,12 @@
 
     private ResolvedIcon? ResolveIcon()
     {
-        if (!string.IsNullOrWhiteSpace(IconClass) && IconRegistry.TryResolveIconClass(IconClass, out var classIcon))
+        if (!string.IsNullOrWhiteSpace(IconKey) && ClientIcons.TryResolve(IconKey, out var packedIcon))
         {
-            return classIcon;
+            return packedIcon;
         }
 
-        var libraryReference = string.IsNullOrWhiteSpace(Version) ? Library : $"{Library}/{Version}";
-        return IconRegistry.TryResolve(Name, libraryReference, out var namedIcon) ? namedIcon : null;
+        return null;
     }
 
     private string CssClass => string.Join(" ", new[] { "orchard-icon", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));

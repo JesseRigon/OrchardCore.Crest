@@ -15,8 +15,17 @@ public sealed class BlazingAdminMenu(IStringLocalizer<BlazingAdminMenu> stringLo
             .Id("design")
             .Add(S["Design System"], S["Design System"].PrefixPosition(), designSystem => designSystem
                 .AddClass("design-system")
+                .AddClass("icon-class-@iconify:mdi:palette")
                 .Id("design-system")
                 .Url("/Admin/DesignSystem")
+                .Permission(SettingsPermissions.ManageSettings)
+                .LocalNav()
+            )
+            .Add(S["Icons"], S["Icons"].PrefixPosition(), icons => icons
+                .AddClass("icons")
+                .AddClass("icon-class-@iconify:mdi:shape")
+                .Id("icons")
+                .Url("/Admin/Design/Icons")
                 .Permission(SettingsPermissions.ManageSettings)
                 .LocalNav()
             ), priority: 1);

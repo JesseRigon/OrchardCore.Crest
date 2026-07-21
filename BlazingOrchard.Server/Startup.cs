@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using BlazingOrchard.Icons;
 using BlazingOrchard.Services;
 using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.DisplayManagement.Theming;
 using OrchardCore.Modules;
 using OrchardCore.Navigation;
+using OrchardCore.Security.Permissions;
 
 namespace BlazingOrchard;
 
@@ -29,7 +31,13 @@ public sealed class Startup : StartupBase
         services.AddHttpContextAccessor();
         services.AddScoped<IThemeSelector, LegacyFrameThemeSelector>();
         services.AddScoped<BlazingAdminMenuLayoutService>();
-        services.AddSingleton<BlazingIconSourceStore>();
+        services.AddNavigationProvider<BlazingAdminMenu>();
+        services.AddScoped<IIconProvider, IconifyIconProvider>();
+        services.AddScoped<IIconProviderSettingsStore, BlazingIconProviderSettingsStore>();
+        services.AddSingleton<SvgIconSanitizer>();
+        services.AddHttpClient("BlazingOrchard.Icons.Iconify");
+        services.AddScoped<IIconRegistry, CompositeIconRegistry>();
+        services.AddScoped<BlazingIconSourceStore>();
         services.AddScoped<BlazingIconController>();
         services.Configure<BlazorAdminThemeOptions>(options => { });
     }
@@ -41,11 +49,17 @@ public sealed class Startup : StartupBase
     }
 }
 
-[Feature("BlazingOrchard.DesignSystem")]
-public sealed class DesignSystemStartup : StartupBase
+[Feature("BlazingOrchard.Icons.TenantMedia")]
+public sealed class TenantMediaIconsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<BlazingAdminMenu>();
+        services.AddScoped<IIconProvider, TenantMediaIconProvider>();
+        services.AddScoped<IPermissionProvider, Security.BlazingIconPermissions>();
     }
+}
+
+[Feature("BlazingOrchard.DesignSystem")]
+public sealed class DesignSystemStartup : StartupBase
+{
 }

@@ -110,6 +110,11 @@ public interface IThemesApi
 public interface IIconsApi
 {
     Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200);
+    Task<BlazingIconProvidersSettings> GetProvidersAsync();
+    Task<BlazingIconProvidersSettings?> UpdateProvidersAsync(BlazingIconProvidersSettings settings);
+    Task<TenantIconSummary[]> ListTenantAsync();
+    Task<TenantIconSummary?> UploadTenantAsync(string fileName, Stream stream, bool overwrite = true);
+    Task<bool> DeleteTenantAsync(string name);
 }
 
 public interface IStandardMenusApi
@@ -481,6 +486,59 @@ public sealed class IconsApi(HttpClient http) : IIconsApi
         return await response.Content.ReadFromJsonAsync<IconSearchResult>() ?? IconSearchResult.Empty;
     }
 
+    public async Task<BlazingIconProvidersSettings> GetProvidersAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/blazing/icons/providers")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<BlazingIconProvidersSettings>() ?? BlazingIconProvidersSettings.Default
+            : BlazingIconProvidersSettings.Default;
+    }
+
+    public async Task<BlazingIconProvidersSettings?> UpdateProvidersAsync(BlazingIconProvidersSettings settings)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Put, "api/blazing/icons/providers")
+        {
+            Content = JsonContent.Create(settings),
+        }));
+
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<BlazingIconProvidersSettings>()
+            : null;
+    }
+
+    public async Task<TenantIconSummary[]> ListTenantAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/blazing/icons/tenant")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<TenantIconSummary[]>() ?? []
+            : [];
+    }
+
+    public async Task<TenantIconSummary?> UploadTenantAsync(string fileName, Stream stream, bool overwrite = true)
+    {
+        using var content = new MultipartFormDataContent
+        {
+            { new StreamContent(stream), "file", fileName },
+            { new StringContent(overwrite.ToString()), "overwrite" }
+        };
+
+        using var request = WithCredentials(new(HttpMethod.Post, "api/blazing/icons/tenant")
+        {
+            Content = content
+        });
+
+        using var response = await http.SendAsync(request);
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<TenantIconSummary>()
+            : null;
+    }
+
+    public async Task<bool> DeleteTenantAsync(string name)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Delete, $"api/blazing/icons/tenant/{Uri.EscapeDataString(name)}")));
+        return response.IsSuccessStatusCode;
+    }
+
     private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
     {
         request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
@@ -752,12 +810,12 @@ public sealed record SiteSettingsUpdate(
     string ResourceDebugMode,
     string CacheMode);
 
-public sealed record NavigationMenu(string Name, NavigationItem[] Items)
+public sealed record NavigationMenu(string Name, NavigationItem[] Items, BlazingOrchard.Icons.IconPack? Icons = null)
 {
     public static NavigationMenu Empty(string name) => new(name, []);
 }
 
-public sealed record NavigationIcon(string Library, string? Version, string Name, string? SvgMarkup);
+public sealed record NavigationIcon(string? Key, string Library, string? Version, string? Style, string Name, string? SvgMarkup);
 
 public sealed record NavigationItem(
     string Text,
@@ -856,9 +914,31 @@ public sealed record IconSearchResult(IconLibrary[] Libraries, IconCatalogItem[]
     public static IconSearchResult Empty { get; } = new([], [], 0, 0, 200);
 }
 
-public sealed record IconLibrary(string Id, string Name, string? Version);
+public sealed record IconLibrary(string Id, string Name, string? Version, string? ProviderId = null, string? ProviderName = null);
 
-public sealed record IconCatalogItem(string Library, string? Version, string Name, string IconClass, string? SvgMarkup);
+public sealed record IconCatalogItem(string Key, string Library, string? Version, string Style, string Name, string IconClass, string? SvgMarkup, string? ProviderId = null);
+
+public sealed record TenantIconSummary(string Key, string Name, string DisplayName, string IconClass, string Path, string PublicUrl);
+
+public sealed record BlazingIconProvidersSettings(IconifyIconProviderSettings Iconify)
+{
+    public static BlazingIconProvidersSettings Default { get; } = new(IconifyIconProviderSettings.Default);
+}
+
+public sealed record IconifyIconProviderSettings(
+    bool Enabled,
+    string BaseUrl,
+    string? ApiKey,
+    string? ApiKeyHeader,
+    string[] Prefixes)
+{
+    public static IconifyIconProviderSettings Default { get; } = new(
+        true,
+        "https://api.iconify.design",
+        null,
+        null,
+        []);
+}
 
 public sealed record StandardMenusState(StandardMenuSummary[] Menus, StandardMenuNodeType[] AvailableNodeTypes)
 {

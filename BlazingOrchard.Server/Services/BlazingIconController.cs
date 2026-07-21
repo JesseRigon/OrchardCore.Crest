@@ -3,16 +3,25 @@ using BlazingOrchard.Controllers;
 namespace BlazingOrchard.Services;
 
 /// <summary>
-/// Resolves raw menu icon declarations into SVG payloads.
-/// This is the icon boundary: navigation/layout code passes raw classes through,
-/// and this controller performs parsing + dictionary lookup without cross-library mapping.
+/// Resolves Blazing icon declarations into response-level icon packs.
+/// Orchard and Font Awesome classes are intentionally ignored in this headless UI path;
+/// admins can override menu icons with canonical Blazing/Iconify keys.
 /// </summary>
 public sealed class BlazingIconController(BlazingIconSourceStore iconSourceStore)
 {
-    public async Task<NavigationMenu> ResolveMenuIconsAsync(NavigationMenu menu, CancellationToken cancellationToken = default) => menu with
+    public async Task<NavigationMenu> ResolveMenuIconsAsync(NavigationMenu menu, CancellationToken cancellationToken = default)
     {
-        Items = await Task.WhenAll(menu.Items.Select(item => ResolveItemIconsAsync(item, cancellationToken)))
-    };
+        var resolved = menu with
+        {
+            Items = await Task.WhenAll(menu.Items.Select(item => ResolveItemIconsAsync(item, cancellationToken)))
+        };
+
+        var iconKeys = CollectIconKeys(resolved.Items);
+        return resolved with
+        {
+            Icons = await iconSourceStore.BuildPackAsync(iconKeys, cancellationToken)
+        };
+    }
 
     private async Task<NavigationItem> ResolveItemIconsAsync(NavigationItem item, CancellationToken cancellationToken)
     {
@@ -40,9 +49,25 @@ public sealed class BlazingIconController(BlazingIconSourceStore iconSourceStore
         }
 
         var resolved = await iconSourceStore.ResolveIconClassAsync(iconClass, cancellationToken);
-        return resolved is not null
-            ? new NavigationIcon(resolved.Library, resolved.Version, resolved.Name, resolved.SvgMarkup)
-            : new NavigationIcon("missing", null, iconClass, null);
+        return resolved is null
+            ? null
+            : new NavigationIcon(resolved.Key, resolved.Library, resolved.Version, resolved.Style, resolved.Name, null);
+    }
+
+    private static IEnumerable<string> CollectIconKeys(IEnumerable<NavigationItem> items)
+    {
+        foreach (var item in items)
+        {
+            if (!string.IsNullOrWhiteSpace(item.Icon?.Key))
+            {
+                yield return item.Icon.Key;
+            }
+
+            foreach (var child in CollectIconKeys(item.Items))
+            {
+                yield return child;
+            }
+        }
     }
 
     private static string? GetIconClass(string[] classes)
@@ -75,6 +100,7 @@ public sealed class BlazingIconController(BlazingIconSourceStore iconSourceStore
             {
                 iconClasses.Add(className);
             }
+
         }
 
         return hasIconMarker ? iconClasses.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() : [];

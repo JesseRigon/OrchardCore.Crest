@@ -1,5 +1,6 @@
 @using BlazingOrchard.Admin.DisplayManagement
 @using BlazingOrchard.Admin.Components.Shared
+@using Radzen.Blazor
 
 <ul class="admin-menu-sidebar__flyout-list" role="menu">
     @foreach (var item in Items)
@@ -25,7 +26,7 @@
                     <span class="admin-menu-sidebar__flyout-text">@item.Text</span>
                     @if (hasChildren)
                     {
-                        <BlazingOrchard.Admin.Components.Shared.OrchardIcon Name="chevron-right" Library="fontawesome" Size="0.75rem" BoxSize="1rem" Class="admin-menu-sidebar__flyout-chevron" Alt="Open submenu" />
+                        <RadzenIcon Icon="chevron_right" class="admin-menu-sidebar__flyout-chevron" title="Open submenu" />
                     }
                 </div>
             }

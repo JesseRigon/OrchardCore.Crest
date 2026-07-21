@@ -1,12 +1,13 @@
 using BlazingOrchard.Admin.Api;
 using BlazingOrchard.Admin.Theme;
+using BlazingOrchard.Icons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using System.Reflection;
 
 namespace BlazingOrchard.Admin.DisplayManagement;
 
-public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine)
+public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine, ClientIconRegistry iconRegistry)
 {
     private readonly Lazy<IReadOnlyDictionary<string, Type>> _shapeBindings = new(BuildShapeBindings);
 
@@ -106,7 +107,9 @@ public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine)
     {
         await RunAsync(async () =>
         {
-            AdminMenu = ToDisplayMenu(await api.Blazing.Rest.Navigation.GetAdminMenuAsync());
+            var menu = await api.Blazing.Rest.Navigation.GetAdminMenuAsync();
+            iconRegistry.Register(menu.Icons);
+            AdminMenu = ToDisplayMenu(menu);
             ErrorMessage = null;
             return true;
         });
@@ -166,6 +169,7 @@ public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine)
     private async Task LoadAdminStateAsync()
     {
         Manifest = await api.Blazing.Rest.App.GetManifestAsync();
+        iconRegistry.Register(Manifest?.AdminMenu.Icons);
         Site = Manifest?.Site ?? await api.Blazing.Rest.Site.GetAsync();
         AdminMenu = ToDisplayMenu(Manifest?.AdminMenu ?? await api.Blazing.Rest.Navigation.GetAdminMenuAsync());
         ContentTypes = await api.Blazing.Rest.Content.Types.ListAsync();
@@ -200,7 +204,7 @@ public sealed class DisplayManager(IApi api, BlazingThemeEngine themeEngine)
 
     private static DisplayIcon? ToDisplayIcon(NavigationIcon? icon) => icon is null
         ? null
-        : new DisplayIcon(icon.Library, icon.Version, icon.Name, icon.SvgMarkup);
+        : new DisplayIcon(icon.Key, icon.Library, icon.Version, icon.Style, icon.Name, icon.SvgMarkup);
 
     private async Task<T> RunAsync<T>(Func<Task<T>> action)
     {

@@ -25,18 +25,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\BlazingOrchard.Components\Themes\BlazingOrchard.Admin\wasm\Components\shared\IconRegistry.cs" Link="Icons\IconRegistry.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="OrchardCore.Admin.Abstractions" />
     <PackageReference Include="OrchardCore.AdminMenu" />
     <PackageReference Include="OrchardCore.AdminMenu.Abstractions" />
     <PackageReference Include="OrchardCore.ContentManagement" />
+    <PackageReference Include="OrchardCore.FileStorage.Abstractions" />
+    <PackageReference Include="OrchardCore.Features" />
     <PackageReference Include="OrchardCore.Menu" />
+    <PackageReference Include="OrchardCore.Media.Abstractions" />
     <PackageReference Include="OrchardCore.Module.Targets" />
     <PackageReference Include="OrchardCore.Roles.Abstractions" />
     <PackageReference Include="OrchardCore.Themes" />
     <PackageReference Include="OrchardCore.Users" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\BlazingOrchard.Icons\Contracts\**\*.cs" Link="Icons\Contracts\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\BlazingOrchard.Icons\Providers\**\*.cs" Link="Icons\Providers\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\BlazingOrchard.Icons\Services\**\*.cs" Link="Icons\Services\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

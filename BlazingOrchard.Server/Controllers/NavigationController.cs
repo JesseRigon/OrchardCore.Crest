@@ -1,4 +1,5 @@
 using BlazingOrchard.Services;
+using BlazingOrchard.Icons;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Navigation;
 using System.Security.Cryptography;
@@ -37,9 +38,9 @@ public sealed class NavigationController(
     }
 }
 
-public sealed record NavigationMenu(string Name, NavigationItem[] Items);
+public sealed record NavigationMenu(string Name, NavigationItem[] Items, IconPack? Icons = null);
 
-public sealed record NavigationIcon(string Library, string? Version, string Name, string? SvgMarkup);
+public sealed record NavigationIcon(string? Key, string Library, string? Version, string? Style, string Name, string? SvgMarkup);
 
 public sealed record NavigationItem(
     string Text,

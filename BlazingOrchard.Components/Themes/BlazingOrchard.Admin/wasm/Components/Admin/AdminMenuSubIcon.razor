@@ -1,9 +1,10 @@
 @using BlazingOrchard.Admin.Components.Shared
 @using BlazingOrchard.Admin.DisplayManagement
 
-@if (!string.IsNullOrWhiteSpace(Icon?.SvgMarkup))
+@if (Icon is not null)
 {
     <OrchardIcon Name="@Icon?.Name"
+                 IconKey="@Icon?.Key"
                  Library="@Icon?.Library"
                  Version="@Icon?.Version"
                  SvgMarkup="@Icon?.SvgMarkup"

@@ -3,6 +3,7 @@ using BlazingOrchard.Admin.Api;
 using BlazingOrchard.Admin.DisplayManagement;
 using BlazingOrchard.Admin.Options;
 using BlazingOrchard.Admin.Theme;
+using BlazingOrchard.Icons;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Radzen;
 
@@ -18,6 +19,7 @@ builder.Services.AddScoped<IApi, global::BlazingOrchard.Admin.Api.Api>();
 builder.Services.AddScoped<DisplayManager>();
 builder.Services.AddScoped<BlazingRoutingOptions>();
 builder.Services.AddScoped<BlazingThemeEngine>();
+builder.Services.AddSingleton<ClientIconRegistry>();
 builder.Services.AddRadzenComponents();
 
 var app = builder.Build();
