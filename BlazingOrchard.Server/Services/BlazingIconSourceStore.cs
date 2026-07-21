@@ -254,6 +254,9 @@ public sealed class BlazingIconSourceStore(ILogger<BlazingIconSourceStore> logge
         "fa" or "fas" or "fa-solid" => "fa-solid",
         "far" or "fa-regular" => "fa-regular",
         "fab" or "fa-brands" => "fa-brands",
+        "fa-light" => "fa-light",
+        "fa-duotone" => "fa-duotone",
+        "fa-thin" => "fa-thin",
         _ => null,
     };
 
@@ -378,14 +381,6 @@ public sealed class BlazingIconSourceStore(ILogger<BlazingIconSourceStore> logge
         var iconName = classes.LastOrDefault(value => value.StartsWith("fa-", StringComparison.OrdinalIgnoreCase) && !IsFontAwesomeStyleClass(value));
         return (iconName is null ? null : iconName[3..], version, style);
     }
-
-    private static bool IsFontAwesomeStyleClass(string value) =>
-        value.Equals("fa-solid", StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("fa-regular", StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("fa-brands", StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("fa-light", StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("fa-duotone", StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("fa-thin", StringComparison.OrdinalIgnoreCase);
 
     private sealed record IconSource(string Name, string Version, string Url);
 

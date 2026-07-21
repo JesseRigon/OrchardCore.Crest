@@ -16,9 +16,9 @@
                              Value="@item.StableKey"
                              Path="@GetPath(item)"
                              Target="@item.Target"
-                             Class="@GetItemClass(item)">
+                             class="@GetItemClass(item)">
             <Template>
-                <span class="admin-menu-sidebar__item-content"
+                <span class="@GetItemContentClass(item)"
                       @onmouseover="@(args => OpenFlyout(item, args))"
                       @onmouseout="CloseFlyoutSoon">
                     <AdminMenuSubIcon Icon="@icon" />
@@ -37,9 +37,9 @@
                              Target="@item.Target"
                              Expanded="@IsExpanded(item)"
                              ExpandedChanged="@(expanded => SetExpanded(item, expanded))"
-                             Class="@GetItemClass(item)">
+                             class="@GetItemClass(item)">
             <Template>
-                <span class="admin-menu-sidebar__item-content">
+                <span class="@GetItemContentClass(item)">
                     @if (Level == 0)
                     {
                         <AdminMenuIcon Icon="@icon" />
@@ -54,7 +54,7 @@
             <ChildContent>
                 @if (item.HasChildren)
                 {
-                    <AdminMenuPanelItems Items="item.Items" Level="@(Level + 1)" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="ExpandedChanged" FlyoutOpened="FlyoutOpened" FlyoutCloseRequested="FlyoutCloseRequested" />
+                    <AdminMenuPanelItems Items="item.Items" Level="@(Level + 1)" ActiveItemKey="@ActiveItemKey" ActiveItemLink="@ActiveItemLink" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="ExpandedChanged" FlyoutOpened="FlyoutOpened" FlyoutCloseRequested="FlyoutCloseRequested" />
                 }
             </ChildContent>
         </RadzenPanelMenuItem>
@@ -67,6 +67,12 @@
 
     [Parameter]
     public int Level { get; set; }
+
+    [Parameter]
+    public string? ActiveItemKey { get; set; }
+
+    [Parameter]
+    public string? ActiveItemLink { get; set; }
 
     [Parameter]
     public ISet<string> ExpandedItemKeys { get; set; } = new HashSet<string>();
@@ -112,5 +118,42 @@
     {
         var itemClass = $"admin-menu-sidebar__item admin-menu-sidebar__item--level-{Level}";
         return ShouldRenderFlyout(item) ? itemClass + " admin-menu-sidebar__item--has-flyout" : itemClass;
+    }
+
+    private string GetItemContentClass(DisplayMenuItem item)
+    {
+        var itemClass = "admin-menu-sidebar__item-content";
+        if (IsCurrentActiveItem(item))
+        {
+            itemClass += " admin-menu-sidebar__item-content--active";
+        }
+        else if (item.HasLink)
+        {
+            itemClass += " admin-menu-sidebar__item-content--not-active";
+        }
+
+        return itemClass;
+    }
+
+    private bool IsCurrentActiveItem(DisplayMenuItem item)
+    {
+        if (!item.HasLink || string.IsNullOrWhiteSpace(ActiveItemLink))
+        {
+            return false;
+        }
+
+        return item.StableKey == ActiveItemKey || string.Equals(NormalizePathOnly(item.Link!), NormalizePathOnly(ActiveItemLink), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizePathOnly(string value)
+    {
+        var path = value.Split('?', 2)[0].Split('#', 2)[0].Trim();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return "/";
+        }
+
+        path = path.StartsWith('/') ? path : '/' + path;
+        return path.TrimEnd('/');
     }
 }

@@ -1,0 +1,64 @@
+@namespace BlazingOrchard.Admin.Components.Shared
+@using Radzen
+@using Radzen.Blazor
+@typeparam TValue
+
+<div class="main-tab-selector" role="tablist" aria-label="@AriaLabel">
+    @foreach (var tab in Items)
+    {
+        var selected = EqualityComparer<TValue>.Default.Equals(tab.Value, Value);
+        var tabClass = selected ? "main-tab-selector__tab main-tab-selector__tab--selected" : "main-tab-selector__tab";
+        <RadzenButton Text="@tab.Text"
+                      Icon="@tab.Icon"
+                      ButtonStyle="ButtonStyle.Light"
+                      Variant="Variant.Text"
+                      role="tab"
+                      aria-selected="@selected"
+                      class="@tabClass"
+                      Click="@(() => SelectAsync(tab.Value))" />
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<MainTabItem<TValue>> Items { get; set; } = [];
+    [Parameter] public TValue? Value { get; set; }
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+    [Parameter] public string AriaLabel { get; set; } = "Section tabs";
+
+    private Task SelectAsync(TValue value) => ValueChanged.InvokeAsync(value);
+}
+
+<style>
+    .main-tab-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-bottom: 1px solid var(--rz-border-color);
+        overflow-x: auto;
+    }
+
+    .main-tab-selector__tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        background: transparent;
+        color: var(--rz-text-secondary-color);
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        font: inherit;
+        white-space: nowrap;
+    }
+
+    .main-tab-selector__tab--selected {
+        color: var(--rz-primary);
+        border-bottom-color: var(--rz-primary);
+        font-weight: 600;
+    }
+
+    .main-tab-selector__icon {
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+</style>

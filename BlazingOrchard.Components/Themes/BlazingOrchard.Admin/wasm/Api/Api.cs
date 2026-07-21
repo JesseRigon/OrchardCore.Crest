@@ -22,6 +22,7 @@ public interface IRestApi
     IAuthApi Auth { get; }
     IAppApi App { get; }
     ISiteApi Site { get; }
+    IAdminSettingsApi AdminSettings { get; }
     INavigationApi Navigation { get; }
     IContentApi Content { get; }
     IFeaturesApi Features { get; }
@@ -29,6 +30,7 @@ public interface IRestApi
     IThemeApi Theme { get; }
     IThemesApi Themes { get; }
     IAdminMenusApi AdminMenus { get; }
+    IStandardMenusApi Menus { get; }
     IIconsApi Icons { get; }
 }
 
@@ -41,6 +43,12 @@ public interface ISiteApi
 {
     Task<SiteSettings> GetAsync();
     Task<SiteSettings?> UpdateAsync(SiteSettingsUpdate update);
+}
+
+public interface IAdminSettingsApi
+{
+    Task<AdminSettingsDto> GetAsync();
+    Task<AdminSettingsDto?> UpdateAsync(AdminSettingsUpdate update);
 }
 
 public interface INavigationApi
@@ -104,6 +112,21 @@ public interface IIconsApi
     Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200);
 }
 
+public interface IStandardMenusApi
+{
+    Task<StandardMenusState> ListAsync();
+    Task<StandardMenuSummary?> CreateMenuAsync(StandardMenuEditModel model);
+    Task<StandardMenuSummary?> RenameMenuAsync(string menuId, StandardMenuEditModel model);
+    Task<StandardMenuSummary?> ToggleMenuAsync(string menuId);
+    Task<StandardMenuSummary?> DuplicateMenuAsync(string menuId);
+    Task<bool> DeleteMenuAsync(string menuId);
+    Task<StandardMenuSummary?> CreateNodeAsync(string menuId, StandardMenuNodeEditModel model);
+    Task<StandardMenuSummary?> UpdateNodeAsync(string menuId, string nodeId, StandardMenuNodeEditModel model);
+    Task<StandardMenuSummary?> MoveNodeAsync(string menuId, string nodeId, StandardMenuNodeMoveModel model);
+    Task<StandardMenuSummary?> DuplicateNodeAsync(string menuId, string nodeId);
+    Task<StandardMenuSummary?> DeleteNodeAsync(string menuId, string nodeId);
+}
+
 public interface IAdminMenusApi
 {
     Task<AdminMenusState> ListAsync();
@@ -136,6 +159,7 @@ public sealed class RestApi(HttpClient http) : IRestApi
     public IAuthApi Auth { get; } = new AuthApi(http);
     public IAppApi App { get; } = new AppApi(http);
     public ISiteApi Site { get; } = new SiteApi(http);
+    public IAdminSettingsApi AdminSettings { get; } = new AdminSettingsApi(http);
     public INavigationApi Navigation { get; } = new NavigationApi(http);
     public IContentApi Content { get; } = new ContentApi(http);
     public IFeaturesApi Features { get; } = new FeaturesApi(http);
@@ -143,6 +167,7 @@ public sealed class RestApi(HttpClient http) : IRestApi
     public IThemeApi Theme { get; } = new ThemeApi(http);
     public IThemesApi Themes { get; } = new ThemesApi(http);
     public IAdminMenusApi AdminMenus { get; } = new AdminMenusApi(http);
+    public IStandardMenusApi Menus { get; } = new StandardMenusApi(http);
     public IIconsApi Icons { get; } = new IconsApi(http);
 }
 
@@ -220,6 +245,38 @@ public sealed class SiteApi(HttpClient http) : ISiteApi
 
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<SiteSettings>()
+            : null;
+    }
+
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
+    {
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return request;
+    }
+}
+
+public sealed class AdminSettingsApi(HttpClient http) : IAdminSettingsApi
+{
+    public async Task<AdminSettingsDto> GetAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/blazing/admin-settings")));
+        if (!response.IsSuccessStatusCode)
+        {
+            return AdminSettingsDto.Default;
+        }
+
+        return await response.Content.ReadFromJsonAsync<AdminSettingsDto>() ?? AdminSettingsDto.Default;
+    }
+
+    public async Task<AdminSettingsDto?> UpdateAsync(AdminSettingsUpdate update)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Put, "api/blazing/admin-settings")
+        {
+            Content = JsonContent.Create(update),
+        }));
+
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<AdminSettingsDto>()
             : null;
     }
 
@@ -431,6 +488,86 @@ public sealed class IconsApi(HttpClient http) : IIconsApi
     }
 }
 
+public sealed class StandardMenusApi(HttpClient http) : IStandardMenusApi
+{
+    public async Task<StandardMenusState> ListAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/blazing/menus")));
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"Menus API returned {(int)response.StatusCode} {response.ReasonPhrase}.");
+        }
+
+        return await response.Content.ReadFromJsonAsync<StandardMenusState>() ?? StandardMenusState.Empty;
+    }
+
+    public async Task<StandardMenuSummary?> CreateMenuAsync(StandardMenuEditModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, "api/blazing/menus") { Content = JsonContent.Create(model) }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    public async Task<StandardMenuSummary?> RenameMenuAsync(string menuId, StandardMenuEditModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}/rename") { Content = JsonContent.Create(model) }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    public async Task<StandardMenuSummary?> ToggleMenuAsync(string menuId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}/toggle")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    public async Task<StandardMenuSummary?> DuplicateMenuAsync(string menuId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}/duplicate")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    public async Task<bool> DeleteMenuAsync(string menuId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Delete, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}")));
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<StandardMenuSummary?> CreateNodeAsync(string menuId, StandardMenuNodeEditModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}/nodes") { Content = JsonContent.Create(model) }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    public async Task<StandardMenuSummary?> UpdateNodeAsync(string menuId, string nodeId, StandardMenuNodeEditModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Put, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}") { Content = JsonContent.Create(model) }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    public async Task<StandardMenuSummary?> MoveNodeAsync(string menuId, string nodeId, StandardMenuNodeMoveModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/move") { Content = JsonContent.Create(model) }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    public async Task<StandardMenuSummary?> DuplicateNodeAsync(string menuId, string nodeId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/duplicate")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    public async Task<StandardMenuSummary?> DeleteNodeAsync(string menuId, string nodeId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Delete, $"api/blazing/menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<StandardMenuSummary>() : null;
+    }
+
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
+    {
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return request;
+    }
+}
+
 public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
 {
     public async Task<AdminMenusState> ListAsync()
@@ -558,6 +695,15 @@ public sealed record AdminSettingsDto(
     bool DisplayThemeToggler,
     bool DisplayMenuFilter,
     bool DisplayNewMenu,
+    bool DisplayTitlesInTopbar)
+{
+    public static AdminSettingsDto Default { get; } = new(true, false, false, false);
+}
+
+public sealed record AdminSettingsUpdate(
+    bool DisplayThemeToggler,
+    bool DisplayMenuFilter,
+    bool DisplayNewMenu,
     bool DisplayTitlesInTopbar);
 
 public sealed record SiteSettings(
@@ -568,7 +714,12 @@ public sealed record SiteSettings(
     string Calendar,
     int PageSize,
     int MaxPageSize,
-    int MaxPagedCount)
+    int MaxPagedCount,
+    bool AppendVersion,
+    bool UseCdn,
+    string CdnBaseUrl,
+    string ResourceDebugMode,
+    string CacheMode)
 {
     public static SiteSettings Default { get; } = new(
         string.Empty,
@@ -578,7 +729,12 @@ public sealed record SiteSettings(
         string.Empty,
         10,
         100,
-        0);
+        0,
+        true,
+        false,
+        string.Empty,
+        "FromConfiguration",
+        "FromConfiguration");
 }
 
 public sealed record SiteSettingsUpdate(
@@ -589,7 +745,12 @@ public sealed record SiteSettingsUpdate(
     string Calendar,
     int PageSize,
     int MaxPageSize,
-    int MaxPagedCount);
+    int MaxPagedCount,
+    bool AppendVersion,
+    bool UseCdn,
+    string CdnBaseUrl,
+    string ResourceDebugMode,
+    string CacheMode);
 
 public sealed record NavigationMenu(string Name, NavigationItem[] Items)
 {
@@ -698,6 +859,43 @@ public sealed record IconSearchResult(IconLibrary[] Libraries, IconCatalogItem[]
 public sealed record IconLibrary(string Id, string Name, string? Version);
 
 public sealed record IconCatalogItem(string Library, string? Version, string Name, string IconClass, string? SvgMarkup);
+
+public sealed record StandardMenusState(StandardMenuSummary[] Menus, StandardMenuNodeType[] AvailableNodeTypes)
+{
+    public static StandardMenusState Empty { get; } = new([], []);
+}
+
+public sealed record StandardMenuNodeType(string Type, string DisplayName);
+
+public sealed record StandardMenuEditModel(string? Name, bool Published);
+
+public sealed record StandardMenuSummary(string Id, string ContentItemId, string ContentItemVersionId, string Name, bool Published, StandardMenuNodeSummary[] Nodes);
+
+public sealed record StandardMenuNodeSummary(
+    string Id,
+    string Type,
+    string Text,
+    string? Url,
+    string? Target,
+    string? Html,
+    bool Enabled,
+    int Depth,
+    int Order,
+    string? ParentId,
+    string[] PermissionNames,
+    StandardMenuNodeSummary[] Items);
+
+public sealed record StandardMenuNodeEditModel(
+    string Type,
+    string Text,
+    string? Url,
+    string? Target,
+    string? Html,
+    string[]? PermissionNames,
+    string? ParentNodeId,
+    int? Position);
+
+public sealed record StandardMenuNodeMoveModel(string? ParentNodeId, int? Position);
 
 public sealed record AdminMenusState(AdminMenuSummary[] Menus)
 {

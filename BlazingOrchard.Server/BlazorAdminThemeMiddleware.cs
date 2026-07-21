@@ -23,6 +23,12 @@ public sealed class BlazorAdminThemeOptions
     {
         "/admin",
         "/admin/themes",
+        "/admin/menus",
+        "/admin/menu",
+        "/admin/menu/list",
+        "/admin/contents/contentitems/menu",
+        "/admin/settings/admin",
+        "/admin/settings/general",
     };
 
     public string[] BlazorRouteSourceDirectories { get; set; } =

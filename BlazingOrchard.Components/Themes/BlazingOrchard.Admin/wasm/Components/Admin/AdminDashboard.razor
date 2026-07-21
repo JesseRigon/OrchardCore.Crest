@@ -171,6 +171,11 @@
         public int PageSize { get; set; }
         public int MaxPageSize { get; set; }
         public int MaxPagedCount { get; set; }
+        public bool AppendVersion { get; set; }
+        public bool UseCdn { get; set; }
+        public string CdnBaseUrl { get; set; } = string.Empty;
+        public string ResourceDebugMode { get; set; } = "FromConfiguration";
+        public string CacheMode { get; set; } = "FromConfiguration";
 
         public static EditableSiteSettings From(SiteSettings settings) => new()
         {
@@ -182,6 +187,11 @@
             PageSize = settings.PageSize,
             MaxPageSize = settings.MaxPageSize,
             MaxPagedCount = settings.MaxPagedCount,
+            AppendVersion = settings.AppendVersion,
+            UseCdn = settings.UseCdn,
+            CdnBaseUrl = settings.CdnBaseUrl,
+            ResourceDebugMode = settings.ResourceDebugMode,
+            CacheMode = settings.CacheMode,
         };
 
         public SiteSettingsUpdate ToUpdate() => new(
@@ -192,6 +202,11 @@
             Calendar,
             PageSize,
             MaxPageSize,
-            MaxPagedCount);
+            MaxPagedCount,
+            AppendVersion,
+            UseCdn,
+            CdnBaseUrl,
+            ResourceDebugMode,
+            CacheMode);
     }
 }

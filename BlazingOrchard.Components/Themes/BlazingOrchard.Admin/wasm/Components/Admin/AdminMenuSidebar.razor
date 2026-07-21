@@ -1,9 +1,13 @@
 @using BlazingOrchard.Admin.DisplayManagement
 @using BlazingOrchard.Admin.Components.Shared
+@using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
 @using Radzen
 @using Radzen.Blazor
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
+@implements IDisposable
 
 <RadzenSidebar class="admin-menu-sidebar">
     <RadzenStack Gap="0.75rem" class="admin-menu-sidebar__content">
@@ -39,7 +43,7 @@
             }
 
             <RadzenPanelMenu class="admin-menu-sidebar__menu">
-                <AdminMenuPanelItems Items="VisibleMenuItems" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" FlyoutOpened="OpenFlyout" FlyoutCloseRequested="CloseFlyoutSoon" />
+                <AdminMenuPanelItems Items="VisibleMenuItems" ActiveItemKey="@ActiveItemKey" ActiveItemLink="@ActiveItemLink" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" FlyoutOpened="OpenFlyout" FlyoutCloseRequested="CloseFlyoutSoon" />
             </RadzenPanelMenu>
 
             @if (VisibleMenuItems.Length == 0)
@@ -58,7 +62,7 @@
                         <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" class="admin-menu-sidebar__quickadd-button" Click="CloseQuickAdd" title="Close Quick Add" />
                     </div>
                     <RadzenPanelMenu class="admin-menu-sidebar__menu admin-menu-sidebar__quickadd-menu">
-                        <AdminMenuPanelItems Items="QuickAddItems" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" FlyoutOpened="OpenFlyout" FlyoutCloseRequested="CloseFlyoutSoon" />
+                        <AdminMenuPanelItems Items="QuickAddItems" ActiveItemKey="@ActiveItemKey" ActiveItemLink="@ActiveItemLink" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" FlyoutOpened="OpenFlyout" FlyoutCloseRequested="CloseFlyoutSoon" />
                     </RadzenPanelMenu>
                 </div>
             }
@@ -91,6 +95,7 @@
     private double FlyoutLeft { get; set; }
     private double FlyoutTop { get; set; }
     private CancellationTokenSource? FlyoutCloseDelay { get; set; }
+    private string? BrowserPathAndQuery { get; set; }
 
     private DisplayMenu? Menu => DisplayManager?.AdminMenu;
     private DisplayMenuItem? QuickAddSource => Menu is null ? null : FindQuickAddSource(Menu.Items);
@@ -98,6 +103,31 @@
     private bool HasQuickAddItems => DisplayManager?.Manifest?.AdminSettings.DisplayNewMenu == true && QuickAddItems.Length > 0;
     private DisplayMenuItem[] SidebarMenuItems => Menu is null ? [] : RemoveQuickAddSource(Menu.Items);
     private DisplayMenuItem[] VisibleMenuItems => string.IsNullOrWhiteSpace(MenuFilter) ? SidebarMenuItems : FilterItems(SidebarMenuItems, MenuFilter);
+    private DisplayMenuItem? ActiveItem => Menu is null ? null : FindBestActiveItem(Menu.Items);
+    private string? ActiveItemKey => ActiveItem?.StableKey;
+    private string? ActiveItemLink => ActiveItem?.Link;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                BrowserPathAndQuery = await JS.InvokeAsync<string>("blazingAdminMenus.getPathAndQuery");
+                StateHasChanged();
+            }
+
+            await JS.InvokeVoidAsync("blazingAdminMenus.syncSidebarActiveState");
+        }
+        catch (JSException)
+        {
+        }
+    }
 
     protected override void OnParametersSet()
     {
@@ -111,6 +141,19 @@
         {
             IsQuickAddOpen = false;
         }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        BrowserPathAndQuery = Uri.TryCreate(args.Location, UriKind.Absolute, out var uri) ? uri.PathAndQuery : args.Location;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        FlyoutCloseDelay?.Cancel();
+        FlyoutCloseDelay?.Dispose();
     }
 
     private void OpenFlyout(DisplayMenuItem item, MouseEventArgs args)
@@ -259,17 +302,81 @@
         return hasActiveItem;
     }
 
-    private bool IsActive(DisplayMenuItem item)
+    private bool IsActive(DisplayMenuItem item) => ActiveItemKey == item.StableKey;
+
+    private DisplayMenuItem? FindBestActiveItem(IEnumerable<DisplayMenuItem> items)
     {
-        if (!item.HasLink)
+        var current = !string.IsNullOrWhiteSpace(BrowserPathAndQuery)
+            ? NormalizePathOnly(BrowserPathAndQuery)
+            : Uri.TryCreate(Navigation.Uri, UriKind.Absolute, out var uri)
+                ? NormalizePathOnly(uri.PathAndQuery)
+                : NormalizePathOnly(Navigation.Uri);
+        return FindBestActiveItem(items, current).Item;
+    }
+
+    private static (DisplayMenuItem? Item, int Score) FindBestActiveItem(IEnumerable<DisplayMenuItem> items, string current)
+    {
+        DisplayMenuItem? bestItem = null;
+        var bestScore = -1;
+
+        foreach (var item in items)
         {
-            return false;
+            var itemScore = GetActiveScore(item, current);
+            if (itemScore > bestScore)
+            {
+                bestItem = item;
+                bestScore = itemScore;
+            }
+
+            var childBest = FindBestActiveItem(item.Items, current);
+            if (childBest.Score > bestScore)
+            {
+                bestItem = childBest.Item;
+                bestScore = childBest.Score;
+            }
         }
 
-        var current = '/' + Navigation.ToBaseRelativePath(Navigation.Uri).TrimStart('/');
-        var link = item.Link!.StartsWith('/') ? item.Link : '/' + item.Link;
-        return current.Equals(link, StringComparison.OrdinalIgnoreCase)
-            || current.StartsWith(link.TrimEnd('/') + '/', StringComparison.OrdinalIgnoreCase);
+        return (bestItem, bestScore);
+    }
+
+    private static int GetActiveScore(DisplayMenuItem item, string current)
+    {
+        if (!item.HasLink || item.Link == "#")
+        {
+            return -1;
+        }
+
+        var link = NormalizePathOnly(item.Link!);
+        if (PathMatches(current, link))
+        {
+            return link.Length;
+        }
+
+        var currentWithoutAdmin = StripAdminPrefix(current);
+        var linkWithoutAdmin = StripAdminPrefix(link);
+        return PathMatches(currentWithoutAdmin, linkWithoutAdmin)
+            ? linkWithoutAdmin.Length
+            : -1;
+    }
+
+    private static bool PathMatches(string current, string link) =>
+        current.Equals(link, StringComparison.OrdinalIgnoreCase) || current.StartsWith(link.TrimEnd('/') + '/', StringComparison.OrdinalIgnoreCase);
+
+    private static string StripAdminPrefix(string path) =>
+        path.StartsWith("/Admin/", StringComparison.OrdinalIgnoreCase)
+            ? path[6..]
+            : string.Equals(path, "/Admin", StringComparison.OrdinalIgnoreCase) ? "/" : path;
+
+    private static string NormalizePathOnly(string value)
+    {
+        var path = value.Split('?', 2)[0].Split('#', 2)[0].Trim();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return "/";
+        }
+
+        path = path.StartsWith('/') ? path : '/' + path;
+        return path.TrimEnd('/');
     }
 
     private static DisplayMenuItem? FindQuickAddSource(IEnumerable<DisplayMenuItem> items)

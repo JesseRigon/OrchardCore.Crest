@@ -172,5 +172,32 @@ window.blazingAdminMenus = (() => {
         }
     }
 
-    return { init, dispose };
+    function getPathAndQuery() {
+        return `${window.location.pathname}${window.location.search}`;
+    }
+
+    function syncSidebarActiveState(rootSelector = '.admin-menu-sidebar') {
+        const root = document.querySelector(rootSelector);
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        root.querySelectorAll('.admin-menu-sidebar__item-content--not-active').forEach(content => {
+            const wrapper = content.closest('.rz-navigation-item-wrapper');
+            const link = content.closest('.rz-navigation-item-link');
+            wrapper?.classList.remove('rz-navigation-item-wrapper-active');
+            link?.classList.remove('rz-navigation-item-link-active', 'active');
+            link?.removeAttribute('aria-current');
+        });
+
+        root.querySelectorAll('.admin-menu-sidebar__item-content--active').forEach(content => {
+            const wrapper = content.closest('.rz-navigation-item-wrapper');
+            const link = content.closest('.rz-navigation-item-link');
+            wrapper?.classList.add('rz-navigation-item-wrapper-active');
+            link?.classList.add('rz-navigation-item-link-active', 'active');
+            link?.setAttribute('aria-current', 'page');
+        });
+    }
+
+    return { init, dispose, getPathAndQuery, syncSidebarActiveState };
 })();

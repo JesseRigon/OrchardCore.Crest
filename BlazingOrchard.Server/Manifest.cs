@@ -14,7 +14,7 @@ using OrchardCore.Modules.Manifest;
     Name = "Blazing Server",
     Description = "Provides Blazing tenant APIs for authentication, theme settings, and app configuration.",
     Category = "Blazing",
-    Dependencies = ["OrchardCore.Settings", "OrchardCore.Themes", "OrchardCore.Users", "BlazingOrchard.LegacyFrame"],
+    Dependencies = ["OrchardCore.Menu", "OrchardCore.Settings", "OrchardCore.Themes", "OrchardCore.Users", "BlazingOrchard.LegacyFrame"],
     IsAlwaysEnabled = true
 )]
 
