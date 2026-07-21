@@ -109,7 +109,7 @@ public interface IThemesApi
 
 public interface IIconsApi
 {
-    Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200);
+    Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200, IEnumerable<IconSearchFilter>? filters = null);
     Task<BlazingIconProvidersSettings> GetProvidersAsync();
     Task<BlazingIconProvidersSettings?> UpdateProvidersAsync(BlazingIconProvidersSettings settings);
     Task<TenantIconSummary[]> ListTenantAsync();
@@ -461,7 +461,7 @@ public sealed class ThemesApi(HttpClient http) : IThemesApi
 
 public sealed class IconsApi(HttpClient http) : IIconsApi
 {
-    public async Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200)
+    public async Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200, IEnumerable<IconSearchFilter>? filters = null)
     {
         var url = new StringBuilder("api/blazing/icons?")
             .Append("skip=").Append(skip)
@@ -475,6 +475,14 @@ public sealed class IconsApi(HttpClient http) : IIconsApi
         if (!string.IsNullOrWhiteSpace(query))
         {
             url.Append("&query=").Append(Uri.EscapeDataString(query));
+        }
+
+        foreach (var filter in filters ?? [])
+        {
+            if (!string.IsNullOrWhiteSpace(filter.Facet) && !string.IsNullOrWhiteSpace(filter.Value))
+            {
+                url.Append("&filter=").Append(Uri.EscapeDataString($"{filter.Facet}:{filter.Value}"));
+            }
         }
 
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, url.ToString())));
@@ -909,12 +917,18 @@ public sealed record ThemeSummary(
     bool Enabled,
     string PreviewImageUrl);
 
-public sealed record IconSearchResult(IconLibrary[] Libraries, IconCatalogItem[] Items, int Total, int Skip, int Take)
+public sealed record IconSearchResult(IconLibrary[] Libraries, IconSearchFacet[] Facets, IconCatalogItem[] Items, int Total, int Skip, int Take)
 {
-    public static IconSearchResult Empty { get; } = new([], [], 0, 0, 200);
+    public static IconSearchResult Empty { get; } = new([], [], [], 0, 0, 200);
 }
 
 public sealed record IconLibrary(string Id, string Name, string? Version, string? ProviderId = null, string? ProviderName = null);
+
+public sealed record IconSearchFilter(string Facet, string Value);
+
+public sealed record IconSearchFacet(string Id, string Label, string SelectionMode, IconSearchFacetOption[] Options);
+
+public sealed record IconSearchFacetOption(string Value, string Label, int? Count = null);
 
 public sealed record IconCatalogItem(string Key, string Library, string? Version, string Style, string Name, string IconClass, string? SvgMarkup, string? ProviderId = null);
 

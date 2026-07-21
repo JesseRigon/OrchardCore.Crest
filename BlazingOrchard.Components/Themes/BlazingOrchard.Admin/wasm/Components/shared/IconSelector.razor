@@ -49,19 +49,19 @@
                             </div>
                         </div>
 
-                        @foreach (var group in FilterGroups)
+                        @foreach (var facet in Facets)
                         {
                             <div class="icon-selector__filter-section">
-                                <div class="icon-selector__filter-heading">@group.Label</div>
-                                <div class="@group.CssClass">
-                                    @foreach (var option in group.Options)
+                                <div class="icon-selector__filter-heading">@facet.Label</div>
+                                <div class="icon-selector__chip-list">
+                                    @foreach (var option in facet.Options)
                                     {
-                                        <button type="button" class="@GetFilterButtonClass(option)" @onclick="@(() => ToggleFilterAsync(option))">
-                                            @if (!string.IsNullOrWhiteSpace(option.Icon))
-                                            {
-                                                <span aria-hidden="true">@option.Icon</span>
-                                            }
+                                        <button type="button" class="@GetFilterButtonClass(facet, option)" @onclick="@(() => ToggleFilterAsync(facet, option))">
                                             <span>@option.Label</span>
+                                            @if (option.Count is > 0)
+                                            {
+                                                <span class="icon-selector__filter-count">@option.Count</span>
+                                            }
                                         </button>
                                     }
                                 </div>
@@ -122,6 +122,7 @@
     private readonly List<IconCatalogItem> Items = [];
     private readonly HashSet<string> ActiveFilterValues = new(StringComparer.OrdinalIgnoreCase);
     private IconLibrary[] Libraries = [];
+    private IconSearchFacet[] Facets = [];
     private ElementReference GridElement;
     private bool IsOpen;
     private bool IsLoading;
@@ -130,60 +131,6 @@
     private int Loaded;
     private string? SearchText;
     private string? SelectedLibrary;
-
-    private static readonly FilterGroup[] FilterGroups =
-    [
-        new("Animation", "icon-selector__chip-list", [
-            new("static", "Static"),
-            new("animated", "Animated")
-        ]),
-        new("OS", "icon-selector__chip-list", [
-            new("android", "Android", "🤖"),
-            new("ios", "iOS", ""),
-            new("windows", "Windows", "🪟"),
-            new("macos", "macOS", "🖥️")
-        ]),
-        new("Technique", "icon-selector__chip-list", [
-            new("3d", "3D", "🌈"),
-            new("filled", "Filled", "●"),
-            new("line", "Line", "○"),
-            new("hand-drawn", "Hand-drawn", "◌")
-        ]),
-        new("Colors", "icon-selector__chip-list", [
-            new("multi", "Multi", "🌈"),
-            new("duo", "Duo", "◒"),
-            new("mono", "Mono", "●"),
-            new("gradient", "Gradient", "🟣")
-        ]),
-        new("Corners", "icon-selector__chip-list", [
-            new("round", "Round", "⌒"),
-            new("sharp", "Sharp", "⌜")
-        ]),
-        new("Filter Size", "icon-selector__size-list", [
-            new("small", "Small", "⌂"),
-            new("medium", "Medium", "⌂"),
-            new("large", "Large", "⌂")
-        ]),
-        new("Aesthetic", "icon-selector__chip-list", [
-            new("professional", "Professional"),
-            new("decorative", "Decorative"),
-            new("games", "Games"),
-            new("classic", "Classic"),
-            new("kids", "Kids")
-        ]),
-        new("Stroke", "icon-selector__chip-list", [
-            new("stroke-1", "1"),
-            new("stroke-1.4", "1.4"),
-            new("stroke-1.5", "1.5"),
-            new("stroke-2", "2"),
-            new("stroke-2.5", "2.5"),
-            new("stroke-3", "3"),
-            new("stroke-4", "4"),
-            new("stroke-6", "6"),
-            new("stroke-8", "8"),
-            new("stroke-10", "10")
-        ])
-    ];
 
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
@@ -217,11 +164,12 @@
         await LoadFirstPageAsync();
     }
 
-    private async Task ToggleFilterAsync(FilterOption option)
+    private async Task ToggleFilterAsync(IconSearchFacet facet, IconSearchFacetOption option)
     {
-        if (!ActiveFilterValues.Add(option.Value))
+        var key = FilterKey(facet.Id, option.Value);
+        if (!ActiveFilterValues.Add(key))
         {
-            ActiveFilterValues.Remove(option.Value);
+            ActiveFilterValues.Remove(key);
         }
 
         await LoadFirstPageAsync();
@@ -265,8 +213,9 @@
         IsLoading = true;
         try
         {
-            var result = await Api.Blazing.Rest.Icons.SearchAsync(SelectedLibrary, BuildQuery(), Loaded, PageSize);
+            var result = await Api.Blazing.Rest.Icons.SearchAsync(SelectedLibrary, SearchText, Loaded, PageSize, BuildFilters());
             Libraries = result.Libraries;
+            Facets = result.Facets;
             Total = result.Total;
             Loaded += result.Items.Length;
             Items.AddRange(FilterDuplicateIcons(result.Items));
@@ -324,27 +273,29 @@
         return $"@{icon.ProviderId ?? icon.Library}:{icon.Library}:{icon.Name}";
     }
 
-    private string? BuildQuery()
+    private IconSearchFilter[] BuildFilters() =>
+        ActiveFilterValues
+            .Select(value => value.Split(':', 2, StringSplitOptions.TrimEntries))
+            .Where(parts => parts.Length == 2)
+            .Select(parts => new IconSearchFilter(parts[0], parts[1]))
+            .ToArray();
+
+    private string GetFilterButtonClass(IconSearchFacet facet, IconSearchFacetOption option) =>
+        $"icon-selector__filter-chip {(ActiveFilterValues.Contains(FilterKey(facet.Id, option.Value)) ? "icon-selector__filter-chip--active" : null)}";
+
+    private string FilterLabel(string key)
     {
-        var parts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(SearchText))
+        var parts = key.Split(':', 2, StringSplitOptions.TrimEntries);
+        if (parts.Length != 2)
         {
-            parts.Add(SearchText.Trim());
+            return key;
         }
 
-        parts.AddRange(ActiveFilterValues.Select(FilterSearchTerm));
-        return parts.Count == 0 ? null : string.Join(' ', parts.Where(value => !string.IsNullOrWhiteSpace(value)));
+        return Facets
+            .FirstOrDefault(facet => string.Equals(facet.Id, parts[0], StringComparison.OrdinalIgnoreCase))
+            ?.Options.FirstOrDefault(option => string.Equals(option.Value, parts[1], StringComparison.OrdinalIgnoreCase))
+            ?.Label ?? parts[1];
     }
 
-    private string GetFilterButtonClass(FilterOption option) =>
-        $"icon-selector__filter-chip {(ActiveFilterValues.Contains(option.Value) ? "icon-selector__filter-chip--active" : null)}";
-
-    private static string FilterLabel(string value) =>
-        FilterGroups.SelectMany(group => group.Options).FirstOrDefault(option => string.Equals(option.Value, value, StringComparison.OrdinalIgnoreCase))?.Label ?? value;
-
-    private static string FilterSearchTerm(string value) => value.StartsWith("stroke-", StringComparison.OrdinalIgnoreCase) ? value["stroke-".Length..] : value;
-
-    private sealed record FilterGroup(string Label, string CssClass, FilterOption[] Options);
-
-    private sealed record FilterOption(string Value, string Label, string? Icon = null);
+    private static string FilterKey(string facet, string value) => $"{facet}:{value}";
 }

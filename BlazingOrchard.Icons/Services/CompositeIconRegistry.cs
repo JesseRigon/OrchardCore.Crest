@@ -69,6 +69,24 @@ public sealed class CompositeIconRegistry(IEnumerable<IIconProvider> providers) 
             .ThenBy(library => library.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
+        var facets = providerResults
+            .SelectMany(result => result.Facets)
+            .GroupBy(facet => facet.Id, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new IconSearchFacet(
+                group.First().Id,
+                group.First().Label,
+                group.First().SelectionMode,
+                group.SelectMany(facet => facet.Options)
+                    .GroupBy(option => option.Value, StringComparer.OrdinalIgnoreCase)
+                    .Select(optionGroup => new IconSearchFacetOption(
+                        optionGroup.First().Value,
+                        optionGroup.First().Label,
+                        optionGroup.Any(option => option.Count.HasValue) ? optionGroup.Sum(option => option.Count ?? 0) : null))
+                    .OrderBy(option => option.Label, StringComparer.OrdinalIgnoreCase)
+                    .ToArray()))
+            .OrderBy(facet => facet.Label, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
         var items = providerResults
             .SelectMany(result => result.Items)
             .DistinctBy(item => item.Key, StringComparer.OrdinalIgnoreCase)
@@ -78,7 +96,7 @@ public sealed class CompositeIconRegistry(IEnumerable<IIconProvider> providers) 
             .ToArray();
 
         var total = providerResults.Sum(result => result.Total);
-        return new IconSearchResult(libraries, items.Take(Math.Clamp(request.Take, 1, 200)).ToArray(), total, Math.Max(0, request.Skip), Math.Clamp(request.Take, 1, 200));
+        return new IconSearchResult(libraries, facets, items.Take(Math.Clamp(request.Take, 1, 200)).ToArray(), total, Math.Max(0, request.Skip), Math.Clamp(request.Take, 1, 200));
     }
 
     public async ValueTask<IconPack> BuildPackAsync(IEnumerable<IconKey> keys, CancellationToken cancellationToken = default)

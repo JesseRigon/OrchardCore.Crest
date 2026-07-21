@@ -62,7 +62,7 @@ public sealed partial class TenantMediaIconProvider(
             .Select(icon => new IconSearchItem(icon.Key.ToString(), icon.Key.Library, icon.Key.Version, icon.Key.Style, icon.Key.Name, icon.IconClass, icon.SvgMarkup, Id))
             .ToArray();
 
-        return new IconSearchResult(Libraries, page, icons.Length, Math.Max(0, request.Skip), Math.Clamp(request.Take, 1, 200));
+        return new IconSearchResult(Libraries, [], page, icons.Length, Math.Max(0, request.Skip), Math.Clamp(request.Take, 1, 200));
     }
 
     public ValueTask<string> GetVersionAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult("tenant-media");

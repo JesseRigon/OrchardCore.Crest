@@ -16,6 +16,7 @@ public sealed class IconifyIconProvider(
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
     private readonly ConcurrentDictionary<string, CacheEntry<IconAssetDefinition?>> _definitionCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, CacheEntry<IconLibraryDescriptor[]>> _libraryCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, CacheEntry<IconifyCollectionResponse?>> _collectionCache = new(StringComparer.OrdinalIgnoreCase);
 
     public string Id => "iconify";
 
@@ -118,18 +119,20 @@ public sealed class IconifyIconProvider(
         {
             var libraries = (await GetLibrariesAsync(cancellationToken)).ToArray();
             var query = request.Query?.Trim();
-            var icons = TryGetPrefix(requestedLibrary, out var prefix) && string.IsNullOrWhiteSpace(query)
+            var collections = await GetCollectionsAsync(settings, cancellationToken);
+            var facets = await BuildFacetsAsync(settings, requestedLibrary, collections, cancellationToken);
+            var icons = TryGetPrefix(requestedLibrary, out var prefix)
                 ? await BrowsePrefixAsync(settings, prefix, request, cancellationToken)
                 : string.IsNullOrWhiteSpace(query)
-                    ? await BrowseDefaultAsync(settings, request, cancellationToken)
-                : await SearchRemoteAsync(settings, requestedLibrary, query, request, cancellationToken);
+                    ? BrowseDefault(settings, collections, request)
+                    : await SearchRemoteAsync(settings, requestedLibrary, query, request, collections, cancellationToken);
 
             var definitions = await ResolveIconifyIconsAsync(settings, icons.Names, cancellationToken);
             var items = definitions
                 .Select(icon => new IconSearchItem(icon.Key.ToString(), icon.Key.Library, icon.Key.Version, icon.Key.Style, icon.Key.Name, icon.IconClass, icon.SvgMarkup, Id))
                 .ToArray();
 
-            return new IconSearchResult(libraries, items, icons.Total, Math.Max(0, request.Skip), ClampTake(request.Take));
+            return new IconSearchResult(libraries, facets, items, icons.Total, Math.Max(0, request.Skip), ClampTake(request.Take));
         }
         catch
         {
@@ -155,7 +158,13 @@ public sealed class IconifyIconProvider(
             ?? new Dictionary<string, IconifyCollectionInfo>(StringComparer.OrdinalIgnoreCase);
     }
 
-    private async Task<IconifySearchPage> SearchRemoteAsync(IconifyIconProviderSettings settings, string? requestedLibrary, string? query, IconSearchRequest request, CancellationToken cancellationToken)
+    private async Task<IconifySearchPage> SearchRemoteAsync(
+        IconifyIconProviderSettings settings,
+        string? requestedLibrary,
+        string? query,
+        IconSearchRequest request,
+        IReadOnlyDictionary<string, IconifyCollectionInfo> collections,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -178,6 +187,12 @@ public sealed class IconifyIconProvider(
             path += $"&prefixes={Uri.EscapeDataString(string.Join(',', settings.Prefixes))}";
         }
 
+        var iconSetCategories = GetFilterValues(request, "iconify.icon-set-category");
+        if (iconSetCategories.Length == 1)
+        {
+            path += $"&category={Uri.EscapeDataString(iconSetCategories[0])}";
+        }
+
         var response = await SendAsync(settings, path, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
@@ -185,7 +200,8 @@ public sealed class IconifyIconProvider(
         }
 
         var search = await response.Content.ReadFromJsonAsync<IconifySearchResponse>(cancellationToken: cancellationToken);
-        return new((search?.Icons ?? []).Take(ClampTake(request.Take)).ToArray(), search?.Total ?? 0);
+        var names = FilterIconifyNames(search?.Icons ?? [], request, collections);
+        return new(names.Take(ClampTake(request.Take)).ToArray(), HasClientSideIconSetFilters(request) ? names.Length : search?.Total ?? names.Length);
     }
 
     private async Task<IconifySearchPage> BrowsePrefixAsync(IconifyIconProviderSettings settings, string prefix, IconSearchRequest request, CancellationToken cancellationToken)
@@ -195,14 +211,9 @@ public sealed class IconifyIconProvider(
             return new([], 0);
         }
 
-        var response = await SendAsync(settings, $"collection?prefix={Uri.EscapeDataString(prefix)}", cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            return new([], 0);
-        }
-
-        var collection = await response.Content.ReadFromJsonAsync<IconifyCollectionResponse>(cancellationToken: cancellationToken);
-        var names = EnumerateCollectionNames(collection)
+        var collection = await GetCollectionAsync(settings, prefix, cancellationToken);
+        var names = EnumerateCollectionNames(collection, GetFilterValues(request, "iconify.icon-category"))
+            .Where(name => MatchesQuery(name, request.Query))
             .Order(StringComparer.OrdinalIgnoreCase)
             .Select(name => $"{prefix}:{name}")
             .ToArray();
@@ -210,9 +221,8 @@ public sealed class IconifyIconProvider(
         return new(names.Skip(Math.Max(0, request.Skip)).Take(ClampTake(request.Take)).ToArray(), names.Length);
     }
 
-    private async Task<IconifySearchPage> BrowseDefaultAsync(IconifyIconProviderSettings settings, IconSearchRequest request, CancellationToken cancellationToken)
+    private IconifySearchPage BrowseDefault(IconifyIconProviderSettings settings, IReadOnlyDictionary<string, IconifyCollectionInfo> collections, IconSearchRequest request)
     {
-        var collections = await GetCollectionsAsync(settings, cancellationToken);
         var names = new List<string>();
 
         foreach (var prefix in GetVisiblePrefixes(settings))
@@ -232,6 +242,80 @@ public sealed class IconifyIconProvider(
 
         var distinct = names.Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
         return new(distinct.Skip(Math.Max(0, request.Skip)).Take(ClampTake(request.Take)).ToArray(), distinct.Length);
+    }
+
+    private async Task<IconifyCollectionResponse?> GetCollectionAsync(IconifyIconProviderSettings settings, string prefix, CancellationToken cancellationToken)
+    {
+        var cacheKey = $"{NormalizeBaseUrl(settings.BaseUrl)}|collection|{prefix}";
+        if (_collectionCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
+        {
+            return cached.Value;
+        }
+
+        var response = await SendAsync(settings, $"collection?prefix={Uri.EscapeDataString(prefix)}", cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            _collectionCache[cacheKey] = new(null, DateTimeOffset.UtcNow.Add(CacheDuration));
+            return null;
+        }
+
+        var collection = await response.Content.ReadFromJsonAsync<IconifyCollectionResponse>(cancellationToken: cancellationToken);
+        _collectionCache[cacheKey] = new(collection, DateTimeOffset.UtcNow.Add(CacheDuration));
+        return collection;
+    }
+
+    private async Task<IconSearchFacet[]> BuildFacetsAsync(
+        IconifyIconProviderSettings settings,
+        string? requestedLibrary,
+        IReadOnlyDictionary<string, IconifyCollectionInfo> collections,
+        CancellationToken cancellationToken)
+    {
+        var facets = new List<IconSearchFacet>();
+        var visibleCollections = collections
+            .Where(pair => CanUsePrefix(settings, pair.Key))
+            .ToArray();
+
+        AddFacet(
+            facets,
+            "iconify.icon-set-category",
+            "Icon set category",
+            visibleCollections
+                .Select(pair => pair.Value.Category)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .GroupBy(value => value!, StringComparer.OrdinalIgnoreCase)
+                .Select(group => new IconSearchFacetOption(group.Key, group.Key, group.Count())));
+
+        AddFacet(
+            facets,
+            "iconify.icon-set-tag",
+            "Icon set traits",
+            visibleCollections
+                .SelectMany(pair => pair.Value.Tags ?? [])
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .GroupBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .Select(group => new IconSearchFacetOption(group.Key, group.Key, group.Count())));
+
+        AddFacet(
+            facets,
+            "iconify.palette",
+            "Palette",
+            visibleCollections
+                .GroupBy(pair => pair.Value.Palette ? "multi-color" : "monochrome", StringComparer.OrdinalIgnoreCase)
+                .Select(group => new IconSearchFacetOption(group.Key, group.Key == "multi-color" ? "Multi-color" : "Monochrome", group.Count())));
+
+        if (TryGetPrefix(requestedLibrary, out var prefix))
+        {
+            var collection = await GetCollectionAsync(settings, prefix, cancellationToken);
+            AddFacet(
+                facets,
+                "iconify.icon-category",
+                "Icon category",
+                (collection?.Categories ?? new Dictionary<string, string[]>())
+                    .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+                    .Select(pair => new IconSearchFacetOption(pair.Key, pair.Key, pair.Value.Length)));
+        }
+
+        return facets.ToArray();
     }
 
     private async Task<IconAssetDefinition?> ResolveIconifyIconAsync(IconifyIconProviderSettings settings, string prefix, string name, CancellationToken cancellationToken)
@@ -441,12 +525,31 @@ public sealed class IconifyIconProvider(
 
     private static string Attribution(IconifyIconProviderSettings settings) => $"Iconify API: {NormalizeBaseUrl(settings.BaseUrl)}";
 
-    private static IconSearchResult Empty(IconSearchRequest request) => new([], [], 0, Math.Max(0, request.Skip), ClampTake(request.Take));
+    private static IconSearchResult Empty(IconSearchRequest request) => new([], [], [], 0, Math.Max(0, request.Skip), ClampTake(request.Take));
 
     private static int ClampTake(int take) => Math.Clamp(take, 1, 200);
 
-    private static IEnumerable<string> EnumerateCollectionNames(IconifyCollectionResponse? collection)
+    private static IEnumerable<string> EnumerateCollectionNames(IconifyCollectionResponse? collection, string[]? categories = null)
     {
+        if (categories is { Length: > 0 })
+        {
+            var requested = categories.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (collection?.Categories is null)
+            {
+                yield break;
+            }
+
+            foreach (var name in collection.Categories
+                .Where(category => requested.Contains(category.Key))
+                .SelectMany(category => category.Value)
+                .Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                yield return name;
+            }
+
+            yield break;
+        }
+
         if (collection?.Uncategorized is not null)
         {
             foreach (var name in collection.Uncategorized)
@@ -461,6 +564,72 @@ public sealed class IconifyIconProvider(
             {
                 yield return name;
             }
+        }
+    }
+
+    private static string[] FilterIconifyNames(IEnumerable<string> names, IconSearchRequest request, IReadOnlyDictionary<string, IconifyCollectionInfo> collections)
+    {
+        var iconSetTags = GetFilterValues(request, "iconify.icon-set-tag");
+        var iconSetCategories = GetFilterValues(request, "iconify.icon-set-category");
+        var palettes = GetFilterValues(request, "iconify.palette");
+        if (iconSetTags.Length == 0 && iconSetCategories.Length <= 1 && palettes.Length == 0)
+        {
+            return names.ToArray();
+        }
+
+        return names
+            .Where(value =>
+            {
+                var parsed = ParseIconifyName(value);
+                if (parsed is null || !collections.TryGetValue(parsed.Value.Prefix, out var info))
+                {
+                    return false;
+                }
+
+                return (iconSetCategories.Length <= 1 || iconSetCategories.Contains(info.Category, StringComparer.OrdinalIgnoreCase))
+                    && (iconSetTags.Length == 0 || iconSetTags.All(tag => info.Tags?.Contains(tag, StringComparer.OrdinalIgnoreCase) == true))
+                    && (palettes.Length == 0 || palettes.Contains(info.Palette ? "multi-color" : "monochrome", StringComparer.OrdinalIgnoreCase));
+            })
+            .ToArray();
+    }
+
+    private static bool HasClientSideIconSetFilters(IconSearchRequest request) =>
+        GetFilterValues(request, "iconify.icon-set-tag").Length > 0
+        || GetFilterValues(request, "iconify.icon-set-category").Length > 1
+        || GetFilterValues(request, "iconify.palette").Length > 0;
+
+    private static string[] GetFilterValues(IconSearchRequest request, string facet) =>
+        (request.Filters ?? [])
+            .Where(filter => string.Equals(filter.Facet, facet, StringComparison.OrdinalIgnoreCase))
+            .Select(filter => filter.Value)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+    private static bool MatchesQuery(string name, string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return true;
+        }
+
+        return query
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .All(term => name.Contains(term, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static void AddFacet(List<IconSearchFacet> facets, string id, string label, IEnumerable<IconSearchFacetOption> options)
+    {
+        var optionArray = options
+            .Where(option => !string.IsNullOrWhiteSpace(option.Value))
+            .DistinctBy(option => option.Value, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(option => option.Label, StringComparer.OrdinalIgnoreCase)
+            .Take(80)
+            .ToArray();
+
+        if (optionArray.Length > 0)
+        {
+            facets.Add(new IconSearchFacet(id, label, "multiple", optionArray));
         }
     }
 
@@ -487,5 +656,8 @@ public sealed class IconifyIconProvider(
     private sealed record IconifyCollectionInfo(
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("version")] string? Version,
-        [property: JsonPropertyName("samples")] string[]? Samples);
+        [property: JsonPropertyName("samples")] string[]? Samples,
+        [property: JsonPropertyName("category")] string? Category,
+        [property: JsonPropertyName("tags")] string[]? Tags,
+        [property: JsonPropertyName("palette")] bool Palette);
 }

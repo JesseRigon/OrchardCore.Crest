@@ -676,12 +676,17 @@
 .icon-selector__modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 2000;
+    z-index: 2147483647;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: clamp(0.75rem, 2vw, 2rem);
     background: rgba(15, 23, 42, 0.48);
+}
+
+body:has(.icon-selector__modal-backdrop) .admin-menu-sidebar,
+body:has(.icon-selector__modal-backdrop) .admin-menu-sidebar__flyout {
+    pointer-events: none !important;
 }
 
 .icon-selector__dialog {
@@ -802,6 +807,11 @@
     padding: 0.25rem 0.65rem;
     font-size: 0.82rem;
     line-height: 1.1;
+}
+
+.icon-selector__filter-count {
+    color: var(--rz-text-secondary-color, #6b7280);
+    font-size: 0.72rem;
 }
 
 .icon-selector__library-chip--active,

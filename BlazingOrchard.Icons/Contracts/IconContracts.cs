@@ -72,14 +72,31 @@ public sealed record IconSearchRequest(
     string? Library,
     string? Query,
     int Skip,
-    int Take);
+    int Take,
+    IconSearchFilter[]? Filters = null);
+
+public sealed record IconSearchFilter(
+    string Facet,
+    string Value);
 
 public sealed record IconSearchResult(
     IconLibraryDescriptor[] Libraries,
+    IconSearchFacet[] Facets,
     IconSearchItem[] Items,
     int Total,
     int Skip,
     int Take);
+
+public sealed record IconSearchFacet(
+    string Id,
+    string Label,
+    string SelectionMode,
+    IconSearchFacetOption[] Options);
+
+public sealed record IconSearchFacetOption(
+    string Value,
+    string Label,
+    int? Count = null);
 
 public sealed record IconSearchItem(
     string Key,
