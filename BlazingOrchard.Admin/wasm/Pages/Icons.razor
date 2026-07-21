@@ -2,6 +2,7 @@
 @page "/Admin/Icons"
 @using BlazingOrchard.Admin.Api
 @using BlazingOrchard.Admin.Components.Shared
+@using BlazingOrchard.Icons.Components
 @using Radzen
 @using Radzen.Blazor
 @inject IApi Api
@@ -59,12 +60,63 @@
                             </RadzenFormField>
                             <RadzenText TextStyle="TextStyle.Caption" Text="Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API." />
 
+                            @if (IsCustomIconifyServer)
+                            {
+                                <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+                                    Custom Iconify servers are remote-only and are not cached by Blazing Orchard.
+                                </RadzenAlert>
+                            }
+
                             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
                                 <RadzenButton Text="Save provider settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
                                 <RadzenButton Text="Reset Iconify defaults" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@IsSaving" />
                             </RadzenStack>
                         </RadzenStack>
                     </RadzenTemplateForm>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeLG="6">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.H5" Text="Public Iconify bundled cache" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="Public Iconify data is bundled from the module submodule, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache." />
+                        </RadzenStack>
+
+                        <RadzenRow>
+                            <RadzenColumn Size="6">
+                                <RadzenText TextStyle="TextStyle.Caption" Text="Status" />
+                                <RadzenText Text="@(LocalMirror.IsAvailable ? "Available" : "Remote fallback")" />
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenText TextStyle="TextStyle.Caption" Text="Version" />
+                                <RadzenText Text="@(LocalMirror.Version ?? "Not initialized")" />
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenText TextStyle="TextStyle.Caption" Text="Prefixes" />
+                                <RadzenText Text="@LocalMirror.PrefixCount.ToString("n0")" />
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenText TextStyle="TextStyle.Caption" Text="Icons" />
+                                <RadzenText Text="@LocalMirror.IconCount.ToString("n0")" />
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        <RadzenText TextStyle="TextStyle.Caption" Text="@($"Root: {(string.IsNullOrWhiteSpace(LocalMirror.RootPath) ? "not configured" : LocalMirror.RootPath)}")" />
+                        @if (LocalMirror.LastSyncUtc is not null)
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" Text="@($"Source commit: {LocalMirror.LastSyncUtc:u}")" />
+                        }
+                        @if (!string.IsNullOrWhiteSpace(LocalMirror.LastError))
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+                                Last cache error: @LocalMirror.LastError
+                            </RadzenAlert>
+                        }
+
+                        <RadzenText TextStyle="TextStyle.Caption" Text="The runtime cache is seeded from the bundled module submodule and refreshed automatically once per day by the server." />
+                    </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
 
@@ -93,11 +145,16 @@
 
 @code {
     private IconifyProviderModel Model { get; set; } = IconifyProviderModel.From(IconifyIconProviderSettings.Default);
+    private IconifyLocalMirrorStatus LocalMirror { get; set; } = IconifyLocalMirrorStatus.Empty;
     private string? SelectedIcon;
     private bool IsLoading = true;
     private bool IsSaving;
     private string? ErrorMessage;
     private bool IsBusy => IsLoading || IsSaving;
+    private bool IsCustomIconifyServer => !string.Equals(
+        (Model.BaseUrl ?? string.Empty).Trim().TrimEnd('/'),
+        IconifyIconProviderSettings.Default.BaseUrl.TrimEnd('/'),
+        StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,6 +169,7 @@
         {
             var settings = await Api.Blazing.Rest.Icons.GetProvidersAsync();
             Model = IconifyProviderModel.From(settings.Iconify);
+            LocalMirror = await Api.Blazing.Rest.Icons.GetIconifyLocalStatusAsync();
         }
         catch (Exception ex)
         {

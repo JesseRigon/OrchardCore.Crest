@@ -8,13 +8,20 @@ The repository is intentionally kept together for source management, but its pro
 BlazingOrchard.OrchardCoreModule/
   BlazingOrchard.Server/
   BlazingOrchard.Components/
+  BlazingOrchard.Icons/
+  BlazingOrchard.Admin/
+  BlazingOrchard.Site/
 ```
 
 ## Project Roles
 
 `BlazingOrchard.Server` is the backend overlay on top of Orchard Core. It integrates with Orchard, serves the active Blazor admin shell when a Blazing-compatible admin theme is selected, exposes thin `api/blazing/*` JSON adapters for Blazor admin needs, and owns shared Orchard-side infrastructure such as legacy frame theme selection. It should call Orchard services, enforce Orchard permissions, and avoid owning duplicate CMS/auth/menu/theme state.
 
-`BlazingOrchard.Components` contains the UI code for now. It is the current Radzen-based component and theme library, including reusable Blazor components, model/editor UI, client DTOs, the Blazing admin WASM shell, the Blazing site theme, CSS, JavaScript, and static assets. Theme projects may split into their own repositories/packages later, but currently remain under `BlazingOrchard.Components`.
+`BlazingOrchard.Components` is the shared Radzen-backed Blazor component layer. It owns reusable primitives, forms, model/editor UI, and client-safe UI contracts. It must not reference feature modules.
+
+`BlazingOrchard.Icons` owns icon providers, registry/search/pack services, icon UI such as `IconSelector`, and icon-specific CSS/JS/assets. It may depend on `BlazingOrchard.Components`.
+
+Admin and Site themes are composition roots. They reference `BlazingOrchard.Components`, `BlazingOrchard.Icons`, and other feature UI modules they want compiled into the WASM app.
 
 Application modules that build UI for the current Radzen line reference `BlazingOrchard.Components` explicitly. For example, a new module `CRM.BlazorWasm` would reference the components project and contributes Blazor routes/components to the admin WASM build.
 
@@ -40,21 +47,21 @@ Preferred data-access order:
 
 `BlazingOrchard.Server` installs middleware that checks the selected Orchard admin theme. If the selected admin theme is `BlazingOrchard.Admin` or has the configured Blazor tag, the middleware serves the Blazing admin WASM files for admin routes and Blazor assets.
 
-The current admin shell assets live under:
+The current admin shell assets still live under:
 
 ```text
-BlazingOrchard.Components/Themes/BlazingOrchard.Admin/wasm
+BlazingOrchard.Admin/wasm
 ```
 
-The Orchard-loadable admin theme manifest project lives at:
+The Orchard-loadable admin theme manifest project still lives at:
 
 ```text
-BlazingOrchard.Components/Themes/BlazingOrchard.Admin
+BlazingOrchard.Admin
 ```
 
 ## Component System Boundary
 
-The current concrete UI implementation is Radzen-based. Radzen controls, Radzen CSS/JS, Blazor components, theme manifests, and Radzen-specific admin UI belong in `BlazingOrchard.Components` for now.
+The current concrete UI implementation is Radzen-based. Shared Radzen-backed primitives belong in `BlazingOrchard.Components`. Feature UI and assets belong with their feature modules; theme chrome belongs with theme projects.
 
 Shared runtime contracts and infrastructure should not depend on Radzen. Future component systems should be able to reuse the Orchard-side server runtime, JSON contracts, route/theme conventions, and legacy frame infrastructure without copying Radzen-specific code.
 
@@ -80,9 +87,10 @@ The current iframe UI is still implemented inside the Radzen admin shell. A futu
 The repository can remain a single git repository while publishing separate NuGet packages. The intended package boundaries are:
 
 - `BlazingOrchard.Server`: Orchard runtime module and shared server infrastructure.
-- `BlazingOrchard.Components`: Radzen-based component/theme implementation.
+- `BlazingOrchard.Components`: shared Radzen-backed component layer.
+- `BlazingOrchard.Icons`: icon providers, icon UI, and icon-owned assets.
+- Theme packages/projects: admin/site composition roots that reference components and feature modules.
 - Future `BlazingOrchard.Client`: UI-library-neutral client contracts, display manager, routing helpers, and legacy frame client component.
-- Theme packages/repositories as needed if `BlazingOrchard.Admin`, `BlazingOrchard.Site`, or other Orchard-loadable themes are split out later.
 
 Project files are not fully package-ready yet. Some projects still have `IsPackable=false`; packaging metadata and dependency boundaries need to be finalized before publishing.
 

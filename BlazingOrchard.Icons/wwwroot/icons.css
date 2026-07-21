@@ -13,6 +13,11 @@
     background: rgba(15, 23, 42, 0.48);
 }
 
+body:has(.icon-selector__modal-backdrop) .admin-menu-sidebar,
+body:has(.icon-selector__modal-backdrop) .admin-menu-sidebar__flyout {
+    pointer-events: none !important;
+}
+
 .icon-selector__dialog {
     display: flex;
     flex-direction: column;
@@ -51,72 +56,37 @@
     background: color-mix(in srgb, var(--rz-base-background-color, #fff) 94%, var(--rz-text-color, #111827) 6%);
 }
 
+.icon-selector__filters,
+.icon-selector__style-strip,
+.icon-selector__dialog .icon-selector__grid {
+    scrollbar-width: none;
+}
+
+.icon-selector__filters::-webkit-scrollbar,
+.icon-selector__style-strip::-webkit-scrollbar,
+.icon-selector__dialog .icon-selector__grid::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
 .icon-selector__filter-section {
     margin-bottom: 1rem;
 }
 
-.icon-selector__filter-heading,
-.icon-selector__filter-heading-row {
+.icon-selector__filter-heading {
     margin-bottom: 0.45rem;
     font-size: 0.86rem;
     font-weight: 700;
     color: var(--rz-text-color);
 }
 
-.icon-selector__filter-heading-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-}
-
-.icon-selector__filter-link {
-    border: 0;
-    background: transparent;
-    color: var(--rz-primary);
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.78rem;
-    padding: 0;
-    text-decoration: underline;
-}
-
-.icon-selector__style-pack {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    width: 100%;
-    gap: 0.55rem;
-    min-height: 2.35rem;
-    border: 1px solid var(--rz-border-color);
-    border-radius: var(--rz-border-radius);
-    background: var(--rz-base-background-color, #fff);
-    color: var(--rz-text-color);
-    cursor: pointer;
-    padding: 0.45rem 0.55rem;
-    text-align: left;
-}
-
-.icon-selector__style-pack--active {
-    border-color: var(--rz-primary);
-    background: color-mix(in srgb, var(--rz-primary) 10%, transparent);
-}
-
-.icon-selector__library-list,
 .icon-selector__chip-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
 }
 
-.icon-selector__library-list {
-    margin-top: 0.5rem;
-    max-height: 9rem;
-    overflow: auto;
-    padding-right: 0.15rem;
-}
-
-.icon-selector__library-chip,
 .icon-selector__filter-chip {
     display: inline-flex;
     align-items: center;
@@ -138,7 +108,6 @@
     font-size: 0.72rem;
 }
 
-.icon-selector__library-chip--active,
 .icon-selector__filter-chip--active {
     border-color: var(--rz-primary);
     background: color-mix(in srgb, var(--rz-primary) 12%, transparent);
@@ -175,6 +144,43 @@
 
 .icon-selector__search-row {
     margin-bottom: 0.45rem;
+}
+
+.icon-selector__style-strip {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    padding: 0.1rem 0.05rem 0.65rem;
+    margin-bottom: 0.25rem;
+}
+
+.icon-selector__style-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    gap: 0.35rem;
+    min-height: 1.9rem;
+    max-width: 15rem;
+    border: 1px solid var(--rz-border-color);
+    border-radius: 999px;
+    background: var(--rz-base-background-color, #fff);
+    color: var(--rz-text-color);
+    cursor: pointer;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.84rem;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.icon-selector__style-chip--active {
+    border-color: var(--rz-primary);
+    background: color-mix(in srgb, var(--rz-primary) 12%, transparent);
+    color: var(--rz-primary);
+    font-weight: 600;
 }
 
 .icon-selector__result-meta {
@@ -228,7 +234,7 @@
     color: currentColor;
 }
 
-.icon-selector__preview ::deep svg {
+.icon-selector__preview svg {
     display: block;
     width: 1.65rem !important;
     height: 1.65rem !important;
@@ -238,7 +244,7 @@
     fill: currentColor;
 }
 
-.icon-selector__preview ::deep path {
+.icon-selector__preview path {
     fill: currentColor;
 }
 

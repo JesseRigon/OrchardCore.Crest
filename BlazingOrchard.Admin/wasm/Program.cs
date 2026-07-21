@@ -19,7 +19,7 @@ builder.Services.AddScoped<IApi, global::BlazingOrchard.Admin.Api.Api>();
 builder.Services.AddScoped<DisplayManager>();
 builder.Services.AddScoped<BlazingRoutingOptions>();
 builder.Services.AddScoped<BlazingThemeEngine>();
-builder.Services.AddSingleton<ClientIconRegistry>();
+builder.Services.AddBlazingOrchardIconClient();
 builder.Services.AddRadzenComponents();
 
 var app = builder.Build();

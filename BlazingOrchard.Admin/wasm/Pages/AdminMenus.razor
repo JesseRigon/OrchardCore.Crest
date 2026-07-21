@@ -5,6 +5,7 @@
 @using BlazingOrchard.Admin.Components.Admin
 @using BlazingOrchard.Admin.Components.Shared
 @using BlazingOrchard.Admin.DisplayManagement
+@using BlazingOrchard.Icons.Components
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
 @using Radzen
@@ -589,7 +590,7 @@
                     }
                     <RadzenStack Gap="0.15rem">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.45rem">
-                            <BlazingOrchard.Admin.Components.Shared.OrchardIcon IconClass="@node.IconClass" Size="1rem" BoxSize="1.25rem" Color="var(--rz-text-secondary-color, #6b7280)" Class="admin-menu-node__icon" />
+                            <BlazingOrchard.Icons.Components.OrchardIcon IconClass="@node.IconClass" Size="1rem" BoxSize="1.25rem" Color="var(--rz-text-secondary-color, #6b7280)" Class="admin-menu-node__icon" />
                             @if (SelectedMenu?.IsDefault == true && RenamingNodeId == node.Id)
                             {
                                 <span class="admin-menu-node__rename">

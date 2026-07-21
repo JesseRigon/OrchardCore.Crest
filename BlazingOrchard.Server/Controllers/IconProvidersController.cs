@@ -10,7 +10,8 @@ namespace BlazingOrchard.Controllers;
 [Route("api/blazing/icons/providers")]
 public sealed class IconProvidersController(
     IAuthorizationService authorizationService,
-    IIconProviderSettingsStore settingsStore) : ControllerBase
+    IIconProviderSettingsStore settingsStore,
+    IIconifyLocalMirrorStore localMirrorStore) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<BlazingIconProvidersSettings>> GetAsync()
@@ -47,6 +48,17 @@ public sealed class IconProvidersController(
         };
 
         return Ok(Redact(await settingsStore.SaveAsync(merged, HttpContext.RequestAborted)));
+    }
+
+    [HttpGet("iconify/local")]
+    public async Task<ActionResult<IconifyLocalMirrorStatus>> GetIconifyLocalStatusAsync()
+    {
+        if (!await CanManageAsync())
+        {
+            return Forbid();
+        }
+
+        return Ok(await localMirrorStore.GetStatusAsync(HttpContext.RequestAborted));
     }
 
     private Task<bool> CanManageAsync() => authorizationService.AuthorizeAsync(User, SettingsPermissions.ManageSettings);

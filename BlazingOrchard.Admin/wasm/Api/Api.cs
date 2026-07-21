@@ -112,6 +112,7 @@ public interface IIconsApi
     Task<IconSearchResult> SearchAsync(string? library = null, string? query = null, int skip = 0, int take = 200, IEnumerable<IconSearchFilter>? filters = null);
     Task<BlazingIconProvidersSettings> GetProvidersAsync();
     Task<BlazingIconProvidersSettings?> UpdateProvidersAsync(BlazingIconProvidersSettings settings);
+    Task<IconifyLocalMirrorStatus> GetIconifyLocalStatusAsync();
     Task<TenantIconSummary[]> ListTenantAsync();
     Task<TenantIconSummary?> UploadTenantAsync(string fileName, Stream stream, bool overwrite = true);
     Task<bool> DeleteTenantAsync(string name);
@@ -512,6 +513,14 @@ public sealed class IconsApi(HttpClient http) : IIconsApi
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<BlazingIconProvidersSettings>()
             : null;
+    }
+
+    public async Task<IconifyLocalMirrorStatus> GetIconifyLocalStatusAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/blazing/icons/providers/iconify/local")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<IconifyLocalMirrorStatus>() ?? IconifyLocalMirrorStatus.Empty
+            : IconifyLocalMirrorStatus.Empty;
     }
 
     public async Task<TenantIconSummary[]> ListTenantAsync()
@@ -952,6 +961,22 @@ public sealed record IconifyIconProviderSettings(
         null,
         null,
         []);
+}
+
+public sealed record IconifyLocalMirrorStatus(
+    bool IsAvailable,
+    bool IsSyncing,
+    string? Version,
+    string RootPath,
+    string? SourcePath,
+    int PrefixCount,
+    int IconCount,
+    DateTimeOffset? LastSyncUtc,
+    DateTimeOffset? LastErrorUtc,
+    string? LastError,
+    bool RemoteFallbackEnabled = true)
+{
+    public static IconifyLocalMirrorStatus Empty { get; } = new(false, false, null, string.Empty, null, 0, 0, null, null, null);
 }
 
 public sealed record StandardMenusState(StandardMenuSummary[] Menus, StandardMenuNodeType[] AvailableNodeTypes)

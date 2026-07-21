@@ -30,4 +30,11 @@
     <PackageReference Include="OrchardCore.Module.Targets" />
     <PackageReference Include="OrchardCore.DisplayManagement" />
   </ItemGroup>
+
+  <Target Name="BuildBlazingOrchardAdminWasm"
+          AfterTargets="Build"
+          Condition="'$(SkipBlazingOrchardAdminWasmBuild)' != 'true' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="dotnet restore &quot;$(MSBuildProjectDirectory)\wasm\BlazingOrchard.Admin.Wasm.csproj&quot; /p:SkipBlazingOrchardAdminWasmBuild=true" />
+    <Exec Command="dotnet build &quot;$(MSBuildProjectDirectory)\wasm\BlazingOrchard.Admin.Wasm.csproj&quot; --no-restore --configuration $(Configuration) /p:SkipBlazingOrchardAdminWasmBuild=true" />
+  </Target>
 </Project>

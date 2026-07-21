@@ -43,9 +43,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\BlazingOrchard.Components.csproj" />
+    <ProjectReference Include="..\..\BlazingOrchard.Components\BlazingOrchard.Components.csproj" />
+    <ProjectReference Include="..\..\BlazingOrchard.Icons\BlazingOrchard.Icons.csproj" />
     <!-- Auto-import Blazing component libraries contributed by Orchard modules. -->
-    <BlazingModuleWasmProject Include="..\..\..\..\..\*\blazor-wasm\*.csproj" />
+    <BlazingModuleWasmProject Include="..\..\..\*\blazor-wasm\*.csproj" />
     <ProjectReference Include="@(BlazingModuleWasmProject)" />
   </ItemGroup>
 
@@ -79,6 +80,14 @@
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)Generated\BlazingModuleAssemblyRegistry.g.cs" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="CopyBlazingOrchardIconAssets" AfterTargets="Build">
+    <ItemGroup>
+      <_BlazingOrchardIconAsset Include="..\..\BlazingOrchard.Icons\wwwroot\icons.css" />
+      <_BlazingOrchardIconAsset Include="..\..\BlazingOrchard.Icons\wwwroot\icons.js" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_BlazingOrchardIconAsset)" DestinationFolder="$(TargetDir)wwwroot" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

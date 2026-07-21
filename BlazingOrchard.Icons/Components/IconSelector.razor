@@ -1,10 +1,10 @@
-@namespace BlazingOrchard.Admin.Components.Shared
-@using BlazingOrchard.Admin.Api
+@namespace BlazingOrchard.Icons.Components
+@using BlazingOrchard.Icons
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
 @using Radzen
 @using Radzen.Blazor
-@inject IApi Api
+@inject IBlazingIconSearchClient Icons
 @inject IJSRuntime Js
 
 <div class="icon-selector">
@@ -31,24 +31,6 @@
 
                 <div class="icon-selector__dialog-body">
                     <aside class="icon-selector__filters" aria-label="Icon filters">
-                        <div class="icon-selector__filter-section">
-                            <div class="icon-selector__filter-heading-row">
-                                <span class="icon-selector__filter-heading">Style</span>
-                                <button type="button" class="icon-selector__filter-link" @onclick="@(() => SelectLibraryAsync(null))">All style packs</button>
-                            </div>
-                            <button type="button" class="icon-selector__style-pack @(SelectedLibrary is null ? "icon-selector__style-pack--active" : null)" @onclick="@(() => SelectLibraryAsync(null))">
-                                <span>💙</span>
-                                <span>All style packs</span>
-                                <span aria-hidden="true">›</span>
-                            </button>
-                            <div class="icon-selector__library-list">
-                                @foreach (var library in Libraries)
-                                {
-                                    <button type="button" class="icon-selector__library-chip @(SelectedLibrary == library.Id ? "icon-selector__library-chip--active" : null)" @onclick="@(() => SelectLibraryAsync(library.Id))">@LibraryLabel(library)</button>
-                                }
-                            </div>
-                        </div>
-
                         @foreach (var facet in Facets)
                         {
                             <div class="icon-selector__filter-section">
@@ -56,7 +38,9 @@
                                 <div class="icon-selector__chip-list">
                                     @foreach (var option in facet.Options)
                                     {
-                                        <button type="button" class="@GetFilterButtonClass(facet, option)" @onclick="@(() => ToggleFilterAsync(facet, option))">
+                                        var facetId = facet.Id;
+                                        var optionValue = option.Value;
+                                        <button type="button" class="@GetFilterButtonClass(facetId, optionValue)" @onclick="EventCallback.Factory.Create(this, () => ToggleFilterAsync(facetId, optionValue))">
                                             <span>@option.Label</span>
                                             @if (option.Count is > 0)
                                             {
@@ -77,6 +61,17 @@
                                 <RadzenButton Text="Clear" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Light" Click="ClearFiltersAsync" ButtonType="ButtonType.Button" />
                             }
                         </RadzenStack>
+
+                        <div class="icon-selector__style-strip" @ref="StylePacksElement" aria-label="Style packs">
+                            <button type="button" class="icon-selector__style-chip @(SelectedLibrary is null ? "icon-selector__style-chip--active" : null)" @onclick="@(() => SelectLibraryAsync(null))">
+                                <span>💙</span>
+                                <span>All style packs</span>
+                            </button>
+                            @foreach (var library in Libraries)
+                            {
+                                <button type="button" class="icon-selector__style-chip @(SelectedLibrary == library.Id ? "icon-selector__style-chip--active" : null)" @onclick="@(() => SelectLibraryAsync(library.Id))">@LibraryLabel(library)</button>
+                            }
+                        </div>
 
                         <div class="icon-selector__result-meta">
                             <span>@ResultSummary</span>
@@ -118,17 +113,21 @@
 </div>
 
 @code {
-    private const int PageSize = 200;
-    private readonly List<IconCatalogItem> Items = [];
+    private const int DefaultColumnCount = 10;
+    private const int RowsPerBatch = 20;
+    private readonly List<IconSearchItem> Items = [];
     private readonly HashSet<string> ActiveFilterValues = new(StringComparer.OrdinalIgnoreCase);
-    private IconLibrary[] Libraries = [];
+    private IconLibraryDescriptor[] Libraries = [];
     private IconSearchFacet[] Facets = [];
     private ElementReference GridElement;
+    private ElementReference StylePacksElement;
     private bool IsOpen;
     private bool IsLoading;
+    private bool LoadWhenRendered;
     private bool ReloadAfterLoad;
     private int Total;
     private int Loaded;
+    private int CurrentColumnCount = DefaultColumnCount;
     private string? SearchText;
     private string? SelectedLibrary;
 
@@ -142,8 +141,22 @@
         IsOpen = !IsOpen;
         if (IsOpen && Items.Count == 0)
         {
-            await LoadNextPageAsync();
+            LoadWhenRendered = true;
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!LoadWhenRendered || !IsOpen)
+        {
+            return;
+        }
+
+        LoadWhenRendered = false;
+        await Js.InvokeVoidAsync("blazingIconSelector.enableHorizontalWheel", StylePacksElement);
+        await UpdateGridMetricsAsync();
+        await LoadNextPageAsync();
+        StateHasChanged();
     }
 
     private void Close() => IsOpen = false;
@@ -164,9 +177,9 @@
         await LoadFirstPageAsync();
     }
 
-    private async Task ToggleFilterAsync(IconSearchFacet facet, IconSearchFacetOption option)
+    private async Task ToggleFilterAsync(string facet, string value)
     {
-        var key = FilterKey(facet.Id, option.Value);
+        var key = FilterKey(facet, value);
         if (!ActiveFilterValues.Add(key))
         {
             ActiveFilterValues.Remove(key);
@@ -183,7 +196,7 @@
         await LoadFirstPageAsync();
     }
 
-    private async Task ChooseAsync(IconCatalogItem icon)
+    private async Task ChooseAsync(IconSearchItem icon)
     {
         await ValueChanged.InvokeAsync(ToProviderReference(icon));
         IsOpen = false;
@@ -200,6 +213,7 @@
             return;
         }
 
+        await UpdateGridMetricsAsync();
         await LoadNextPageAsync();
     }
 
@@ -213,7 +227,9 @@
         IsLoading = true;
         try
         {
-            var result = await Api.Blazing.Rest.Icons.SearchAsync(SelectedLibrary, SearchText, Loaded, PageSize, BuildFilters());
+            await UpdateGridMetricsAsync();
+            var batchSize = GetBatchSize();
+            var result = await Icons.SearchAsync(SelectedLibrary, SearchText, Loaded, batchSize, BuildFilters());
             Libraries = result.Libraries;
             Facets = result.Facets;
             Total = result.Total;
@@ -238,14 +254,37 @@
             return;
         }
 
-        var remainingItems = await Js.InvokeAsync<int>("blazingIconSelector.remainingItems", GridElement, 4);
-        if (remainingItems <= 25)
+        var metrics = await GetGridMetricsAsync();
+        CurrentColumnCount = metrics.Columns;
+        var batchSize = GetBatchSize();
+        if (metrics.RemainingItems <= Math.Max(1, batchSize / 2))
         {
             await LoadNextPageAsync();
         }
     }
 
-    private IEnumerable<IconCatalogItem> FilterDuplicateIcons(IEnumerable<IconCatalogItem> icons)
+    private int GetBatchSize() => Math.Max(RowsPerBatch, CurrentColumnCount * RowsPerBatch);
+
+    private async Task UpdateGridMetricsAsync()
+    {
+        var metrics = await GetGridMetricsAsync();
+        CurrentColumnCount = metrics.Columns;
+    }
+
+    private async Task<IconSelectorGridMetrics> GetGridMetricsAsync()
+    {
+        try
+        {
+            var metrics = await Js.InvokeAsync<IconSelectorGridMetrics>("blazingIconSelector.getMetrics", GridElement);
+            return metrics.Columns <= 0 ? new IconSelectorGridMetrics(DefaultColumnCount, 0) : metrics;
+        }
+        catch (JSException)
+        {
+            return new IconSelectorGridMetrics(DefaultColumnCount, 0);
+        }
+    }
+
+    private IEnumerable<IconSearchItem> FilterDuplicateIcons(IEnumerable<IconSearchItem> icons)
     {
         if (!string.IsNullOrWhiteSpace(SelectedLibrary))
         {
@@ -256,14 +295,14 @@
         return icons.Where(icon => existingKeys.Add(GetDuplicateKey(icon))).ToArray();
     }
 
-    private static string GetDuplicateKey(IconCatalogItem icon)
+    private static string GetDuplicateKey(IconSearchItem icon)
     {
         return $"{icon.Library}|{icon.Style}|{icon.Name}";
     }
 
-    private static string LibraryLabel(IconLibrary library) => library.Version is null ? library.Name : library.Name;
+    private static string LibraryLabel(IconLibraryDescriptor library) => library.Version is null ? library.Name : library.Name;
 
-    private static string ToProviderReference(IconCatalogItem icon)
+    private static string ToProviderReference(IconSearchItem icon)
     {
         if (string.Equals(icon.ProviderId, "iconify", StringComparison.OrdinalIgnoreCase) && icon.Library.StartsWith("iconify.", StringComparison.OrdinalIgnoreCase))
         {
@@ -280,8 +319,8 @@
             .Select(parts => new IconSearchFilter(parts[0], parts[1]))
             .ToArray();
 
-    private string GetFilterButtonClass(IconSearchFacet facet, IconSearchFacetOption option) =>
-        $"icon-selector__filter-chip {(ActiveFilterValues.Contains(FilterKey(facet.Id, option.Value)) ? "icon-selector__filter-chip--active" : null)}";
+    private string GetFilterButtonClass(string facet, string value) =>
+        $"icon-selector__filter-chip {(ActiveFilterValues.Contains(FilterKey(facet, value)) ? "icon-selector__filter-chip--active" : null)}";
 
     private string FilterLabel(string key)
     {
@@ -298,4 +337,6 @@
     }
 
     private static string FilterKey(string facet, string value) => $"{facet}:{value}";
+
+    private sealed record IconSelectorGridMetrics(int Columns, int RemainingItems);
 }

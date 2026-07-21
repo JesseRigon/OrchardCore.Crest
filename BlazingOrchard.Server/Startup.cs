@@ -34,6 +34,9 @@ public sealed class Startup : StartupBase
         services.AddNavigationProvider<BlazingAdminMenu>();
         services.AddScoped<IIconProvider, IconifyIconProvider>();
         services.AddScoped<IIconProviderSettingsStore, BlazingIconProviderSettingsStore>();
+        services.AddSingleton<IIconifyLocalMirrorPathProvider, BlazingIconifyLocalMirrorPathProvider>();
+        services.AddSingleton<IIconifyLocalMirrorStore, IconifyLocalMirrorStore>();
+        services.AddHostedService<IconifyCacheRefreshService>();
         services.AddSingleton<SvgIconSanitizer>();
         services.AddHttpClient("BlazingOrchard.Icons.Iconify");
         services.AddScoped<IIconRegistry, CompositeIconRegistry>();

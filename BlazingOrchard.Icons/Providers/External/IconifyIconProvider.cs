@@ -9,6 +9,7 @@ namespace BlazingOrchard.Icons;
 public sealed class IconifyIconProvider(
     IHttpClientFactory httpClientFactory,
     IIconProviderSettingsStore settingsStore,
+    IIconifyLocalMirrorStore localMirrorStore,
     SvgIconSanitizer svgIconSanitizer) : IIconProvider
 {
     private const string ProviderLibraryId = "iconify";
@@ -30,8 +31,9 @@ public sealed class IconifyIconProvider(
             return [];
         }
 
+        var isPublicIconify = localMirrorStore.IsPublicIconify(settings);
         var cacheKey = $"{NormalizeBaseUrl(settings.BaseUrl)}|{string.Join(',', settings.Prefixes.Order(StringComparer.OrdinalIgnoreCase))}";
-        if (_libraryCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
+        if (isPublicIconify && _libraryCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
         {
             return cached.Value;
         }
@@ -39,22 +41,40 @@ public sealed class IconifyIconProvider(
         var libraries = new List<IconLibraryDescriptor> { ProviderLibrary(settings) };
         try
         {
-            var collections = await GetCollectionsAsync(settings, cancellationToken);
-            foreach (var prefix in GetVisiblePrefixes(settings))
+            var localCollections = isPublicIconify ? await localMirrorStore.GetCollectionsAsync(cancellationToken) : new Dictionary<string, IconifyLocalCollectionInfo>(StringComparer.OrdinalIgnoreCase);
+            if (localCollections.Count > 0)
             {
-                if (collections.TryGetValue(prefix, out var info))
+                foreach (var prefix in GetVisiblePrefixes(settings, localCollections.Keys))
                 {
-                    libraries.Add(Library(prefix, info, settings));
+                    if (localCollections.TryGetValue(prefix, out var info))
+                    {
+                        libraries.Add(LocalLibrary(prefix, info, settings));
+                    }
+                    else
+                    {
+                        libraries.Add(Library(prefix, null, settings));
+                    }
                 }
-                else
+            }
+            else
+            {
+                var collections = await GetRemoteCollectionsAsync(settings, cancellationToken);
+                foreach (var prefix in GetVisiblePrefixes(settings, collections.Keys))
                 {
-                    libraries.Add(Library(prefix, null, settings));
+                    if (collections.TryGetValue(prefix, out var info))
+                    {
+                        libraries.Add(Library(prefix, info, settings));
+                    }
+                    else
+                    {
+                        libraries.Add(Library(prefix, null, settings));
+                    }
                 }
             }
         }
         catch
         {
-            foreach (var prefix in GetVisiblePrefixes(settings))
+            foreach (var prefix in GetVisiblePrefixes(settings, DefaultBrowsePrefixes))
             {
                 libraries.Add(Library(prefix, null, settings));
             }
@@ -64,7 +84,11 @@ public sealed class IconifyIconProvider(
             .DistinctBy(library => library.Id, StringComparer.OrdinalIgnoreCase)
             .OrderBy(library => library.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        _libraryCache[cacheKey] = new(result, DateTimeOffset.UtcNow.Add(CacheDuration));
+        if (isPublicIconify)
+        {
+            _libraryCache[cacheKey] = new(result, DateTimeOffset.UtcNow.Add(CacheDuration));
+        }
+
         return result;
     }
 
@@ -119,20 +143,16 @@ public sealed class IconifyIconProvider(
         {
             var libraries = (await GetLibrariesAsync(cancellationToken)).ToArray();
             var query = request.Query?.Trim();
-            var collections = await GetCollectionsAsync(settings, cancellationToken);
-            var facets = await BuildFacetsAsync(settings, requestedLibrary, collections, cancellationToken);
-            var icons = TryGetPrefix(requestedLibrary, out var prefix)
-                ? await BrowsePrefixAsync(settings, prefix, request, cancellationToken)
-                : string.IsNullOrWhiteSpace(query)
-                    ? BrowseDefault(settings, collections, request)
-                    : await SearchRemoteAsync(settings, requestedLibrary, query, request, collections, cancellationToken);
+            if (localMirrorStore.IsPublicIconify(settings))
+            {
+                var localCollections = await localMirrorStore.GetCollectionsAsync(cancellationToken);
+                if (localCollections.Count > 0)
+                {
+                    return await SearchLocalAsync(settings, request, requestedLibrary, libraries, localCollections, cancellationToken);
+                }
+            }
 
-            var definitions = await ResolveIconifyIconsAsync(settings, icons.Names, cancellationToken);
-            var items = definitions
-                .Select(icon => new IconSearchItem(icon.Key.ToString(), icon.Key.Library, icon.Key.Version, icon.Key.Style, icon.Key.Name, icon.IconClass, icon.SvgMarkup, Id))
-                .ToArray();
-
-            return new IconSearchResult(libraries, facets, items, icons.Total, Math.Max(0, request.Skip), ClampTake(request.Take));
+            return await SearchRemoteWithLibrariesAsync(settings, request, requestedLibrary, libraries, query, cancellationToken);
         }
         catch
         {
@@ -146,7 +166,7 @@ public sealed class IconifyIconProvider(
         return $"{NormalizeBaseUrl(settings.BaseUrl)}|{settings.Enabled}|{string.Join(',', settings.Prefixes.Order(StringComparer.OrdinalIgnoreCase))}";
     }
 
-    private async Task<IReadOnlyDictionary<string, IconifyCollectionInfo>> GetCollectionsAsync(IconifyIconProviderSettings settings, CancellationToken cancellationToken)
+    private async Task<IReadOnlyDictionary<string, IconifyCollectionInfo>> GetRemoteCollectionsAsync(IconifyIconProviderSettings settings, CancellationToken cancellationToken)
     {
         var response = await SendAsync(settings, "collections", cancellationToken);
         if (!response.IsSuccessStatusCode)
@@ -156,6 +176,96 @@ public sealed class IconifyIconProvider(
 
         return await response.Content.ReadFromJsonAsync<Dictionary<string, IconifyCollectionInfo>>(cancellationToken: cancellationToken)
             ?? new Dictionary<string, IconifyCollectionInfo>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<IconSearchResult> SearchLocalAsync(
+        IconifyIconProviderSettings settings,
+        IconSearchRequest request,
+        string? requestedLibrary,
+        IconLibraryDescriptor[] libraries,
+        IReadOnlyDictionary<string, IconifyLocalCollectionInfo> collections,
+        CancellationToken cancellationToken)
+    {
+        var facets = await BuildLocalFacetsAsync(settings, requestedLibrary, collections, cancellationToken);
+        var names = new List<string>();
+
+        if (TryGetPrefix(requestedLibrary, out var prefix))
+        {
+            if (!CanUsePrefix(settings, prefix))
+            {
+                return Empty(request);
+            }
+
+            var collection = await localMirrorStore.GetCollectionAsync(prefix, cancellationToken);
+            if (collection is not null)
+            {
+                var requestedCategories = GetFilterValues(request, "iconify.icon-category");
+                var collectionNames = requestedCategories.Length == 0
+                    ? collection.Names
+                    : collection.Categories
+                        .Where(category => requestedCategories.Contains(category.Key, StringComparer.OrdinalIgnoreCase))
+                        .SelectMany(category => category.Value)
+                        .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                names.AddRange(collectionNames
+                    .Where(name => MatchesQuery(name, request.Query))
+                    .Select(name => $"{prefix}:{name}"));
+            }
+        }
+        else
+        {
+            foreach (var info in GetVisibleLocalCollections(settings, collections).Where(info => MatchesIconSetFilters(info, request)))
+            {
+                var collection = await localMirrorStore.GetCollectionAsync(info.Prefix, cancellationToken);
+                if (collection is null)
+                {
+                    continue;
+                }
+
+                names.AddRange(collection.Names
+                    .Where(name => MatchesQuery(name, request.Query))
+                    .Select(name => $"{info.Prefix}:{name}"));
+            }
+        }
+
+        var allNames = names
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var pageNames = allNames
+            .Skip(Math.Max(0, request.Skip))
+            .Take(ClampTake(request.Take))
+            .ToArray();
+        var definitions = await ResolveIconifyIconsAsync(settings, pageNames, cancellationToken);
+        var items = definitions
+            .Select(icon => new IconSearchItem(icon.Key.ToString(), icon.Key.Library, icon.Key.Version, icon.Key.Style, icon.Key.Name, icon.IconClass, icon.SvgMarkup, Id))
+            .ToArray();
+
+        return new IconSearchResult(libraries, facets, items, allNames.Length, Math.Max(0, request.Skip), ClampTake(request.Take));
+    }
+
+    private async Task<IconSearchResult> SearchRemoteWithLibrariesAsync(
+        IconifyIconProviderSettings settings,
+        IconSearchRequest request,
+        string? requestedLibrary,
+        IconLibraryDescriptor[] libraries,
+        string? query,
+        CancellationToken cancellationToken)
+    {
+        var collections = await GetRemoteCollectionsAsync(settings, cancellationToken);
+        var facets = await BuildFacetsAsync(settings, requestedLibrary, collections, cancellationToken);
+        var icons = TryGetPrefix(requestedLibrary, out var prefix)
+            ? await BrowsePrefixAsync(settings, prefix, request, cancellationToken)
+            : string.IsNullOrWhiteSpace(query)
+                ? BrowseDefault(settings, collections, request)
+                : await SearchRemoteAsync(settings, requestedLibrary, query, request, collections, cancellationToken);
+
+        var definitions = await ResolveIconifyIconsAsync(settings, icons.Names, cancellationToken);
+        var items = definitions
+            .Select(icon => new IconSearchItem(icon.Key.ToString(), icon.Key.Library, icon.Key.Version, icon.Key.Style, icon.Key.Name, icon.IconClass, icon.SvgMarkup, Id))
+            .ToArray();
+
+        return new IconSearchResult(libraries, facets, items, icons.Total, Math.Max(0, request.Skip), ClampTake(request.Take));
     }
 
     private async Task<IconifySearchPage> SearchRemoteAsync(
@@ -211,7 +321,7 @@ public sealed class IconifyIconProvider(
             return new([], 0);
         }
 
-        var collection = await GetCollectionAsync(settings, prefix, cancellationToken);
+        var collection = await GetRemoteCollectionAsync(settings, prefix, cancellationToken);
         var names = EnumerateCollectionNames(collection, GetFilterValues(request, "iconify.icon-category"))
             .Where(name => MatchesQuery(name, request.Query))
             .Order(StringComparer.OrdinalIgnoreCase)
@@ -225,7 +335,7 @@ public sealed class IconifyIconProvider(
     {
         var names = new List<string>();
 
-        foreach (var prefix in GetVisiblePrefixes(settings))
+        foreach (var prefix in GetVisiblePrefixes(settings, collections.Keys))
         {
             if (!CanUsePrefix(settings, prefix) || !collections.TryGetValue(prefix, out var info) || info.Samples is null)
             {
@@ -244,10 +354,11 @@ public sealed class IconifyIconProvider(
         return new(distinct.Skip(Math.Max(0, request.Skip)).Take(ClampTake(request.Take)).ToArray(), distinct.Length);
     }
 
-    private async Task<IconifyCollectionResponse?> GetCollectionAsync(IconifyIconProviderSettings settings, string prefix, CancellationToken cancellationToken)
+    private async Task<IconifyCollectionResponse?> GetRemoteCollectionAsync(IconifyIconProviderSettings settings, string prefix, CancellationToken cancellationToken)
     {
+        var isPublicIconify = localMirrorStore.IsPublicIconify(settings);
         var cacheKey = $"{NormalizeBaseUrl(settings.BaseUrl)}|collection|{prefix}";
-        if (_collectionCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
+        if (isPublicIconify && _collectionCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
         {
             return cached.Value;
         }
@@ -255,12 +366,20 @@ public sealed class IconifyIconProvider(
         var response = await SendAsync(settings, $"collection?prefix={Uri.EscapeDataString(prefix)}", cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            _collectionCache[cacheKey] = new(null, DateTimeOffset.UtcNow.Add(CacheDuration));
+            if (isPublicIconify)
+            {
+                _collectionCache[cacheKey] = new(null, DateTimeOffset.UtcNow.Add(CacheDuration));
+            }
+
             return null;
         }
 
         var collection = await response.Content.ReadFromJsonAsync<IconifyCollectionResponse>(cancellationToken: cancellationToken);
-        _collectionCache[cacheKey] = new(collection, DateTimeOffset.UtcNow.Add(CacheDuration));
+        if (isPublicIconify)
+        {
+            _collectionCache[cacheKey] = new(collection, DateTimeOffset.UtcNow.Add(CacheDuration));
+        }
+
         return collection;
     }
 
@@ -305,7 +424,59 @@ public sealed class IconifyIconProvider(
 
         if (TryGetPrefix(requestedLibrary, out var prefix))
         {
-            var collection = await GetCollectionAsync(settings, prefix, cancellationToken);
+            var collection = await GetRemoteCollectionAsync(settings, prefix, cancellationToken);
+            AddFacet(
+                facets,
+                "iconify.icon-category",
+                "Icon category",
+                (collection?.Categories ?? new Dictionary<string, string[]>())
+                    .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+                    .Select(pair => new IconSearchFacetOption(pair.Key, pair.Key, pair.Value.Length)));
+        }
+
+        return facets.ToArray();
+    }
+
+    private async Task<IconSearchFacet[]> BuildLocalFacetsAsync(
+        IconifyIconProviderSettings settings,
+        string? requestedLibrary,
+        IReadOnlyDictionary<string, IconifyLocalCollectionInfo> collections,
+        CancellationToken cancellationToken)
+    {
+        var facets = new List<IconSearchFacet>();
+        var visibleCollections = GetVisibleLocalCollections(settings, collections).ToArray();
+
+        AddFacet(
+            facets,
+            "iconify.icon-set-category",
+            "Icon set category",
+            visibleCollections
+                .Select(collection => collection.Category)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .GroupBy(value => value!, StringComparer.OrdinalIgnoreCase)
+                .Select(group => new IconSearchFacetOption(group.Key, group.Key, group.Count())));
+
+        AddFacet(
+            facets,
+            "iconify.icon-set-tag",
+            "Icon set traits",
+            visibleCollections
+                .SelectMany(collection => collection.Tags)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .GroupBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .Select(group => new IconSearchFacetOption(group.Key, group.Key, group.Count())));
+
+        AddFacet(
+            facets,
+            "iconify.palette",
+            "Palette",
+            visibleCollections
+                .GroupBy(collection => collection.Palette ? "multi-color" : "monochrome", StringComparer.OrdinalIgnoreCase)
+                .Select(group => new IconSearchFacetOption(group.Key, group.Key == "multi-color" ? "Multi-color" : "Monochrome", group.Count())));
+
+        if (TryGetPrefix(requestedLibrary, out var prefix))
+        {
+            var collection = await localMirrorStore.GetCollectionAsync(prefix, cancellationToken);
             AddFacet(
                 facets,
                 "iconify.icon-category",
@@ -320,6 +491,20 @@ public sealed class IconifyIconProvider(
 
     private async Task<IconAssetDefinition?> ResolveIconifyIconAsync(IconifyIconProviderSettings settings, string prefix, string name, CancellationToken cancellationToken)
     {
+        if (localMirrorStore.IsPublicIconify(settings))
+        {
+            var local = await localMirrorStore.ResolveAsync(settings, prefix, name, svgIconSanitizer, cancellationToken);
+            if (local is not null)
+            {
+                return local;
+            }
+        }
+
+        if (!localMirrorStore.IsPublicIconify(settings))
+        {
+            return (await ResolveIconifyIconsAsync(settings, [$"{prefix}:{name}"], cancellationToken)).FirstOrDefault();
+        }
+
         var cacheKey = $"{NormalizeBaseUrl(settings.BaseUrl)}|{prefix}:{name}";
         if (_definitionCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
         {
@@ -333,6 +518,7 @@ public sealed class IconifyIconProvider(
 
     private async Task<IconAssetDefinition[]> ResolveIconifyIconsAsync(IconifyIconProviderSettings settings, IEnumerable<string> iconNames, CancellationToken cancellationToken)
     {
+        var isPublicIconify = localMirrorStore.IsPublicIconify(settings);
         var byPrefix = iconNames
             .Select(ParseIconifyName)
             .Where(icon => icon is not null && CanUsePrefix(settings, icon.Value.Prefix))
@@ -346,7 +532,17 @@ public sealed class IconifyIconProvider(
             foreach (var icon in group)
             {
                 var cacheKey = $"{NormalizeBaseUrl(settings.BaseUrl)}|{icon.Prefix}:{icon.Name}";
-                if (_definitionCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
+                if (isPublicIconify)
+                {
+                    var local = await localMirrorStore.ResolveAsync(settings, icon.Prefix, icon.Name, svgIconSanitizer, cancellationToken);
+                    if (local is not null)
+                    {
+                        definitions.Add(local);
+                        continue;
+                    }
+                }
+
+                if (isPublicIconify && _definitionCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
                 {
                     if (cached.Value is not null)
                     {
@@ -421,7 +617,11 @@ public sealed class IconifyIconProvider(
                 [icon.Name, prefix, "iconify"],
                 Attribution(settings),
                 "Iconify collection license");
-            _definitionCache[$"{NormalizeBaseUrl(settings.BaseUrl)}|{prefix}:{icon.Name}"] = new(definition, DateTimeOffset.UtcNow.Add(CacheDuration));
+            if (localMirrorStore.IsPublicIconify(settings))
+            {
+                _definitionCache[$"{NormalizeBaseUrl(settings.BaseUrl)}|{prefix}:{icon.Name}"] = new(definition, DateTimeOffset.UtcNow.Add(CacheDuration));
+            }
+
             yield return definition;
         }
     }
@@ -476,6 +676,15 @@ public sealed class IconifyIconProvider(
         ["default"],
         ["search", "resolve", "pack", "remote"]);
 
+    private static IconLibraryDescriptor LocalLibrary(string prefix, IconifyLocalCollectionInfo info, IconifyIconProviderSettings settings) => new(
+        $"iconify.{prefix}",
+        info.Name,
+        info.Version,
+        "iconify",
+        "Iconify",
+        ["default"],
+        ["search", "resolve", "pack", "local", settings.Prefixes.Length == 0 ? "all-prefixes" : "configured-prefixes"]);
+
     private static bool TryGetPrefix(string? library, out string prefix)
     {
         prefix = string.Empty;
@@ -493,8 +702,28 @@ public sealed class IconifyIconProvider(
         && (settings.Prefixes.Length == 0
             || settings.Prefixes.Contains(prefix, StringComparer.OrdinalIgnoreCase));
 
-    private static string[] GetVisiblePrefixes(IconifyIconProviderSettings settings) =>
-        settings.Prefixes.Length == 0 ? DefaultBrowsePrefixes : settings.Prefixes;
+    private static string[] GetVisiblePrefixes(IconifyIconProviderSettings settings, IEnumerable<string> availablePrefixes) =>
+        settings.Prefixes.Length == 0
+            ? availablePrefixes.Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray()
+            : settings.Prefixes;
+
+    private static IEnumerable<IconifyLocalCollectionInfo> GetVisibleLocalCollections(IconifyIconProviderSettings settings, IReadOnlyDictionary<string, IconifyLocalCollectionInfo> collections)
+    {
+        var prefixes = GetVisiblePrefixes(settings, collections.Keys).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return collections.Values
+            .Where(collection => prefixes.Contains(collection.Prefix))
+            .OrderBy(collection => collection.Name, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static bool MatchesIconSetFilters(IconifyLocalCollectionInfo collection, IconSearchRequest request)
+    {
+        var iconSetTags = GetFilterValues(request, "iconify.icon-set-tag");
+        var iconSetCategories = GetFilterValues(request, "iconify.icon-set-category");
+        var palettes = GetFilterValues(request, "iconify.palette");
+        return (iconSetCategories.Length == 0 || iconSetCategories.Contains(collection.Category, StringComparer.OrdinalIgnoreCase))
+            && (iconSetTags.Length == 0 || iconSetTags.All(tag => collection.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase)))
+            && (palettes.Length == 0 || palettes.Contains(collection.Palette ? "multi-color" : "monochrome", StringComparer.OrdinalIgnoreCase));
+    }
 
     private static bool TryParseProviderReference(string declaration, out IconKey key)
     {

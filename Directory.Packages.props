@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.Authorization" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.9" />
+    <PackageVersion Include="OrchardCore.Admin.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.ContentManagement" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.DisplayManagement" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Email.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Menu" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Module.Targets" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.ResourceManagement" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Setup" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Setup.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Users" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Users.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="Radzen.Blazor" Version="11.0.4" />
+  </ItemGroup>
+</Project>

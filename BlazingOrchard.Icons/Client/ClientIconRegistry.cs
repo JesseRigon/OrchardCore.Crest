@@ -29,15 +29,3 @@ public sealed class ClientIconRegistry
         return true;
     }
 }
-
-public sealed record IconPack(string Version, IReadOnlyDictionary<string, IconPackItem> Icons);
-
-public sealed record IconPackItem(
-    string Key,
-    string Library,
-    string Version,
-    string Style,
-    string Name,
-    string SvgMarkup,
-    string? Attribution = null,
-    string? License = null);
