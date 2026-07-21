@@ -1,3 +1,3 @@
-[submodule "BlazingOrchard.Icons/icons/Sources/IconifyCache"]
-	path = BlazingOrchard.Icons/icons/Sources/IconifyCache
+[submodule "OrchardCore.Crest.Icons/icons/Sources/IconifyCache"]
+	path = OrchardCore.Crest.Icons/icons/Sources/IconifyCache
 	url = https://github.com/iconify/icon-sets.git

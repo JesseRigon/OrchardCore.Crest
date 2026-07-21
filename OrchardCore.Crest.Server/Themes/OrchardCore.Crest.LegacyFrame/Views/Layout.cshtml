@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="@Orchard.CultureName()">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <base target="_self" />
+    <title>@RenderTitleSegments(Site.SiteName, "before")</title>
+
+    <script asp-name="admin-main" version="1" at="Head"></script>
+    <style asp-name="TheAdminLayout" asp-src="~/TheAdmin/css/admin-layout.min.css" debug-src="~/TheAdmin/css/admin-layout.css" at="Head"></style>
+    <style asp-name="bootstrap" version="5" at="Head"></style>
+    <style media="all" asp-name="the-admin" version="1" depends-on="bootstrap,TheAdminLayout" at="Head"></style>
+    <style asp-name="font-awesome" at="Head" version="7"></style>
+    <script asp-name="the-admin" version="1" at="Foot"></script>
+
+    <resources type="Header" />
+
+    @await RenderSectionAsync("HeadMeta", required: false)
+
+    <style>
+        html,
+        body {
+            background: transparent;
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            padding: 1rem;
+        }
+
+        .ta-navbar-top,
+        .ta-left-sidebar,
+        .ta-content-header,
+        .admin-toolbar,
+        #ta-left-sidebar,
+        #ta-navbar-top,
+        #layout-navigation,
+        #layout-header {
+            display: none !important;
+        }
+
+        .ta-content,
+        .ta-content-wrapper,
+        .container,
+        .container-fluid {
+            margin-left: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
+        }
+    </style>
+</head>
+<body dir="@Orchard.CultureDir()" class="crest-legacy-frame">
+    <main class="ta-content crest-legacy-frame-content">
+        @await RenderSectionAsync("Header", required: false)
+        @await RenderSectionAsync("Messages", required: false)
+        @await RenderSectionAsync("Breadcrumbs", required: false)
+        @await RenderSectionAsync("Title", required: false)
+        @await RenderBodyAsync()
+        @await RenderSectionAsync("Footer", required: false)
+    </main>
+
+    <script>
+        (() => {
+            const parameter = 'legacy-frame';
+            const ensureLegacyFrame = url => {
+                try {
+                    const parsed = new URL(url, window.location.href);
+                    if (parsed.origin !== window.location.origin || !parsed.pathname.toLowerCase().startsWith('/admin')) {
+                        return url;
+                    }
+
+                    parsed.searchParams.set(parameter, '1');
+                    return parsed.pathname + parsed.search + parsed.hash;
+                } catch {
+                    return url;
+                }
+            };
+
+            document.addEventListener('click', event => {
+                const anchor = event.target.closest?.('a[href]');
+                if (!anchor) {
+                    return;
+                }
+
+                anchor.href = ensureLegacyFrame(anchor.href);
+            }, true);
+
+            document.addEventListener('submit', event => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) {
+                    return;
+                }
+
+                form.action = ensureLegacyFrame(form.action || window.location.href);
+            }, true);
+
+            if (window.fetch) {
+                const originalFetch = window.fetch.bind(window);
+                window.fetch = (resource, options) => {
+                    if (typeof resource === 'string') {
+                        return originalFetch(ensureLegacyFrame(resource), options);
+                    }
+
+                    if (resource instanceof Request) {
+                        return originalFetch(new Request(ensureLegacyFrame(resource.url), resource), options);
+                    }
+
+                    return originalFetch(resource, options);
+                };
+            }
+
+            const originalOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+                return originalOpen.call(this, method, ensureLegacyFrame(url), ...rest);
+            };
+        })();
+    </script>
+
+    <resources type="FootScript" />
+</body>
+</html>

@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>OrchardCore.Crest.Icons</AssemblyName>
+    <RootNamespace>Crest.Icons</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Providers\TenantMedia\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Radzen.Blazor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+  </ItemGroup>
+
+  <Target Name="EnsureIconifyCacheSubmodule"
+          BeforeTargets="CoreCompile"
+          Condition="'$(CrestEnsureIconifyCache)' != 'false' and !Exists('$(MSBuildProjectDirectory)/icons/Sources/IconifyCache/collections.json')">
+    <Message Importance="High" Text="Initializing bundled Iconify cache submodule..." />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/.."
+          Command="git submodule update --init --depth 1 --filter=blob:none -- OrchardCore.Crest.Icons/icons/Sources/IconifyCache" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/icons/Sources/IconifyCache"
+          Command="git sparse-checkout set --no-cone /collections.json /json/" />
+  </Target>
+
+  <Target Name="UpdateIconifyCache"
+          Condition="'$(UpdateIconifyCache)' == 'true' and Exists('$(MSBuildProjectDirectory)/icons/Sources/IconifyCache/.git')">
+    <Message Importance="High" Text="Updating bundled Iconify cache submodule..." />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/icons/Sources/IconifyCache"
+          Command="git fetch --depth 1 origin master" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/icons/Sources/IconifyCache"
+          Command="git checkout --force FETCH_HEAD" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/icons/Sources/IconifyCache"
+          Command="git sparse-checkout set --no-cone /collections.json /json/" />
+  </Target>
+</Project>

@@ -1,0 +1,78 @@
+@using Radzen
+@using Radzen.Blazor
+@inject NavigationManager Navigation
+
+<CrestAppContainer>
+    <div class="legacy-admin-frame-page">
+        <RadzenStack Gap="1rem" Style="height: 100%; min-height: 0;">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H4" Text="@Title" />
+                        <RadzenText TextStyle="TextStyle.Body2" Text="This Orchard admin page is running inside the Crest Admin shell." />
+                    </RadzenStack>
+                    <RadzenButton Text="Open full page" ButtonStyle="ButtonStyle.Light" Click="OpenFullPage" />
+                </RadzenStack>
+
+                <iframe class="legacy-admin-frame" src="@FrameUrl" title="@Title"></iframe>
+        </RadzenStack>
+    </div>
+</CrestAppContainer>
+
+<style>
+    .legacy-admin-frame-page {
+        min-height: 100vh;
+    }
+
+    .legacy-admin-frame {
+        width: 100%;
+        min-height: calc(100vh - 8rem);
+        flex: 1 1 auto;
+        border: 1px solid var(--rz-border-color);
+        border-radius: var(--rz-border-radius);
+        background: var(--rz-base-background-color);
+    }
+</style>
+
+@code {
+    private string FrameUrl => EnsureLegacyFrame(Navigation.Uri);
+
+    private string Title
+    {
+        get
+        {
+            var path = new Uri(Navigation.Uri).AbsolutePath.Trim('/');
+            return string.IsNullOrWhiteSpace(path) ? "Admin" : path.Split('/').Last().Replace('-', ' ');
+        }
+    }
+
+    private void OpenFullPage() => Navigation.NavigateTo(FrameUrl, forceLoad: true);
+
+    private static string EnsureLegacyFrame(string uri)
+    {
+        var builder = new UriBuilder(uri);
+        var query = ParseQuery(builder.Query);
+        query["legacy-frame"] = "1";
+        builder.Query = string.Join("&", query.Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}"));
+        return builder.Uri.PathAndQuery;
+    }
+
+    private static Dictionary<string, string> ParseQuery(string query)
+    {
+        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var trimmed = query.TrimStart('?');
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return values;
+        }
+
+        foreach (var part in trimmed.Split('&', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var split = part.Split('=', 2);
+            var key = Uri.UnescapeDataString(split[0]);
+            var value = split.Length > 1 ? Uri.UnescapeDataString(split[1]) : string.Empty;
+            values[key] = value;
+        }
+
+        return values;
+    }
+}

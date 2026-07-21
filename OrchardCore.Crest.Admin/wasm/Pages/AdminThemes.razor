@@ -1,0 +1,403 @@
+@page "/Admin/Themes"
+@using Crest.Admin.Api
+@using Crest.Admin.Components.Admin
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NotificationService Notifications
+
+    <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H4" Text="Themes" />
+                        <RadzenText TextStyle="TextStyle.Body2" Text="Select the current site and admin themes, and enable or disable available Orchard themes." />
+                    </RadzenStack>
+                    <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+                </RadzenStack>
+
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">
+                        @ErrorMessage
+                    </RadzenAlert>
+                }
+
+                @if (IsLoading)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                        <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                        <RadzenText Text="Loading themes..." />
+                    </RadzenStack>
+                }
+                else if (State.Themes.Length == 0)
+                {
+                    <RadzenCard>
+                        <RadzenText Text="There are no themes installed." />
+                    </RadzenCard>
+                }
+                else
+                {
+                    <RadzenStack Gap="0.75rem">
+                        <RadzenText TextStyle="TextStyle.H6" Text="Current themes" />
+                        <div class="theme-grid current-theme-grid">
+                            @if (State.CurrentSiteTheme is { } currentSiteTheme)
+                            {
+                                <RadzenCard class="theme-card theme-card--current">
+                                    <RadzenText TextStyle="TextStyle.Caption" Text="Current site theme" class="theme-card__slot" />
+                                    <div class="theme-card__preview">
+                                        <img src="@currentSiteTheme.PreviewImageUrl" alt="@($"{currentSiteTheme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentSiteTheme.Id))" hidden="@PreviewFailed(currentSiteTheme.Id)" />
+                                        @if (PreviewFailed(currentSiteTheme.Id))
+                                        {
+                                            <div class="theme-card__placeholder">
+                                                <RadzenIcon Icon="palette" />
+                                                <span>@currentSiteTheme.Name</span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <RadzenStack Gap="0.75rem" class="theme-card__body">
+                                        <RadzenStack Gap="0.35rem">
+                                            <RadzenText TextStyle="TextStyle.H6" Text="@currentSiteTheme.Name" />
+                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
+                                                <RadzenText TextStyle="TextStyle.Caption" Text="Site theme" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <RadzenText TextStyle="TextStyle.Caption" Text="Current site" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <RadzenText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                            </RadzenStack>
+                                        </RadzenStack>
+
+                                        @if (!string.IsNullOrWhiteSpace(currentSiteTheme.Description))
+                                        {
+                                            <RadzenText TextStyle="TextStyle.Body2" Text="@currentSiteTheme.Description" class="theme-card__description" />
+                                        }
+
+                                        <RadzenText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentSiteTheme)" />
+                                        <RadzenButton Text="Reset site theme" ButtonStyle="ButtonStyle.Light" Click="ResetSiteThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
+                                    </RadzenStack>
+                                </RadzenCard>
+                            }
+                            else
+                            {
+                                <RadzenCard class="theme-card theme-card--empty">
+                                    <RadzenText TextStyle="TextStyle.Caption" Text="Current site theme" class="theme-card__slot" />
+                                    <div class="theme-card__placeholder theme-card__placeholder--empty">
+                                        <RadzenIcon Icon="web_asset_off" />
+                                        <span>No site theme selected</span>
+                                    </div>
+                                </RadzenCard>
+                            }
+
+                            @if (State.CurrentAdminTheme is { } currentAdminTheme)
+                            {
+                                <RadzenCard class="theme-card theme-card--current">
+                                    <RadzenText TextStyle="TextStyle.Caption" Text="Current admin theme" class="theme-card__slot" />
+                                    <div class="theme-card__preview">
+                                        <img src="@currentAdminTheme.PreviewImageUrl" alt="@($"{currentAdminTheme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentAdminTheme.Id))" hidden="@PreviewFailed(currentAdminTheme.Id)" />
+                                        @if (PreviewFailed(currentAdminTheme.Id))
+                                        {
+                                            <div class="theme-card__placeholder">
+                                                <RadzenIcon Icon="palette" />
+                                                <span>@currentAdminTheme.Name</span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <RadzenStack Gap="0.75rem" class="theme-card__body">
+                                        <RadzenStack Gap="0.35rem">
+                                            <RadzenText TextStyle="TextStyle.H6" Text="@currentAdminTheme.Name" />
+                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
+                                                <RadzenText TextStyle="TextStyle.Caption" Text="Admin theme" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <RadzenText TextStyle="TextStyle.Caption" Text="Current admin" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <RadzenText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                            </RadzenStack>
+                                        </RadzenStack>
+
+                                        @if (!string.IsNullOrWhiteSpace(currentAdminTheme.Description))
+                                        {
+                                            <RadzenText TextStyle="TextStyle.Body2" Text="@currentAdminTheme.Description" class="theme-card__description" />
+                                        }
+
+                                        <RadzenText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentAdminTheme)" />
+                                        <RadzenButton Text="Reset admin theme" ButtonStyle="ButtonStyle.Light" Click="ResetAdminThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
+                                    </RadzenStack>
+                                </RadzenCard>
+                            }
+                            else
+                            {
+                                <RadzenCard class="theme-card theme-card--empty">
+                                    <RadzenText TextStyle="TextStyle.Caption" Text="Current admin theme" class="theme-card__slot" />
+                                    <div class="theme-card__placeholder theme-card__placeholder--empty">
+                                        <RadzenIcon Icon="admin_panel_settings" />
+                                        <span>No admin theme selected</span>
+                                    </div>
+                                </RadzenCard>
+                            }
+                        </div>
+                    </RadzenStack>
+
+                    <RadzenStack Gap="0.75rem">
+                        <RadzenText TextStyle="TextStyle.H6" Text="Available alternatives" />
+                        @if (!AlternateThemes.Any())
+                        {
+                            <RadzenCard>
+                                <RadzenText Text="There are no alternate themes installed." />
+                            </RadzenCard>
+                        }
+                        else
+                        {
+                            <div class="theme-grid">
+                                @foreach (var theme in AlternateThemes)
+                                {
+                                    <RadzenCard class="theme-card">
+                                        <div class="theme-card__preview">
+                                            <img src="@theme.PreviewImageUrl" alt="@($"{theme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(theme.Id))" hidden="@PreviewFailed(theme.Id)" />
+                                            @if (PreviewFailed(theme.Id))
+                                            {
+                                                <div class="theme-card__placeholder">
+                                                    <RadzenIcon Icon="palette" />
+                                                    <span>@theme.Name</span>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <RadzenStack Gap="0.75rem" class="theme-card__body">
+                                            <RadzenStack Gap="0.35rem">
+                                                <RadzenText TextStyle="TextStyle.H6" Text="@theme.Name" />
+                                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
+                                                    <RadzenText TextStyle="TextStyle.Caption" Text="@(theme.IsAdmin ? "Admin theme" : "Site theme")" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                    @if (theme.Enabled)
+                                                    {
+                                                        <RadzenText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <RadzenText TextStyle="TextStyle.Caption" Text="Disabled" Style="background: var(--rz-warning); color: var(--rz-on-warning); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                    }
+                                                </RadzenStack>
+                                            </RadzenStack>
+
+                                            @if (!string.IsNullOrWhiteSpace(theme.Description))
+                                            {
+                                                <RadzenText TextStyle="TextStyle.Body2" Text="@theme.Description" class="theme-card__description" />
+                                            }
+
+                                            <RadzenText TextStyle="TextStyle.Caption" Text="@ThemeMeta(theme)" />
+
+                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap; margin-top: auto;">
+                                                <RadzenButton Text="@(theme.IsAdmin ? "Use as admin" : "Use as site")" ButtonStyle="ButtonStyle.Primary" Click="@(() => SetCurrentAsync(theme))" Disabled="@IsBusy" />
+                                                @if (theme.Enabled)
+                                                {
+                                                    <RadzenButton Text="Disable" ButtonStyle="ButtonStyle.Light" Click="@(() => DisableAsync(theme))" Disabled="@IsBusy" />
+                                                }
+                                                else
+                                                {
+                                                    <RadzenButton Text="Enable" ButtonStyle="ButtonStyle.Secondary" Click="@(() => EnableAsync(theme))" Disabled="@IsBusy" />
+                                                }
+                                            </RadzenStack>
+                                        </RadzenStack>
+                                    </RadzenCard>
+                                }
+                            </div>
+                        }
+                    </RadzenStack>
+                }
+    </RadzenStack>
+
+
+<style>
+    .theme-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    }
+
+    .current-theme-grid {
+        grid-template-columns: repeat(2, minmax(18rem, 1fr));
+    }
+
+    .theme-card {
+        overflow: hidden;
+        position: relative;
+    }
+
+    .theme-card--current {
+        border: 1px solid var(--rz-primary);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--rz-primary) 35%, transparent);
+    }
+
+    .theme-card--empty {
+        min-height: 20rem;
+    }
+
+    .theme-card__slot {
+        background: var(--rz-primary);
+        border-radius: 0 0 0 var(--rz-border-radius);
+        color: var(--rz-on-primary);
+        padding: 0.25rem 0.65rem;
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: 1;
+    }
+
+    .theme-card__preview {
+        align-items: center;
+        aspect-ratio: 16 / 9;
+        background: linear-gradient(135deg, var(--rz-base-200), var(--rz-base-100));
+        border-bottom: 1px solid var(--rz-border-color);
+        display: flex;
+        justify-content: center;
+        margin: calc(var(--rz-card-padding) * -1) calc(var(--rz-card-padding) * -1) 1rem;
+        overflow: hidden;
+    }
+
+    .theme-card__preview img {
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .theme-card__placeholder {
+        align-items: center;
+        color: var(--rz-text-secondary-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .theme-card__placeholder .rz-icon {
+        font-size: 2.5rem;
+    }
+
+    .theme-card__placeholder--empty {
+        min-height: 20rem;
+    }
+
+    .theme-card__body {
+        min-height: 16rem;
+    }
+
+    .theme-card__description {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    @@media (max-width: 900px) {
+        .current-theme-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private ThemesState State { get; set; } = ThemesState.Empty;
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+    private HashSet<string> FailedPreviewIds { get; } = new(StringComparer.OrdinalIgnoreCase);
+    private IEnumerable<ThemeSummary> AlternateThemes => State.Themes.Where(theme => !IsCurrentThemeId(theme.Id));
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            State = await Api.Crest.Rest.Themes.ListAsync();
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = $"Unable to load themes: {exception.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task SetCurrentAsync(ThemeSummary theme) => await ExecuteAsync(
+        () => Api.Crest.Rest.Themes.SetCurrentAsync(theme.Id),
+        $"{theme.Name} is now the current {(theme.IsAdmin ? "admin" : "site")} theme.");
+
+    private async Task EnableAsync(ThemeSummary theme) => await ExecuteAsync(
+        () => Api.Crest.Rest.Themes.EnableAsync(theme.Id),
+        $"{theme.Name} was enabled.");
+
+    private async Task DisableAsync(ThemeSummary theme) => await ExecuteAsync(
+        () => Api.Crest.Rest.Themes.DisableAsync(theme.Id),
+        $"{theme.Name} was disabled.");
+
+    private async Task ResetSiteThemeAsync() => await ExecuteAsync(
+        () => Api.Crest.Rest.Themes.ResetSiteThemeAsync(),
+        "The site theme was reset.");
+
+    private async Task ResetAdminThemeAsync() => await ExecuteAsync(
+        () => Api.Crest.Rest.Themes.ResetAdminThemeAsync(),
+        "The admin theme was reset.");
+
+    private async Task ExecuteAsync(Func<Task<bool>> action, string successMessage)
+    {
+        IsSaving = true;
+        ErrorMessage = null;
+
+        try
+        {
+            if (await action())
+            {
+                Notifications.Notify(NotificationSeverity.Success, "Themes", successMessage);
+                State = await Api.Crest.Rest.Themes.ListAsync();
+            }
+            else
+            {
+                ErrorMessage = "The theme action did not complete successfully.";
+                Notifications.Notify(NotificationSeverity.Error, "Themes", ErrorMessage);
+            }
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+            Notifications.Notify(NotificationSeverity.Error, "Themes", ErrorMessage);
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private bool PreviewFailed(string themeId) => FailedPreviewIds.Contains(themeId);
+
+    private void MarkPreviewFailed(string themeId) => FailedPreviewIds.Add(themeId);
+
+    private bool IsCurrentThemeId(string themeId) =>
+        string.Equals(themeId, State.CurrentSiteThemeId, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(themeId, State.CurrentAdminThemeId, StringComparison.OrdinalIgnoreCase);
+
+    private static string ThemeMeta(ThemeSummary theme)
+    {
+        var parts = new List<string> { theme.Id };
+
+        if (!string.IsNullOrWhiteSpace(theme.Version))
+        {
+            parts.Add($"v{theme.Version}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(theme.Author))
+        {
+            parts.Add(theme.Author);
+        }
+
+        if (!string.IsNullOrWhiteSpace(theme.Website))
+        {
+            parts.Add(theme.Website);
+        }
+
+        return string.Join(" · ", parts);
+    }
+}

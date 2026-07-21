@@ -1,0 +1,221 @@
+@namespace Crest.Components.Forms
+@using System.Globalization
+@using System.Text.Json.Nodes
+@using Crest.Components.Models
+@using Microsoft.AspNetCore.Components.Rendering
+@using Radzen
+@using Radzen.Blazor
+
+@if (Content is null)
+{
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-secondary">No content data is available for this item.</RadzenText>
+}
+else if (Metadata?.Parts is { Length: > 0 } parts)
+{
+    <RadzenStack Gap="1rem" class="crest-form-manager">
+        @foreach (var part in parts.Where(ShouldRenderPart))
+        {
+            <RadzenFieldset Text="@part.DisplayName" AllowCollapse="true">
+                <RadzenStack Gap="0.75rem">
+                    @foreach (var field in part.Fields.OrderBy(field => field.Position ?? string.Empty, StringComparer.OrdinalIgnoreCase))
+                    {
+                        <div class="crest-form-manager__field">
+                            @RenderField(part, field)
+                            @if (Errors.TryGetValue(FieldKey(part.Name, field.Name), out var error))
+                            {
+                                <RadzenText TextStyle="TextStyle.Caption" class="rz-color-danger">@error</RadzenText>
+                            }
+                        </div>
+                    }
+                </RadzenStack>
+            </RadzenFieldset>
+        }
+    </RadzenStack>
+}
+else
+{
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-secondary">This content type does not expose editable field metadata yet.</RadzenText>
+}
+
+@code {
+    [Parameter] public JsonNode? Content { get; set; }
+    [Parameter] public CrestContentItemMetadata? Metadata { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    private readonly Dictionary<string, string> Errors = new(StringComparer.Ordinal);
+
+    public bool Validate()
+    {
+        Errors.Clear();
+
+        foreach (var part in Metadata?.Parts?.Where(ShouldRenderPart) ?? [])
+        {
+            foreach (var field in part.Fields)
+            {
+                if (!field.Required)
+                {
+                    continue;
+                }
+
+                var value = GetFieldPrimaryValue(part.Name, field);
+                var isMissing = value is null
+                    || value.GetValueKind() is System.Text.Json.JsonValueKind.Null
+                    || value.GetValueKind() is System.Text.Json.JsonValueKind.String && string.IsNullOrWhiteSpace(value.GetValue<string>())
+                    || value is JsonArray array && array.Count == 0;
+
+                if (isMissing)
+                {
+                    Errors[FieldKey(part.Name, field.Name)] = $"{field.Label} is required.";
+                }
+            }
+        }
+
+        StateHasChanged();
+        return Errors.Count == 0;
+    }
+
+    private RenderFragment RenderField(CrestContentPartMetadata part, CrestContentFieldMetadata field) => builder =>
+    {
+        var sequence = 0;
+        builder.OpenComponent<RadzenFormField>(sequence++);
+        builder.AddAttribute(sequence++, "Text", field.Label);
+        builder.AddAttribute(sequence++, "Style", "width: 100%;");
+        builder.AddAttribute(sequence++, "ChildContent", (RenderFragment)(childBuilder => RenderFieldInput(childBuilder, part.Name, field)));
+        builder.CloseComponent();
+    };
+
+    private void RenderFieldInput(RenderTreeBuilder builder, string partName, CrestContentFieldMetadata field)
+    {
+        var sequence = 0;
+        switch (field.FieldType)
+        {
+            case "NumericField":
+                builder.OpenComponent<RadzenNumeric<decimal?>>(sequence++);
+                builder.AddAttribute(sequence++, "Value", GetDecimal(partName, field.Name));
+                builder.AddAttribute(sequence++, "ValueChanged", EventCallback.Factory.Create<decimal?>(this, value => SetFieldValue(partName, field.Name, "Value", value)));
+                builder.AddAttribute(sequence++, "Disabled", Disabled);
+                builder.AddAttribute(sequence++, "Style", "width: 100%;");
+                builder.CloseComponent();
+                break;
+            case "BooleanField":
+                builder.OpenComponent<RadzenCheckBox<bool>>(sequence++);
+                builder.AddAttribute(sequence++, "Value", GetBool(partName, field.Name));
+                builder.AddAttribute(sequence++, "ValueChanged", EventCallback.Factory.Create<bool>(this, value => SetFieldValue(partName, field.Name, "Value", value)));
+                builder.AddAttribute(sequence++, "Disabled", Disabled);
+                builder.CloseComponent();
+                break;
+            case "DateField":
+            case "DateTimeField":
+                builder.OpenComponent<RadzenDatePicker<DateTime?>>(sequence++);
+                builder.AddAttribute(sequence++, "Value", GetDateTime(partName, field.Name));
+                builder.AddAttribute(sequence++, "ValueChanged", EventCallback.Factory.Create<DateTime?>(this, value => SetFieldValue(partName, field.Name, "Value", value)));
+                builder.AddAttribute(sequence++, "Disabled", Disabled);
+                builder.AddAttribute(sequence++, "Style", "width: 100%;");
+                builder.CloseComponent();
+                break;
+            case "ContentPickerField":
+                builder.OpenComponent<RadzenTextBox>(sequence++);
+                builder.AddAttribute(sequence++, "Value", GetPickerIds(partName, field.Name));
+                builder.AddAttribute(sequence++, "Change", EventCallback.Factory.Create<string>(this, value => SetPickerIds(partName, field.Name, value)));
+                builder.AddAttribute(sequence++, "Disabled", Disabled);
+                builder.AddAttribute(sequence++, "Style", "width: 100%;");
+                builder.CloseComponent();
+                break;
+            case "TextField":
+            default:
+                builder.OpenComponent<RadzenTextBox>(sequence++);
+                builder.AddAttribute(sequence++, "Value", GetString(partName, field.Name, "Text"));
+                builder.AddAttribute(sequence++, "Change", EventCallback.Factory.Create<string>(this, value => SetFieldValue(partName, field.Name, "Text", value)));
+                builder.AddAttribute(sequence++, "Disabled", Disabled);
+                builder.AddAttribute(sequence++, "Style", "width: 100%;");
+                builder.CloseComponent();
+                break;
+        }
+    }
+
+    private bool ShouldRenderPart(CrestContentPartMetadata part) => part.Fields.Length > 0;
+
+    private JsonObject Root => Content as JsonObject ?? Content?.AsObject() ?? [];
+
+    private JsonObject GetOrCreateField(string partName, string fieldName)
+    {
+        if (Root[partName] is not JsonObject part)
+        {
+            part = [];
+            Root[partName] = part;
+        }
+
+        if (part[fieldName] is not JsonObject field)
+        {
+            field = [];
+            part[fieldName] = field;
+        }
+
+        return field;
+    }
+
+    private JsonNode? GetFieldPrimaryValue(string partName, CrestContentFieldMetadata field)
+    {
+        var propertyName = field.FieldType switch
+        {
+            "ContentPickerField" => "ContentItemIds",
+            "TextField" => "Text",
+            _ => "Value"
+        };
+
+        return Root[partName]?[field.Name]?[propertyName];
+    }
+
+    private string? GetString(string partName, string fieldName, string propertyName)
+        => Root[partName]?[fieldName]?[propertyName]?.GetValue<string>();
+
+    private decimal? GetDecimal(string partName, string fieldName)
+    {
+        var node = Root[partName]?[fieldName]?["Value"];
+        return node is null ? null : Convert.ToDecimal(node.GetValue<object>(), CultureInfo.InvariantCulture);
+    }
+
+    private bool GetBool(string partName, string fieldName)
+        => Root[partName]?[fieldName]?["Value"]?.GetValue<bool>() == true;
+
+    private DateTime? GetDateTime(string partName, string fieldName)
+    {
+        var node = Root[partName]?[fieldName]?["Value"];
+        if (node is null)
+        {
+            return null;
+        }
+
+        if (node.GetValueKind() == System.Text.Json.JsonValueKind.String && DateTime.TryParse(node.GetValue<string>(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed))
+        {
+            return parsed;
+        }
+
+        return node.GetValue<DateTime>();
+    }
+
+    private string GetPickerIds(string partName, string fieldName)
+    {
+        var ids = Root[partName]?[fieldName]?["ContentItemIds"] as JsonArray;
+        return ids is null
+            ? string.Empty
+            : string.Join(", ", ids.Select(id => id?.GetValue<string>()).Where(id => !string.IsNullOrWhiteSpace(id)));
+    }
+
+    private void SetPickerIds(string partName, string fieldName, string value)
+    {
+        var ids = new JsonArray(value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(id => JsonValue.Create(id)!)
+            .ToArray<JsonNode?>());
+        GetOrCreateField(partName, fieldName)["ContentItemIds"] = ids;
+        Errors.Remove(FieldKey(partName, fieldName));
+    }
+
+    private void SetFieldValue<T>(string partName, string fieldName, string propertyName, T value)
+    {
+        GetOrCreateField(partName, fieldName)[propertyName] = JsonValue.Create(value);
+        Errors.Remove(FieldKey(partName, fieldName));
+    }
+
+    private static string FieldKey(string partName, string fieldName) => $"{partName}.{fieldName}";
+}

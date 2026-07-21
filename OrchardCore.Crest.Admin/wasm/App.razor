@@ -1,0 +1,30 @@
+@using Microsoft.AspNetCore.Components.Routing
+@using Crest.Admin.Components.Admin
+@using Radzen
+@using Radzen.Blazor
+
+<RadzenNotification />
+
+<Router AppAssembly="@typeof(App).Assembly" AdditionalAssemblies="@CrestModuleAssemblyRegistry.Assemblies">
+    <Found Context="routeData">
+        @if (IsShelllessRoute(routeData))
+        {
+            <RouteView RouteData="@routeData" />
+        }
+        else
+        {
+            <CrestAppContainer>
+                <RouteView RouteData="@routeData" />
+            </CrestAppContainer>
+        }
+    </Found>
+    <NotFound>
+        <LegacyAdminFrame />
+    </NotFound>
+</Router>
+
+@code {
+    private static bool IsShelllessRoute(RouteData routeData)
+        => string.Equals(routeData.PageType.Name, "Login", StringComparison.Ordinal)
+            || string.Equals(routeData.PageType.Name, "Home", StringComparison.Ordinal);
+}

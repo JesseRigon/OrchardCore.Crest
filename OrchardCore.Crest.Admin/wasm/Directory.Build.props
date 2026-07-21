@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>obj\OrchardCore.Crest.Admin\</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin\OrchardCore.Crest.Admin\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,151 @@
+@page "/Admin/DesignSystem"
+@using Crest.Admin.Api
+@using Crest.Admin.Components.Admin
+@using Crest.Admin.DisplayManagement
+@using Radzen
+@using Radzen.Blazor
+@inject DisplayManager DisplayManager
+@inject NotificationService Notifications
+
+    <RadzenStack Gap="1rem">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Design System" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Edit Orchard Crest UI Framework design tokens for the active tenant without switching or creating Orchard themes." />
+        </RadzenStack>
+
+        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+            These settings are tenant site settings. They override Radzen CSS variables at runtime while the selected Orchard theme remains the same.
+        </RadzenAlert>
+
+        <RadzenCard>
+            <RadzenTemplateForm TItem="DesignSystemModel" Data="@Model" Submit="SaveAsync">
+                <RadzenStack Gap="1rem">
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenLabel Text="Radzen base theme" />
+                            <RadzenDropDown TValue="string" Data="@RadzenThemes" @bind-Value="Model.RadzenTheme" Style="width: 100%;" />
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenLabel Text="Border radius" />
+                            <RadzenTextBox @bind-Value="Model.Radius" Placeholder="6px" Style="width: 100%;" />
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="12" SizeMD="3">
+                            <RadzenLabel Text="Primary" />
+                            <RadzenColorPicker @bind-Value="Model.Primary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="3">
+                            <RadzenLabel Text="Secondary" />
+                            <RadzenColorPicker @bind-Value="Model.Secondary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="3">
+                            <RadzenLabel Text="Surface" />
+                            <RadzenColorPicker @bind-Value="Model.Surface" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="3">
+                            <RadzenLabel Text="Background" />
+                            <RadzenColorPicker @bind-Value="Model.Background" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <div class="design-system-preview">
+                        <RadzenText TextStyle="TextStyle.H6" Text="Preview" />
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Style="flex-wrap: wrap;">
+                            <RadzenButton Text="Primary Action" ButtonStyle="ButtonStyle.Primary" />
+                            <RadzenButton Text="Secondary Action" ButtonStyle="ButtonStyle.Secondary" />
+                            <RadzenButton Text="Light Action" ButtonStyle="ButtonStyle.Light" />
+                        </RadzenStack>
+                    </div>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                        <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@DisplayManager.IsBusy" />
+                        <RadzenButton Text="Reset defaults" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@DisplayManager.IsBusy" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    </RadzenStack>
+
+
+<style>
+    .design-system-preview {
+        border: 1px solid var(--rz-border-color);
+        border-radius: var(--rz-border-radius);
+        padding: 1rem;
+        background: var(--rz-base-background-color);
+    }
+</style>
+
+@code {
+    private static readonly string[] RadzenThemes =
+    [
+        "material-base",
+        "material-dark-base",
+        "standard-base",
+        "standard-dark-base",
+        "default",
+        "dark",
+        "software",
+        "humanistic"
+    ];
+
+    private DesignSystemModel Model { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        Model = DesignSystemModel.From(DisplayManager.Theme);
+    }
+
+    private async Task SaveAsync()
+    {
+        var saved = await DisplayManager.UpdateThemeAsync(Model.ToSettings());
+        if (saved is not null)
+        {
+            Model = DesignSystemModel.From(saved);
+            Notifications.Notify(NotificationSeverity.Success, "Design system saved", "The tenant design tokens were updated.");
+        }
+        else
+        {
+            Notifications.Notify(NotificationSeverity.Error, "Design system save failed", "The server could not save the design tokens.");
+        }
+    }
+
+    private void ResetDefaults()
+    {
+        Model = DesignSystemModel.From(CrestThemeSettings.Default);
+    }
+
+    private sealed class DesignSystemModel
+    {
+        public string RadzenTheme { get; set; } = CrestThemeSettings.Default.RadzenTheme;
+        public string Primary { get; set; } = "#2f6f4e";
+        public string Secondary { get; set; } = "#6d5d3f";
+        public string Surface { get; set; } = "#ffffff";
+        public string Background { get; set; } = "#f7f8f6";
+        public string Radius { get; set; } = "6px";
+
+        public static DesignSystemModel From(CrestThemeSettings settings) => new()
+        {
+            RadzenTheme = settings.RadzenTheme,
+            Primary = Get(settings, "primary", "#2f6f4e"),
+            Secondary = Get(settings, "secondary", "#6d5d3f"),
+            Surface = Get(settings, "surface", "#ffffff"),
+            Background = Get(settings, "background", "#f7f8f6"),
+            Radius = Get(settings, "radius", "6px"),
+        };
+
+        public CrestThemeSettings ToSettings() => new(RadzenTheme, new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["primary"] = Primary,
+            ["secondary"] = Secondary,
+            ["surface"] = Surface,
+            ["background"] = Background,
+            ["radius"] = Radius,
+        });
+
+        private static string Get(CrestThemeSettings settings, string key, string fallback) =>
+            settings.Tokens.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : fallback;
+    }
+}

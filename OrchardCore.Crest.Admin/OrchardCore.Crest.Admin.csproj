@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>OrchardCore.Crest.Admin.Manifest</AssemblyName>
+    <RootNamespace>Crest.Admin.Manifest</RootNamespace>
+    <OrchardCoreCompatibilityVersion>3.0.0</OrchardCoreCompatibilityVersion>
+    <CrestSecurityPatch>0</CrestSecurityPatch>
+    <CrestBugPatch>0</CrestBugPatch>
+    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="wasm\**" />
+    <Content Remove="wasm\**" />
+    <EmbeddedResource Remove="wasm\**" />
+    <None Remove="wasm\**" />
+    <RazorGenerate Remove="wasm\**" />
+    <RazorComponent Remove="wasm\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OrchardCore.Module.Targets" />
+    <PackageReference Include="OrchardCore.DisplayManagement" />
+  </ItemGroup>
+
+  <Target Name="BuildCrestAdminWasm"
+          AfterTargets="Build"
+          Condition="'$(SkipCrestAdminWasmBuild)' != 'true' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="dotnet restore &quot;$(MSBuildProjectDirectory)\wasm\OrchardCore.Crest.Admin.Wasm.csproj&quot; /p:SkipCrestAdminWasmBuild=true" />
+    <Exec Command="dotnet build &quot;$(MSBuildProjectDirectory)\wasm\OrchardCore.Crest.Admin.Wasm.csproj&quot; --no-restore --configuration $(Configuration) /p:SkipCrestAdminWasmBuild=true" />
+  </Target>
+</Project>

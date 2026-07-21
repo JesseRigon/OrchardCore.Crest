@@ -1,0 +1,66 @@
+@using Crest.Admin.DisplayManagement
+@using Crest.Admin.Options
+@using Radzen
+@using Radzen.Blazor
+@implements IDisposable
+@inject DisplayManager DisplayManager
+@inject CrestRoutingOptions Routing
+@inject NavigationManager Navigation
+
+@if (!DisplayManager.IsInitialized)
+{
+    <RadzenStack Gap="1rem" Style="padding: 2rem;">
+        <RadzenText Text="Loading..." />
+    </RadzenStack>
+}
+else if (DisplayManager.IsAuthenticated)
+{
+    <CascadingValue Value="DisplayManager">
+        <div class="admin-shell">
+            <AdminTitleBar ToggleSidebar="ToggleSidebar" />
+            <div class="@DashboardClass">
+                <AdminMenuSidebar />
+                @if (IsSidebarOpen)
+                {
+                    <button type="button" class="admin-dashboard__backdrop" aria-label="Close navigation menu" @onclick="CloseSidebar"></button>
+                }
+                <main class="admin-dashboard__main" @onclick="CloseSidebar">
+                    @ChildContent
+                </main>
+            </div>
+        </div>
+    </CascadingValue>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool IsSidebarOpen { get; set; }
+
+    private string DashboardClass => IsSidebarOpen ? "admin-dashboard admin-dashboard--sidebar-open" : "admin-dashboard";
+
+    protected override async Task OnInitializedAsync()
+    {
+        DisplayManager.Changed += StateHasChanged;
+        await DisplayManager.EnsureInitializedAsync();
+        EnsureAuthenticated();
+    }
+
+    public void Dispose()
+    {
+        DisplayManager.Changed -= StateHasChanged;
+    }
+
+    private void ToggleSidebar() => IsSidebarOpen = !IsSidebarOpen;
+
+    private void CloseSidebar() => IsSidebarOpen = false;
+
+    private void EnsureAuthenticated()
+    {
+        if (!DisplayManager.IsAuthenticated)
+        {
+            Navigation.NavigateTo(Routing.LoginPath);
+        }
+    }
+}

@@ -1,0 +1,14 @@
+@namespace Crest.Admin.DisplayManagement
+@using Radzen
+@using Radzen.Blazor
+@inherits ShapeTemplate
+
+<RadzenStack Gap="0.25rem">
+    <RadzenText TextStyle="TextStyle.H6" Text="Crest Admin" />
+    <RadzenText Text="@($"Signed in as {UserName}")" />
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public string? UserName { get; set; }
+}

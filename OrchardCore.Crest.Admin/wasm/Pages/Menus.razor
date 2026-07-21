@@ -1,0 +1,345 @@
+@page "/Admin/Menus"
+@page "/Admin/Menu"
+@page "/Admin/Menu/List"
+@page "/Admin/Contents/ContentItems/Menu"
+@using Crest.Admin.Api
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NotificationService Notifications
+
+<RadzenStack Gap="1rem">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Menus" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Manage standard Orchard site menus and nested menu items." />
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <RadzenButton Text="New menu" Icon="add" Click="StartCreateMenu" Disabled="@IsBusy" />
+            <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
+        </RadzenStack>
+    </RadzenStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+    }
+
+    @if (IsLoading)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <RadzenText Text="Loading menus..." />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeLG="4">
+                <RadzenCard>
+                    <RadzenStack Gap="0.75rem">
+                        <RadzenText TextStyle="TextStyle.H6" Text="Menus" />
+                        <RadzenTextBox @bind-Value="MenuSearch" Placeholder="Search menus..." Style="width: 100%;" />
+                        @if (FilteredMenus.Length == 0)
+                        {
+                            <RadzenText Text="No standard menus found." />
+                        }
+                        else
+                        {
+                            <RadzenStack Gap="0.35rem">
+                                @foreach (var menu in FilteredMenus)
+                                {
+                                    <div class="admin-menu-list-item @(menu.Id == SelectedMenuId ? "admin-menu-list-item--selected" : null) @(!menu.Published ? "admin-menu-list-item--disabled" : null)">
+                                        <RadzenButton Text="@menu.Name" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
+                                        <RadzenBadge Text="@(menu.Published ? "Published" : "Draft")" BadgeStyle="@(menu.Published ? BadgeStyle.Success : BadgeStyle.Warning)" />
+                                        <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@IsBusy" title="Rename menu" />
+                                        <RadzenButton Size="ButtonSize.Small" Icon="@(menu.Published ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@IsBusy" title="Publish/unpublish menu" />
+                                        <RadzenButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@IsBusy" title="Duplicate menu" />
+                                        <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@IsBusy" title="Delete menu" />
+                                    </div>
+                                }
+                            </RadzenStack>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeLG="8">
+                @if (SelectedMenu is null)
+                {
+                    <RadzenCard><RadzenText Text="Select a standard menu to edit its items." /></RadzenCard>
+                }
+                else
+                {
+                    <RadzenCard>
+                        <RadzenStack Gap="0.85rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                                <RadzenStack Gap="0.2rem">
+                                    <RadzenText TextStyle="TextStyle.H5" Text="@SelectedMenu.Name" />
+                                    <RadzenText TextStyle="TextStyle.Caption" Text="Standard Orchard menu items. Link and HTML menu items are editable here; content-picker menu items should still be edited in the legacy Orchard editor for now." />
+                                </RadzenStack>
+                                <RadzenButton Text="Add menu item" Icon="add" Click="StartCreateNode" Disabled="@(IsBusy || AvailableNodeTypes.Length == 0)" />
+                            </RadzenStack>
+
+                            @if (SelectedMenu.Nodes.Length == 0)
+                            {
+                                <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">This menu does not have any items yet.</RadzenAlert>
+                            }
+                            else
+                            {
+                                <ol class="admin-menu-tree__list admin-menu-tree__list--root">
+                                    @foreach (var node in SelectedMenu.Nodes)
+                                    {
+                                        @MenuNode(node)
+                                    }
+                                </ol>
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                }
+            </RadzenColumn>
+        </RadzenRow>
+    }
+
+    @if (MenuDialogModel is not null)
+    {
+        <div class="admin-menu-editor-dialog-backdrop">
+            <RadzenCard class="admin-menu-editor-dialog" Style="max-width: 32rem; width: min(32rem, calc(100vw - 2rem));">
+                <RadzenTemplateForm TItem="MenuFormModel" Data="@MenuDialogModel" Submit="@(_ => SaveMenuDialogAsync())">
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H5" Text="@MenuDialogTitle" />
+                        <RadzenFormField Text="Menu name" Style="width: 100%;"><RadzenTextBox @bind-Value="MenuDialogModel.Name" Style="width: 100%;" /></RadzenFormField>
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelMenuDialog" />
+                            <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            </RadzenCard>
+        </div>
+    }
+
+    @if (NodeDialogModel is not null)
+    {
+        <div class="admin-menu-editor-dialog-backdrop">
+            <RadzenCard class="admin-menu-editor-dialog" Style="max-width: 44rem; width: min(44rem, calc(100vw - 2rem));">
+                <RadzenTemplateForm TItem="NodeFormModel" Data="@NodeDialogModel" Submit="@(_ => SaveNodeDialogAsync())">
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H5" Text="@NodeDialogTitle" />
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Type" Style="width: 100%;"><RadzenDropDown @bind-Value="NodeDialogModel.Type" Data="AvailableNodeTypes" TextProperty="DisplayName" ValueProperty="Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Parent" Style="width: 100%;"><RadzenDropDown @bind-Value="NodeDialogModel.ParentNodeId" Data="ParentOptions" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="Root" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            <RadzenColumn Size="12"><RadzenFormField Text="Text" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Text" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="8"><RadzenFormField Text="URL" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Url" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="4"><RadzenFormField Text="Target" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Target" Placeholder="_blank" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            @if (string.Equals(NodeDialogModel.Type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <RadzenColumn Size="12"><RadzenFormField Text="HTML" Style="width: 100%;"><RadzenTextArea @bind-Value="NodeDialogModel.Html" Rows="5" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            }
+                            <RadzenColumn Size="12"><RadzenFormField Text="Permission names" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.PermissionNamesText" Placeholder="Comma-separated permission names" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                        </RadzenRow>
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelNodeDialog" />
+                            <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            </RadzenCard>
+        </div>
+    }
+</RadzenStack>
+
+<style>
+    .admin-menu-list-item { display: flex; align-items: center; gap: 0.25rem; border: 1px solid var(--rz-border-color); border-radius: var(--rz-border-radius); padding: 0.15rem; }
+    .admin-menu-list-item--selected { border-color: var(--rz-primary); background: color-mix(in srgb, var(--rz-primary) 8%, transparent); }
+    .admin-menu-list-item--disabled { opacity: 0.55; }
+    .admin-menu-tree__list { list-style: none; margin: 0; padding-left: 1.25rem; }
+    .admin-menu-tree__list--root { padding-left: 0; }
+    .admin-menu-tree__item { margin: 0.45rem 0; }
+    .admin-menu-node { border: 1px solid var(--rz-border-color); border-radius: var(--rz-border-radius); background: var(--rz-base-background-color); padding: 0.65rem; }
+    .admin-menu-node__handle { color: var(--rz-text-secondary-color); border: 1px dashed var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.35rem; user-select: none; display: inline-flex; align-items: center; }
+    .admin-menu-node__spacer { display: inline-block; width: 2rem; }
+    .admin-menu-editor-dialog-backdrop { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 1rem; background: rgba(15, 23, 42, 0.35); }
+</style>
+
+@code {
+    private StandardMenusState State { get; set; } = StandardMenusState.Empty;
+    private string? SelectedMenuId { get; set; }
+    private string MenuSearch { get; set; } = string.Empty;
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+    private MenuFormModel? MenuDialogModel { get; set; }
+    private string? EditingMenuId { get; set; }
+    private string MenuDialogTitle { get; set; } = "Menu";
+    private NodeFormModel? NodeDialogModel { get; set; }
+    private string? EditingNodeId { get; set; }
+    private string NodeDialogTitle { get; set; } = "Menu item";
+
+    private StandardMenuSummary? SelectedMenu => State.Menus.FirstOrDefault(menu => menu.Id == SelectedMenuId);
+    private StandardMenuNodeType[] AvailableNodeTypes => State.AvailableNodeTypes.Length == 0 ? [new("LinkMenuItem", "Link Menu Item"), new("HtmlMenuItem", "HTML Menu Item")] : State.AvailableNodeTypes;
+    private ParentOption[] ParentOptions => SelectedMenu is null ? [] : [new(null, "Root"), .. FlattenNodes(SelectedMenu.Nodes).Where(node => node.Id != EditingNodeId).Select(node => new ParentOption(node.Id, $"{new string('—', node.Depth)} {node.Text}"))];
+
+    private StandardMenuSummary[] FilteredMenus => State.Menus
+        .Where(menu => string.IsNullOrWhiteSpace(MenuSearch) || menu.Name.Contains(MenuSearch, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(menu => menu.Name, StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            State = await Api.Crest.Rest.Menus.ListAsync();
+            SelectedMenuId = State.Menus.Any(menu => menu.Id == SelectedMenuId) ? SelectedMenuId : State.Menus.FirstOrDefault()?.Id;
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private void SelectMenu(string menuId) => SelectedMenuId = menuId;
+    private void StartCreateMenu() { EditingMenuId = null; MenuDialogTitle = "Create menu"; MenuDialogModel = new(); }
+    private void StartMenuRename(StandardMenuSummary menu) { EditingMenuId = menu.Id; MenuDialogTitle = $"Rename menu: {menu.Name}"; MenuDialogModel = new() { Name = menu.Name, Published = menu.Published }; }
+    private void CancelMenuDialog() { EditingMenuId = null; MenuDialogModel = null; }
+
+    private async Task SaveMenuDialogAsync()
+    {
+        if (MenuDialogModel is null) return;
+        IsSaving = true;
+        var result = EditingMenuId is null
+            ? await Api.Crest.Rest.Menus.CreateMenuAsync(MenuDialogModel.ToEditModel())
+            : await Api.Crest.Rest.Menus.RenameMenuAsync(EditingMenuId, MenuDialogModel.ToEditModel());
+        await ApplyMenuResultAsync(result);
+        CancelMenuDialog();
+        IsSaving = false;
+    }
+
+    private async Task ToggleMenuAsync(StandardMenuSummary menu) => await ApplyMenuResultAsync(await Api.Crest.Rest.Menus.ToggleMenuAsync(menu.Id));
+    private async Task DuplicateMenuAsync(StandardMenuSummary menu) => await ApplyMenuResultAsync(await Api.Crest.Rest.Menus.DuplicateMenuAsync(menu.Id));
+    private async Task DeleteMenuAsync(StandardMenuSummary menu)
+    {
+        if (await Api.Crest.Rest.Menus.DeleteMenuAsync(menu.Id))
+        {
+            State = State with { Menus = State.Menus.Where(existing => existing.Id != menu.Id).ToArray() };
+            SelectedMenuId = State.Menus.FirstOrDefault()?.Id;
+            Notifications.Notify(NotificationSeverity.Success, "Menu deleted", menu.Name);
+        }
+    }
+
+    private void StartCreateNode()
+    {
+        EditingNodeId = null;
+        NodeDialogTitle = "Add menu item";
+        NodeDialogModel = new() { Type = AvailableNodeTypes.FirstOrDefault()?.Type ?? "LinkMenuItem" };
+    }
+
+    private void StartEditNode(StandardMenuNodeSummary node)
+    {
+        EditingNodeId = node.Id;
+        NodeDialogTitle = $"Edit menu item: {node.Text}";
+        NodeDialogModel = NodeFormModel.From(node);
+    }
+
+    private void CancelNodeDialog() { EditingNodeId = null; NodeDialogModel = null; }
+
+    private async Task SaveNodeDialogAsync()
+    {
+        if (SelectedMenu is null || NodeDialogModel is null) return;
+        IsSaving = true;
+        var result = EditingNodeId is null
+            ? await Api.Crest.Rest.Menus.CreateNodeAsync(SelectedMenu.Id, NodeDialogModel.ToEditModel())
+            : await Api.Crest.Rest.Menus.UpdateNodeAsync(SelectedMenu.Id, EditingNodeId, NodeDialogModel.ToEditModel());
+        await ApplyMenuResultAsync(result);
+        CancelNodeDialog();
+        IsSaving = false;
+    }
+
+    private async Task MoveNodeAsync(StandardMenuNodeSummary node, int delta)
+    {
+        if (SelectedMenu is null) return;
+        await ApplyMenuResultAsync(await Api.Crest.Rest.Menus.MoveNodeAsync(SelectedMenu.Id, node.Id, new(node.ParentId, node.Order + delta)));
+    }
+
+    private async Task DuplicateNodeAsync(StandardMenuNodeSummary node)
+    {
+        if (SelectedMenu is null) return;
+        await ApplyMenuResultAsync(await Api.Crest.Rest.Menus.DuplicateNodeAsync(SelectedMenu.Id, node.Id));
+    }
+
+    private async Task DeleteNodeAsync(StandardMenuNodeSummary node)
+    {
+        if (SelectedMenu is null) return;
+        await ApplyMenuResultAsync(await Api.Crest.Rest.Menus.DeleteNodeAsync(SelectedMenu.Id, node.Id));
+    }
+
+    private async Task ApplyMenuResultAsync(StandardMenuSummary? result)
+    {
+        if (result is null) { Notifications.Notify(NotificationSeverity.Error, "Menu update failed"); return; }
+        var menus = State.Menus.Any(menu => menu.Id == result.Id)
+            ? State.Menus.Select(menu => menu.Id == result.Id ? result : menu).ToArray()
+            : [.. State.Menus, result];
+        State = State with { Menus = menus };
+        SelectedMenuId = result.Id;
+        Notifications.Notify(NotificationSeverity.Success, "Menu saved", result.Name);
+        await Task.CompletedTask;
+    }
+
+    private RenderFragment MenuNode(StandardMenuNodeSummary node) => @<li class="admin-menu-tree__item">
+        <div class="admin-menu-node">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
+                    <span class="admin-menu-node__handle" draggable="true" title="Drag to move"><RadzenIcon Icon="drag_indicator" /></span>
+                    @if (node.Items.Length > 0) { <RadzenButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" /> }
+                    else { <span class="admin-menu-node__spacer"></span> }
+                    <RadzenStack Gap="0.1rem" Style="flex: 1; min-width: 0;">
+                        <RadzenText TextStyle="TextStyle.Subtitle2" Text="@node.Text" />
+                        <RadzenText TextStyle="TextStyle.Caption" Text="@NodeMeta(node)" />
+                    </RadzenStack>
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.35rem">
+                    <RadzenButton Size="ButtonSize.Small" Icon="arrow_upward" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveNodeAsync(node, -1))" Disabled="@(IsBusy || node.Order == 0)" title="Move up" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="arrow_downward" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveNodeAsync(node, 1))" Disabled="@IsBusy" title="Move down" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => StartEditNode(node))" Disabled="@(IsBusy || !CanEdit(node))" title="Edit menu item" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Click="@(() => DuplicateNodeAsync(node))" Disabled="@IsBusy" title="Duplicate menu item" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@IsBusy" title="Delete menu item" />
+                </RadzenStack>
+            </RadzenStack>
+        </div>
+        @if (node.Items.Length > 0)
+        {
+            <ol class="admin-menu-tree__list">@foreach (var child in node.Items) { @MenuNode(child) }</ol>
+        }
+    </li>;
+
+    private static bool CanEdit(StandardMenuNodeSummary node) => string.Equals(node.Type, "LinkMenuItem", StringComparison.OrdinalIgnoreCase) || string.Equals(node.Type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase);
+    private static IEnumerable<StandardMenuNodeSummary> FlattenNodes(IEnumerable<StandardMenuNodeSummary> nodes) => nodes.SelectMany(node => new[] { node }.Concat(FlattenNodes(node.Items)));
+    private static string NodeMeta(StandardMenuNodeSummary node) => string.Join(" • ", new[] { node.Type, node.Url, !string.IsNullOrWhiteSpace(node.Target) ? $"Target: {node.Target}" : null, node.PermissionNames.Length > 0 ? $"Permissions: {string.Join(", ", node.PermissionNames)}" : null }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private sealed class MenuFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool Published { get; set; } = true;
+        public StandardMenuEditModel ToEditModel() => new(Name, Published);
+    }
+
+    private sealed class NodeFormModel
+    {
+        public string Type { get; set; } = "LinkMenuItem";
+        public string Text { get; set; } = string.Empty;
+        public string? Url { get; set; }
+        public string? Target { get; set; }
+        public string? Html { get; set; }
+        public string? PermissionNamesText { get; set; }
+        public string? ParentNodeId { get; set; }
+        public int? Position { get; set; }
+
+        public static NodeFormModel From(StandardMenuNodeSummary node) => new() { Type = node.Type, Text = node.Text, Url = node.Url, Target = node.Target, Html = node.Html, PermissionNamesText = string.Join(", ", node.PermissionNames), ParentNodeId = node.ParentId, Position = node.Order };
+        public StandardMenuNodeEditModel ToEditModel() => new(Type, Text, Url, Target, Html, PermissionNamesText?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [], ParentNodeId, Position);
+    }
+
+    private sealed record ParentOption(string? Id, string Text);
+}

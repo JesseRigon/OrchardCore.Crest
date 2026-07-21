@@ -1,0 +1,175 @@
+@page "/Admin/Settings/general"
+@using Crest.Admin.Api
+@using Crest.Admin.Components.Shared
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NotificationService Notifications
+
+<RadzenStack Gap="1rem">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="General Settings" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Manage standard Orchard site, resource, and cache settings." />
+        </RadzenStack>
+        <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
+    </RadzenStack>
+
+    <RadzenCard>
+        <MainTabSelector TValue="GeneralSettingsTab" Items="Tabs" Value="@SelectedTab" ValueChanged="@((GeneralSettingsTab tab) => SelectTab(tab))" AriaLabel="General settings sections" />
+
+        <div class="admin-settings-tab-panel">
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+            }
+            else if (IsLoading)
+            {
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                    <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                    <RadzenText Text="Loading settings..." />
+                </RadzenStack>
+            }
+            else
+            {
+                <RadzenTemplateForm TItem="SiteSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
+                    <RadzenStack Gap="1rem">
+                        @if (SelectedTab == GeneralSettingsTab.General)
+                        {
+                            <RadzenText TextStyle="TextStyle.H5" Text="General" />
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Site name" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.SiteName" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Base URL" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.BaseUrl" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                                <RadzenColumn Size="12"><RadzenFormField Text="Page title format" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.PageTitleFormat" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Default Time Zone" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.TimeZoneId" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Calendar" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.Calendar" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="4"><RadzenFormField Text="Page size" Style="width: 100%;"><RadzenNumeric @bind-Value="Model.PageSize" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="4"><RadzenFormField Text="Max page size" Style="width: 100%;"><RadzenNumeric @bind-Value="Model.MaxPageSize" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="4"><RadzenFormField Text="Max paged count" Style="width: 100%;"><RadzenNumeric @bind-Value="Model.MaxPagedCount" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            </RadzenRow>
+                        }
+                        else if (SelectedTab == GeneralSettingsTab.Resources)
+                        {
+                            <RadzenText TextStyle="TextStyle.H5" Text="Resources" />
+                            <SettingsSwitch Label="Use resources cache busting" Hint="Whether cache busting (append a version) is used for scripts and stylesheets." @bind-Value="Model.AppendVersion" />
+                            <SettingsSwitch Label="Use framework CDN (Content Delivery Network)" Hint="Whether a framework CDN is used for registered scripts and stylesheets, such as jQuery, or their local version." @bind-Value="Model.UseCdn" />
+                            <RadzenFormField Text="Site CDN (Content Delivery Network) base URL" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.CdnBaseUrl" Style="width: 100%;" /></RadzenFormField>
+                            <RadzenFormField Text="Resource Debug Mode" Style="width: 100%; max-width: 48rem;"><RadzenDropDown @bind-Value="Model.ResourceDebugMode" Data="ResourceDebugOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></RadzenFormField>
+                            <RadzenText TextStyle="TextStyle.Caption" Text="Determines whether scripts and stylesheets load in their debuggable or minified form." />
+                        }
+                        else
+                        {
+                            <RadzenText TextStyle="TextStyle.H5" Text="Cache" />
+                            <RadzenFormField Text="Cache Mode" Style="width: 100%; max-width: 48rem;"><RadzenDropDown @bind-Value="Model.CacheMode" Data="CacheModeOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></RadzenFormField>
+                            <RadzenText TextStyle="TextStyle.Caption" Text="Determines whether caches are enabled or disabled." />
+                        }
+
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                            <RadzenButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            }
+        </div>
+    </RadzenCard>
+</RadzenStack>
+
+<style>.admin-settings-tab-panel { padding-top: 1rem; }</style>
+
+@code {
+    private static readonly IReadOnlyList<MainTabItem<GeneralSettingsTab>> Tabs =
+    [
+        new(GeneralSettingsTab.General, "General", "settings"),
+        new(GeneralSettingsTab.Resources, "Resources", "widgets"),
+        new(GeneralSettingsTab.Cache, "Cache", "cached"),
+    ];
+
+    private static readonly SelectOption[] ResourceDebugOptions =
+    [
+        new("FromConfiguration", "From environment — disabled in Production, enabled otherwise"),
+        new("Enabled", "Enabled — use debuggable version of resources"),
+        new("Disabled", "Disabled — use minified version of resources"),
+    ];
+
+    private static readonly SelectOption[] CacheModeOptions =
+    [
+        new("FromConfiguration", "From environment — enabled in Production, disabled otherwise"),
+        new("Enabled", "Enabled"),
+        new("DebugEnabled", "Enabled with cache debug mode"),
+        new("Disabled", "Disabled"),
+    ];
+
+    private GeneralSettingsTab SelectedTab { get; set; } = GeneralSettingsTab.General;
+    private SiteSettingsModel Model { get; set; } = new();
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try { Model = SiteSettingsModel.From(await Api.Crest.Rest.Site.GetAsync()); }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private Task SelectTab(GeneralSettingsTab tab) { SelectedTab = tab; return Task.CompletedTask; }
+
+    private async Task SaveAsync()
+    {
+        IsSaving = true;
+        try
+        {
+            var saved = await Api.Crest.Rest.Site.UpdateAsync(Model.ToUpdate());
+            if (saved is not null)
+            {
+                Model = SiteSettingsModel.From(saved);
+                Notifications.Notify(NotificationSeverity.Success, "Settings saved", "General settings were updated.");
+            }
+        }
+        finally { IsSaving = false; }
+    }
+
+    private enum GeneralSettingsTab { General, Resources, Cache }
+    private sealed record SelectOption(string Value, string Text);
+
+    private sealed class SiteSettingsModel
+    {
+        public string SiteName { get; set; } = string.Empty;
+        public string PageTitleFormat { get; set; } = string.Empty;
+        public string BaseUrl { get; set; } = string.Empty;
+        public string TimeZoneId { get; set; } = string.Empty;
+        public string Calendar { get; set; } = string.Empty;
+        public int PageSize { get; set; }
+        public int MaxPageSize { get; set; }
+        public int MaxPagedCount { get; set; }
+        public bool AppendVersion { get; set; }
+        public bool UseCdn { get; set; }
+        public string CdnBaseUrl { get; set; } = string.Empty;
+        public string ResourceDebugMode { get; set; } = "FromConfiguration";
+        public string CacheMode { get; set; } = "FromConfiguration";
+
+        public static SiteSettingsModel From(SiteSettings settings) => new()
+        {
+            SiteName = settings.SiteName,
+            PageTitleFormat = settings.PageTitleFormat,
+            BaseUrl = settings.BaseUrl,
+            TimeZoneId = settings.TimeZoneId,
+            Calendar = settings.Calendar,
+            PageSize = settings.PageSize,
+            MaxPageSize = settings.MaxPageSize,
+            MaxPagedCount = settings.MaxPagedCount,
+            AppendVersion = settings.AppendVersion,
+            UseCdn = settings.UseCdn,
+            CdnBaseUrl = settings.CdnBaseUrl,
+            ResourceDebugMode = settings.ResourceDebugMode,
+            CacheMode = settings.CacheMode,
+        };
+
+        public SiteSettingsUpdate ToUpdate() => new(SiteName, PageTitleFormat, BaseUrl, TimeZoneId, Calendar, PageSize, MaxPageSize, MaxPagedCount, AppendVersion, UseCdn, CdnBaseUrl, ResourceDebugMode, CacheMode);
+    }
+}

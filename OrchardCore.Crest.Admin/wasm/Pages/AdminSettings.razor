@@ -1,0 +1,202 @@
+@page "/Admin/Settings/admin"
+@using Crest.Admin.Api
+@using Crest.Admin.Components.Shared
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NotificationService Notifications
+
+<RadzenStack Gap="1rem">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Admin Settings" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Manage Orchard admin UI options and route access planning." />
+        </RadzenStack>
+        <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
+    </RadzenStack>
+
+    <RadzenCard>
+        <MainTabSelector TValue="AdminSettingsTab" Items="Tabs" Value="@SelectedTab" ValueChanged="@((AdminSettingsTab tab) => SelectTab(tab))" AriaLabel="Admin settings sections" />
+
+        <div class="admin-settings-tab-panel">
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+            }
+            else if (IsLoading)
+            {
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                    <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                    <RadzenText Text="Loading settings..." />
+                </RadzenStack>
+            }
+            else if (SelectedTab == AdminSettingsTab.Admin)
+            {
+                <RadzenTemplateForm TItem="AdminSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H5" Text="Admin" />
+                        <SettingsSwitch Label="Enable theme toggler" Hint="Whether or not to display a theme toggler." @bind-Value="Model.DisplayThemeToggler" />
+                        <SettingsSwitch Label="Enable Admin Menu filter" Hint="Whether a quick search to filter the admin menu is displayed." @bind-Value="Model.DisplayMenuFilter" />
+                        <SettingsSwitch Label="Display New menu" Hint="Whether a New menu is displayed in the admin menu." @bind-Value="Model.DisplayNewMenu" />
+                        <SettingsSwitch Label="Display titles in top bar" Hint="Whether the titles are displayed in the top bar." @bind-Value="Model.DisplayTitlesInTopbar" />
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                            <RadzenButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            }
+            else
+            {
+                <RadzenStack Gap="1rem">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H5" Text="Site Map" />
+                        <RadzenText TextStyle="TextStyle.Body2" Text="Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up." />
+                    </RadzenStack>
+
+                    @if (RouteNodes.Length == 0)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">No routes were discovered for the admin site map.</RadzenAlert>
+                    }
+                    else
+                    {
+                        <ol class="admin-menu-tree__list admin-menu-tree__list--root">
+                            @foreach (var node in RouteNodes)
+                            {
+                                @RenderRouteNode(node)
+                            }
+                        </ol>
+                    }
+                </RadzenStack>
+            }
+        </div>
+    </RadzenCard>
+</RadzenStack>
+
+<style>
+    .admin-settings-tab-panel { padding-top: 1rem; }
+    .admin-menu-tree__list { list-style: none; margin: 0; padding-left: 1.25rem; }
+    .admin-menu-tree__list--root { padding-left: 0; }
+    .admin-menu-tree__item { margin: 0.45rem 0; }
+    .admin-menu-node { border: 1px solid var(--rz-border-color); border-radius: var(--rz-border-radius); background: var(--rz-base-background-color); padding: 0.65rem; }
+    .admin-menu-node__handle { color: var(--rz-text-secondary-color); border: 1px dashed var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.35rem; user-select: none; display: inline-flex; align-items: center; }
+    .admin-menu-node__spacer { display: inline-block; width: 2rem; }
+</style>
+
+@code {
+    private static readonly IReadOnlyList<MainTabItem<AdminSettingsTab>> Tabs =
+    [
+        new(AdminSettingsTab.Admin, "Admin", "admin_panel_settings"),
+        new(AdminSettingsTab.SiteMap, "Site Map", "account_tree"),
+    ];
+
+    private AdminSettingsTab SelectedTab { get; set; } = AdminSettingsTab.Admin;
+    private AdminSettingsModel Model { get; set; } = new();
+    private RouteNode[] RouteNodes { get; set; } = [];
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            Model = AdminSettingsModel.From(await Api.Crest.Rest.AdminSettings.GetAsync());
+            var manifest = await Api.Crest.Rest.App.GetManifestAsync();
+            RouteNodes = manifest?.AdminMenu.Items.Select((item, index) => RouteNode.From(item, null, 0, index)).ToArray() ?? [];
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private Task SelectTab(AdminSettingsTab tab) { SelectedTab = tab; return Task.CompletedTask; }
+
+    private async Task SaveAsync()
+    {
+        IsSaving = true;
+        try
+        {
+            var saved = await Api.Crest.Rest.AdminSettings.UpdateAsync(Model.ToUpdate());
+            if (saved is not null)
+            {
+                Model = AdminSettingsModel.From(saved);
+                Notifications.Notify(NotificationSeverity.Success, "Settings saved", "Admin settings were updated.");
+            }
+        }
+        finally { IsSaving = false; }
+    }
+
+    private RenderFragment RenderRouteNode(RouteNode node) => @<li class="admin-menu-tree__item">
+        <div class="admin-menu-node">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
+                    <span class="admin-menu-node__handle" title="Drag to move"><RadzenIcon Icon="drag_indicator" /></span>
+                    @if (node.Items.Length > 0)
+                    {
+                        <RadzenButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" title="Expand/collapse coming soon" />
+                    }
+                    else
+                    {
+                        <span class="admin-menu-node__spacer"></span>
+                    }
+                    <RadzenStack Gap="0.1rem" Style="flex: 1; min-width: 0;">
+                        <RadzenText TextStyle="TextStyle.Subtitle2" Text="@node.Text" />
+                        <RadzenText TextStyle="TextStyle.Caption" Text="@node.Meta" />
+                    </RadzenStack>
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.35rem">
+                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Disabled="true" title="Edit route permissions coming soon" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="visibility_off" ButtonStyle="ButtonStyle.Light" Disabled="true" title="Toggle route access coming soon" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Disabled="true" title="Delete route override coming soon" />
+                </RadzenStack>
+            </RadzenStack>
+        </div>
+        @if (node.Items.Length > 0)
+        {
+            <ol class="admin-menu-tree__list">
+                @foreach (var child in node.Items)
+                {
+                    @RenderRouteNode(child)
+                }
+            </ol>
+        }
+    </li>;
+
+    private enum AdminSettingsTab { Admin, SiteMap }
+
+    private sealed class AdminSettingsModel
+    {
+        public bool DisplayThemeToggler { get; set; }
+        public bool DisplayMenuFilter { get; set; }
+        public bool DisplayNewMenu { get; set; }
+        public bool DisplayTitlesInTopbar { get; set; }
+
+        public static AdminSettingsModel From(AdminSettingsDto settings) => new()
+        {
+            DisplayThemeToggler = settings.DisplayThemeToggler,
+            DisplayMenuFilter = settings.DisplayMenuFilter,
+            DisplayNewMenu = settings.DisplayNewMenu,
+            DisplayTitlesInTopbar = settings.DisplayTitlesInTopbar,
+        };
+
+        public AdminSettingsUpdate ToUpdate() => new(DisplayThemeToggler, DisplayMenuFilter, DisplayNewMenu, DisplayTitlesInTopbar);
+    }
+
+    private sealed record RouteNode(string Id, string Text, string Meta, RouteNode[] Items)
+    {
+        public static RouteNode From(NavigationItem item, string? parentId, int depth, int order)
+        {
+            var id = item.Key;
+            var metaValues = new List<string>();
+            if (!string.IsNullOrWhiteSpace(item.Link)) metaValues.Add(item.Link!);
+            if (item.Classes.Length > 0) metaValues.Add($"Classes: {string.Join(" ", item.Classes)}");
+            if (!string.IsNullOrWhiteSpace(parentId)) metaValues.Add($"Parent: {parentId}");
+
+            return new(id, item.Text, metaValues.Count == 0 ? $"Route group • depth {depth} • order {order}" : string.Join(" • ", metaValues), item.Items.Select((child, index) => From(child, id, depth + 1, index)).ToArray());
+        }
+    }
+}

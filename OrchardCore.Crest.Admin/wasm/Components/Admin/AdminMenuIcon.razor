@@ -1,0 +1,22 @@
+@using Crest.Admin.Components.Shared
+@using Crest.Admin.DisplayManagement
+@using Crest.Icons.Components
+
+<OrchardIcon Name="@Icon?.Name"
+             IconKey="@Icon?.Key"
+             Library="@Icon?.Library"
+             Version="@Icon?.Version"
+             SvgMarkup="@Icon?.SvgMarkup"
+             Alt="@Alt"
+             Size="1.25rem"
+             BoxSize="1.5rem"
+             Opacity="1"
+             Class="rz-navigation-item-icon admin-menu-sidebar__icon" />
+
+@code {
+    [Parameter]
+    public DisplayIcon? Icon { get; set; }
+
+    [Parameter]
+    public string? Alt { get; set; }
+}

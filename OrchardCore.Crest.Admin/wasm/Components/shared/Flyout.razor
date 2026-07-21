@@ -1,0 +1,42 @@
+@namespace Crest.Admin.Components.Shared
+@using Microsoft.AspNetCore.Components.Web
+
+@if (IsOpen)
+{
+    <div class="@CssClass"
+         style="@PositionStyle"
+         role="@Role"
+         @onmouseenter="OnMouseEnter"
+         @onmouseleave="OnMouseLeave">
+        @ChildContent
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public double Left { get; set; }
+
+    [Parameter]
+    public double Top { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string Role { get; set; } = "menu";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnMouseEnter { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnMouseLeave { get; set; }
+
+    private string CssClass => string.IsNullOrWhiteSpace(Class) ? "crest-flyout" : $"crest-flyout {Class}";
+    private string PositionStyle => $"left: {Left}px; top: {Top}px;";
+}
