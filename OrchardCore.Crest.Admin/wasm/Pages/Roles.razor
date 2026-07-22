@@ -1,0 +1,113 @@
+@page "/Admin/Roles/Index"
+@using Crest.Admin.Api
+@using Crest.Components.Model
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+
+<RadzenStack Gap="1rem" data-testid="roles-page">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Roles" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Browse Orchard roles and their system and administrator status." />
+        </RadzenStack>
+        <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+    </RadzenStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+    }
+
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeLG="4">
+            <CrestModelList TItem="Role"
+                            Title="Roles"
+                            Items="@AllRoles"
+                            SelectedKey="@SelectedRoleName"
+                            KeySelector="@(role => role.Name)"
+                            TextSelector="@(role => role.Name)"
+                            DescriptionSelector="@(role => role.Description)"
+                            SearchPredicate="MatchesSearch"
+                            Select="SelectRoleAsync"
+                            ShowCreate="false"
+                            IsBusy="@IsLoading"
+                            EmptyText="No roles are available." />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeLG="8">
+            @if (IsLoading)
+            {
+                <RadzenCard><RadzenProgressBar Mode="ProgressBarMode.Indeterminate" /></RadzenCard>
+            }
+            else if (SelectedRole is null)
+            {
+                <RadzenCard><RadzenText Text="Select a role to inspect its Orchard status." /></RadzenCard>
+            }
+            else
+            {
+                <RadzenCard data-testid="role-detail">
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.H5" Text="@SelectedRole.Name" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="@(string.IsNullOrWhiteSpace(SelectedRole.Description) ? "No role description has been set." : SelectedRole.Description)" />
+                        </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                            <RadzenBadge Text="@(SelectedRole.IsSystem ? "System role" : "Custom role")" BadgeStyle="@(SelectedRole.IsSystem ? BadgeStyle.Info : BadgeStyle.Secondary)" />
+                            @if (SelectedRole.IsAdmin)
+                            {
+                                <RadzenBadge Text="Administrator" BadgeStyle="BadgeStyle.Success" />
+                            }
+                        </RadzenStack>
+                        @if (SelectedRole.IsSystem)
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">System roles are managed by Orchard and cannot be deleted.</RadzenAlert>
+                        }
+                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">Role permissions will be added with the dedicated permission editor so they retain Orchard’s effective-permission behavior.</RadzenAlert>
+                    </RadzenStack>
+                </RadzenCard>
+            }
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+    private Role[] AllRoles { get; set; } = [];
+    private string? SelectedRoleName { get; set; }
+    private bool IsLoading { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private Role? SelectedRole => AllRoles.FirstOrDefault(role => string.Equals(role.Name, SelectedRoleName, StringComparison.OrdinalIgnoreCase));
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            AllRoles = await Api.Crest.Rest.Roles.ListAsync();
+            SelectedRoleName = AllRoles.Any(role => string.Equals(role.Name, SelectedRoleName, StringComparison.OrdinalIgnoreCase))
+                ? SelectedRoleName
+                : AllRoles.FirstOrDefault()?.Name;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private Task SelectRoleAsync(Role role)
+    {
+        SelectedRoleName = role.Name;
+        return Task.CompletedTask;
+    }
+
+    private static bool MatchesSearch(Role role, string term) =>
+        role.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+        || role.Description.Contains(term, StringComparison.OrdinalIgnoreCase);
+}

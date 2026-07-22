@@ -8,7 +8,7 @@ using OrchardCore.Settings;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/admin-settings")]
 public sealed class AdminSettingsController(
     IAuthorizationService authorizationService,

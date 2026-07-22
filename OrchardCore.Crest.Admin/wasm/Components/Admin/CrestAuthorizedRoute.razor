@@ -1,0 +1,43 @@
+@using Crest.Admin.DisplayManagement
+@using Radzen
+@using Radzen.Blazor
+@inject DisplayManager DisplayManager
+@inject NavigationManager Navigation
+
+@if (!DisplayManager.IsInitialized)
+{
+    <RadzenStack Gap="1rem" Style="padding: 2rem;">
+        <RadzenText Text="Loading..." />
+    </RadzenStack>
+}
+else if (!DisplayManager.IsAuthenticated)
+{
+    <RadzenStack Gap="1rem" Style="padding: 2rem;">
+        <RadzenText Text="Sign in is required." />
+    </RadzenStack>
+}
+else if (!DisplayManager.IsRouteAuthorized(Navigation.Uri))
+{
+    <RadzenStack data-testid="crest-route-forbidden" Gap="0.5rem" Style="padding: 2rem;">
+        <RadzenText TextStyle="TextStyle.H4" Text="Access denied" />
+        <RadzenText Text="You do not have permission to access this admin page." />
+    </RadzenStack>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DisplayManager.EnsureInitializedAsync();
+        if (!DisplayManager.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+        }
+    }
+}

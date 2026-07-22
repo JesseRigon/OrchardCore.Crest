@@ -1,0 +1,324 @@
+@page "/Admin/Features"
+@using Crest.Admin.Api
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NotificationService Notifications
+
+<RadzenStack Gap="1rem" data-testid="features-page">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Features" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Enable and disable Orchard features for this tenant." />
+        </RadzenStack>
+        <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+    </RadzenStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+    }
+
+    <RadzenCard>
+        <RadzenStack Gap="0.85rem">
+            <RadzenRow Gap="0.75rem">
+                <RadzenColumn Size="12" SizeMD="6">
+                    <RadzenTextBox @bind-Value="SearchText" Placeholder="Search name, ID, category, description, or dependency..." Style="width: 100%;" data-testid="features-search" />
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenDropDown @bind-Value="StatusFilter" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" data-testid="features-status-filter" />
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenCheckBox @bind-Value="HideAlwaysEnabled" TValue="bool" />
+                    <RadzenLabel Text="Hide always enabled" Style="margin-left: 0.45rem;" />
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <RadzenText Text="Bulk actions" TextStyle="TextStyle.Subtitle2" />
+                <RadzenButton Text="Enable" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => ApplyBulkAsync(BulkAction.Enable))" Disabled="@(!CanApplyBulk)" />
+                <RadzenButton Text="Disable" Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => RequestBulkDisable())" Disabled="@(!CanApplyBulk)" />
+                <RadzenButton Text="Toggle" Icon="swap_horiz" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@(() => RequestBulkToggle())" Disabled="@(!CanApplyBulk)" />
+                <RadzenText Text="@($"Showing {FilteredFeatures.Length} of {AllFeatures.Length} features")" TextStyle="TextStyle.Caption" class="features-count" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    @if (IsLoading)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <RadzenText Text="Loading features..." />
+        </RadzenStack>
+    }
+    else if (FilteredFeatures.Length == 0)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">Nothing here. The current search or filters returned no features.</RadzenAlert>
+    }
+    else
+    {
+        @foreach (var group in GroupedFeatures)
+        {
+            <section class="feature-group" data-testid="feature-category">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
+                    <input type="checkbox" checked="@IsGroupSelected(group.Items)" @onchange="@((ChangeEventArgs args) => SelectGroup(group.Items, args.Value is true))" aria-label="@($"Select all features in {group.Category}")" />
+                    <RadzenText TextStyle="TextStyle.H5" Text="@group.Category" />
+                    <RadzenBadge Text="@group.Items.Length.ToString()" BadgeStyle="BadgeStyle.Secondary" />
+                </RadzenStack>
+
+                <RadzenStack Gap="0.6rem">
+                    @foreach (var feature in group.Items)
+                    {
+                        <RadzenCard class="feature-card" data-feature-id="@feature.Id">
+                            <div class="feature-card__selection">
+                                <input type="checkbox" checked="@SelectedIds.Contains(feature.Id)" @onchange="@((ChangeEventArgs args) => SelectFeature(feature.Id, args.Value is true))" aria-label="@($"Select {feature.Name}")" />
+                            </div>
+                            <RadzenStack Gap="0.45rem" class="feature-card__content">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                                    <RadzenText TextStyle="TextStyle.H6" Text="@feature.Name" />
+                                    <RadzenText TextStyle="TextStyle.Caption" Text="@feature.Id" />
+                                    <RadzenBadge Text="@(feature.Enabled ? "Enabled" : "Disabled")" BadgeStyle="@(feature.Enabled ? BadgeStyle.Success : BadgeStyle.Light)" />
+                                    @if (feature.AlwaysEnabled)
+                                    {
+                                        <RadzenBadge Text="Always enabled" BadgeStyle="BadgeStyle.Info" />
+                                    }
+                                    @if (feature.EnabledByDependencyOnly)
+                                    {
+                                        <RadzenBadge Text="Dependency only" BadgeStyle="BadgeStyle.Warning" />
+                                    }
+                                </RadzenStack>
+
+                                @if (!string.IsNullOrWhiteSpace(feature.Description))
+                                {
+                                    <RadzenText TextStyle="TextStyle.Body2" Text="@feature.Description" />
+                                }
+
+                                @if (feature.Dependencies.Length > 0)
+                                {
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.35rem" Wrap="FlexWrap.Wrap">
+                                        <RadzenText Text="Depends on:" TextStyle="TextStyle.Caption" />
+                                        @foreach (var dependency in feature.Dependencies)
+                                        {
+                                            <RadzenBadge Text="@DependencyName(dependency)" BadgeStyle="@(IsDependencyAvailable(dependency) ? BadgeStyle.Secondary : BadgeStyle.Danger)" />
+                                        }
+                                    </RadzenStack>
+                                }
+                            </RadzenStack>
+
+                            <div class="feature-card__actions">
+                                @if (feature.Enabled)
+                                {
+                                    <RadzenButton Text="Disable" Icon="block" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RequestDisable(feature))" Disabled="@(IsBusy || !CanDisable(feature))" />
+                                }
+                                else
+                                {
+                                    <RadzenButton Text="Enable" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => SetFeatureAsync(feature, true))" Disabled="@(IsBusy || !CanEnable(feature))" />
+                                }
+                            </div>
+                        </RadzenCard>
+                    }
+                </RadzenStack>
+            </section>
+        }
+    }
+
+    @if (Confirmation is not null)
+    {
+        <div class="feature-dialog-backdrop" data-testid="feature-confirm-dialog">
+            <RadzenCard class="feature-dialog">
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H5" Text="@Confirmation.Title" />
+                    <RadzenText Text="@Confirmation.Message" />
+                    @if (Confirmation.Dependents.Length > 0)
+                    {
+                        <ul>
+                            @foreach (var dependent in Confirmation.Dependents)
+                            {
+                                <li>@dependent</li>
+                            }
+                        </ul>
+                    }
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelConfirmation" />
+                        <RadzenButton Text="Continue" ButtonStyle="ButtonStyle.Danger" Click="ConfirmAsync" Disabled="@IsBusy" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </div>
+    }
+</RadzenStack>
+
+@code {
+    private Feature[] AllFeatures { get; set; } = [];
+    private HashSet<string> SelectedIds { get; } = new(StringComparer.OrdinalIgnoreCase);
+    private string SearchText { get; set; } = string.Empty;
+    private string StatusFilter { get; set; } = "any";
+    private bool HideAlwaysEnabled { get; set; }
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private bool CanApplyBulk => SelectedIds.Count > 0 && !IsBusy;
+    private string? ErrorMessage { get; set; }
+    private ConfirmationModel? Confirmation { get; set; }
+
+    private static readonly FilterOption[] StatusOptions = [new("any", "Any status"), new("enabled", "Enabled only"), new("disabled", "Disabled only")];
+
+    private Feature[] FilteredFeatures => AllFeatures
+        .Where(feature => !HideAlwaysEnabled || !feature.AlwaysEnabled)
+        .Where(feature => StatusFilter switch
+        {
+            "enabled" => feature.Enabled,
+            "disabled" => !feature.Enabled,
+            _ => true,
+        })
+        .Where(MatchesSearch)
+        .ToArray();
+
+    private FeatureGroup[] GroupedFeatures => FilteredFeatures
+        .GroupBy(feature => string.IsNullOrWhiteSpace(feature.Category) ? "Uncategorized" : feature.Category)
+        .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+        .Select(group => new FeatureGroup(group.Key, group.OrderBy(feature => feature.Name, StringComparer.OrdinalIgnoreCase).ToArray()))
+        .ToArray();
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            AllFeatures = await Api.Crest.Rest.Features.ListAsync();
+            SelectedIds.RemoveWhere(id => AllFeatures.All(feature => !string.Equals(feature.Id, id, StringComparison.OrdinalIgnoreCase)));
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private bool MatchesSearch(Feature feature)
+    {
+        if (string.IsNullOrWhiteSpace(SearchText)) return true;
+        var term = SearchText.Trim();
+        return feature.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || feature.Id.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || feature.Category.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || feature.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || feature.ExtensionId.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || feature.Dependencies.Any(dependency => dependency.Contains(term, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool CanEnable(Feature feature) => !feature.EnabledByDependencyOnly && feature.Id is not "OrchardCore.Setup" and not "OrchardCore.AutoSetup";
+    private bool CanDisable(Feature feature) => !feature.AlwaysEnabled && !feature.EnabledByDependencyOnly && !string.Equals(feature.Category, "Core", StringComparison.OrdinalIgnoreCase);
+    private bool IsDependencyAvailable(string id) => AllFeatures.Any(feature => string.Equals(feature.Id, id, StringComparison.OrdinalIgnoreCase));
+    private string DependencyName(string id) => AllFeatures.FirstOrDefault(feature => string.Equals(feature.Id, id, StringComparison.OrdinalIgnoreCase))?.Name ?? id;
+    private string[] EnabledDependentNames(Feature feature) => AllFeatures
+        .Where(candidate => candidate.Enabled && candidate.Dependencies.Contains(feature.Id, StringComparer.OrdinalIgnoreCase))
+        .Select(candidate => candidate.Name)
+        .Order(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    private void SelectFeature(string id, bool selected)
+    {
+        if (selected) SelectedIds.Add(id); else SelectedIds.Remove(id);
+    }
+
+    private bool IsGroupSelected(Feature[] features) => features.Length > 0 && features.All(feature => SelectedIds.Contains(feature.Id));
+
+    private void SelectGroup(Feature[] features, bool selected)
+    {
+        foreach (var feature in features) SelectFeature(feature.Id, selected);
+    }
+
+    private void RequestDisable(Feature feature)
+    {
+        Confirmation = new(
+            $"Disable {feature.Name}?",
+            "Disabling a feature can also disable features that depend on it.",
+            EnabledDependentNames(feature),
+            () => SetFeatureAsync(feature, false));
+    }
+
+    private void RequestBulkDisable() => RequestBulk(BulkAction.Disable);
+    private void RequestBulkToggle() => RequestBulk(BulkAction.Toggle);
+
+    private void RequestBulk(BulkAction action)
+    {
+        var selected = AllFeatures.Where(feature => SelectedIds.Contains(feature.Id)).ToArray();
+        var dependents = selected.SelectMany(EnabledDependentNames).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
+        Confirmation = new(
+            $"{action} {selected.Length} features?",
+            "Feature changes can recycle the tenant and affect dependent features.",
+            dependents,
+            () => ApplyBulkAsync(action));
+    }
+
+    private void CancelConfirmation() => Confirmation = null;
+
+    private async Task ConfirmAsync()
+    {
+        var action = Confirmation?.Action;
+        Confirmation = null;
+        if (action is not null) await action();
+    }
+
+    private async Task SetFeatureAsync(Feature feature, bool enable)
+    {
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            var succeeded = enable
+                ? await Api.Crest.Rest.Features.EnableAsync(feature.Id)
+                : await Api.Crest.Rest.Features.DisableAsync(feature.Id);
+            if (!succeeded) throw new InvalidOperationException($"Orchard could not {(enable ? "enable" : "disable")} {feature.Name}.");
+            Notifications.Notify(NotificationSeverity.Success, "Features", $"{feature.Name} was {(enable ? "enabled" : "disabled")}.");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task ApplyBulkAsync(BulkAction action)
+    {
+        var selected = AllFeatures.Where(feature => SelectedIds.Contains(feature.Id)).ToArray();
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            foreach (var feature in selected)
+            {
+                var enable = action == BulkAction.Enable || action == BulkAction.Toggle && !feature.Enabled;
+                if (enable && CanEnable(feature)) await Api.Crest.Rest.Features.EnableAsync(feature.Id);
+                if (!enable && feature.Enabled && CanDisable(feature)) await Api.Crest.Rest.Features.DisableAsync(feature.Id);
+            }
+            SelectedIds.Clear();
+            Notifications.Notify(NotificationSeverity.Success, "Features", $"Applied {action.ToString().ToLowerInvariant()} to {selected.Length} selected features.");
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private sealed record FilterOption(string Value, string Text);
+    private sealed record FeatureGroup(string Category, Feature[] Items);
+    private sealed record ConfirmationModel(string Title, string Message, string[] Dependents, Func<Task> Action);
+    private enum BulkAction { Enable, Disable, Toggle }
+}

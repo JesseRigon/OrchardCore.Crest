@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using OrchardCore.Environment.Extensions;
 using OrchardCore.Environment.Extensions.Features;
 using OrchardCore.Environment.Shell;
 using OrchardCore.Environment.Shell.Descriptor;
@@ -8,23 +7,25 @@ using OrchardCore.Environment.Shell.Descriptor;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/features")]
 public sealed class FeaturesController(
     IShellDescriptorManager shellDescriptorManager,
-    IExtensionManager extensionManager,
     IShellFeaturesManager shellFeaturesManager,
     IAuthorizationService authorizationService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<Feature[]>> List()
     {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Features.FeaturesPermissions.ManageFeatures)) return Forbid();
         var descriptor = await shellDescriptorManager.GetShellDescriptorAsync();
-        var enabledIds = descriptor.Features.Select(feature => feature.Id).ToArray();
-        var featureInfos = extensionManager.GetFeatures(enabledIds.AsEnumerable()).ToDictionary(feature => feature.Id);
+        var enabledIds = descriptor.Features
+            .Select(feature => feature.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var featureInfos = await shellFeaturesManager.GetAvailableFeaturesAsync();
 
-        return Ok(enabledIds
-            .Select(id => Feature.From(id, featureInfos.GetValueOrDefault(id)))
+        return Ok(featureInfos
+            .Select(feature => Feature.From(feature, enabledIds.Contains(feature.Id)))
             .OrderBy(feature => feature.Category)
             .ThenBy(feature => feature.Name)
             .ToArray());
@@ -77,14 +78,29 @@ public sealed record Feature(
     string Description,
     string ExtensionId,
     string[] Dependencies,
-    bool AlwaysEnabled)
+    bool AlwaysEnabled,
+    bool Enabled,
+    bool EnabledByDependencyOnly)
 {
-    public static Feature From(string id, OrchardCore.Environment.Extensions.Features.IFeatureInfo? feature) => new(
+    public static Feature From(IFeatureInfo feature, bool enabled) => new(
+        feature.Id,
+        feature.Name ?? feature.Id,
+        feature.Category ?? string.Empty,
+        feature.Description ?? string.Empty,
+        feature.Extension?.Id ?? string.Empty,
+        feature.Dependencies ?? [],
+        feature.IsAlwaysEnabled,
+        enabled,
+        feature.EnabledByDependencyOnly);
+
+    public static Feature From(string id, IFeatureInfo? feature, bool enabled = true) => new(
         id,
         feature?.Name ?? id,
         feature?.Category ?? string.Empty,
         feature?.Description ?? string.Empty,
         feature?.Extension?.Id ?? string.Empty,
         feature?.Dependencies ?? [],
-        feature?.IsAlwaysEnabled ?? false);
+        feature?.IsAlwaysEnabled ?? false,
+        enabled,
+        feature?.EnabledByDependencyOnly ?? false);
 }

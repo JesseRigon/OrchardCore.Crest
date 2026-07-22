@@ -1,0 +1,2 @@
+.content-items-dialog-backdrop { background: rgba(15, 23, 42, 0.4); display: grid; inset: 0; padding: 1rem; place-items: center; position: fixed; z-index: 2000; }
+.content-items-dialog { max-width: 30rem; width: min(30rem, calc(100vw - 2rem)); }

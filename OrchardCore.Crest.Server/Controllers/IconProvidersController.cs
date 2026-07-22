@@ -6,7 +6,7 @@ using OrchardCore.Settings;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/icons/providers")]
 public sealed class IconProvidersController(
     IAuthorizationService authorizationService,

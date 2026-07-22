@@ -5,6 +5,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Crest.Services;
 using OrchardCore.Admin;
 using OrchardCore.Environment.Extensions;
 using OrchardCore.Environment.Shell;
@@ -77,7 +78,7 @@ public sealed class BlazorAdminThemeMiddleware
 
         var isAdminRoute = requestPath.StartsWithSegments(adminPath, out var adminRemainder);
         var isBlazorAssetRoute = IsBlazorAssetRoute(requestPath);
-        var isBlazorPageRoute = IsPageRequest(requestPath) && IsBlazorRoute(options, requestPath);
+        var isBlazorPageRoute = IsPageRequest(requestPath) && IsBlazorRoute(options, context.Request);
         var isCrestAdminThemePreviewRoute = requestPath.Equals(CrestAdminThemePreviewPath);
 
         if (!isAdminRoute && !isBlazorAssetRoute && !isBlazorPageRoute && !isCrestAdminThemePreviewRoute)
@@ -105,6 +106,25 @@ public sealed class BlazorAdminThemeMiddleware
         {
             await _next(context);
             return;
+        }
+
+        // Direct URL requests are authorized on the server. In-app navigation
+        // uses the login manifest's batch as a fast UI guard, but that browser
+        // state is deliberately never trusted as an authorization decision.
+        if (isBlazorPageRoute && isAdminRoute)
+        {
+            if (context.User.Identity?.IsAuthenticated != true)
+            {
+                context.Response.Redirect("/login");
+                return;
+            }
+
+            var routeAuthorization = context.RequestServices.GetRequiredService<CrestRouteAuthorizationService>();
+            if (!await routeAuthorization.CanAccessAsync(context.User, requestPath.Value))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return;
+            }
         }
 
         if (webRoots.Length == 0)
@@ -162,10 +182,16 @@ public sealed class BlazorAdminThemeMiddleware
         return string.IsNullOrEmpty(value) || !Path.HasExtension(value);
     }
 
-    private bool IsBlazorRoute(BlazorAdminThemeOptions options, PathString requestPath)
+    private bool IsBlazorRoute(BlazorAdminThemeOptions options, HttpRequest request)
     {
-        var normalized = NormalizeRoute(requestPath.Value);
-        return ResolveBlazorRoutes(options).Contains(normalized);
+        var normalized = NormalizeRoute(request.Path.Value);
+        if (string.Equals(normalized, "/admin/settings", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(request.Query["groupId"], "SecurityHeaders", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return ResolveBlazorRoutes(options).Any(route => CrestRouteAuthorizationService.Matches(route, normalized));
     }
 
     private HashSet<string> ResolveBlazorRoutes(BlazorAdminThemeOptions options)

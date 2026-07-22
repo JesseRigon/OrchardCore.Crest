@@ -102,4 +102,4 @@ Use the host application for end-to-end validation:
 dotnet build OrchardCore.Crest.Host.csproj --no-restore
 ```
 
-Browser validation should use reusable Playwright scripts under `tests/playwright`, not one-off inline scripts.
+Browser validation should use reusable Playwright scripts under the owning project's `tests/playwright` directory, not one-off inline scripts.

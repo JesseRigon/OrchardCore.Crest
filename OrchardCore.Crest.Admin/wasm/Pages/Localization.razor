@@ -1,0 +1,7 @@
+@page "/Admin/Settings/localization"
+@using Crest.Admin.Api
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+<RadzenStack Gap="1rem" data-testid="localization-page"><RadzenText TextStyle="TextStyle.H4" Text="Cultures"/>@if(Model is null){<RadzenProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<RadzenLabel Text="Supported cultures (one culture name per line)"/><RadzenTextArea @bind-Value="Cultures" Rows="12"/><RadzenLabel Text="Default culture"/><RadzenTextBox @bind-Value="Model.DefaultCulture"/><RadzenCheckBox @bind-Value="Model.FallBackToParentCulture" Name="fallback"/><label for="fallback"> Fall back to parent cultures</label><RadzenButton Text="Save" Click="Save"/>}</RadzenStack>
+@code { CrestLocalization? Model; string Cultures=""; protected override async Task OnInitializedAsync(){Model=await Api.Crest.Rest.Localization.GetAsync();Cultures=string.Join('\n',Model?.SupportedCultures??[]);} async Task Save(){if(Model is null)return;Model.SupportedCultures=Cultures.Split('\n',StringSplitOptions.TrimEntries|StringSplitOptions.RemoveEmptyEntries);Model=await Api.Crest.Rest.Localization.SaveAsync(Model);} }

@@ -1,0 +1,7 @@
+@page "/Admin/Recipes"
+@using Crest.Admin.Api
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+<RadzenStack Gap="1rem" data-testid="recipes-page"><RadzenText TextStyle="TextStyle.H4" Text="Recipes"/>@if(Model is null){<RadzenProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<RadzenDataGrid Data="Model" TItem="CrestRecipe"><Columns><RadzenDataGridColumn TItem="CrestRecipe" Property="DisplayName" Title="Recipe"/><RadzenDataGridColumn TItem="CrestRecipe" Property="Description" Title="Description"/><RadzenDataGridColumn TItem="CrestRecipe" Title="Actions"><Template Context="recipe"><RadzenButton Text="Run" Click="@(()=>Run(recipe))"/></Template></RadzenDataGridColumn></Columns></RadzenDataGrid>}</RadzenStack>
+@code { CrestRecipe[]? Model; protected override async Task OnInitializedAsync()=>Model=await Api.Crest.Rest.Recipes.ListAsync(); async Task Run(CrestRecipe x){await Api.Crest.Rest.Recipes.ExecuteAsync(new(x.BasePath,x.FileName));} }

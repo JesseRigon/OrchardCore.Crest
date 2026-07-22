@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/iconify")]
 public sealed class IconifyServerController(
     IAuthorizationService authorizationService,

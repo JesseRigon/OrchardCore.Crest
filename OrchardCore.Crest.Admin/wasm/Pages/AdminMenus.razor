@@ -101,6 +101,10 @@
                                                         <RadzenText TextStyle="TextStyle.Caption" Text="Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child. Admin menus support up to 4 tiers." />
                                                     </RadzenStack>
                                                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                                        @if (SelectedMenu.IsDefault)
+                                                        {
+                                                            <RadzenButton Text="Export layout JSON" Icon="download" ButtonStyle="ButtonStyle.Light" Click="ExportLayoutAsync" Disabled="@(IsBusy || IsExportingLayout)" />
+                                                        }
                                                         <RadzenButton Text="@(AllNodesCollapsed ? "Expand All" : "Collapse All")" Icon="@(AllNodesCollapsed ? "unfold_more" : "unfold_less")" ButtonStyle="ButtonStyle.Light" Click="ToggleCollapseAll" Disabled="@(IsBusy || SelectedMenu.Nodes.Length == 0)" />
                                                         <RadzenButton Text="Add node" Icon="add" Click="AddNode" Disabled="@IsBusy" />
                                                     </RadzenStack>
@@ -202,6 +206,15 @@
         transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
     }
 
+    .admin-menu-node--locked {
+        opacity: 0.55;
+        background: color-mix(in srgb, var(--rz-text-secondary-color, #6b7280) 8%, var(--rz-base-background-color));
+    }
+
+    .admin-menu-node--locked .admin-menu-node__handle {
+        cursor: not-allowed;
+    }
+
     .admin-menu-node__handle {
         cursor: grab;
         color: var(--rz-text-secondary-color);
@@ -283,6 +296,7 @@
 @code {
     private const string LinkNodeType = "LinkAdminNode";
     private const string PlaceholderNodeType = "PlaceholderAdminNode";
+    private const string LockedNewNodeId = "new";
     private const int MaxMenuTiers = 4;
     private const int MaxNodeDepth = MaxMenuTiers - 1;
 
@@ -305,6 +319,7 @@
     private bool AllNodesCollapsed => SelectedMenu is not null && Flatten(SelectedMenu.Nodes).Where(node => node.Items.Length > 0).All(node => CollapsedNodeIds.Contains(node.Id));
     private bool IsLoading { get; set; } = true;
     private bool IsBusy { get; set; }
+    private bool IsExportingLayout { get; set; }
     private string? ErrorMessage { get; set; }
     private ElementReference TreeRoot;
     private DotNetObjectReference<AdminMenus>? DotNetRef;
@@ -333,7 +348,7 @@
             }
 
             options.AddRange(Flatten(SelectedMenu.Nodes)
-                .Where(node => node.Id != EditingNodeId && !IsDescendantOf(node, EditingNodeId) && CanPlaceNodeUnder(EditingNodeId, node.Id))
+                .Where(node => node.Id != EditingNodeId && !IsLockedNode(node) && !IsDescendantOf(node, EditingNodeId) && CanPlaceNodeUnder(EditingNodeId, node.Id))
                 .Select(node => new ParentOption(node.Id, $"{new string('—', node.Depth)} {node.Text} ({NodeTypeLabel(node.Type)})")));
 
             return options;
@@ -424,6 +439,31 @@
         catch (OperationCanceledException)
         {
             // Normal during component disposal.
+        }
+    }
+
+    private async Task ExportLayoutAsync()
+    {
+        IsExportingLayout = true;
+
+        try
+        {
+            var result = await Api.Crest.Rest.AdminMenus.ExportLayoutAsync();
+            if (result is null)
+            {
+                Notifications.Notify(NotificationSeverity.Error, "Sidebar layout export failed", "The development export endpoint was not available or rejected the request.");
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, "Sidebar layout exported", $"{result.File} saved with {result.ItemCount} layout items and {result.CustomItemCount} custom items.");
+        }
+        catch (Exception ex)
+        {
+            Notifications.Notify(NotificationSeverity.Error, "Sidebar layout export failed", ex.Message);
+        }
+        finally
+        {
+            IsExportingLayout = false;
         }
     }
 
@@ -567,11 +607,11 @@
         }
     }
 
-    private RenderFragment NodeItem(AdminMenuNodeSummary node) => @<li class="admin-menu-tree__item" data-node-id="@node.Id">
-        <div class="admin-menu-node">
+    private RenderFragment NodeItem(AdminMenuNodeSummary node) => @<li class="admin-menu-tree__item" data-node-id="@node.Id" data-locked="@IsLockedNode(node).ToString().ToLowerInvariant()">
+        <div class="admin-menu-node @(IsLockedNode(node) ? "admin-menu-node--locked" : null)">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
-                    <span class="admin-menu-node__handle" draggable="true" title="Drag to move">
+                    <span class="admin-menu-node__handle" draggable="@(!IsLockedNode(node) ? "true" : "false")" title="@(IsLockedNode(node) ? "The New menu branch is locked" : "Drag to move")">
                         <RadzenIcon Icon="drag_indicator" />
                     </span>
                     @if (node.Items.Length > 0)
@@ -613,15 +653,19 @@
                             {
                                 <RadzenBadge Text="Disabled" BadgeStyle="BadgeStyle.Warning" />
                             }
+                            @if (IsLockedNode(node))
+                            {
+                                <RadzenBadge Text="Locked" BadgeStyle="BadgeStyle.Secondary" />
+                            }
                         </RadzenStack>
                         <RadzenText TextStyle="TextStyle.Caption" Text="@NodeMeta(node)" />
                     </RadzenStack>
                 </RadzenStack>
 
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.35rem">
-                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditOrRenameNode(node))" Disabled="@IsBusy" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="@(node.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Click="@(() => ToggleNodeAsync(node))" Disabled="@IsBusy" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@(IsBusy || SelectedMenu?.IsDefault == true)" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditOrRenameNode(node))" Disabled="@(IsBusy || IsLockedNode(node))" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="@(node.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Click="@(() => ToggleNodeAsync(node))" Disabled="@(IsBusy || IsLockedNode(node))" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@(IsBusy || SelectedMenu?.IsDefault == true || IsLockedNode(node))" />
                 </RadzenStack>
             </RadzenStack>
         </div>
@@ -703,7 +747,7 @@
         }
 
         var node = FindNode(SelectedMenu.Nodes, nodeId);
-        if (node is null || IsDescendantOf(node, parentNodeId))
+        if (node is null || IsLockedNode(node) || IsLockedNode(parentNodeId) || IsDescendantOf(node, parentNodeId))
         {
             return;
         }
@@ -731,6 +775,11 @@
 
     private void EditOrRenameNode(AdminMenuNodeSummary node)
     {
+        if (IsLockedNode(node))
+        {
+            return;
+        }
+
         EditNode(node);
     }
 
@@ -863,6 +912,12 @@
             return;
         }
 
+        if (IsLockedNode(RenamingNodeId))
+        {
+            CancelRename();
+            return;
+        }
+
         IsBusy = true;
         var result = await Api.Crest.Rest.AdminMenus.RenameNodeAsync(SelectedMenu.Id, RenamingNodeId, new(RenameText));
         await ApplyMenuResultAsync(result);
@@ -881,6 +936,13 @@
     {
         if (SelectedMenu is null)
         {
+            return;
+        }
+
+        if (IsLockedNode(EditingNodeId) || IsLockedNode(model.ParentNodeId))
+        {
+            CancelEdit();
+            Notifications.Notify(NotificationSeverity.Warning, "Admin menu item locked", "The New menu branch is a built-in Orchard shortcut and cannot be edited.");
             return;
         }
 
@@ -908,7 +970,7 @@
 
     private async Task ToggleNodeAsync(AdminMenuNodeSummary node)
     {
-        if (SelectedMenu is null)
+        if (SelectedMenu is null || IsLockedNode(node))
         {
             return;
         }
@@ -918,7 +980,7 @@
 
     private async Task DeleteNodeAsync(AdminMenuNodeSummary node)
     {
-        if (SelectedMenu is null)
+        if (SelectedMenu is null || IsLockedNode(node))
         {
             return;
         }
@@ -958,6 +1020,22 @@
 
     private static bool IsDescendantOf(AdminMenuNodeSummary node, string? candidateId) =>
         !string.IsNullOrWhiteSpace(candidateId) && Flatten(node.Items).Any(child => child.Id == candidateId);
+
+    private bool IsLockedNode(AdminMenuNodeSummary node) => SelectedMenu?.IsDefault == true && (node.Id == LockedNewNodeId || IsDescendantOfNewNode(node.Id));
+
+    private bool IsLockedNode(string? nodeId) =>
+        SelectedMenu?.IsDefault == true && !string.IsNullOrWhiteSpace(nodeId) && (nodeId == LockedNewNodeId || IsDescendantOfNewNode(nodeId));
+
+    private bool IsDescendantOfNewNode(string nodeId)
+    {
+        if (SelectedMenu is null)
+        {
+            return false;
+        }
+
+        var newNode = FindNode(SelectedMenu.Nodes, LockedNewNodeId);
+        return newNode is not null && IsDescendantOf(newNode, nodeId);
+    }
 
     private bool CanPlaceNodeUnder(string? movingNodeId, string? parentNodeId)
     {

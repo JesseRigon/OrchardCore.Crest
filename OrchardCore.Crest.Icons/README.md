@@ -21,3 +21,7 @@ wwwroot/icons.js
 ```
 
 Theme stylesheets should only contain intentional theme overrides.
+
+## Local Iconify cache builds
+
+Release builds use the bundled Iconify cache seed and runtime cache. Debug builds disable both by default, so local development uses the public Iconify API fallback and does not initialize the cache submodule. Override either default with `-p:CrestUseLocalIconifyCache=true|false`.

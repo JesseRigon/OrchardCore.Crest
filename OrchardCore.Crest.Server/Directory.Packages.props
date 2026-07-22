@@ -10,18 +10,30 @@
     <PackageVersion Include="OrchardCore.AdminMenu" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.AdminMenu.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.ContentManagement" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Contents" Version="3.0.0" />
+    <PackageVersion Include="YesSql.Abstractions" Version="5.4.7" />
     <PackageVersion Include="OrchardCore.DisplayManagement" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Email.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Features" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.FileStorage.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Menu" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Media.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Media" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Module.Targets" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Recipes.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Recipes.Core" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Localization.Core" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Localization" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Indexing.Abstractions" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Indexing.Core" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Lucene.Core" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.ResourceManagement" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Roles.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Setup" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Setup.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Themes" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Templates" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Security" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Users" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Users.Abstractions" Version="3.0.0" />
   </ItemGroup>

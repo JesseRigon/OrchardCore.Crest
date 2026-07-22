@@ -1,0 +1,144 @@
+@page "/Admin/ContentTypes/ListParts"
+@using Crest.Admin.Api
+@using Crest.Components.Model
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+
+<RadzenStack Gap="1rem" data-testid="content-parts-page">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Content Parts" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Browse reusable Orchard parts, their fields, and the content types that attach them." />
+        </RadzenStack>
+        <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+    </RadzenStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+    }
+
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeLG="4">
+            <CrestModelList TItem="ContentPartUsage"
+                            Title="Content parts"
+                            Items="@PartUsages"
+                            SelectedKey="@SelectedPartName"
+                            KeySelector="@(part => part.Name)"
+                            TextSelector="@(part => part.Name)"
+                            DescriptionSelector="@(part => $"{part.Fields.Length} fields · {part.ContentTypes.Length} types")"
+                            SearchPredicate="MatchesSearch"
+                            Select="SelectPartAsync"
+                            ShowCreate="false"
+                            IsBusy="@IsLoading"
+                            EmptyText="No content parts are attached to the available types." />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeLG="8">
+            @if (IsLoading)
+            {
+                <RadzenCard><RadzenProgressBar Mode="ProgressBarMode.Indeterminate" /></RadzenCard>
+            }
+            else if (SelectedPart is null)
+            {
+                <RadzenCard><RadzenText Text="Select a content part to inspect its field and type usage." /></RadzenCard>
+            }
+            else
+            {
+                <RadzenCard data-testid="content-part-detail">
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.H5" Text="@SelectedPart.Name" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="@TypeUsageText(SelectedPart)" />
+                        </RadzenStack>
+
+                        <RadzenFieldset Text="Fields" AllowCollapse="true" Collapsed="false">
+                            @if (SelectedPart.Fields.Length == 0)
+                            {
+                                <RadzenText Text="No fields are defined on this part." />
+                            }
+                            else
+                            {
+                                <div class="content-part-fields">
+                                    @foreach (var field in SelectedPart.Fields.OrderBy(field => field.Name, StringComparer.OrdinalIgnoreCase))
+                                    {
+                                        <div class="content-part-field">
+                                            <RadzenText TextStyle="TextStyle.Subtitle2" Text="@field.Name" />
+                                            <RadzenText TextStyle="TextStyle.Caption" Text="@field.Field.Name" />
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </RadzenFieldset>
+
+                        <RadzenFieldset Text="Used by content types" AllowCollapse="true" Collapsed="false">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.45rem" Wrap="FlexWrap.Wrap">
+                                @foreach (var contentType in SelectedPart.ContentTypes.Order(StringComparer.OrdinalIgnoreCase))
+                                {
+                                    <RadzenBadge Text="@contentType" BadgeStyle="BadgeStyle.Info" />
+                                }
+                            </RadzenStack>
+                        </RadzenFieldset>
+                    </RadzenStack>
+                </RadzenCard>
+            }
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+    private ContentPartUsage[] PartUsages { get; set; } = [];
+    private string? SelectedPartName { get; set; }
+    private bool IsLoading { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private ContentPartUsage? SelectedPart => PartUsages.FirstOrDefault(part => string.Equals(part.Name, SelectedPartName, StringComparison.OrdinalIgnoreCase));
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var types = await Api.Crest.Rest.Content.Types.ListAsync();
+            PartUsages = types
+                .SelectMany(type => type.Parts.Select(part => new { TypeName = type.DisplayName, Part = part }))
+                .GroupBy(entry => entry.Part.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(group => new ContentPartUsage(
+                    group.Key,
+                    group.First().Part.Part.Fields,
+                    group.Select(entry => entry.TypeName).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray()))
+                .OrderBy(part => part.Name, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            SelectedPartName = PartUsages.Any(part => string.Equals(part.Name, SelectedPartName, StringComparison.OrdinalIgnoreCase))
+                ? SelectedPartName
+                : PartUsages.FirstOrDefault()?.Name;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private Task SelectPartAsync(ContentPartUsage part)
+    {
+        SelectedPartName = part.Name;
+        return Task.CompletedTask;
+    }
+
+    private static bool MatchesSearch(ContentPartUsage part, string term) =>
+        part.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+        || part.Fields.Any(field => field.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
+        || part.ContentTypes.Any(contentType => contentType.Contains(term, StringComparison.OrdinalIgnoreCase));
+
+    private static string TypeUsageText(ContentPartUsage part) =>
+        $"Attached to {part.ContentTypes.Length} content type{(part.ContentTypes.Length == 1 ? string.Empty : "s")}.";
+
+    private sealed record ContentPartUsage(string Name, ContentPartField[] Fields, string[] ContentTypes);
+}

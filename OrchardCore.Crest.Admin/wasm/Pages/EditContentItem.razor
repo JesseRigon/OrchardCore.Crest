@@ -1,0 +1,8 @@
+@page "/Admin/Contents/ContentItems/{ContentItemId}/Edit"
+@using Crest.Admin.Components.Admin
+
+<CrestContentItemEditor ContentItemId="@ContentItemId" />
+
+@code {
+    [Parameter] public string? ContentItemId { get; set; }
+}

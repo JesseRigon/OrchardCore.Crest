@@ -1,0 +1,115 @@
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Crest.Admin.Api
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+
+<RadzenStack Gap="1rem" data-testid="content-item-editor">
+    @if (IsLoading)
+    {
+        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+    }
+    else
+    {
+        <RadzenTemplateForm TItem="EditorModel" Data="@Model" Submit="@(_ => SaveAsync())">
+            <RadzenStack Gap="1rem">
+                <RadzenCard>
+                    <RadzenStack Gap="0.75rem">
+                        <RadzenText TextStyle="TextStyle.H4" Text="@(IsCreate ? $"New {ContentType}" : $"Edit {Model.ContentType}")" />
+                        <RadzenText TextStyle="TextStyle.Body2" Text="Edit the Orchard content document directly. Changes are persisted through the standard content manager lifecycle." />
+                        <RadzenTextBox Name="displayText" @bind-Value="Model.DisplayText" Placeholder="Title" Style="width: 100%;" />
+                        <RadzenCheckBox @bind-Value="Model.Publish" Name="publish" /> <label for="publish">Publish after saving</label>
+                    </RadzenStack>
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenText TextStyle="TextStyle.Subtitle1" Text="Content document" />
+                        <RadzenText TextStyle="TextStyle.Caption" Text="This is the content JSON consumed by Orchard parts and fields. Preserve fields you do not intend to change." />
+                        <RadzenTextArea @bind-Value="Model.ContentJson" Rows="22" Style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; width: 100%;" />
+                    </RadzenStack>
+                </RadzenCard>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="Cancel" Disabled="@IsSaving" />
+                    <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenTemplateForm>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public string? ContentType { get; set; }
+    [Parameter] public string? ContentItemId { get; set; }
+
+    private bool IsCreate => !string.IsNullOrWhiteSpace(ContentType);
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private EditorModel Model { get; set; } = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ErrorMessage = null;
+        if (IsCreate)
+        {
+            Model = new EditorModel { ContentType = ContentType!, ContentJson = "{}" };
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(ContentItemId)) { ErrorMessage = "A content item identifier is required."; return; }
+        IsLoading = true;
+        try
+        {
+            var item = await Api.Crest.Rest.Content.Items.GetAsync(ContentItemId);
+            if (item is null) { ErrorMessage = "The requested Orchard content item was not found."; return; }
+            Model = new EditorModel
+            {
+                ContentType = item.ContentType,
+                DisplayText = item.DisplayText,
+                Publish = item.Published,
+                ContentJson = JsonSerializer.Serialize(item.Content, new JsonSerializerOptions { WriteIndented = true }),
+            };
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private async Task SaveAsync()
+    {
+        JsonObject? content;
+        try { content = JsonNode.Parse(Model.ContentJson) as JsonObject ?? throw new InvalidOperationException("The content document must be a JSON object."); }
+        catch (Exception ex) { ErrorMessage = $"Content JSON is invalid: {ex.Message}"; return; }
+
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            var request = new ContentItemWriteRequest(Model.ContentType, Model.DisplayText, content, Model.Publish);
+            var saved = IsCreate
+                ? await Api.Crest.Rest.Content.Items.CreateAsync(request)
+                : await Api.Crest.Rest.Content.Items.UpdateAsync(ContentItemId!, request);
+            if (saved is null) throw new InvalidOperationException("Orchard did not accept the content item update.");
+            Notifications.Notify(NotificationSeverity.Success, "Content items", $"{saved.DisplayText} saved.");
+            Navigation.NavigateTo("/Admin/Contents/ContentItems");
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/Admin/Contents/ContentItems");
+
+    private sealed class EditorModel
+    {
+        public string ContentType { get; set; } = string.Empty;
+        public string? DisplayText { get; set; }
+        public bool Publish { get; set; }
+        public string ContentJson { get; set; } = "{}";
+    }
+}

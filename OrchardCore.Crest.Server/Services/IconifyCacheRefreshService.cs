@@ -13,6 +13,12 @@ public sealed class IconifyCacheRefreshService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (!IconifyLocalMirrorBuildOptions.Enabled)
+        {
+            logger.LogInformation("Iconify local cache is disabled for this build; Iconify API fallback is active.");
+            return;
+        }
+
         try
         {
             await localMirrorStore.GetStatusAsync(stoppingToken);

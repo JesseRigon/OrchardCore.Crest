@@ -1,16 +1,19 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OrchardCore.Roles;
 using OrchardCore.Security.Services;
 
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/roles")]
-public sealed class RolesController(IRoleService roleService) : ControllerBase
+public sealed class RolesController(IRoleService roleService, IAuthorizationService authorization) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<Role[]>> List()
     {
+        if (!await authorization.AuthorizeAsync(User, RolesPermissions.ManageRoles)) return Forbid();
         var roles = await roleService.GetRolesAsync();
         var result = new List<Role>();
 

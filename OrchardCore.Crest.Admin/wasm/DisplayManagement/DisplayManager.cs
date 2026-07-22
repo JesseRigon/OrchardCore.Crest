@@ -3,13 +3,17 @@ using Crest.Admin.Theme;
 using Crest.Icons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.SignalR.Client;
 using System.Reflection;
 
 namespace Crest.Admin.DisplayManagement;
 
-public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, ClientIconRegistry iconRegistry)
+public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, ClientIconRegistry iconRegistry, NavigationManager navigation)
 {
     private readonly Lazy<IReadOnlyDictionary<string, Type>> _shapeBindings = new(BuildShapeBindings);
+    private readonly SemaphoreSlim _manifestLock = new(1, 1);
+    private CancellationTokenSource? _permissionRefreshCancellation;
+    private HubConnection? _permissionHub;
 
     public event Action? Changed;
 
@@ -26,6 +30,14 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     public string? ErrorMessage { get; private set; }
 
     public bool IsAuthenticated => User.IsAuthenticated;
+
+    // This is a navigation convenience only. The server independently
+    // authorizes direct route requests and every Crest/Orchard data operation.
+    public bool IsRouteAuthorized(string uri)
+    {
+        var path = new Uri(uri).AbsolutePath;
+        return Manifest?.AuthorizedRoutes.Any(route => RouteMatches(route.Template, path)) == true;
+    }
 
     public Shape NewShape(string type, Action<Shape>? configure = null)
     {
@@ -86,6 +98,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         await RunAsync(async () =>
         {
             User = await api.Crest.Rest.Auth.LogoutAsync();
+            await StopPermissionRefreshAsync();
             ClearAdminState();
             ErrorMessage = null;
             IsInitialized = true;
@@ -168,12 +181,115 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
 
     private async Task LoadAdminStateAsync()
     {
-        Manifest = await api.Crest.Rest.App.GetManifestAsync();
-        iconRegistry.Register(Manifest?.AdminMenu.Icons);
-        Site = Manifest?.Site ?? await api.Crest.Rest.Site.GetAsync();
-        AdminMenu = ToDisplayMenu(Manifest?.AdminMenu ?? await api.Crest.Rest.Navigation.GetAdminMenuAsync());
+        await RefreshManifestAsync();
         ContentTypes = await api.Crest.Rest.Content.Types.ListAsync();
         Roles = await api.Crest.Rest.Roles.ListAsync();
+        await StartPermissionRefreshAsync();
+    }
+
+    private async Task RefreshManifestAsync()
+    {
+        await _manifestLock.WaitAsync();
+        try
+        {
+            Manifest = await api.Crest.Rest.App.GetManifestAsync();
+            iconRegistry.Register(Manifest?.AdminMenu.Icons);
+            Site = Manifest?.Site ?? await api.Crest.Rest.Site.GetAsync();
+            AdminMenu = ToDisplayMenu(Manifest?.AdminMenu ?? await api.Crest.Rest.Navigation.GetAdminMenuAsync());
+        }
+        finally
+        {
+            _manifestLock.Release();
+        }
+    }
+
+    private async Task StartPermissionRefreshAsync()
+    {
+        if (_permissionRefreshCancellation is not null)
+        {
+            return;
+        }
+
+        _permissionRefreshCancellation = new CancellationTokenSource();
+        var cancellationToken = _permissionRefreshCancellation.Token;
+        _permissionHub = new HubConnectionBuilder()
+            .WithUrl(new Uri(new Uri(navigation.BaseUri), "api/crest/permissions"))
+            .WithAutomaticReconnect()
+            .Build();
+        _permissionHub.On("permissionsInvalidated", async () => await RefreshAfterPermissionChangeAsync());
+
+        try
+        {
+            await _permissionHub.StartAsync(cancellationToken);
+        }
+        catch
+        {
+            // The periodic refresh remains the reliable fallback.
+        }
+
+        _ = RefreshManifestPeriodicallyAsync(cancellationToken);
+    }
+
+    private async Task RefreshManifestPeriodicallyAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await RefreshAfterPermissionChangeAsync();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task RefreshAfterPermissionChangeAsync()
+    {
+        if (!IsAuthenticated)
+        {
+            return;
+        }
+
+        try
+        {
+            await RefreshManifestAsync();
+            ErrorMessage = null;
+            if (!IsRouteAuthorized(navigation.Uri))
+            {
+                // Do not disrupt a permitted page. If a role or permission
+                // change removed the current page, reload it so the server
+                // supplies its authoritative 403 response.
+                navigation.NavigateTo(navigation.Uri, forceLoad: true);
+                return;
+            }
+        }
+        catch
+        {
+            // Preserve the last known UI state. Orchard remains authoritative
+            // for every subsequent server request.
+        }
+        finally
+        {
+            NotifyChanged();
+        }
+    }
+
+    private async Task StopPermissionRefreshAsync()
+    {
+        var cancellation = Interlocked.Exchange(ref _permissionRefreshCancellation, null);
+        if (cancellation is not null)
+        {
+            await cancellation.CancelAsync();
+            cancellation.Dispose();
+        }
+
+        if (_permissionHub is not null)
+        {
+            await _permissionHub.DisposeAsync();
+            _permissionHub = null;
+        }
     }
 
     private void ClearAdminState()
@@ -205,6 +321,32 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     private static DisplayIcon? ToDisplayIcon(NavigationIcon? icon) => icon is null
         ? null
         : new DisplayIcon(icon.Key, icon.Library, icon.Version, icon.Style, icon.Name, icon.SvgMarkup);
+
+    private static bool RouteMatches(string template, string path)
+    {
+        var templateSegments = template.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var pathSegments = path.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (templateSegments.Length != pathSegments.Length)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < templateSegments.Length; index++)
+        {
+            var segment = templateSegments[index];
+            if (segment.StartsWith('{') && segment.EndsWith('}'))
+            {
+                continue;
+            }
+
+            if (!string.Equals(segment, pathSegments[index], StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     private async Task<T> RunAsync<T>(Func<Task<T>> action)
     {

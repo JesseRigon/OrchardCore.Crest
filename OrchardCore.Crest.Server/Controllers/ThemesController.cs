@@ -12,7 +12,7 @@ using OrchardCore.Themes.Services;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/themes")]
 public sealed class ThemesController(
     ISiteThemeService siteThemeService,

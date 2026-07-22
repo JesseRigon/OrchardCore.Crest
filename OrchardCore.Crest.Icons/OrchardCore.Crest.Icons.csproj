@@ -6,6 +6,12 @@
     <IsPackable>false</IsPackable>
     <AssemblyName>OrchardCore.Crest.Icons</AssemblyName>
     <RootNamespace>Crest.Icons</RootNamespace>
+    <CrestUseLocalIconifyCache Condition="'$(CrestUseLocalIconifyCache)' == '' and '$(Configuration)' == 'Debug'">false</CrestUseLocalIconifyCache>
+    <CrestUseLocalIconifyCache Condition="'$(CrestUseLocalIconifyCache)' == ''">true</CrestUseLocalIconifyCache>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(CrestUseLocalIconifyCache)' == 'true'">
+    <DefineConstants>$(DefineConstants);CREST_ICONIFY_LOCAL_CACHE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +30,7 @@
 
   <Target Name="EnsureIconifyCacheSubmodule"
           BeforeTargets="CoreCompile"
-          Condition="'$(CrestEnsureIconifyCache)' != 'false' and !Exists('$(MSBuildProjectDirectory)/icons/Sources/IconifyCache/collections.json')">
+          Condition="'$(CrestUseLocalIconifyCache)' == 'true' and '$(CrestEnsureIconifyCache)' != 'false' and !Exists('$(MSBuildProjectDirectory)/icons/Sources/IconifyCache/collections.json')">
     <Message Importance="High" Text="Initializing bundled Iconify cache submodule..." />
     <Exec WorkingDirectory="$(MSBuildProjectDirectory)/.."
           Command="git submodule update --init --depth 1 --filter=blob:none -- OrchardCore.Crest.Icons/icons/Sources/IconifyCache" />

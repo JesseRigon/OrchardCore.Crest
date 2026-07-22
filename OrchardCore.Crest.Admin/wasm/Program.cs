@@ -14,7 +14,14 @@ builder.RootComponents.Add<App>("#app");
 var appBaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 var apiBaseAddress = new Uri(appBaseAddress.GetLeftPart(UriPartial.Authority) + "/");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = apiBaseAddress });
+builder.Services.AddScoped<CrestAntiforgeryHandler>();
+builder.Services.AddScoped<ICrestAntiforgeryTokenStore>(sp => sp.GetRequiredService<CrestAntiforgeryHandler>());
+builder.Services.AddScoped(sp =>
+{
+    var handler = sp.GetRequiredService<CrestAntiforgeryHandler>();
+    handler.InnerHandler = new HttpClientHandler();
+    return new HttpClient(handler) { BaseAddress = apiBaseAddress };
+});
 builder.Services.AddScoped<IApi, global::Crest.Admin.Api.Api>();
 builder.Services.AddScoped<DisplayManager>();
 builder.Services.AddScoped<CrestRoutingOptions>();

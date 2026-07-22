@@ -1,0 +1,159 @@
+@page "/Admin/ContentTypes/List"
+@using Crest.Admin.Api
+@using Crest.Components.Model
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NavigationManager Navigation
+
+<RadzenStack Gap="1rem" data-testid="content-types-page">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Content Types" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Browse the current Orchard content definitions, their parts, and their fields." />
+        </RadzenStack>
+        <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+    </RadzenStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+    }
+
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeLG="4">
+            <CrestModelList TItem="ContentType"
+                            Title="Content types"
+                            Items="@AllContentTypes"
+                            SelectedKey="@SelectedTypeName"
+                            KeySelector="@(type => type.Name)"
+                            TextSelector="@(type => type.DisplayName)"
+                            DescriptionSelector="@(type => $"{type.Name} · {type.Parts.Length} parts")"
+                            SearchPredicate="MatchesSearch"
+                            Select="SelectTypeAsync"
+                            ShowCreate="false"
+                            IsBusy="@IsLoading"
+                            EmptyText="No content types are available." />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeLG="8">
+            @if (IsLoading)
+            {
+                <RadzenCard><RadzenProgressBar Mode="ProgressBarMode.Indeterminate" /></RadzenCard>
+            }
+            else if (SelectedType is null)
+            {
+                <RadzenCard><RadzenText Text="Select a content type to inspect its Orchard definition." /></RadzenCard>
+            }
+            else
+            {
+                <RadzenCard data-testid="content-type-detail">
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.H5" Text="@SelectedType.DisplayName" />
+                                <RadzenText TextStyle="TextStyle.Caption" Text="@SelectedType.Name" />
+                            </RadzenStack>
+                            <RadzenButton Text="Create content item" Icon="add" Size="ButtonSize.Small" Click="CreateContentItem" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                            <RadzenBadge Text="@($"{SelectedType.Parts.Length} parts")" BadgeStyle="BadgeStyle.Info" />
+                            <RadzenBadge Text="@($"{FieldCount(SelectedType)} fields")" BadgeStyle="BadgeStyle.Secondary" />
+                        </RadzenStack>
+
+                        @if (SelectedType.Parts.Length == 0)
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">This type has no attached parts.</RadzenAlert>
+                        }
+                        else
+                        {
+                            @foreach (var part in SelectedType.Parts.OrderBy(part => part.Name, StringComparer.OrdinalIgnoreCase))
+                            {
+                                <RadzenFieldset Text="@part.Name" AllowCollapse="true" Collapsed="false" class="content-definition-part">
+                                    <RadzenStack Gap="0.7rem">
+                                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                                            <RadzenBadge Text="@part.Part.Name" BadgeStyle="BadgeStyle.Secondary" />
+                                            <RadzenBadge Text="@($"{part.Part.Fields.Length} fields")" BadgeStyle="BadgeStyle.Info" />
+                                        </RadzenStack>
+                                        @if (part.Part.Fields.Length == 0)
+                                        {
+                                            <RadzenText TextStyle="TextStyle.Body2" Text="No fields are defined on this part." />
+                                        }
+                                        else
+                                        {
+                                            <div class="content-definition-fields">
+                                                @foreach (var field in part.Part.Fields.OrderBy(field => field.Name, StringComparer.OrdinalIgnoreCase))
+                                                {
+                                                    <div class="content-definition-field">
+                                                        <RadzenText TextStyle="TextStyle.Subtitle2" Text="@field.Name" />
+                                                        <RadzenText TextStyle="TextStyle.Caption" Text="@field.Field.Name" />
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </RadzenStack>
+                                </RadzenFieldset>
+                            }
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            }
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+    private ContentType[] AllContentTypes { get; set; } = [];
+    private string? SelectedTypeName { get; set; }
+    private bool IsLoading { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private ContentType? SelectedType => AllContentTypes.FirstOrDefault(type => string.Equals(type.Name, SelectedTypeName, StringComparison.OrdinalIgnoreCase));
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            AllContentTypes = (await Api.Crest.Rest.Content.Types.ListAsync())
+                .OrderBy(type => type.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            SelectedTypeName = AllContentTypes.Any(type => string.Equals(type.Name, SelectedTypeName, StringComparison.OrdinalIgnoreCase))
+                ? SelectedTypeName
+                : AllContentTypes.FirstOrDefault()?.Name;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private Task SelectTypeAsync(ContentType contentType)
+    {
+        SelectedTypeName = contentType.Name;
+        return Task.CompletedTask;
+    }
+
+    private static bool MatchesSearch(ContentType contentType, string term) =>
+        contentType.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+        || contentType.DisplayName.Contains(term, StringComparison.OrdinalIgnoreCase)
+        || contentType.Parts.Any(part => part.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+            || part.Part.Fields.Any(field => field.Name.Contains(term, StringComparison.OrdinalIgnoreCase)));
+
+    private static int FieldCount(ContentType contentType) => contentType.Parts.Sum(part => part.Part.Fields.Length);
+
+    private void CreateContentItem()
+    {
+        if (SelectedType is not null)
+        {
+            Navigation.NavigateTo($"/Admin/Contents/ContentTypes/{Uri.EscapeDataString(SelectedType.Name)}/Create");
+        }
+    }
+}

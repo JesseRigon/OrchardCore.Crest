@@ -1,0 +1,13 @@
+.content-definition-fields {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+}
+
+.content-definition-field {
+    border: 1px solid var(--rz-border-color);
+    border-radius: var(--rz-border-radius);
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.65rem;
+}

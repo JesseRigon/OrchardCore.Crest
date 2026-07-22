@@ -7,7 +7,7 @@ using OrchardCore.Users.Services;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/auth")]
 public sealed class CrestAuthController(IUserService users) : ControllerBase
 {

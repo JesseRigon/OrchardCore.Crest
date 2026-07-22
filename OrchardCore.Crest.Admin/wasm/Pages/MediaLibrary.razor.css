@@ -1,0 +1,12 @@
+.media-dialog-backdrop {
+    align-items: center;
+    background: color-mix(in srgb, black 35%, transparent);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 1rem;
+    position: fixed;
+    z-index: 1200;
+}
+
+.media-dialog { max-width: 30rem; width: 100%; }

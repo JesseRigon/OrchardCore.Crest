@@ -8,12 +8,31 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
 {
     public const string DefaultMenuId = "__crest_default_admin_menu";
     public const string DefaultMenuName = "Sidebar Layout";
+    public const string LockedNewItemKey = "new";
 
     public async Task<CrestAdminMenuLayoutDocument> GetAsync() => await documents.GetOrCreateImmutableAsync();
 
     public async Task<CrestAdminMenuLayoutDocument> LoadAsync() => await documents.GetOrCreateMutableAsync();
 
     public Task SaveAsync(CrestAdminMenuLayoutDocument document) => documents.UpdateAsync(document);
+
+    public async Task<CrestAdminMenuLayoutFile> ExportAsync()
+    {
+        var layout = await GetAsync();
+        return new CrestAdminMenuLayoutFile
+        {
+            Items = layout.Items.ToList(),
+            CustomItems = layout.CustomItems.ToList(),
+        };
+    }
+
+    public async Task ImportAsync(CrestAdminMenuLayoutFile file)
+    {
+        var layout = await LoadAsync();
+        layout.Items = file.Items ?? [];
+        layout.CustomItems = file.CustomItems ?? [];
+        await SaveAsync(layout);
+    }
 
     public async Task<NavigationMenu> ApplyAsync(NavigationMenu menu)
     {
@@ -56,26 +75,12 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
                 continue;
             }
 
-            if (includeHidden)
-            {
-                roots.Add(node);
-                continue;
-            }
-
-            if (GetOverride(layout, parentKey).Hidden)
-            {
-                continue;
-            }
-
-            var placeholderParent = EnsurePlaceholderParent(parentKey, layout, visible, childMap, roots);
-            if (placeholderParent is not null)
-            {
-                childMap[placeholderParent.Key].Add(node);
-            }
-            else
-            {
-                roots.Add(node);
-            }
+            // The input tree is already authorization-filtered by Orchard's
+            // INavigationManager. A saved layout must never recreate a parent
+            // that Orchard omitted for this request. Keep an authorized child
+            // reachable if its saved parent is unavailable, but do not expose
+            // that absent parent as a synthetic menu node.
+            roots.Add(node);
         }
 
         return Build(roots, childMap, layout);
@@ -246,6 +251,21 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         return layout.CustomItems.Any(item => string.Equals(item.Key, key, StringComparison.Ordinal));
     }
 
+    public async Task<bool> IsLockedNewBranchAsync(NavigationMenu baseMenu, string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return false;
+        }
+
+        var layout = await GetAsync();
+        var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
+        Flatten(baseMenu.Items, null, flat);
+        FlattenCustom(layout, flat);
+
+        return IsLockedNewBranch(flat, layout, key);
+    }
+
     private static string? GetEffectiveParent(CrestAdminMenuLayoutDocument layout, LayoutNode node)
     {
         var item = GetOverride(layout, node.Key);
@@ -294,53 +314,30 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         return false;
     }
 
-    private static LayoutNode? EnsurePlaceholderParent(
-        string parentKey,
-        CrestAdminMenuLayoutDocument layout,
-        Dictionary<string, LayoutNode> visible,
-        Dictionary<string, List<LayoutNode>> childMap,
-        List<LayoutNode> roots)
+    private static bool IsLockedNewBranch(Dictionary<string, LayoutNode> flat, CrestAdminMenuLayoutDocument layout, string key)
     {
-        if (visible.TryGetValue(parentKey, out var existing))
+        if (string.Equals(key, LockedNewItemKey, StringComparison.Ordinal))
         {
-            return existing;
+            return true;
         }
 
-        var itemOverride = GetOverride(layout, parentKey);
-        if (string.IsNullOrWhiteSpace(itemOverride.Text))
+        if (!flat.TryGetValue(key, out var node))
         {
-            return null;
+            return false;
         }
 
-        var classes = string.IsNullOrWhiteSpace(itemOverride.IconClass) ? [] : ToIconClasses(itemOverride.IconClass);
-
-        var node = new LayoutNode(
-            parentKey,
-            new NavigationItem(string.IsNullOrWhiteSpace(itemOverride.DisplayText) ? itemOverride.Text : itemOverride.DisplayText, parentKey, null, null, null, null, null, classes, []),
-            null,
-            itemOverride.Order ?? 0);
-
-        visible[parentKey] = node;
-        childMap[parentKey] = [];
-
-        var grandParentKey = itemOverride.ParentKey;
-        if (string.IsNullOrWhiteSpace(grandParentKey) || GetOverride(layout, grandParentKey).Hidden)
+        var parentKey = GetEffectiveParent(layout, node);
+        while (!string.IsNullOrWhiteSpace(parentKey) && flat.TryGetValue(parentKey, out var parent))
         {
-            roots.Add(node);
-            return node;
+            if (string.Equals(parent.Key, LockedNewItemKey, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            parentKey = GetEffectiveParent(layout, parent);
         }
 
-        var placeholderParent = EnsurePlaceholderParent(grandParentKey, layout, visible, childMap, roots);
-        if (placeholderParent is not null)
-        {
-            childMap[placeholderParent.Key].Add(node);
-        }
-        else
-        {
-            roots.Add(node);
-        }
-
-        return node;
+        return false;
     }
 
     private static string[] ToIconClasses(string iconClass) =>
@@ -418,6 +415,12 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
 }
 
 public sealed class CrestAdminMenuLayoutDocument : Document
+{
+    public List<CrestAdminMenuLayoutItem> Items { get; set; } = [];
+    public List<CrestAdminMenuCustomItem> CustomItems { get; set; } = [];
+}
+
+public sealed class CrestAdminMenuLayoutFile
 {
     public List<CrestAdminMenuLayoutItem> Items { get; set; } = [];
     public List<CrestAdminMenuCustomItem> CustomItems { get; set; } = [];

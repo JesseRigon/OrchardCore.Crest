@@ -1,0 +1,8 @@
+@page "/Admin/Contents/ContentTypes/{ContentType}/Create"
+@using Crest.Admin.Components.Admin
+
+<CrestContentItemEditor ContentType="@ContentType" />
+
+@code {
+    [Parameter] public string? ContentType { get; set; }
+}

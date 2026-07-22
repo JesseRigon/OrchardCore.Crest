@@ -31,6 +31,16 @@ public interface IRestApi
     IThemesApi Themes { get; }
     IAdminMenusApi AdminMenus { get; }
     IStandardMenusApi Menus { get; }
+    IMediaApi Media { get; }
+    IMediaProfilesApi MediaProfiles { get; }
+    IMediaOptionsApi MediaOptions { get; }
+    ITemplatesApi Templates { get; }
+    ISecurityHeadersApi SecurityHeaders { get; }
+    ILoginSettingsApi LoginSettings { get; }
+    IUsersApi Users { get; }
+    IRecipesApi Recipes { get; }
+    ILocalizationApi Localization { get; }
+    IIndexesApi Indexes { get; }
     IIconsApi Icons { get; }
 }
 
@@ -71,12 +81,21 @@ public interface IContentTypesApi
 
 public interface IContentItemsApi
 {
+    Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20);
+    Task<ContentItem?> GetAsync(string contentItemId);
     Task<ContentItem?> GetByHandleAsync(string handle);
+    Task<ContentItem?> CreateAsync(ContentItemWriteRequest request);
+    Task<ContentItem?> UpdateAsync(string contentItemId, ContentItemWriteRequest request);
+    Task<bool> PublishAsync(string contentItemId);
+    Task<bool> UnpublishAsync(string contentItemId);
+    Task<bool> DeleteAsync(string contentItemId);
 }
 
 public interface IFeaturesApi
 {
     Task<Feature[]> ListAsync();
+    Task<bool> EnableAsync(string id);
+    Task<bool> DisableAsync(string id);
 }
 
 public interface IRolesApi
@@ -118,6 +137,29 @@ public interface IIconsApi
     Task<bool> DeleteTenantAsync(string name);
 }
 
+public interface IMediaApi
+{
+    Task<MediaDirectoryResult> ListAsync(string? path = null);
+    Task<MediaDirectoryResult?> CreateFolderAsync(string? parentPath, string name);
+    Task<MediaDirectoryResult?> UploadAsync(string? path, string fileName, Stream stream, bool overwrite = false);
+    Task<bool> DeleteAsync(string path);
+}
+
+public interface IMediaProfilesApi
+{
+    Task<MediaProfile[]> ListAsync();
+    Task<MediaProfile?> SaveAsync(string name, MediaProfileWriteRequest request);
+    Task<bool> DeleteAsync(string name);
+}
+public interface IMediaOptionsApi { Task<CrestMediaOptions?> GetAsync(); }
+public interface ITemplatesApi { Task<CrestTemplate[]> ListAsync(); Task<CrestTemplate?> SaveAsync(string name, CrestTemplateWrite request); Task<bool> DeleteAsync(string name); }
+public interface ISecurityHeadersApi { Task<CrestSecurityHeaders?> GetAsync(); Task<CrestSecurityHeaders?> SaveAsync(CrestSecurityHeaders value); }
+public interface ILoginSettingsApi { Task<CrestLoginSettings?> GetAsync(); Task<CrestLoginSettings?> SaveAsync(CrestLoginSettings value); }
+public interface IUsersApi { Task<CrestUserList> ListAsync(string? search = null, string? status = null); Task<CrestUser?> GetAsync(string id); Task<CrestUser?> CreateAsync(CrestUserWrite value); Task<CrestUser?> SaveAsync(string id, CrestUserWrite value); Task<CrestUser?> SetEnabledAsync(string id, bool enabled); Task<bool> DeleteAsync(string id); }
+public interface IRecipesApi { Task<CrestRecipe[]> ListAsync(); Task<bool> ExecuteAsync(CrestRecipeKey value); }
+public interface ILocalizationApi { Task<CrestLocalization?> GetAsync(); Task<CrestLocalization?> SaveAsync(CrestLocalization value); }
+public interface IIndexesApi { Task<CrestIndex[]> ListAsync(); Task<CrestIndex?> RebuildAsync(string id); }
+
 public interface IStandardMenusApi
 {
     Task<StandardMenusState> ListAsync();
@@ -148,21 +190,22 @@ public interface IAdminMenusApi
     Task<AdminMenuSummary?> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model);
     Task<AdminMenuSummary?> ToggleNodeAsync(string menuId, string nodeId);
     Task<AdminMenuSummary?> DeleteNodeAsync(string menuId, string nodeId);
+    Task<AdminMenuLayoutExportResult?> ExportLayoutAsync(string? fileName = null);
 }
 
-public sealed class Api(HttpClient http) : IApi
+public sealed class Api(HttpClient http, ICrestAntiforgeryTokenStore antiforgery) : IApi
 {
-    public ICrestArea Crest { get; } = new CrestArea(http);
+    public ICrestArea Crest { get; } = new CrestArea(http, antiforgery);
 }
 
-public sealed class CrestArea(HttpClient http) : ICrestArea
+public sealed class CrestArea(HttpClient http, ICrestAntiforgeryTokenStore antiforgery) : ICrestArea
 {
-    public IRestApi Rest { get; } = new RestApi(http);
+    public IRestApi Rest { get; } = new RestApi(http, antiforgery);
 }
 
-public sealed class RestApi(HttpClient http) : IRestApi
+public sealed class RestApi(HttpClient http, ICrestAntiforgeryTokenStore antiforgery) : IRestApi
 {
-    public IAuthApi Auth { get; } = new AuthApi(http);
+    public IAuthApi Auth { get; } = new AuthApi(http, antiforgery);
     public IAppApi App { get; } = new AppApi(http);
     public ISiteApi Site { get; } = new SiteApi(http);
     public IAdminSettingsApi AdminSettings { get; } = new AdminSettingsApi(http);
@@ -174,10 +217,20 @@ public sealed class RestApi(HttpClient http) : IRestApi
     public IThemesApi Themes { get; } = new ThemesApi(http);
     public IAdminMenusApi AdminMenus { get; } = new AdminMenusApi(http);
     public IStandardMenusApi Menus { get; } = new StandardMenusApi(http);
+    public IMediaApi Media { get; } = new MediaApi(http);
+    public IMediaProfilesApi MediaProfiles { get; } = new MediaProfilesApi(http);
+    public IMediaOptionsApi MediaOptions { get; } = new MediaOptionsApi(http);
+    public ITemplatesApi Templates { get; } = new TemplatesApi(http);
+    public ISecurityHeadersApi SecurityHeaders { get; } = new SecurityHeadersApi(http);
+    public ILoginSettingsApi LoginSettings { get; } = new LoginSettingsApi(http);
+    public IUsersApi Users { get; } = new UsersApi(http);
+    public IRecipesApi Recipes { get; } = new RecipesApi(http);
+    public ILocalizationApi Localization { get; } = new LocalizationApi(http);
+    public IIndexesApi Indexes { get; } = new IndexesApi(http);
     public IIconsApi Icons { get; } = new IconsApi(http);
 }
 
-public sealed class AuthApi(HttpClient http) : IAuthApi
+public sealed class AuthApi(HttpClient http, ICrestAntiforgeryTokenStore antiforgery) : IAuthApi
 {
     public async Task<AuthUser> MeAsync()
     {
@@ -197,15 +250,22 @@ public sealed class AuthApi(HttpClient http) : IAuthApi
             Content = JsonContent.Create(model),
         }));
 
-        return response.IsSuccessStatusCode
-            ? await response.Content.ReadFromJsonAsync<AuthUser>()
-            : null;
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        // Orchard antiforgery tokens are user-bound. Renew after sign-in.
+        antiforgery.Clear();
+        return await response.Content.ReadFromJsonAsync<AuthUser>();
     }
 
     public async Task<AuthUser> LogoutAsync()
     {
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, "api/crest/auth/logout")));
-        return await response.Content.ReadFromJsonAsync<AuthUser>() ?? AuthUser.Anonymous;
+        var user = await response.Content.ReadFromJsonAsync<AuthUser>() ?? AuthUser.Anonymous;
+        antiforgery.Clear();
+        return user;
     }
 
     private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
@@ -351,12 +411,51 @@ public sealed class ContentTypesApi(HttpClient http) : IContentTypesApi
 
 public sealed class ContentItemsApi(HttpClient http) : IContentItemsApi
 {
+    public async Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20)
+    {
+        var query = new List<string> { $"page={page}", $"pageSize={pageSize}" };
+        if (!string.IsNullOrWhiteSpace(contentType)) query.Add($"contentType={Uri.EscapeDataString(contentType)}");
+        if (!string.IsNullOrWhiteSpace(status)) query.Add($"status={Uri.EscapeDataString(status)}");
+        if (!string.IsNullOrWhiteSpace(search)) query.Add($"search={Uri.EscapeDataString(search)}");
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, $"api/crest/content-items?{string.Join('&', query)}")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<ContentItemListResult>() ?? ContentItemListResult.Empty
+            : ContentItemListResult.Empty;
+    }
+
     public async Task<ContentItem?> GetByHandleAsync(string handle)
     {
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, $"api/crest/content-items/by-handle/{Uri.EscapeDataString(handle)}")));
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<ContentItem>()
             : null;
+    }
+
+    public async Task<ContentItem?> GetAsync(string contentItemId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ContentItem>() : null;
+    }
+
+    public Task<ContentItem?> CreateAsync(ContentItemWriteRequest request) => WriteAsync(HttpMethod.Post, "api/crest/content-items", request);
+    public Task<ContentItem?> UpdateAsync(string contentItemId, ContentItemWriteRequest request) => WriteAsync(HttpMethod.Put, $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}", request);
+
+    public Task<bool> PublishAsync(string contentItemId) => SendActionAsync(HttpMethod.Post, $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}/publish");
+    public Task<bool> UnpublishAsync(string contentItemId) => SendActionAsync(HttpMethod.Post, $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}/unpublish");
+    public Task<bool> DeleteAsync(string contentItemId) => SendActionAsync(HttpMethod.Delete, $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}");
+
+    private async Task<bool> SendActionAsync(HttpMethod method, string uri)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(method, uri)));
+        return response.IsSuccessStatusCode;
+    }
+
+    private async Task<ContentItem?> WriteAsync(HttpMethod method, string uri, ContentItemWriteRequest payload)
+    {
+        using var request = WithCredentials(new(method, uri));
+        request.Content = JsonContent.Create(payload);
+        using var response = await http.SendAsync(request);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ContentItem>() : null;
     }
 
     private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
@@ -366,6 +465,90 @@ public sealed class ContentItemsApi(HttpClient http) : IContentItemsApi
     }
 }
 
+public sealed class MediaApi(HttpClient http) : IMediaApi
+{
+    public async Task<MediaDirectoryResult> ListAsync(string? path = null)
+    {
+        var url = string.IsNullOrWhiteSpace(path) ? "api/crest/media" : $"api/crest/media?path={Uri.EscapeDataString(path)}";
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, url)));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<MediaDirectoryResult>() ?? MediaDirectoryResult.Empty
+            : MediaDirectoryResult.Empty;
+    }
+
+    public async Task<MediaDirectoryResult?> CreateFolderAsync(string? parentPath, string name)
+    {
+        using var request = WithCredentials(new(HttpMethod.Post, "api/crest/media/folders"));
+        request.Content = JsonContent.Create(new MediaFolderRequest(parentPath, name));
+        using var response = await http.SendAsync(request);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<MediaDirectoryResult>() : null;
+    }
+
+    public async Task<MediaDirectoryResult?> UploadAsync(string? path, string fileName, Stream stream, bool overwrite = false)
+    {
+        using var form = new MultipartFormDataContent();
+        form.Add(new StreamContent(stream), "file", fileName);
+        form.Add(new StringContent(path ?? string.Empty), "path");
+        form.Add(new StringContent(overwrite ? "true" : "false"), "overwrite");
+        using var request = WithCredentials(new(HttpMethod.Post, "api/crest/media/files"));
+        request.Content = form;
+        using var response = await http.SendAsync(request);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<MediaDirectoryResult>() : null;
+    }
+
+    public async Task<bool> DeleteAsync(string path)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Delete, $"api/crest/media?path={Uri.EscapeDataString(path)}")));
+        return response.IsSuccessStatusCode;
+    }
+
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
+    {
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return request;
+    }
+}
+
+public sealed class MediaProfilesApi(HttpClient http) : IMediaProfilesApi
+{
+    public async Task<MediaProfile[]> ListAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/crest/media/profiles")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<MediaProfile[]>() ?? [] : [];
+    }
+    public async Task<MediaProfile?> SaveAsync(string name, MediaProfileWriteRequest request)
+    {
+        using var message = WithCredentials(new(HttpMethod.Put, $"api/crest/media/profiles/{Uri.EscapeDataString(name)}"));
+        message.Content = JsonContent.Create(request);
+        using var response = await http.SendAsync(message);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<MediaProfile>() : null;
+    }
+    public async Task<bool> DeleteAsync(string name)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Delete, $"api/crest/media/profiles/{Uri.EscapeDataString(name)}")));
+        return response.IsSuccessStatusCode;
+    }
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request) { request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); return request; }
+}
+public sealed class MediaOptionsApi(HttpClient http) : IMediaOptionsApi
+{
+    public async Task<CrestMediaOptions?> GetAsync() { using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/crest/media/options"))); return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<CrestMediaOptions>() : null; }
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request) { request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); return request; }
+}
+public sealed class TemplatesApi(HttpClient http) : ITemplatesApi
+{
+ public async Task<CrestTemplate[]> ListAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/templates")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestTemplate[]>()??[]:[];}
+ public async Task<CrestTemplate?> SaveAsync(string name,CrestTemplateWrite x){using var q=C(new(HttpMethod.Put,$"api/crest/templates/{Uri.EscapeDataString(name)}"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestTemplate>():null;}
+ public async Task<bool> DeleteAsync(string name){using var r=await http.SendAsync(C(new(HttpMethod.Delete,$"api/crest/templates/{Uri.EscapeDataString(name)}")));return r.IsSuccessStatusCode;}
+ static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}
+}
+public sealed class SecurityHeadersApi(HttpClient http) : ISecurityHeadersApi { public async Task<CrestSecurityHeaders?> GetAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/security-headers")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestSecurityHeaders>():null;}public async Task<CrestSecurityHeaders?> SaveAsync(CrestSecurityHeaders x){using var q=C(new(HttpMethod.Put,"api/crest/security-headers"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestSecurityHeaders>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
+public sealed class LoginSettingsApi(HttpClient http) : ILoginSettingsApi { public async Task<CrestLoginSettings?> GetAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/settings/login")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLoginSettings>():null;}public async Task<CrestLoginSettings?> SaveAsync(CrestLoginSettings x){using var q=C(new(HttpMethod.Put,"api/crest/settings/login"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLoginSettings>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
+public sealed class UsersApi(HttpClient http) : IUsersApi { public async Task<CrestUserList> ListAsync(string? search=null,string? status=null){var q=string.Join('&',new[]{string.IsNullOrWhiteSpace(search)?null:$"search={Uri.EscapeDataString(search)}",string.IsNullOrWhiteSpace(status)?null:$"status={Uri.EscapeDataString(status)}"}.Where(x=>x is not null));using var r=await http.SendAsync(C(new(HttpMethod.Get,$"api/crest/users{(q.Length>0?"?"+q:"")}")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUserList>()??new(0,[]):new(0,[]);} public async Task<CrestUser?> GetAsync(string id){using var r=await http.SendAsync(C(new(HttpMethod.Get,$"api/crest/users/{Uri.EscapeDataString(id)}")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUser>():null;} public Task<CrestUser?> CreateAsync(CrestUserWrite x)=>Write(new(HttpMethod.Post,"api/crest/users"),x); public Task<CrestUser?> SaveAsync(string id,CrestUserWrite x)=>Write(new(HttpMethod.Put,$"api/crest/users/{Uri.EscapeDataString(id)}"),x); public async Task<CrestUser?> SetEnabledAsync(string id,bool enabled)=>await Write(new(HttpMethod.Post,$"api/crest/users/{Uri.EscapeDataString(id)}/enabled"),new CrestUserEnabled(enabled)); public async Task<bool> DeleteAsync(string id){using var r=await http.SendAsync(C(new(HttpMethod.Delete,$"api/crest/users/{Uri.EscapeDataString(id)}")));return r.IsSuccessStatusCode;} async Task<CrestUser?> Write(HttpRequestMessage q,object x){using(q){q.Content=JsonContent.Create(x);using var r=await http.SendAsync(C(q));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUser>():null;}} static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
+public sealed class RecipesApi(HttpClient http) : IRecipesApi { public async Task<CrestRecipe[]> ListAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/recipes")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestRecipe[]>()??[]:[];} public async Task<bool> ExecuteAsync(CrestRecipeKey x){using var q=C(new(HttpMethod.Post,"api/crest/recipes/execute"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode;} static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
+public sealed class LocalizationApi(HttpClient http) : ILocalizationApi { public async Task<CrestLocalization?> GetAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/localization")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLocalization>():null;} public async Task<CrestLocalization?> SaveAsync(CrestLocalization x){using var q=C(new(HttpMethod.Put,"api/crest/localization"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLocalization>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
+public sealed class IndexesApi(HttpClient http) : IIndexesApi { public async Task<CrestIndex[]> ListAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/indexes")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestIndex[]>()??[]:[];}public async Task<CrestIndex?> RebuildAsync(string id){using var r=await http.SendAsync(C(new(HttpMethod.Post,$"api/crest/indexes/{Uri.EscapeDataString(id)}/rebuild")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestIndex>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
+
 public sealed class FeaturesApi(HttpClient http) : IFeaturesApi
 {
     public async Task<Feature[]> ListAsync()
@@ -374,6 +557,16 @@ public sealed class FeaturesApi(HttpClient http) : IFeaturesApi
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<Feature[]>() ?? []
             : [];
+    }
+
+    public Task<bool> EnableAsync(string id) => SetStateAsync(id, "enable");
+
+    public Task<bool> DisableAsync(string id) => SetStateAsync(id, "disable");
+
+    private async Task<bool> SetStateAsync(string id, string action)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/features/{Uri.EscapeDataString(id)}/{action}")));
+        return response.IsSuccessStatusCode;
     }
 
     private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
@@ -698,6 +891,18 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
         return response.IsSuccessStatusCode;
     }
 
+    public async Task<AdminMenuLayoutExportResult?> ExportLayoutAsync(string? fileName = null)
+    {
+        var uri = "api/crest/admin-menu-layout/export";
+        if (!string.IsNullOrWhiteSpace(fileName))
+        {
+            uri += $"?file={Uri.EscapeDataString(fileName)}";
+        }
+
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, uri)));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuLayoutExportResult>() : null;
+    }
+
     public Task<AdminMenuSummary?> CreateNodeAsync(string menuId, AdminMenuNodeEditModel model) =>
         SendNodeAsync(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/nodes", model);
 
@@ -754,7 +959,10 @@ public sealed record AppManifest(
     int FeatureSerialNumber,
     string FeatureHash,
     Feature[] Features,
-    NavigationMenu AdminMenu);
+    NavigationMenu AdminMenu,
+    CrestRouteAccess[] AuthorizedRoutes);
+
+public sealed record CrestRouteAccess(string Template);
 
 public sealed record Tenant(
     string Name,
@@ -892,6 +1100,62 @@ public sealed record ContentItem(
     string Author,
     JsonElement Content);
 
+public sealed record ContentItemListResult(ContentItem[] Items, int Total, int Page, int PageSize)
+{
+    public static ContentItemListResult Empty { get; } = new([], 0, 1, 20);
+}
+
+public sealed record ContentItemWriteRequest(string ContentType, string? DisplayText, JsonObject? Content, bool Publish);
+
+public sealed record MediaDirectoryResult(string Path, string? ParentPath, MediaEntry[] Entries)
+{
+    public static MediaDirectoryResult Empty { get; } = new(string.Empty, null, []);
+}
+
+public sealed record MediaEntry(string Path, string Name, bool IsDirectory, long Length, DateTimeOffset LastModifiedUtc, string? PublicUrl);
+public sealed record MediaFolderRequest(string? ParentPath, string? Name);
+public sealed record MediaProfile(string Name, string? Hint, int Width, int Height, int Mode, int Format, int Quality, string? BackgroundColor, bool AutoOrient);
+public sealed record MediaProfileWriteRequest(string? Hint, int Width, int Height, int Mode, int Format, int Quality, string? BackgroundColor, bool AutoOrient);
+public sealed record CrestMediaOptions(int[] SupportedSizes, IEnumerable<string> AllowedFileExtensions, int MaxBrowserCacheDays, int MaxSecureFilesBrowserCacheDays, int MaxCacheDays, long MaxFileSize, int? MaxUploadChunkSize, string CdnBaseUrl, string AssetsRequestPath, string AssetsPath, string AssetsUsersFolder, bool UseTokenizedQueryString);
+public sealed record CrestTemplate(string Name,string? Description,string Content);
+public sealed record CrestTemplateWrite(string? Description,string? Content);
+public sealed record CrestSecurityHeaders(Dictionary<string,string>? ContentSecurityPolicy,Dictionary<string,string>? PermissionsPolicy,string? ReferrerPolicy,bool FromConfiguration);
+public sealed class CrestLoginSettings
+{
+    public bool AllowRememberMe { get; set; }
+    public bool AllowChangingUsername { get; set; }
+    public bool AllowChangingEmail { get; set; }
+    public bool AllowChangingPhoneNumber { get; set; }
+    public bool UseSiteTheme { get; set; }
+    public bool DisableLocalLogin { get; set; }
+    public bool RequireTwoFactorAuthentication { get; set; }
+    public bool AllowRememberClientTwoFactorAuthentication { get; set; }
+    public int NumberOfRecoveryCodesToGenerate { get; set; } = 5;
+    public bool UseSiteThemeForTwoFactorAuthentication { get; set; }
+    public bool UseExternalProviderIfOnlyOneDefined { get; set; }
+    public bool UseScriptToSyncProperties { get; set; }
+    public string? SyncPropertiesScript { get; set; }
+}
+public sealed record CrestUserList(int Total, CrestUser[] Items);
+public sealed record CrestUser(string Id,string? UserName,string? Email,string? PhoneNumber,bool EmailConfirmed,bool IsEnabled,bool TwoFactorEnabled,string[] Roles);
+public sealed class CrestUserWrite
+{
+    public CrestUserWrite() { }
+    public CrestUserWrite(string? userName,string? email,string? phoneNumber,bool emailConfirmed,bool isEnabled,string[]? roles,string? password) { UserName=userName; Email=email; PhoneNumber=phoneNumber; EmailConfirmed=emailConfirmed; IsEnabled=isEnabled; Roles=roles; Password=password; }
+    public string? UserName { get; set; }
+    public string? Email { get; set; }
+    public string? PhoneNumber { get; set; }
+    public bool EmailConfirmed { get; set; }
+    public bool IsEnabled { get; set; }
+    public string[]? Roles { get; set; }
+    public string? Password { get; set; }
+}
+public sealed record CrestUserEnabled(bool Enabled);
+public sealed record CrestRecipe(string Name,string? DisplayName,string? Description,string? FileName,string? BasePath,string[]? Tags);
+public sealed record CrestRecipeKey(string? BasePath,string? FileName);
+public sealed class CrestLocalization { public string DefaultCulture {get;set;}=""; public string[]? SupportedCultures {get;set;}=[]; public bool FallBackToParentCulture {get;set;} }
+public sealed record CrestIndex(string Id,string? Name,string? Provider,string? IndexName,string? Type,string? CreatedUtc);
+
 public sealed record Feature(
     string Id,
     string Name,
@@ -899,7 +1163,9 @@ public sealed record Feature(
     string Description,
     string ExtensionId,
     string[] Dependencies,
-    bool AlwaysEnabled);
+    bool AlwaysEnabled,
+    bool Enabled,
+    bool EnabledByDependencyOnly);
 
 public sealed record Role(string Name, string Description, bool IsAdmin, bool IsSystem);
 
@@ -1057,6 +1323,8 @@ public sealed record AdminMenuNodeEditModel(
 public sealed record AdminMenuNodeMoveModel(string? ParentNodeId, int? Position);
 
 public sealed record AdminMenuNodeRenameModel(string? Text);
+
+public sealed record AdminMenuLayoutExportResult(string File, string Path, int ItemCount, int CustomItemCount);
 
 public sealed record CrestThemeSettings(string RadzenTheme, Dictionary<string, string> Tokens)
 {

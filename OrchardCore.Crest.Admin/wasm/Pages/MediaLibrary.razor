@@ -1,0 +1,176 @@
+@page "/Admin/Media"
+@using Crest.Admin.Api
+@using Microsoft.AspNetCore.Components.Forms
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NotificationService Notifications
+
+<RadzenStack Gap="1rem" data-testid="media-library-page">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Media Library" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Manage the current tenant's Orchard media files and folders." />
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+            <label class="rz-button rz-button-md rz-button-primary"><span class="rzi rzi-upload"></span> Upload<input type="file" hidden @onchange="UploadAsync" disabled="@IsBusy" /></label>
+            <RadzenButton Text="New folder" Icon="create_new_folder" Click="OpenFolderDialog" Disabled="@IsBusy" />
+            <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
+        </RadzenStack>
+    </RadzenStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+    }
+
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.35rem" Wrap="FlexWrap.Wrap" data-testid="media-breadcrumbs">
+            <RadzenButton Text="Media" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenFolderAsync(string.Empty))" />
+            @foreach (var crumb in Breadcrumbs)
+            {
+                <RadzenText Text="/" />
+                <RadzenButton Text="@crumb.Name" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenFolderAsync(crumb.Path))" />
+            }
+        </RadzenStack>
+    </RadzenCard>
+
+    @if (IsLoading)
+    {
+        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Directory.Entries.Length == 0)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">This folder is empty. Upload a file or create a folder to get started.</RadzenAlert>
+    }
+    else
+    {
+        <RadzenDataGrid Data="@Directory.Entries" TItem="MediaEntry" AllowPaging="false" Responsive="true" data-testid="media-library-grid">
+            <Columns>
+                <RadzenDataGridColumn TItem="MediaEntry" Title="Name">
+                    <Template Context="entry">
+                        @if (entry.IsDirectory)
+                        {
+                            <RadzenButton Text="@entry.Name" Icon="folder" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => OpenFolderAsync(entry.Path))" />
+                        }
+                        else if (!string.IsNullOrWhiteSpace(entry.PublicUrl))
+                        {
+                            <a href="@entry.PublicUrl" target="_blank" rel="noopener">@entry.Name</a>
+                        }
+                        else { @entry.Name }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="MediaEntry" Title="Type"><Template Context="entry">@(entry.IsDirectory ? "Folder" : "File")</Template></RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="MediaEntry" Title="Size"><Template Context="entry">@(entry.IsDirectory ? "—" : FormatBytes(entry.Length))</Template></RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="MediaEntry" Title="Modified"><Template Context="entry">@entry.LastModifiedUtc.LocalDateTime.ToString("g")</Template></RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="MediaEntry" Title="Actions" Width="6rem" Sortable="false" Filterable="false">
+                    <Template Context="entry">
+                        @if (!entry.IsDirectory)
+                        {
+                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small" title="Delete file" Click="@(() => ConfirmDelete(entry))" Disabled="@IsBusy" />
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    }
+
+    @if (FolderDialogOpen)
+    {
+        <div class="media-dialog-backdrop"><RadzenCard class="media-dialog"><RadzenStack Gap="1rem"><RadzenText TextStyle="TextStyle.H5" Text="New folder" /><RadzenTextBox @bind-Value="NewFolderName" Placeholder="Folder name" Style="width: 100%;" /><RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CloseFolderDialog" /><RadzenButton Text="Create" Click="CreateFolderAsync" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewFolderName))" /></RadzenStack></RadzenStack></RadzenCard></div>
+    }
+    @if (DeleteCandidate is not null)
+    {
+        <div class="media-dialog-backdrop"><RadzenCard class="media-dialog"><RadzenStack Gap="1rem"><RadzenText TextStyle="TextStyle.H5" Text="Delete media file?" /><RadzenText Text="@($"This permanently removes {DeleteCandidate.Name}.")" /><RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></RadzenStack></RadzenStack></RadzenCard></div>
+    }
+</RadzenStack>
+
+@code {
+    private MediaDirectoryResult Directory { get; set; } = MediaDirectoryResult.Empty;
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+    private bool FolderDialogOpen { get; set; }
+    private string? NewFolderName { get; set; }
+    private MediaEntry? DeleteCandidate { get; set; }
+    private IEnumerable<Breadcrumb> Breadcrumbs
+    {
+        get
+        {
+            var segments = Directory.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            return segments.Select((name, index) => new Breadcrumb(name, string.Join('/', segments.Take(index + 1))));
+        }
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync(string? path = null)
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try { Directory = await Api.Crest.Rest.Media.ListAsync(path ?? Directory.Path); }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private Task OpenFolderAsync(string path) => LoadAsync(path);
+    private void OpenFolderDialog() { NewFolderName = null; FolderDialogOpen = true; }
+    private void CloseFolderDialog() => FolderDialogOpen = false;
+    private void ConfirmDelete(MediaEntry entry) => DeleteCandidate = entry;
+    private void CancelDelete() => DeleteCandidate = null;
+
+    private async Task CreateFolderAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewFolderName)) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            var result = await Api.Crest.Rest.Media.CreateFolderAsync(Directory.Path, NewFolderName);
+            if (result is null) throw new InvalidOperationException("Orchard did not create the media folder.");
+            Directory = result;
+            FolderDialogOpen = false;
+            Notifications.Notify(NotificationSeverity.Success, "Media library", "Folder created.");
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task UploadAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        if (file.Size == 0) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            await using var stream = file.OpenReadStream(100 * 1024 * 1024);
+            var result = await Api.Crest.Rest.Media.UploadAsync(Directory.Path, file.Name, stream);
+            if (result is null) throw new InvalidOperationException("Orchard did not accept the media file.");
+            Directory = result;
+            Notifications.Notify(NotificationSeverity.Success, "Media library", $"{file.Name} uploaded.");
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (DeleteCandidate is null) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            if (!await Api.Crest.Rest.Media.DeleteAsync(DeleteCandidate.Path)) throw new InvalidOperationException("Orchard did not delete the media file.");
+            Notifications.Notify(NotificationSeverity.Success, "Media library", $"{DeleteCandidate.Name} deleted.");
+            DeleteCandidate = null;
+            await LoadAsync();
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private static string FormatBytes(long bytes) => bytes < 1024 ? $"{bytes} B" : bytes < 1024 * 1024 ? $"{bytes / 1024d:F1} KB" : $"{bytes / 1024d / 1024d:F1} MB";
+    private sealed record Breadcrumb(string Name, string Path);
+}

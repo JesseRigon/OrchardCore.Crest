@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/theme")]
 public sealed class CrestThemeController(ISiteService siteService, IAuthorizationService authorizationService) : ControllerBase
 {

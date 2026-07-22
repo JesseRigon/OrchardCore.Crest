@@ -1,6 +1,7 @@
 using Crest.Services;
 using Crest.Icons;
 using Microsoft.AspNetCore.Mvc;
+using OrchardCore.Admin;
 using OrchardCore.Navigation;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,12 +9,10 @@ using System.Text;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/navigation")]
 public sealed class NavigationController(
-    INavigationManager navigationManager,
-    CrestAdminMenuLayoutService layoutService,
-    CrestIconController iconController) : ControllerBase
+    ICrestRequestAccess requestAccess) : ControllerBase
 {
     [HttpGet("admin")]
     public Task<ActionResult<NavigationMenu>> GetAdminMenu() => GetMenu("admin");
@@ -21,6 +20,18 @@ public sealed class NavigationController(
     [HttpGet("menus/{menuName}")]
     public async Task<ActionResult<NavigationMenu>> GetMenu(string menuName)
     {
+        var access = await requestAccess.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel);
+        if (access is null)
+        {
+            return Forbid();
+        }
+
+        var navigationManager = access.GetRequiredService<INavigationManager>();
+        var layoutService = access.GetRequiredService<CrestAdminMenuLayoutService>();
+        var iconController = access.GetRequiredService<CrestIconController>();
+
+        // Orchard builds, authorizes, and reduces this tree for the actual
+        // request user. Apply the tenant-wide Crest layout only afterwards.
         var items = await navigationManager.BuildMenuAsync(menuName, ControllerContext);
 
         var menu = new NavigationMenu(

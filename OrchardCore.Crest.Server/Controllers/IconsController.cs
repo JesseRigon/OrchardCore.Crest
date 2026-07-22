@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/icons")]
 public sealed class IconsController(
     IAuthorizationService authorizationService,

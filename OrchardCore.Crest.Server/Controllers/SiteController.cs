@@ -1,16 +1,18 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Settings;
 
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/site")]
-public sealed class SiteController(ISiteService siteService) : ControllerBase
+public sealed class SiteController(ISiteService siteService, IAuthorizationService authorization) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<SiteSettings>> Get()
     {
+        if (!await authorization.AuthorizeAsync(User, SettingsPermissions.ManageSettings)) return Forbid();
         var site = await siteService.GetSiteSettingsAsync();
         return Ok(SiteSettings.From(site));
     }
@@ -18,6 +20,7 @@ public sealed class SiteController(ISiteService siteService) : ControllerBase
     [HttpPut]
     public async Task<ActionResult<SiteSettings>> Put(SiteSettingsUpdate update)
     {
+        if (!await authorization.AuthorizeAsync(User, SettingsPermissions.ManageSettings)) return Forbid();
         var site = await siteService.LoadSiteSettingsAsync();
 
         site.SiteName = update.SiteName?.Trim() ?? string.Empty;

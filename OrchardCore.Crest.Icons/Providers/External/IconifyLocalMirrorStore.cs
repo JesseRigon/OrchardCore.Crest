@@ -71,6 +71,11 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
 
     public async ValueTask<IconifyLocalMirrorStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
+        if (!IconifyLocalMirrorBuildOptions.Enabled)
+        {
+            return DisabledStatus();
+        }
+
         await EnsureInitializedAsync(cancellationToken);
         var sourcePath = GetCurrentSourcePath();
         var collections = await TryGetCollectionsAsync(cancellationToken);
@@ -91,6 +96,11 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
 
     public async ValueTask<IconifyLocalMirrorStatus> SyncAsync(CancellationToken cancellationToken = default)
     {
+        if (!IconifyLocalMirrorBuildOptions.Enabled)
+        {
+            return DisabledStatus();
+        }
+
         await SyncLock.WaitAsync(cancellationToken);
         _isSyncing = true;
         try
@@ -127,6 +137,11 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
 
     public async ValueTask<IReadOnlyDictionary<string, IconifyLocalCollectionInfo>> GetCollectionsAsync(CancellationToken cancellationToken = default)
     {
+        if (!IconifyLocalMirrorBuildOptions.Enabled)
+        {
+            return EmptyCollections;
+        }
+
         if (_collectionsCache is not null)
         {
             return _collectionsCache;
@@ -139,6 +154,11 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
 
     public async ValueTask<IconifyLocalCollection?> GetCollectionAsync(string prefix, CancellationToken cancellationToken = default)
     {
+        if (!IconifyLocalMirrorBuildOptions.Enabled)
+        {
+            return null;
+        }
+
         prefix = NormalizePrefix(prefix);
         if (string.IsNullOrWhiteSpace(prefix))
         {
@@ -189,7 +209,7 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
 
     public async ValueTask<IconAssetDefinition?> ResolveAsync(IconifyIconProviderSettings settings, string prefix, string name, SvgIconSanitizer sanitizer, CancellationToken cancellationToken = default)
     {
-        if (!IsPublicIconify(settings))
+        if (!IconifyLocalMirrorBuildOptions.Enabled || !IsPublicIconify(settings))
         {
             return null;
         }
@@ -480,6 +500,20 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
     private string SeedPath => pathProvider.SeedPath;
 
     private string MetadataPath => Path.Combine(RootPath, ".crest-orchard-cache.json");
+
+    private static IReadOnlyDictionary<string, IconifyLocalCollectionInfo> EmptyCollections { get; } = new Dictionary<string, IconifyLocalCollectionInfo>(StringComparer.OrdinalIgnoreCase);
+
+    private IconifyLocalMirrorStatus DisabledStatus() => new(
+        false,
+        false,
+        null,
+        RootPath,
+        null,
+        0,
+        0,
+        null,
+        null,
+        "The local Iconify cache is disabled for this build.");
 
     private static string GetCollectionPath(string sourcePath, string prefix) => Path.Combine(sourcePath, "json", NormalizePrefix(prefix) + ".json");
 

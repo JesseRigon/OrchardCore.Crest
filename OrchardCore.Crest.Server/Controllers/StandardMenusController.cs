@@ -15,7 +15,7 @@ using OrchardContentItem = OrchardCore.ContentManagement.ContentItem;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/menus")]
 public sealed class StandardMenusController(
     IAuthorizationService authorizationService,
@@ -26,7 +26,7 @@ public sealed class StandardMenusController(
     [HttpGet]
     public async Task<ActionResult<StandardMenusState>> ListAsync()
     {
-        if (!await authorizationService.AuthorizeAsync(User, Permissions.ManageMenu))
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Menu.Permissions.ManageMenu))
         {
             return Forbid();
         }
@@ -296,7 +296,7 @@ public sealed class StandardMenusController(
         return Ok(StandardMenuSummary.From(menu));
     }
 
-    private Task<bool> IsAuthorizedAsync() => authorizationService.AuthorizeAsync(User, Permissions.ManageMenu);
+    private Task<bool> IsAuthorizedAsync() => authorizationService.AuthorizeAsync(User, OrchardCore.Menu.Permissions.ManageMenu);
 
     private async Task<OrchardContentItem?> LoadMenuForUpdateAsync(string menuId)
     {

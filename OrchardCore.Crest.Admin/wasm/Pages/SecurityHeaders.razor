@@ -1,0 +1,186 @@
+@page "/Admin/Settings/SecurityHeaders"
+@page "/Admin/Settings"
+@using Crest.Admin.Api
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@using Microsoft.AspNetCore.Components
+
+<RadzenStack Gap="1rem" data-testid="security-headers-page">
+    <RadzenText TextStyle="TextStyle.H4" Text="Security Headers" />
+
+    @if (Model is null)
+    {
+        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        @if (Model.FromConfiguration)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning">Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source.</RadzenAlert>
+        }
+
+        <RadzenTabs data-testid="security-headers-tabs">
+            <RadzenTabsItem Text="Content Security Policy">
+                <RadzenStack Gap="1rem" class="pt-3">
+                    <RadzenCheckBox @bind-Value="EnableSandbox" Name="enable-sandbox" />
+                    <label for="enable-sandbox">Enable sandbox</label>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="Enables a sandbox for the requested resource, similar to the iframe sandbox attribute." />
+                    <RadzenCheckBox @bind-Value="UpgradeInsecureRequests" Name="upgrade-insecure-requests" />
+                    <label for="upgrade-insecure-requests">Upgrade insecure requests</label>
+                    <RadzenDataGrid Data="ContentSecurityPolicies" TItem="SecurityPolicyOption" AllowPaging="false" AllowSorting="false">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="Directive" />
+                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Title="Allowed sources">
+                                <Template Context="option">
+                                    <RadzenTextBox Value="@GetContentSecurityPolicy(option.Key)" Change="@(value => SetContentSecurityPolicy(option.Key, value?.ToString()))" Style="width: 100%;" Placeholder="'self' https://cdn.example.com" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="Controls the resources the browser is allowed to load for a page." />
+                </RadzenStack>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Permissions Policy">
+                <RadzenStack Gap="1rem" class="pt-3">
+                    <RadzenDataGrid Data="PermissionsPolicies" TItem="SecurityPolicyOption" AllowPaging="false" AllowSorting="false">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="Feature" />
+                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Title="Allowed by">
+                                <Template Context="option">
+                                    <RadzenDropDown TValue="string" Value="@GetPermissionOrigin(option.Key)" Change="@(value => SetPermissionOrigin(option.Key, value?.ToString() ?? "()"))" Data="PermissionOriginOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Title="Additional origins">
+                                <Template Context="option">
+                                    @if (GetPermissionOrigin(option.Key) == "self")
+                                    {
+                                        <RadzenTextBox Value="@GetAdditionalOrigins(option.Key)" Change="@(value => SetAdditionalOrigins(option.Key, value?.ToString()))" Style="width: 100%;" Placeholder="https://www.example.com https://app.example.com" />
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="Controls which browser features and APIs are available to this site." />
+                </RadzenStack>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Referrer Policy">
+                <RadzenStack Gap="1rem" class="pt-3">
+                    <RadzenFormField Text="Referrer policy" Style="width: 100%; max-width: 42rem;">
+                        <RadzenDropDown TValue="string" @bind-Value="ReferrerPolicy" Data="ReferrerPolicyOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
+                    </RadzenFormField>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="Controls how much referrer information the browser includes when navigating away from a page." />
+                </RadzenStack>
+            </RadzenTabsItem>
+        </RadzenTabs>
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="Save" Click="SaveAsync" />
+        </RadzenStack>
+    }
+</RadzenStack>
+
+@code {
+    [SupplyParameterFromQuery(Name = "groupId")]
+    public string? GroupId { get; set; }
+
+    private CrestSecurityHeaders? Model;
+    private Dictionary<string, string> ContentSecurityPolicy = new(StringComparer.Ordinal);
+    private Dictionary<string, string> PermissionsPolicy = new(StringComparer.Ordinal);
+    private string ReferrerPolicy = "no-referrer";
+
+    private bool EnableSandbox
+    {
+        get => ContentSecurityPolicy.ContainsKey("sandbox");
+        set => SetFlag("sandbox", value);
+    }
+
+    private bool UpgradeInsecureRequests
+    {
+        get => ContentSecurityPolicy.ContainsKey("upgrade-insecure-requests");
+        set => SetFlag("upgrade-insecure-requests", value);
+    }
+
+    private static readonly SecurityPolicyOption[] ContentSecurityPolicies =
+    [
+        new("base-uri", "Base URI"), new("child-src", "Child source"), new("connect-src", "Connect source"),
+        new("default-src", "Default source"), new("font-src", "Font source"), new("form-action", "Form action"),
+        new("frame-ancestors", "Frame ancestors"), new("frame-src", "Frame source"), new("img-src", "Image source"),
+        new("manifest-src", "Manifest source"), new("media-src", "Media source"), new("object-src", "Object source"),
+        new("script-src", "Script source"), new("style-src", "Style source"),
+    ];
+
+    private static readonly SecurityPolicyOption[] PermissionsPolicies =
+    [
+        new("accelerometer", "Accelerometer"), new("ambient-light-sensor", "Ambient light sensor"), new("autoplay", "Autoplay"),
+        new("battery", "Battery"), new("camera", "Camera"), new("display-capture", "Display capture"), new("document-domain", "Document domain"),
+        new("encrypted-media", "Encrypted media"), new("fullscreen", "Full screen"), new("gamepad", "Game pad"),
+        new("geolocation", "Geolocation"), new("gyroscope", "Gyroscope"), new("layout-animations", "Layout animations"),
+        new("legacy-image-format", "Legacy image format"), new("magnetometer", "Magnetometer"), new("microphone", "Microphone"),
+        new("midi", "MIDI"), new("oversized-images", "Oversized images"), new("payment", "Payment"),
+        new("picture-in-picture", "Picture in picture"), new("publickey-credentials-get", "Public key retrieval"),
+        new("speaker-selection", "Speaker selection"), new("screen-wake-lock", "Screen wake lock"),
+        new("sync-xhr", "Synchronous XML HTTP request"), new("unoptimized-images", "Unoptimized images"),
+        new("unsized-media", "Unsized media"), new("usb", "USB"), new("web-share", "Web share"), new("xr-spatial-tracking", "Web XR"),
+    ];
+
+    private static readonly NamedOption[] PermissionOriginOptions = [new("()", "None"), new("*", "Any"), new("self", "Self")];
+    private static readonly NamedOption[] ReferrerPolicyOptions =
+    [
+        new("no-referrer", "No referrer"), new("no-referrer-when-downgrade", "No referrer when downgrade"),
+        new("origin", "Origin"), new("origin-when-cross-origin", "Origin when cross origin"), new("same-origin", "Same origin"),
+        new("strict-origin", "Strict origin"), new("strict-origin-when-cross-origin", "Strict origin when cross origin"),
+        new("unsafe-url", "Unsafe URL"),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Api.Crest.Rest.SecurityHeaders.GetAsync();
+        ContentSecurityPolicy = new(Model?.ContentSecurityPolicy ?? [], StringComparer.Ordinal);
+        PermissionsPolicy = new(Model?.PermissionsPolicy ?? [], StringComparer.Ordinal);
+        ReferrerPolicy = Model?.ReferrerPolicy ?? "no-referrer";
+    }
+
+    private string GetContentSecurityPolicy(string key) => ContentSecurityPolicy.TryGetValue(key, out var value) ? value : string.Empty;
+    private void SetContentSecurityPolicy(string key, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) ContentSecurityPolicy.Remove(key);
+        else ContentSecurityPolicy[key] = value.Trim();
+    }
+    private void SetFlag(string key, bool value)
+    {
+        if (value) ContentSecurityPolicy[key] = string.Empty;
+        else ContentSecurityPolicy.Remove(key);
+    }
+
+    private string GetPermissionOrigin(string key) => PermissionsPolicy.TryGetValue(key, out var value)
+        ? value.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[0]
+        : "()";
+    private string GetAdditionalOrigins(string key) => PermissionsPolicy.TryGetValue(key, out var value)
+        ? string.Join(' ', value.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries).Skip(1))
+        : string.Empty;
+    private void SetPermissionOrigin(string key, string value)
+    {
+        if (value == "()") PermissionsPolicy.Remove(key);
+        else if (value == "self") PermissionsPolicy[key] = string.IsNullOrWhiteSpace(GetAdditionalOrigins(key)) ? "self" : $"self {GetAdditionalOrigins(key)}";
+        else PermissionsPolicy[key] = value;
+    }
+    private void SetAdditionalOrigins(string key, string? value)
+    {
+        if (GetPermissionOrigin(key) == "self") PermissionsPolicy[key] = string.IsNullOrWhiteSpace(value) ? "self" : $"self {value.Trim()}";
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Model is null) return;
+        Model = await Api.Crest.Rest.SecurityHeaders.SaveAsync(Model with
+        {
+            ReferrerPolicy = ReferrerPolicy,
+            ContentSecurityPolicy = ContentSecurityPolicy,
+            PermissionsPolicy = PermissionsPolicy,
+        });
+    }
+
+    private sealed record SecurityPolicyOption(string Key, string Label);
+    private sealed record NamedOption(string Value, string Label);
+}

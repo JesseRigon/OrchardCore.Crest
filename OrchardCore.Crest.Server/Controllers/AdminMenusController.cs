@@ -10,7 +10,7 @@ using OrchardCore.Navigation;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/admin-menus")]
 public sealed class AdminMenusController(
     IAuthorizationService authorizationService,
@@ -206,6 +206,11 @@ public sealed class AdminMenusController(
             }
 
             var baseMenu = await BuildDefaultNavigationMenuAsync();
+            if (await layoutService.IsLockedNewBranchAsync(baseMenu, model.ParentNodeId))
+            {
+                return BadRequest("The New menu branch is locked and cannot be edited.");
+            }
+
             await layoutService.CreateCustomAsync(baseMenu, model.Text.Trim(), null, model.IconClass?.Trim(), model.ParentNodeId, model.Position);
             return Ok(await GetDefaultMenuSummaryAsync());
         }
@@ -253,6 +258,11 @@ public sealed class AdminMenusController(
         if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
+            if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId) || await layoutService.IsLockedNewBranchAsync(baseMenu, model.ParentNodeId))
+            {
+                return BadRequest("The New menu branch is locked and cannot be edited.");
+            }
+
             if (await layoutService.IsCustomAsync(nodeId))
             {
                 await layoutService.UpdateCustomAsync(baseMenu, nodeId, model.Text.Trim(), null, model.IconClass?.Trim());
@@ -310,6 +320,11 @@ public sealed class AdminMenusController(
         }
 
         var baseMenu = await BuildDefaultNavigationMenuAsync();
+        if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId))
+        {
+            return BadRequest("The New menu branch is locked and cannot be edited.");
+        }
+
         await layoutService.RenameAsync(baseMenu, nodeId, model.Text);
         return Ok(await GetDefaultMenuSummaryAsync());
     }
@@ -325,6 +340,11 @@ public sealed class AdminMenusController(
         if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
+            if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId) || await layoutService.IsLockedNewBranchAsync(baseMenu, model.ParentNodeId))
+            {
+                return BadRequest("The New menu branch is locked and cannot be edited.");
+            }
+
             await layoutService.MoveAsync(baseMenu, nodeId, model.ParentNodeId, model.Position);
             return Ok(await GetDefaultMenuSummaryAsync());
         }
@@ -361,6 +381,11 @@ public sealed class AdminMenusController(
         if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
+            if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId))
+            {
+                return BadRequest("The New menu branch is locked and cannot be edited.");
+            }
+
             await layoutService.ToggleAsync(baseMenu, nodeId);
             return Ok(await GetDefaultMenuSummaryAsync());
         }
@@ -393,6 +418,11 @@ public sealed class AdminMenusController(
         if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
+            if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId))
+            {
+                return BadRequest("The New menu branch is locked and cannot be edited.");
+            }
+
             if (!await layoutService.IsCustomAsync(nodeId))
             {
                 return BadRequest("Only custom Sidebar nodes can be deleted.");

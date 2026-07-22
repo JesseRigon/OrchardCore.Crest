@@ -13,9 +13,11 @@
         }
         else
         {
-            <CrestAppContainer>
-                <RouteView RouteData="@routeData" />
-            </CrestAppContainer>
+            <CrestAuthorizedRoute>
+                <CrestAppContainer>
+                    <RouteView RouteData="@routeData" />
+                </CrestAppContainer>
+            </CrestAuthorizedRoute>
         }
     </Found>
     <NotFound>

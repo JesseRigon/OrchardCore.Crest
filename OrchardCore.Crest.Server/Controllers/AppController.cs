@@ -1,5 +1,6 @@
 using Crest.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrchardCore.Admin;
@@ -18,7 +19,7 @@ using System.Text;
 namespace Crest.Controllers;
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/app")]
 public sealed class AppController(
     ShellSettings shellSettings,
@@ -28,12 +29,15 @@ public sealed class AppController(
     ISiteService siteService,
     INavigationManager navigationManager,
     IOptions<AdminOptions> adminOptions,
+    IAuthorizationService authorization,
     CrestAdminMenuLayoutService layoutService,
-    CrestIconController iconController) : ControllerBase
+    CrestIconController iconController,
+    CrestRouteAuthorizationService routeAuthorization) : ControllerBase
 {
     [HttpGet("manifest")]
     public async Task<ActionResult<AppManifest>> GetManifest()
     {
+        if (!await authorization.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel)) return Forbid();
         var descriptor = await shellDescriptorManager.GetShellDescriptorAsync();
         var site = await siteService.GetSiteSettingsAsync();
         var featureIds = descriptor.Features.Select(feature => feature.Id).Order(StringComparer.Ordinal).ToArray();
@@ -53,7 +57,8 @@ public sealed class AppController(
             descriptor.SerialNumber,
             ComputeFeatureHash(descriptor.SerialNumber, featureIds),
             featureIds.Select(id => Feature.From(id, featureInfos.GetValueOrDefault(id))).ToArray(),
-            adminMenu));
+            adminMenu,
+            await routeAuthorization.GetAuthorizedRoutesAsync(User)));
     }
 
     private async Task<Tenant[]> GetAvailableTenantsAsync()
@@ -117,7 +122,8 @@ public sealed record AppManifest(
     int FeatureSerialNumber,
     string FeatureHash,
     Feature[] Features,
-    NavigationMenu AdminMenu);
+    NavigationMenu AdminMenu,
+    CrestRouteAccess[] AuthorizedRoutes);
 
 public sealed record Tenant(
     string Name,

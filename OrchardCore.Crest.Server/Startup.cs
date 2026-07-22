@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.DisplayManagement.Theming;
 using OrchardCore.Modules;
 using OrchardCore.Navigation;
+using OrchardCore.Recipes;
+using OrchardCore.Security;
 using OrchardCore.Security.Permissions;
 
 namespace Crest;
@@ -29,6 +31,11 @@ public sealed class Startup : StartupBase
         });
 
         services.AddHttpContextAccessor();
+        services.AddSignalR();
+        services.AddScoped<ICrestRequestAccess, CrestRequestAccess>();
+        services.AddScoped<CrestRouteAuthorizationService>();
+        services.AddScoped<ICrestPermissionInvalidator, CrestPermissionInvalidator>();
+        services.AddScoped<IRoleUpdatedEventHandler, CrestRolePermissionInvalidationHandler>();
         services.AddScoped<IThemeSelector, LegacyFrameThemeSelector>();
         services.AddScoped<CrestAdminMenuLayoutService>();
         services.AddNavigationProvider<CrestAdminMenu>();
@@ -42,6 +49,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IIconRegistry, CompositeIconRegistry>();
         services.AddScoped<CrestIconSourceStore>();
         services.AddScoped<CrestIconController>();
+        services.AddRecipeExecutionStep<Recipes.CrestAdminMenuLayoutStep>();
         services.Configure<BlazorAdminThemeOptions>(options => { });
     }
 
@@ -49,6 +57,7 @@ public sealed class Startup : StartupBase
     {
         app.UseMiddleware<BlazorAdminThemeMiddleware>();
         app.UseCors(CrestWebCors);
+        routes.MapHub<CrestPermissionHub>("/api/crest/permissions");
     }
 }
 
