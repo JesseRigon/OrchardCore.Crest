@@ -1,6 +1,7 @@
 @page "/Admin/Settings/SecurityHeaders"
 @page "/Admin/Settings"
 @using Crest.Admin.Api
+@using Crest.Admin.Components.Shared
 @using Radzen
 @using Radzen.Blazor
 @inject IApi Api
@@ -20,7 +21,7 @@
             <RadzenAlert AlertStyle="AlertStyle.Warning">Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source.</RadzenAlert>
         }
 
-        <RadzenTabs data-testid="security-headers-tabs">
+        <CrestMainContentTabs data-testid="security-headers-tabs">
             <RadzenTabsItem Text="Content Security Policy">
                 <RadzenStack Gap="1rem" class="pt-3">
                     <RadzenCheckBox @bind-Value="EnableSandbox" Name="enable-sandbox" />
@@ -72,7 +73,7 @@
                     <RadzenText TextStyle="TextStyle.Body2" Text="Controls how much referrer information the browser includes when navigating away from a page." />
                 </RadzenStack>
             </RadzenTabsItem>
-        </RadzenTabs>
+        </CrestMainContentTabs>
 
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
             <RadzenButton Text="Save" Click="SaveAsync" />

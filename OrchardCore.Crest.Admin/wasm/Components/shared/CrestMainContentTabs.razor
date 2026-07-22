@@ -1,0 +1,54 @@
+@namespace Crest.Admin.Components.Shared
+@using Radzen
+@using Radzen.Blazor
+
+<RadzenTabs @attributes="Attributes"
+            class="crest-main-content-tabs"
+            RenderMode="TabRenderMode.Client"
+            SelectedIndex="@SelectedIndex"
+            SelectedIndexChanged="@SelectedIndexChanged"
+            Change="@Change">
+    <Tabs>
+        @ChildContent
+    </Tabs>
+</RadzenTabs>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public int SelectedIndex { get; set; }
+    [Parameter] public EventCallback<int> SelectedIndexChanged { get; set; }
+    [Parameter] public EventCallback<int> Change { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? Attributes { get; set; }
+}
+
+<style>
+    .crest-main-content-tabs .rz-tabview-nav {
+        gap: 0.25rem;
+        border-bottom: 1px solid var(--rz-border-color);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .crest-main-content-tabs .rz-tabview-nav::-webkit-scrollbar { display: none; }
+
+    .crest-main-content-tabs .rz-tabview-nav li { margin: 0; }
+
+    .crest-main-content-tabs .rz-tabview-nav button {
+        border: 0;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
+        color: var(--rz-text-secondary-color);
+        font: inherit;
+        font-weight: 500;
+        padding: 0.75rem 1rem;
+        white-space: nowrap;
+    }
+
+    .crest-main-content-tabs .rz-tabview-nav .rz-tabview-selected button {
+        border-bottom-color: var(--rz-primary);
+        color: var(--rz-primary);
+        font-weight: 600;
+    }
+
+    .crest-main-content-tabs .rz-tabview-panels { padding: 1rem 0 0; }
+</style>

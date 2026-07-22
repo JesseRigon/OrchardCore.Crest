@@ -16,26 +16,24 @@
     </RadzenStack>
 
     <RadzenCard>
-        <MainTabSelector TValue="GeneralSettingsTab" Items="Tabs" Value="@SelectedTab" ValueChanged="@((GeneralSettingsTab tab) => SelectTab(tab))" AriaLabel="General settings sections" />
-
-        <div class="admin-settings-tab-panel">
-            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
-            {
-                <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
-            }
-            else if (IsLoading)
-            {
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-                    <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                    <RadzenText Text="Loading settings..." />
-                </RadzenStack>
-            }
-            else
-            {
-                <RadzenTemplateForm TItem="SiteSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
-                    <RadzenStack Gap="1rem">
-                        @if (SelectedTab == GeneralSettingsTab.General)
-                        {
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+        }
+        else if (IsLoading)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                <RadzenText Text="Loading settings..." />
+            </RadzenStack>
+        }
+        else
+        {
+            <RadzenTemplateForm TItem="SiteSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
+                <RadzenStack Gap="1rem">
+                    <CrestMainContentTabs @bind-SelectedIndex="SelectedTabIndex" aria-label="General settings sections">
+                        <RadzenTabsItem Text="General" Icon="settings">
+                            <RadzenStack Gap="1rem">
                             <RadzenText TextStyle="TextStyle.H5" Text="General" />
                             <RadzenRow Gap="1rem">
                                 <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Site name" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.SiteName" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
@@ -47,43 +45,37 @@
                                 <RadzenColumn Size="12" SizeMD="4"><RadzenFormField Text="Max page size" Style="width: 100%;"><RadzenNumeric @bind-Value="Model.MaxPageSize" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
                                 <RadzenColumn Size="12" SizeMD="4"><RadzenFormField Text="Max paged count" Style="width: 100%;"><RadzenNumeric @bind-Value="Model.MaxPagedCount" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
                             </RadzenRow>
-                        }
-                        else if (SelectedTab == GeneralSettingsTab.Resources)
-                        {
+                            </RadzenStack>
+                        </RadzenTabsItem>
+                        <RadzenTabsItem Text="Resources" Icon="widgets">
+                            <RadzenStack Gap="1rem">
                             <RadzenText TextStyle="TextStyle.H5" Text="Resources" />
                             <SettingsSwitch Label="Use resources cache busting" Hint="Whether cache busting (append a version) is used for scripts and stylesheets." @bind-Value="Model.AppendVersion" />
                             <SettingsSwitch Label="Use framework CDN (Content Delivery Network)" Hint="Whether a framework CDN is used for registered scripts and stylesheets, such as jQuery, or their local version." @bind-Value="Model.UseCdn" />
                             <RadzenFormField Text="Site CDN (Content Delivery Network) base URL" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.CdnBaseUrl" Style="width: 100%;" /></RadzenFormField>
                             <RadzenFormField Text="Resource Debug Mode" Style="width: 100%; max-width: 48rem;"><RadzenDropDown @bind-Value="Model.ResourceDebugMode" Data="ResourceDebugOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></RadzenFormField>
                             <RadzenText TextStyle="TextStyle.Caption" Text="Determines whether scripts and stylesheets load in their debuggable or minified form." />
-                        }
-                        else
-                        {
+                            </RadzenStack>
+                        </RadzenTabsItem>
+                        <RadzenTabsItem Text="Cache" Icon="cached">
+                            <RadzenStack Gap="1rem">
                             <RadzenText TextStyle="TextStyle.H5" Text="Cache" />
                             <RadzenFormField Text="Cache Mode" Style="width: 100%; max-width: 48rem;"><RadzenDropDown @bind-Value="Model.CacheMode" Data="CacheModeOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></RadzenFormField>
                             <RadzenText TextStyle="TextStyle.Caption" Text="Determines whether caches are enabled or disabled." />
-                        }
+                            </RadzenStack>
+                        </RadzenTabsItem>
+                    </CrestMainContentTabs>
 
-                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                            <RadzenButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
-                        </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                        <RadzenButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
                     </RadzenStack>
-                </RadzenTemplateForm>
-            }
-        </div>
+                </RadzenStack>
+            </RadzenTemplateForm>
+        }
     </RadzenCard>
 </RadzenStack>
 
-<style>.admin-settings-tab-panel { padding-top: 1rem; }</style>
-
 @code {
-    private static readonly IReadOnlyList<MainTabItem<GeneralSettingsTab>> Tabs =
-    [
-        new(GeneralSettingsTab.General, "General", "settings"),
-        new(GeneralSettingsTab.Resources, "Resources", "widgets"),
-        new(GeneralSettingsTab.Cache, "Cache", "cached"),
-    ];
-
     private static readonly SelectOption[] ResourceDebugOptions =
     [
         new("FromConfiguration", "From environment — disabled in Production, enabled otherwise"),
@@ -99,7 +91,7 @@
         new("Disabled", "Disabled"),
     ];
 
-    private GeneralSettingsTab SelectedTab { get; set; } = GeneralSettingsTab.General;
+    private int SelectedTabIndex { get; set; }
     private SiteSettingsModel Model { get; set; } = new();
     private bool IsLoading { get; set; }
     private bool IsSaving { get; set; }
@@ -117,8 +109,6 @@
         finally { IsLoading = false; }
     }
 
-    private Task SelectTab(GeneralSettingsTab tab) { SelectedTab = tab; return Task.CompletedTask; }
-
     private async Task SaveAsync()
     {
         IsSaving = true;
@@ -134,7 +124,6 @@
         finally { IsSaving = false; }
     }
 
-    private enum GeneralSettingsTab { General, Resources, Cache }
     private sealed record SelectOption(string Value, string Text);
 
     private sealed class SiteSettingsModel

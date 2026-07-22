@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
@@ -113,6 +115,15 @@ public sealed class BlazorAdminThemeMiddleware
         // state is deliberately never trusted as an authorization decision.
         if (isBlazorPageRoute && isAdminRoute)
         {
+            // Crest serves the WASM shell before Orchard's later authentication
+            // middleware. Authenticate the same Orchard application cookie here
+            // before making an early route decision.
+            var authentication = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+            if (authentication.Succeeded && authentication.Principal is not null)
+            {
+                context.User = authentication.Principal;
+            }
+
             if (context.User.Identity?.IsAuthenticated != true)
             {
                 context.Response.Redirect("/login");

@@ -22,6 +22,7 @@
     <PackageVersion Include="OrchardCore.Module.Targets" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Recipes.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Recipes.Core" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Queries" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Localization.Core" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Localization" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Indexing.Abstractions" Version="3.0.0" />
@@ -33,6 +34,7 @@
     <PackageVersion Include="OrchardCore.Setup.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Themes" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Templates" Version="3.0.0" />
+    <PackageVersion Include="OrchardCore.Tenants" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Security" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Users" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Users.Abstractions" Version="3.0.0" />

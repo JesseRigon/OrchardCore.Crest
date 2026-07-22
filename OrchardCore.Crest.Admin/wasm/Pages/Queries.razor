@@ -1,0 +1,205 @@
+@page "/Admin/Queries/Index"
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Crest.Admin.Api
+@using Radzen
+@using Radzen.Blazor
+@inject IApi Api
+@inject NotificationService Notifications
+
+<RadzenStack Gap="1rem" data-testid="queries-page">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.H4" Text="Queries" />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Manage queries through the query sources enabled for this tenant." />
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+            <RadzenButton Text="@($"Delete selected ({SelectedQueryNames.Count})")" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="ConfirmDeleteSelected" Disabled="@(SelectedQueryNames.Count == 0 || IsBusy)" />
+            <RadzenButton Text="New query" Icon="add" Click="NewQuery" Disabled="@(Catalog.Sources.Length == 0 || IsBusy)" />
+        </RadzenStack>
+    </RadzenStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+    }
+
+    <RadzenCard>
+        <RadzenRow AlignItems="AlignItems.End" Gap="0.75rem">
+            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Search" Style="width: 100%;"><RadzenTextBox @bind-Value="Search" Placeholder="Search query names" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="3"><RadzenButton Text="Search" Icon="search" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" /></RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+
+    @if (Editing)
+    {
+        <RadzenCard data-testid="query-editor">
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H5" Text="@(EditingName is null ? "New query" : $"Edit {EditingName}")" />
+                <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+                    The source and metadata are provider-neutral. Provider modules may store any metadata shape in the JSON object below.
+                </RadzenAlert>
+                @if (!string.IsNullOrWhiteSpace(EditorError))
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@EditorError</RadzenAlert>
+                }
+                <RadzenRow Gap="1rem">
+                    <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Name" Style="width: 100%;"><RadzenTextBox @bind-Value="DraftName" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Source" Style="width: 100%;"><RadzenDropDown @bind-Value="DraftSource" Data="@Catalog.Sources" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                    <RadzenColumn Size="12"><RadzenFormField Text="Result schema (optional)" Style="width: 100%;"><RadzenTextBox @bind-Value="DraftSchema" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                </RadzenRow>
+                <RadzenCheckBox @bind-Value="DraftReturnContentItems" Name="return-content-items" /> <span>Return content items</span>
+                <RadzenFormField Text="Provider metadata (JSON object)" Style="width: 100%;"><RadzenTextArea @bind-Value="DraftProperties" Rows="14" Style="width: 100%; font-family: var(--rz-code-font-family, monospace);" /></RadzenFormField>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" Disabled="@IsBusy" />
+                    <RadzenButton Text="Save" Icon="save" Click="SaveAsync" Disabled="@IsBusy" />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+
+    @if (DeletingNames.Length > 0)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                <span>Delete @(DeletingNames.Length == 1 ? $"query {DeletingNames[0]}" : $"{DeletingNames.Length} selected queries")? This cannot be undone.</span>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem"><RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></RadzenStack>
+            </RadzenStack>
+        </RadzenAlert>
+    }
+
+    <RadzenCard>
+        @if (IsLoading)
+        {
+            <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Catalog.Queries.Length == 0)
+        {
+            <RadzenText TextStyle="TextStyle.Body2" Text="No queries match this filter." />
+        }
+        else
+        {
+            <RadzenDataGrid Data="@Catalog.Queries" TItem="CrestQuery" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <RadzenDataGridColumn TItem="CrestQuery" Width="3.5rem" Sortable="false" Filterable="false"><HeaderTemplate><RadzenCheckBox Value="@(Catalog.Queries.Length > 0 && Catalog.Queries.All(query => SelectedQueryNames.Contains(query.Name)))" Change="@((bool value) => ToggleAll(value))" Name="select-all-queries" /></HeaderTemplate><Template Context="query"><RadzenCheckBox Value="@SelectedQueryNames.Contains(query.Name)" Change="@((bool value) => ToggleSelection(query.Name, value))" Name="@($"query-{query.Name}")" /></Template></RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="CrestQuery" Property="Name" Title="Name" />
+                    <RadzenDataGridColumn TItem="CrestQuery" Property="Source" Title="Source" />
+                    <RadzenDataGridColumn TItem="CrestQuery" Property="Schema" Title="Schema"><Template Context="query">@(string.IsNullOrWhiteSpace(query.Schema) ? "—" : query.Schema)</Template></RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="CrestQuery" Title="Result"><Template Context="query">@(query.ReturnContentItems ? "Content items" : "Documents")</Template></RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="CrestQuery" Title="Actions" Width="10rem"><Template Context="query"><RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem"><RadzenButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(query))" title="Edit" /><RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => ConfirmDelete(query.Name))" title="Delete" /></RadzenStack></Template></RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        }
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    private CrestQueryCatalog Catalog { get; set; } = CrestQueryCatalog.Empty;
+    private string? Search { get; set; }
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+    private bool Editing { get; set; }
+    private string? EditingName { get; set; }
+    private string DraftName { get; set; } = string.Empty;
+    private string DraftSource { get; set; } = string.Empty;
+    private string? DraftSchema { get; set; }
+    private bool DraftReturnContentItems { get; set; }
+    private string DraftProperties { get; set; } = "{}";
+    private string? EditorError { get; set; }
+    private HashSet<string> SelectedQueryNames { get; } = new(StringComparer.OrdinalIgnoreCase);
+    private string[] DeletingNames { get; set; } = [];
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try { Catalog = await Api.Crest.Rest.Queries.ListAsync(Search); }
+        catch (Exception exception) { ErrorMessage = exception.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private void NewQuery()
+    {
+        Editing = true;
+        EditingName = null;
+        DraftName = string.Empty;
+        DraftSource = Catalog.Sources.FirstOrDefault() ?? string.Empty;
+        DraftSchema = null;
+        DraftReturnContentItems = false;
+        DraftProperties = "{}";
+        EditorError = null;
+    }
+
+    private void Edit(CrestQuery query)
+    {
+        Editing = true;
+        EditingName = query.Name;
+        DraftName = query.Name;
+        DraftSource = query.Source;
+        DraftSchema = query.Schema;
+        DraftReturnContentItems = query.ReturnContentItems;
+        DraftProperties = query.Properties.ToJsonString(new() { WriteIndented = true });
+        EditorError = null;
+    }
+
+    private void CancelEdit() { Editing = false; EditorError = null; }
+    private void ConfirmDelete(string name) => DeletingNames = [name];
+    private void ConfirmDeleteSelected() => DeletingNames = SelectedQueryNames.ToArray();
+    private void CancelDelete() => DeletingNames = [];
+    private void ToggleSelection(string name, bool value)
+    {
+        if (value is true) SelectedQueryNames.Add(name);
+        else SelectedQueryNames.Remove(name);
+    }
+    private void ToggleAll(bool value)
+    {
+        if (value is true) foreach (var query in Catalog.Queries) SelectedQueryNames.Add(query.Name);
+        else SelectedQueryNames.Clear();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(DraftName) || string.IsNullOrWhiteSpace(DraftSource)) { EditorError = "A query name and source are required."; return; }
+        if (JsonNode.Parse(DraftProperties) is not JsonObject properties) { EditorError = "Provider metadata must be a JSON object."; return; }
+
+        IsSaving = true;
+        EditorError = null;
+        try
+        {
+            var write = new CrestQueryWrite(DraftName, DraftSource, DraftSchema, DraftReturnContentItems, properties);
+            var saved = EditingName is null ? await Api.Crest.Rest.Queries.CreateAsync(write) : await Api.Crest.Rest.Queries.SaveAsync(EditingName, write);
+            if (saved is null) { EditorError = "The query could not be saved. Check the provider metadata and try again."; return; }
+            Notifications.Notify(NotificationSeverity.Success, "Query saved", $"{saved.Name} was saved.");
+            Editing = false;
+            await LoadAsync();
+        }
+        catch (JsonException) { EditorError = "Provider metadata must contain valid JSON."; }
+        catch (Exception exception) { EditorError = exception.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (DeletingNames.Length == 0) return;
+        IsSaving = true;
+        try
+        {
+            var deleted = DeletingNames.Length == 1
+                ? await Api.Crest.Rest.Queries.DeleteAsync(DeletingNames[0])
+                : await Api.Crest.Rest.Queries.DeleteManyAsync(DeletingNames);
+            if (deleted)
+            {
+                Notifications.Notify(NotificationSeverity.Success, "Queries deleted", DeletingNames.Length == 1 ? "1 query deleted." : $"{DeletingNames.Length} queries deleted.");
+                foreach (var name in DeletingNames) SelectedQueryNames.Remove(name);
+                DeletingNames = [];
+                await LoadAsync();
+            }
+        }
+        finally { IsSaving = false; }
+    }
+}

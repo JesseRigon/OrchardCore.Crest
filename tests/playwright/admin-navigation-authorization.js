@@ -65,6 +65,9 @@ async function main() {
       throw new Error('The authenticated manifest did not contain its route authorization batch');
     }
 
+    await page.goto(`${baseUrl}/Admin/Settings/SecurityHeaders`, { waitUntil: 'domcontentloaded' });
+    await page.locator('[data-testid="security-headers-page"]').waitFor({ timeout: 20000 });
+
     console.log(JSON.stringify({ authorization: 'orchard', nodes: nodes.length, routes: manifest.payload.authorizedRoutes.length }));
   } finally {
     await browser.close();

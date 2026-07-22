@@ -7,17 +7,25 @@ const password = process.env.ADMIN_PASSWORD || 'FruitfulRules1!';
 async function main() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
+  const browserErrors = [];
+  page.on('pageerror', error => browserErrors.push(error.message));
   try {
     await page.goto(`${baseUrl}/login`, { waitUntil: 'domcontentloaded' });
-    if (await page.locator('#UserName').count()) {
-      await page.fill('#UserName', username);
-      await page.fill('#Password', password);
-      await page.press('#Password', 'Enter');
-      await page.waitForURL(/\/admin/i, { timeout: 15000 }).catch(() => {});
-    }
+    const userNameInput = page.locator('input[name="UserName"]');
+    await userNameInput.waitFor({ timeout: 20000 });
+    await userNameInput.fill(username);
+    await page.locator('input[name="Password"]').fill(password);
+    await page.getByRole('button', { name: 'Login', exact: true }).click();
+    await page.waitForURL(/\/admin/i, { timeout: 15000 });
+    await page.locator('.admin-shell').waitFor({ timeout: 20000 });
 
-    await page.goto(`${baseUrl}/Admin/Settings/SecurityHeaders`, { waitUntil: 'domcontentloaded' });
-    await page.locator('[data-testid="security-headers-page"]').waitFor({ timeout: 20000 });
+    const directResponse = await page.goto(`${baseUrl}/Admin/Settings/SecurityHeaders`, { waitUntil: 'domcontentloaded' });
+    try {
+      await page.locator('[data-testid="security-headers-page"]').waitFor({ timeout: 20000 });
+    } catch (error) {
+      await page.screenshot({ path: 'chat/security-headers-failure.png', fullPage: true });
+      throw new Error(`${error.message}\nURL: ${page.url()}\nRoute response: ${directResponse?.status()} ${directResponse?.url()}\nBrowser errors: ${browserErrors.join(' | ')}`);
+    }
     for (const label of ['Content Security Policy', 'Permissions Policy', 'Referrer Policy']) {
       await page.getByText(label, { exact: true }).first().waitFor();
     }

@@ -16,64 +16,61 @@
     </RadzenStack>
 
     <RadzenCard>
-        <MainTabSelector TValue="AdminSettingsTab" Items="Tabs" Value="@SelectedTab" ValueChanged="@((AdminSettingsTab tab) => SelectTab(tab))" AriaLabel="Admin settings sections" />
-
-        <div class="admin-settings-tab-panel">
-            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
-            {
-                <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
-            }
-            else if (IsLoading)
-            {
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-                    <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                    <RadzenText Text="Loading settings..." />
-                </RadzenStack>
-            }
-            else if (SelectedTab == AdminSettingsTab.Admin)
-            {
-                <RadzenTemplateForm TItem="AdminSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
-                    <RadzenStack Gap="1rem">
-                        <RadzenText TextStyle="TextStyle.H5" Text="Admin" />
-                        <SettingsSwitch Label="Enable theme toggler" Hint="Whether or not to display a theme toggler." @bind-Value="Model.DisplayThemeToggler" />
-                        <SettingsSwitch Label="Enable Admin Menu filter" Hint="Whether a quick search to filter the admin menu is displayed." @bind-Value="Model.DisplayMenuFilter" />
-                        <SettingsSwitch Label="Display New menu" Hint="Whether a New menu is displayed in the admin menu." @bind-Value="Model.DisplayNewMenu" />
-                        <SettingsSwitch Label="Display titles in top bar" Hint="Whether the titles are displayed in the top bar." @bind-Value="Model.DisplayTitlesInTopbar" />
-                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                            <RadzenButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+        }
+        else if (IsLoading)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                <RadzenText Text="Loading settings..." />
+            </RadzenStack>
+        }
+        else
+        {
+            <CrestMainContentTabs @bind-SelectedIndex="SelectedTabIndex" aria-label="Admin settings sections">
+                <RadzenTabsItem Text="Admin" Icon="admin_panel_settings">
+                    <RadzenTemplateForm TItem="AdminSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
+                        <RadzenStack Gap="1rem">
+                            <RadzenText TextStyle="TextStyle.H5" Text="Admin" />
+                            <SettingsSwitch Label="Enable theme toggler" Hint="Whether or not to display a theme toggler." @bind-Value="Model.DisplayThemeToggler" />
+                            <SettingsSwitch Label="Enable Admin Menu filter" Hint="Whether a quick search to filter the admin menu is displayed." @bind-Value="Model.DisplayMenuFilter" />
+                            <SettingsSwitch Label="Display New menu" Hint="Whether a New menu is displayed in the admin menu." @bind-Value="Model.DisplayNewMenu" />
+                            <SettingsSwitch Label="Display titles in top bar" Hint="Whether the titles are displayed in the top bar." @bind-Value="Model.DisplayTitlesInTopbar" />
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                                <RadzenButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                            </RadzenStack>
                         </RadzenStack>
+                    </RadzenTemplateForm>
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Site Map" Icon="account_tree">
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.H5" Text="Site Map" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up." />
+                        </RadzenStack>
+                        @if (RouteNodes.Length == 0)
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">No routes were discovered for the admin site map.</RadzenAlert>
+                        }
+                        else
+                        {
+                            <ol class="admin-menu-tree__list admin-menu-tree__list--root">
+                                @foreach (var node in RouteNodes)
+                                {
+                                    @RenderRouteNode(node)
+                                }
+                            </ol>
+                        }
                     </RadzenStack>
-                </RadzenTemplateForm>
-            }
-            else
-            {
-                <RadzenStack Gap="1rem">
-                    <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.H5" Text="Site Map" />
-                        <RadzenText TextStyle="TextStyle.Body2" Text="Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up." />
-                    </RadzenStack>
-
-                    @if (RouteNodes.Length == 0)
-                    {
-                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">No routes were discovered for the admin site map.</RadzenAlert>
-                    }
-                    else
-                    {
-                        <ol class="admin-menu-tree__list admin-menu-tree__list--root">
-                            @foreach (var node in RouteNodes)
-                            {
-                                @RenderRouteNode(node)
-                            }
-                        </ol>
-                    }
-                </RadzenStack>
-            }
-        </div>
+                </RadzenTabsItem>
+            </CrestMainContentTabs>
+        }
     </RadzenCard>
 </RadzenStack>
 
 <style>
-    .admin-settings-tab-panel { padding-top: 1rem; }
     .admin-menu-tree__list { list-style: none; margin: 0; padding-left: 1.25rem; }
     .admin-menu-tree__list--root { padding-left: 0; }
     .admin-menu-tree__item { margin: 0.45rem 0; }
@@ -83,13 +80,7 @@
 </style>
 
 @code {
-    private static readonly IReadOnlyList<MainTabItem<AdminSettingsTab>> Tabs =
-    [
-        new(AdminSettingsTab.Admin, "Admin", "admin_panel_settings"),
-        new(AdminSettingsTab.SiteMap, "Site Map", "account_tree"),
-    ];
-
-    private AdminSettingsTab SelectedTab { get; set; } = AdminSettingsTab.Admin;
+    private int SelectedTabIndex { get; set; }
     private AdminSettingsModel Model { get; set; } = new();
     private RouteNode[] RouteNodes { get; set; } = [];
     private bool IsLoading { get; set; }
@@ -112,8 +103,6 @@
         catch (Exception ex) { ErrorMessage = ex.Message; }
         finally { IsLoading = false; }
     }
-
-    private Task SelectTab(AdminSettingsTab tab) { SelectedTab = tab; return Task.CompletedTask; }
 
     private async Task SaveAsync()
     {
@@ -165,8 +154,6 @@
             </ol>
         }
     </li>;
-
-    private enum AdminSettingsTab { Admin, SiteMap }
 
     private sealed class AdminSettingsModel
     {
