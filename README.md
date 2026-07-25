@@ -8,6 +8,7 @@ The repository is intentionally kept together for source management, but its pro
 OrchardCore.Crest/
   OrchardCore.Crest.Server/
   OrchardCore.Crest.Components/
+  OrchardCore.Crest.Iconify/
   OrchardCore.Crest.Icons/
   OrchardCore.Crest.Admin/
   OrchardCore.Crest.Site/
@@ -19,7 +20,9 @@ OrchardCore.Crest/
 
 `OrchardCore.Crest.Components` is the shared Radzen-backed Blazor component layer. It owns reusable primitives, forms, model/editor UI, and client-safe UI contracts. It must not reference feature modules.
 
-`OrchardCore.Crest.Icons` owns icon providers, registry/search/pack services, icon UI such as `IconSelector`, and icon-specific CSS/JS/assets. It may depend on `OrchardCore.Crest.Components`.
+`OrchardCore.Crest.Iconify` owns the Iconify-specific C# API, provider settings, and optional full-library cache integration. It does not depend on `OrchardCore.Crest.Icons`.
+
+`OrchardCore.Crest.Icons` owns the generic icon provider contract, registry/search/used-icon pack services, tenant/media icon cache behavior, icon UI such as `IconSelector`, and icon-specific CSS/JS/assets. It depends on `OrchardCore.Crest.Iconify` for the default Iconify provider.
 
 Admin and Site themes are composition roots. They reference `OrchardCore.Crest.Components`, `OrchardCore.Crest.Icons`, and other feature UI modules they want compiled into the WASM app.
 
@@ -88,6 +91,7 @@ The repository can remain a single git repository while publishing separate NuGe
 
 - `OrchardCore.Crest.Server`: Orchard runtime module and shared server infrastructure.
 - `OrchardCore.Crest.Components`: shared Radzen-backed component layer.
+- `OrchardCore.Crest.Iconify`: Iconify provider API and optional full-library cache.
 - `OrchardCore.Crest.Icons`: icon providers, icon UI, and icon-owned assets.
 - Theme packages/projects: admin/site composition roots that reference components and feature modules.
 - Future `OrchardCore.Crest.Client`: UI-library-neutral client contracts, display manager, routing helpers, and legacy frame client component.

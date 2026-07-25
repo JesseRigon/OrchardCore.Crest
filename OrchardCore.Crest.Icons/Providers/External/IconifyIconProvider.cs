@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Crest.Iconify;
 
 namespace Crest.Icons;
 
@@ -31,7 +32,7 @@ public sealed class IconifyIconProvider(
             return [];
         }
 
-        var isPublicIconify = localMirrorStore.IsPublicIconify(settings);
+        var isPublicIconify = CanUseLocalLibraryCache(settings);
         var cacheKey = $"{NormalizeBaseUrl(settings.BaseUrl)}|{string.Join(',', settings.Prefixes.Order(StringComparer.OrdinalIgnoreCase))}";
         if (isPublicIconify && _libraryCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
         {
@@ -143,7 +144,7 @@ public sealed class IconifyIconProvider(
         {
             var libraries = (await GetLibrariesAsync(cancellationToken)).ToArray();
             var query = request.Query?.Trim();
-            if (localMirrorStore.IsPublicIconify(settings))
+            if (CanUseLocalLibraryCache(settings))
             {
                 var localCollections = await localMirrorStore.GetCollectionsAsync(cancellationToken);
                 if (localCollections.Count > 0)
@@ -491,12 +492,12 @@ public sealed class IconifyIconProvider(
 
     private async Task<IconAssetDefinition?> ResolveIconifyIconAsync(IconifyIconProviderSettings settings, string prefix, string name, CancellationToken cancellationToken)
     {
-        if (localMirrorStore.IsPublicIconify(settings))
+        if (CanUseLocalLibraryCache(settings))
         {
-            var local = await localMirrorStore.ResolveAsync(settings, prefix, name, svgIconSanitizer, cancellationToken);
-            if (local is not null)
+            var local = await localMirrorStore.ResolveAsync(settings, prefix, name, cancellationToken);
+            if (local is not null && svgIconSanitizer.IsSafeSvg(local.SvgMarkup))
             {
-                return local;
+                return FromLocalIcon(local);
             }
         }
 
@@ -518,7 +519,7 @@ public sealed class IconifyIconProvider(
 
     private async Task<IconAssetDefinition[]> ResolveIconifyIconsAsync(IconifyIconProviderSettings settings, IEnumerable<string> iconNames, CancellationToken cancellationToken)
     {
-        var isPublicIconify = localMirrorStore.IsPublicIconify(settings);
+        var isPublicIconify = CanUseLocalLibraryCache(settings);
         var byPrefix = iconNames
             .Select(ParseIconifyName)
             .Where(icon => icon is not null && CanUsePrefix(settings, icon.Value.Prefix))
@@ -534,10 +535,10 @@ public sealed class IconifyIconProvider(
                 var cacheKey = $"{NormalizeBaseUrl(settings.BaseUrl)}|{icon.Prefix}:{icon.Name}";
                 if (isPublicIconify)
                 {
-                    var local = await localMirrorStore.ResolveAsync(settings, icon.Prefix, icon.Name, svgIconSanitizer, cancellationToken);
-                    if (local is not null)
+                    var local = await localMirrorStore.ResolveAsync(settings, icon.Prefix, icon.Name, cancellationToken);
+                    if (local is not null && svgIconSanitizer.IsSafeSvg(local.SvgMarkup))
                     {
-                        definitions.Add(local);
+                        definitions.Add(FromLocalIcon(local));
                         continue;
                     }
                 }
@@ -695,6 +696,22 @@ public sealed class IconifyIconProvider(
 
         prefix = library["iconify.".Length..].Trim().ToLowerInvariant();
         return prefix.Length > 0;
+    }
+
+    private bool CanUseLocalLibraryCache(IconifyIconProviderSettings settings) =>
+        settings.LocalLibraryCacheEnabled && localMirrorStore.IsPublicIconify(settings);
+
+    private static IconAssetDefinition FromLocalIcon(IconifyLocalIcon icon)
+    {
+        var key = IconKey.Create($"iconify.{icon.Prefix}", "current", "default", icon.Name);
+        return new IconAssetDefinition(
+            key,
+            ToDisplayName(icon.Name),
+            key.ToString(),
+            icon.SvgMarkup,
+            [icon.Name, icon.Prefix, "iconify"],
+            icon.Attribution,
+            icon.License);
     }
 
     private static bool CanUsePrefix(IconifyIconProviderSettings settings, string prefix) =>

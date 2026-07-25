@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Crest.Iconify;
 using Crest.Icons;
 using Crest.Services;
 using Microsoft.Extensions.DependencyInjection;

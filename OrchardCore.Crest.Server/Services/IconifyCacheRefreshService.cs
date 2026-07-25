@@ -1,4 +1,4 @@
-using Crest.Icons;
+using Crest.Iconify;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

@@ -102,6 +102,12 @@
       },
       "LayerSettings": {
         "Zones": [ "Content", "Footer" ]
+      },
+      "AdminSettings": {
+        "DisplayThemeToggler": true,
+        "DisplayMenuFilter": true,
+        "DisplayNewMenu": true,
+        "DisplayTitlesInTopbar": false
       }
     },
     {

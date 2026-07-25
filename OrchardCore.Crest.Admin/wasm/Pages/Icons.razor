@@ -219,6 +219,7 @@
         public string? ApiKey { get; set; }
         public string? ApiKeyHeader { get; set; }
         public string? Prefixes { get; set; }
+        public bool LocalLibraryCacheEnabled { get; set; } = true;
 
         public static IconifyProviderModel From(IconifyIconProviderSettings settings) => new()
         {
@@ -227,6 +228,7 @@
             ApiKey = settings.ApiKey,
             ApiKeyHeader = settings.ApiKeyHeader,
             Prefixes = string.Join(", ", settings.Prefixes),
+            LocalLibraryCacheEnabled = settings.LocalLibraryCacheEnabled,
         };
 
         public IconifyIconProviderSettings ToSettings() => new(
@@ -239,6 +241,7 @@
                 .Where(prefix => !string.IsNullOrWhiteSpace(prefix))
                 .Select(prefix => prefix.ToLowerInvariant())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray());
+                .ToArray(),
+            LocalLibraryCacheEnabled);
     }
 }

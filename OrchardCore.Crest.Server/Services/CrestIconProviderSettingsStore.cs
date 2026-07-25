@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Crest.Iconify;
 using Crest.Icons;
 using OrchardCore.Settings;
 
@@ -37,7 +38,8 @@ public sealed class CrestIconProviderSettingsStore(ISiteService siteService) : I
             .Select(prefix => prefix.Trim().ToLowerInvariant())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Order(StringComparer.OrdinalIgnoreCase)
-            .ToArray());
+            .ToArray(),
+        settings.LocalLibraryCacheEnabled);
 
     private static string NormalizeUrl(string? value)
     {

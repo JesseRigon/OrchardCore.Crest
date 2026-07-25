@@ -55,6 +55,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OrchardCore.Crest.Iconify\OrchardCore.Crest.Iconify.csproj" />
     <Compile Include="..\OrchardCore.Crest.Icons\Contracts\**\*.cs" Link="Icons\Contracts\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\OrchardCore.Crest.Icons\Providers\**\*.cs" Link="Icons\Providers\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\OrchardCore.Crest.Icons\Services\**\*.cs" Link="Icons\Services\%(RecursiveDir)%(Filename)%(Extension)" />

@@ -4,12 +4,12 @@
 
 - icon provider contracts and settings;
 - icon registry/search/pack services;
-- public Iconify cache integration;
+- provider adapters, including the default Iconify adapter through `OrchardCore.Crest.Iconify`;
 - tenant media icon support;
 - icon UI such as `IconSelector`;
 - icon-specific CSS, JavaScript, and static assets.
 
-This module may depend on `OrchardCore.Crest.Components` for shared Radzen-backed UI primitives.
+This module depends on `OrchardCore.Crest.Iconify` for Iconify-specific provider APIs and may depend on `OrchardCore.Crest.Components` for shared Radzen-backed UI primitives.
 
 `OrchardCore.Crest.Components` must not depend on this module. Admin/Site themes reference both projects when they need icon UI compiled into the WASM app.
 
@@ -22,6 +22,8 @@ wwwroot/icons.js
 
 Theme stylesheets should only contain intentional theme overrides.
 
-## Local Iconify cache builds
+## Local Iconify cache boundary
 
-Release builds use the bundled Iconify cache seed and runtime cache. Debug builds disable both by default, so local development uses the public Iconify API fallback and does not initialize the cache submodule. Override either default with `-p:CrestUseLocalIconifyCache=true|false`.
+The full Iconify library cache belongs to `OrchardCore.Crest.Iconify`. `OrchardCore.Crest.Icons` owns the generic provider registry and smaller used-icon/client pack cache that applies across all providers.
+
+Release builds of `OrchardCore.Crest.Iconify` use the bundled Iconify cache seed and runtime cache by default. Debug builds disable the full-library local cache by default, so local development uses the public Iconify API fallback. Override either default with `-p:CrestUseLocalIconifyCache=true|false`.

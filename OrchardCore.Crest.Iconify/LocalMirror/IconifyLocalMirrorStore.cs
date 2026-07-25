@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace Crest.Icons;
+namespace Crest.Iconify;
 
 public interface IIconifyLocalMirrorPathProvider
 {
@@ -21,7 +21,7 @@ public interface IIconifyLocalMirrorStore
 
     ValueTask<IconifyLocalCollection?> GetCollectionAsync(string prefix, CancellationToken cancellationToken = default);
 
-    ValueTask<IconAssetDefinition?> ResolveAsync(IconifyIconProviderSettings settings, string prefix, string name, SvgIconSanitizer sanitizer, CancellationToken cancellationToken = default);
+    ValueTask<IconifyLocalIcon?> ResolveAsync(IconifyIconProviderSettings settings, string prefix, string name, CancellationToken cancellationToken = default);
 
     bool IsPublicIconify(IconifyIconProviderSettings settings);
 }
@@ -207,7 +207,7 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
         return collection;
     }
 
-    public async ValueTask<IconAssetDefinition?> ResolveAsync(IconifyIconProviderSettings settings, string prefix, string name, SvgIconSanitizer sanitizer, CancellationToken cancellationToken = default)
+    public async ValueTask<IconifyLocalIcon?> ResolveAsync(IconifyIconProviderSettings settings, string prefix, string name, CancellationToken cancellationToken = default)
     {
         if (!IconifyLocalMirrorBuildOptions.Enabled || !IsPublicIconify(settings))
         {
@@ -250,20 +250,12 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
         var left = GetInt(iconElement, "left", 0);
         var top = GetInt(iconElement, "top", 0);
         var svg = $"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="{left} {top} {width} {height}" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false">{body}</svg>""";
-        if (!sanitizer.IsSafeSvg(svg))
-        {
-            return null;
-        }
-
-        var key = IconKey.Create($"iconify.{prefix}", "current", "default", name);
         var collections = await GetCollectionsAsync(cancellationToken);
         collections.TryGetValue(prefix, out var info);
-        return new IconAssetDefinition(
-            key,
-            ToDisplayName(name),
-            key.ToString(),
+        return new IconifyLocalIcon(
+            prefix,
+            name,
             svg,
-            [name, prefix, "iconify"],
             info?.Attribution ?? "Iconify local cache",
             info?.License ?? "Iconify collection license");
     }

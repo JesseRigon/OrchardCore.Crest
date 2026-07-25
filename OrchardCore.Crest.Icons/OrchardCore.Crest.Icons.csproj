@@ -6,16 +6,14 @@
     <IsPackable>false</IsPackable>
     <AssemblyName>OrchardCore.Crest.Icons</AssemblyName>
     <RootNamespace>Crest.Icons</RootNamespace>
-    <CrestUseLocalIconifyCache Condition="'$(CrestUseLocalIconifyCache)' == '' and '$(Configuration)' == 'Debug'">false</CrestUseLocalIconifyCache>
-    <CrestUseLocalIconifyCache Condition="'$(CrestUseLocalIconifyCache)' == ''">true</CrestUseLocalIconifyCache>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(CrestUseLocalIconifyCache)' == 'true'">
-    <DefineConstants>$(DefineConstants);CREST_ICONIFY_LOCAL_CACHE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Providers\TenantMedia\**\*.cs" />
+    <Compile Remove="icons\Sources\IconifyCache\**" />
+    <Content Remove="icons\Sources\IconifyCache\**" />
+    <EmbeddedResource Remove="icons\Sources\IconifyCache\**" />
+    <None Remove="icons\Sources\IconifyCache\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,27 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OrchardCore.Crest.Iconify\OrchardCore.Crest.Iconify.csproj" />
     <ProjectReference Include="..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
   </ItemGroup>
-
-  <Target Name="EnsureIconifyCacheSubmodule"
-          BeforeTargets="CoreCompile"
-          Condition="'$(CrestUseLocalIconifyCache)' == 'true' and '$(CrestEnsureIconifyCache)' != 'false' and !Exists('$(MSBuildProjectDirectory)/icons/Sources/IconifyCache/collections.json')">
-    <Message Importance="High" Text="Initializing bundled Iconify cache submodule..." />
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/.."
-          Command="git submodule update --init --depth 1 --filter=blob:none -- OrchardCore.Crest.Icons/icons/Sources/IconifyCache" />
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/icons/Sources/IconifyCache"
-          Command="git sparse-checkout set --no-cone /collections.json /json/" />
-  </Target>
-
-  <Target Name="UpdateIconifyCache"
-          Condition="'$(UpdateIconifyCache)' == 'true' and Exists('$(MSBuildProjectDirectory)/icons/Sources/IconifyCache/.git')">
-    <Message Importance="High" Text="Updating bundled Iconify cache submodule..." />
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/icons/Sources/IconifyCache"
-          Command="git fetch --depth 1 origin master" />
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/icons/Sources/IconifyCache"
-          Command="git checkout --force FETCH_HEAD" />
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/icons/Sources/IconifyCache"
-          Command="git sparse-checkout set --no-cone /collections.json /json/" />
-  </Target>
 </Project>

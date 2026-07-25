@@ -36,7 +36,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     public bool IsRouteAuthorized(string uri)
     {
         var path = new Uri(uri).AbsolutePath;
-        return Manifest?.AuthorizedRoutes.Any(route => RouteMatches(route.Template, path)) == true;
+        return Manifest?.AuthorizedRoutes?.Any(route => RouteMatches(route.Template, path)) == true;
     }
 
     public Shape NewShape(string type, Action<Shape>? configure = null)

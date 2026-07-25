@@ -1,4 +1,4 @@
-namespace Crest.Icons;
+namespace Crest.Iconify;
 
 /// <summary>
 /// Controls whether this build can use the bundled Iconify cache. Debug builds disable it by default so

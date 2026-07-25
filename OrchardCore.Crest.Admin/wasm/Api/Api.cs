@@ -1296,14 +1296,16 @@ public sealed record IconifyIconProviderSettings(
     string BaseUrl,
     string? ApiKey,
     string? ApiKeyHeader,
-    string[] Prefixes)
+    string[] Prefixes,
+    bool LocalLibraryCacheEnabled = true)
 {
     public static IconifyIconProviderSettings Default { get; } = new(
         true,
         "https://api.iconify.design",
         null,
         null,
-        []);
+        [],
+        true);
 }
 
 public sealed record IconifyLocalMirrorStatus(
