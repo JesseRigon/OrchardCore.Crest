@@ -15,7 +15,7 @@ public sealed class IconifyCacheRefreshService(
     {
         if (!IconifyLocalMirrorBuildOptions.Enabled)
         {
-            logger.LogInformation("Iconify local cache is disabled for this build; Iconify API fallback is active.");
+            logger.LogInformation("Iconify local cache is disabled; Iconify API fallback is active.");
             return;
         }
 
@@ -25,7 +25,7 @@ public sealed class IconifyCacheRefreshService(
         }
         catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
         {
-            logger.LogWarning(ex, "Could not initialize the Iconify App_Data cache from the bundled seed.");
+            logger.LogWarning(ex, "Could not initialize the Iconify App_Data cache from the Iconify icon-sets repository.");
         }
 
         try

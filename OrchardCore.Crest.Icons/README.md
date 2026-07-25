@@ -25,5 +25,3 @@ Theme stylesheets should only contain intentional theme overrides.
 ## Local Iconify cache boundary
 
 The full Iconify library cache belongs to `OrchardCore.Crest.Iconify`. `OrchardCore.Crest.Icons` owns the generic provider registry and smaller used-icon/client pack cache that applies across all providers.
-
-Release builds of `OrchardCore.Crest.Iconify` use the bundled Iconify cache seed and runtime cache by default. Debug builds disable the full-library local cache by default, so local development uses the public Iconify API fallback. Override either default with `-p:CrestUseLocalIconifyCache=true|false`.

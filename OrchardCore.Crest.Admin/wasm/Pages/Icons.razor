@@ -80,8 +80,8 @@
                 <RadzenCard>
                     <RadzenStack Gap="1rem">
                         <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.H5" Text="Public Iconify bundled cache" />
-                            <RadzenText TextStyle="TextStyle.Body2" Text="Public Iconify data is bundled from the module submodule, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache." />
+                            <RadzenText TextStyle="TextStyle.H5" Text="Public Iconify local cache" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache." />
                         </RadzenStack>
 
                         <RadzenRow>
@@ -115,7 +115,7 @@
                             </RadzenAlert>
                         }
 
-                        <RadzenText TextStyle="TextStyle.Caption" Text="The runtime cache is seeded from the bundled module submodule and refreshed automatically once per day by the server." />
+                        <RadzenText TextStyle="TextStyle.Caption" Text="The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server." />
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>

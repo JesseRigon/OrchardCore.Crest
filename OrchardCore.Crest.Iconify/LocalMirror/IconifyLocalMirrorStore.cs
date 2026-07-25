@@ -7,8 +7,6 @@ namespace Crest.Iconify;
 public interface IIconifyLocalMirrorPathProvider
 {
     string RootPath { get; }
-
-    string SeedPath { get; }
 }
 
 public interface IIconifyLocalMirrorStore
@@ -106,7 +104,6 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
         try
         {
             await RefreshRuntimeCacheAsync(cancellationToken);
-            await RefreshSeedSubmoduleAsync(cancellationToken);
             _metadata = new IconifyLocalMirrorMetadata(
                 await ReadPackageVersionAsync(RootPath, cancellationToken),
                 DateTimeOffset.UtcNow,
@@ -275,51 +272,10 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
                 return;
             }
 
-            if (File.Exists(Path.Combine(SeedPath, "collections.json")))
-            {
-                await CopySeedToRuntimeCacheAsync(cancellationToken);
-                return;
-            }
         }
         finally
         {
             SyncLock.Release();
-        }
-    }
-
-    private async Task CopySeedToRuntimeCacheAsync(CancellationToken cancellationToken)
-    {
-        var tempPath = Path.Combine(Path.GetDirectoryName(RootPath) ?? RootPath, ".iconify-cache-seed-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempPath);
-        try
-        {
-            CopyFileIfExists(Path.Combine(SeedPath, "collections.json"), Path.Combine(tempPath, "collections.json"));
-            CopyFileIfExists(Path.Combine(SeedPath, "package.json"), Path.Combine(tempPath, "package.json"));
-            CopyDirectory(Path.Combine(SeedPath, "json"), Path.Combine(tempPath, "json"));
-            Directory.CreateDirectory(Path.GetDirectoryName(RootPath)!);
-            if (Directory.Exists(RootPath))
-            {
-                Directory.Move(RootPath, RootPath + ".old-" + DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-            }
-
-            Directory.Move(tempPath, RootPath);
-            _metadata = new IconifyLocalMirrorMetadata(
-                await ReadPackageVersionAsync(RootPath, cancellationToken),
-                DateTimeOffset.UtcNow,
-                null,
-                null);
-            await WriteMetadataAsync(_metadata, cancellationToken);
-            _collectionsCache = null;
-            _collectionCache.Clear();
-        }
-        catch
-        {
-            if (Directory.Exists(tempPath))
-            {
-                Directory.Delete(tempPath, recursive: true);
-            }
-
-            throw;
         }
     }
 
@@ -336,10 +292,7 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
         var tempPath = Path.Combine(Path.GetDirectoryName(RootPath)!, ".iconify-cache-refresh-" + Guid.NewGuid().ToString("N"));
         try
         {
-            var referenceArgument = Directory.Exists(Path.Combine(SeedPath, ".git")) || File.Exists(Path.Combine(SeedPath, ".git"))
-                ? $" --reference-if-able {SeedPath}"
-                : string.Empty;
-            await RunGitAsync($"clone --depth 1 --filter=blob:none --sparse{referenceArgument} {RepositoryUrl} {tempPath}", Path.GetDirectoryName(RootPath)!, cancellationToken);
+            await RunGitAsync($"clone --depth 1 --filter=blob:none --sparse {RepositoryUrl} {tempPath}", Path.GetDirectoryName(RootPath)!, cancellationToken);
             await RunGitAsync("sparse-checkout set --no-cone /collections.json /json/", tempPath, cancellationToken);
 
             if (Directory.Exists(RootPath))
@@ -360,22 +313,6 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
 
             throw;
         }
-    }
-
-    private async Task RefreshSeedSubmoduleAsync(CancellationToken cancellationToken)
-    {
-        if (!Directory.Exists(SeedPath))
-        {
-            return;
-        }
-
-        if (!File.Exists(Path.Combine(SeedPath, ".git")) && !Directory.Exists(Path.Combine(SeedPath, ".git")))
-        {
-            return;
-        }
-
-        await UpdateGitCheckoutAsync(SeedPath, cancellationToken);
-        await RunGitAsync("sparse-checkout set --no-cone /collections.json /json/", SeedPath, cancellationToken);
     }
 
     private static async Task UpdateGitCheckoutAsync(string workingDirectory, CancellationToken cancellationToken)
@@ -489,8 +426,6 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
 
     private string RootPath => pathProvider.RootPath;
 
-    private string SeedPath => pathProvider.SeedPath;
-
     private string MetadataPath => Path.Combine(RootPath, ".crest-orchard-cache.json");
 
     private static IReadOnlyDictionary<string, IconifyLocalCollectionInfo> EmptyCollections { get; } = new Dictionary<string, IconifyLocalCollectionInfo>(StringComparer.OrdinalIgnoreCase);
@@ -505,40 +440,9 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
         0,
         null,
         null,
-        "The local Iconify cache is disabled for this build.");
+        "The local Iconify cache is disabled.");
 
     private static string GetCollectionPath(string sourcePath, string prefix) => Path.Combine(sourcePath, "json", NormalizePrefix(prefix) + ".json");
-
-    private static void CopyFileIfExists(string sourcePath, string destinationPath)
-    {
-        if (!File.Exists(sourcePath))
-        {
-            return;
-        }
-
-        Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-        File.Copy(sourcePath, destinationPath, overwrite: true);
-    }
-
-    private static void CopyDirectory(string sourcePath, string destinationPath)
-    {
-        if (!Directory.Exists(sourcePath))
-        {
-            return;
-        }
-
-        foreach (var directory in Directory.EnumerateDirectories(sourcePath, "*", SearchOption.AllDirectories))
-        {
-            Directory.CreateDirectory(Path.Combine(destinationPath, Path.GetRelativePath(sourcePath, directory)));
-        }
-
-        foreach (var file in Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories))
-        {
-            var destination = Path.Combine(destinationPath, Path.GetRelativePath(sourcePath, file));
-            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-            File.Copy(file, destination, overwrite: true);
-        }
-    }
 
     private static IconifyLocalCollectionInfo CollectionInfoFromMetadata(string prefix, JsonElement element)
     {

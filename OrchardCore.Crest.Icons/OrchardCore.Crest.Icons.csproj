@@ -10,10 +10,6 @@
 
   <ItemGroup>
     <Compile Remove="Providers\TenantMedia\**\*.cs" />
-    <Compile Remove="icons\Sources\IconifyCache\**" />
-    <Content Remove="icons\Sources\IconifyCache\**" />
-    <EmbeddedResource Remove="icons\Sources\IconifyCache\**" />
-    <None Remove="icons\Sources\IconifyCache\**" />
   </ItemGroup>
 
   <ItemGroup>
