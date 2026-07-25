@@ -1,0 +1,127 @@
+@namespace Crest.Components.Overlay
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+@if (IsOpen)
+{
+    <div @ref="PopupElement"
+         @attributes="AdditionalAttributes"
+         class="@CssClass"
+         style="@InitialStyle"
+         role="@Role"
+         @onmouseenter="OnMouseEnter"
+         @onmouseleave="OnMouseLeave">
+        @ChildContent
+    </div>
+}
+
+@code {
+    private ElementReference PopupElement;
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public CrestPopupAnchorMode AnchorMode { get; set; } = CrestPopupAnchorMode.Point;
+
+    [Parameter]
+    public double AnchorX { get; set; }
+
+    [Parameter]
+    public double AnchorY { get; set; }
+
+    [Parameter]
+    public ElementReference? AnchorElement { get; set; }
+
+    [Parameter]
+    public string? AnchorSelector { get; set; }
+
+    [Parameter]
+    public string? AnchorId { get; set; }
+
+    [Parameter]
+    public string? AnchorClass { get; set; }
+
+    [Parameter]
+    public CrestPopupAnchorPoint AnchorPoint { get; set; } = CrestPopupAnchorPoint.BottomRight;
+
+    [Parameter]
+    public CrestPopupAnchorPoint? FlipAboveAnchorPoint { get; set; }
+
+    [Parameter]
+    public bool WindowAware { get; set; } = true;
+
+    [Parameter]
+    public double OffsetX { get; set; } = 12;
+
+    [Parameter]
+    public double OffsetY { get; set; } = 8;
+
+    [Parameter]
+    public double ViewportMargin { get; set; } = 8;
+
+    [Parameter]
+    public string? ZIndex { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string Role { get; set; } = "menu";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnMouseEnter { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnMouseLeave { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string CssClass => string.IsNullOrWhiteSpace(Class) ? "crest-popup" : $"crest-popup {Class}";
+
+    private string InitialStyle => string.Join(' ', new[]
+    {
+        $"left: {AnchorX + OffsetX}px;",
+        $"top: {AnchorY + OffsetY}px;",
+        string.IsNullOrWhiteSpace(ZIndex) ? null : $"--crest-popup-z-index: {ZIndex};",
+        Style,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!IsOpen)
+        {
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("crestComponents.positionPopup", PopupElement, AnchorElement, new
+            {
+                anchorMode = AnchorMode.ToString(),
+                anchorX = AnchorX,
+                anchorY = AnchorY,
+                anchorSelector = AnchorSelector,
+                anchorId = AnchorId,
+                anchorClass = AnchorClass,
+                anchorPoint = AnchorPoint.ToString(),
+                flipAboveAnchorPoint = FlipAboveAnchorPoint?.ToString(),
+                offsetX = OffsetX,
+                offsetY = OffsetY,
+                margin = ViewportMargin,
+                windowAware = WindowAware,
+            });
+        }
+        catch (JSException)
+        {
+        }
+    }
+}

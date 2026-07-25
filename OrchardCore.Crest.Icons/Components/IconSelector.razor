@@ -4,6 +4,7 @@
 @using Microsoft.JSInterop
 @using Radzen
 @using Radzen.Blazor
+@implements IAsyncDisposable
 @inject ICrestIconSearchClient Icons
 @inject IJSRuntime Js
 
@@ -20,7 +21,7 @@
     @if (IsOpen)
     {
         <div class="icon-selector__modal-backdrop" role="presentation" @onclick="Close">
-            <div class="icon-selector__dialog" role="dialog" aria-modal="true" aria-label="Choose icon" @onclick:stopPropagation="true">
+            <div class="icon-selector__dialog" role="dialog" aria-modal="true" aria-label="Choose icon" @onclick:stopPropagation="true" @ref="DialogElement">
                 <div class="icon-selector__dialog-header">
                     <RadzenStack Gap="0.2rem">
                         <RadzenText TextStyle="TextStyle.H5" Text="Choose icon" />
@@ -94,7 +95,7 @@
                             {
                                 @foreach (var icon in Items)
                                 {
-                                    <button type="button" class="icon-selector__item @(Value == ToProviderReference(icon) ? "icon-selector__item--selected" : null)" title="@ToProviderReference(icon)" @onclick="@(() => ChooseAsync(icon))">
+                                    <button type="button" class="icon-selector__item @(PendingValue == ToProviderReference(icon) ? "icon-selector__item--selected" : null)" title="@ToProviderReference(icon)" @onclick="@(() => SelectAsync(icon))">
                                         <span class="icon-selector__preview">@((MarkupString)(icon.SvgMarkup ?? string.Empty))</span>
                                         <span class="icon-selector__name">@icon.Name</span>
                                     </button>
@@ -106,6 +107,11 @@
                             }
                         </div>
                     </section>
+                </div>
+
+                <div class="icon-selector__dialog-footer">
+                    <RadzenTextBox Value="@PendingValue" ValueChanged="SetPendingValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
+                    <RadzenButton Text="Save" Icon="save" Click="SaveAsync" ButtonType="ButtonType.Button" Disabled="@string.IsNullOrWhiteSpace(PendingValue)" data-icon-selector-save="true" />
                 </div>
             </div>
         </div>
@@ -119,8 +125,10 @@
     private readonly HashSet<string> ActiveFilterValues = new(StringComparer.OrdinalIgnoreCase);
     private IconLibraryDescriptor[] Libraries = [];
     private IconSearchFacet[] Facets = [];
+    private ElementReference DialogElement;
     private ElementReference GridElement;
     private ElementReference StylePacksElement;
+    private DotNetObjectReference<IconSelector>? DotNetRef;
     private bool IsOpen;
     private bool IsLoading;
     private bool LoadWhenRendered;
@@ -130,6 +138,7 @@
     private int CurrentColumnCount = DefaultColumnCount;
     private string? SearchText;
     private string? SelectedLibrary;
+    private string? PendingValue;
 
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
@@ -139,29 +148,46 @@
     private async Task ToggleOpenAsync()
     {
         IsOpen = !IsOpen;
-        if (IsOpen && Items.Count == 0)
+        if (IsOpen)
         {
-            LoadWhenRendered = true;
+            PendingValue = Value;
+            LoadWhenRendered = Items.Count == 0;
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!LoadWhenRendered || !IsOpen)
+        if (!IsOpen)
         {
             return;
         }
 
-        LoadWhenRendered = false;
-        await Js.InvokeVoidAsync("crestIconSelector.enableHorizontalWheel", StylePacksElement);
-        await UpdateGridMetricsAsync();
-        await LoadNextPageAsync();
-        StateHasChanged();
+        DotNetRef ??= DotNetObjectReference.Create(this);
+        await Js.InvokeVoidAsync("crestIconSelector.registerDialogKeyboard", DialogElement, DotNetRef);
+
+        if (LoadWhenRendered)
+        {
+            LoadWhenRendered = false;
+            await Js.InvokeVoidAsync("crestIconSelector.enableHorizontalWheel", StylePacksElement);
+            await UpdateGridMetricsAsync();
+            await LoadNextPageAsync();
+            StateHasChanged();
+        }
     }
 
-    private void Close() => IsOpen = false;
+    private async Task Close()
+    {
+        await UnregisterDialogKeyboardAsync();
+        IsOpen = false;
+    }
 
     private async Task SetValueAsync(string? value) => await ValueChanged.InvokeAsync(value);
+
+    private Task SetPendingValueAsync(string? value)
+    {
+        PendingValue = value;
+        return Task.CompletedTask;
+    }
 
     private async Task ClearAsync() => await ValueChanged.InvokeAsync(null);
 
@@ -196,10 +222,28 @@
         await LoadFirstPageAsync();
     }
 
-    private async Task ChooseAsync(IconSearchItem icon)
+    private Task SelectAsync(IconSearchItem icon)
     {
-        await ValueChanged.InvokeAsync(ToProviderReference(icon));
-        IsOpen = false;
+        PendingValue = ToProviderReference(icon);
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(PendingValue))
+        {
+            return;
+        }
+
+        await ValueChanged.InvokeAsync(PendingValue);
+        await Close();
+    }
+
+    [JSInvokable]
+    public async Task CloseFromKeyboardAsync()
+    {
+        await Close();
+        StateHasChanged();
     }
 
     private async Task LoadFirstPageAsync()
@@ -337,6 +381,23 @@
     }
 
     private static string FilterKey(string facet, string value) => $"{facet}:{value}";
+
+    private async ValueTask UnregisterDialogKeyboardAsync()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("crestIconSelector.unregisterDialogKeyboard", DialogElement);
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await UnregisterDialogKeyboardAsync();
+        DotNetRef?.Dispose();
+    }
 
     private sealed record IconSelectorGridMetrics(int Columns, int RemainingItems);
 }

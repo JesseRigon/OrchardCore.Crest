@@ -33,11 +33,15 @@ public sealed class Startup : StartupBase
         services.AddHttpContextAccessor();
         services.AddSignalR();
         services.AddScoped<ICrestRequestAccess, CrestRequestAccess>();
+        services.AddScoped<ICrestRoutePermissionProvider, CrestRoutePermissionProvider>();
         services.AddScoped<CrestRouteAuthorizationService>();
         services.AddScoped<ICrestPermissionInvalidator, CrestPermissionInvalidator>();
+        services.AddScoped<ICrestAdminMenuLayoutInvalidator, CrestAdminMenuLayoutInvalidator>();
         services.AddScoped<IRoleUpdatedEventHandler, CrestRolePermissionInvalidationHandler>();
         services.AddScoped<IThemeSelector, LegacyFrameThemeSelector>();
         services.AddScoped<CrestAdminMenuLayoutService>();
+        services.AddScoped<CrestAdminSidebarSettingsStore>();
+        services.AddScoped<CrestAdminSettingsNormalizer>();
         services.AddNavigationProvider<CrestAdminMenu>();
         services.AddScoped<IIconProvider, IconifyIconProvider>();
         services.AddScoped<IIconProviderSettingsStore, CrestIconProviderSettingsStore>();
@@ -58,6 +62,7 @@ public sealed class Startup : StartupBase
         app.UseMiddleware<BlazorAdminThemeMiddleware>();
         app.UseCors(CrestWebCors);
         routes.MapHub<CrestPermissionHub>("/api/crest/permissions");
+        routes.MapHub<CrestAdminMenuLayoutHub>("/api/crest/admin-menu-layout");
     }
 }
 

@@ -20,9 +20,71 @@ namespace Crest.Services;
 /// a UI gate: the underlying Orchard services and Crest adapters remain the
 /// authority for every data operation.
 /// </summary>
-public sealed class CrestRouteAuthorizationService(IAuthorizationService authorization)
+public sealed class CrestRouteAuthorizationService(
+    IAuthorizationService authorization,
+    IEnumerable<ICrestRoutePermissionProvider> providers)
 {
-    private static readonly CrestRoutePermission[] Routes =
+    public async Task<CrestRouteAccess[]> GetAuthorizedRoutesAsync(ClaimsPrincipal user)
+    {
+        var granted = new List<CrestRouteAccess>();
+        foreach (var route in GetRoutes())
+        {
+            if (await authorization.AuthorizeAsync(user, route.Permission))
+            {
+                granted.Add(new CrestRouteAccess(route.Template));
+            }
+        }
+
+        return granted.ToArray();
+    }
+
+    public async Task<bool> CanAccessAsync(ClaimsPrincipal user, string? path)
+    {
+        var route = GetRoutes().FirstOrDefault(candidate => Matches(candidate.Template, path));
+        return route is not null && await authorization.AuthorizeAsync(user, route.Permission);
+    }
+
+    public static bool Matches(string template, string? path)
+    {
+        var templateSegments = template.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var pathSegments = (path ?? string.Empty).Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (templateSegments.Length != pathSegments.Length)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < templateSegments.Length; index++)
+        {
+            var segment = templateSegments[index];
+            if (segment.StartsWith('{') && segment.EndsWith('}'))
+            {
+                continue;
+            }
+
+            if (!string.Equals(segment, pathSegments[index], StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private CrestRoutePermission[] GetRoutes() => providers
+        .SelectMany(provider => provider.GetRoutes())
+        .GroupBy(route => route.Template, StringComparer.OrdinalIgnoreCase)
+        .Select(group => group.First())
+        .ToArray();
+}
+
+public interface ICrestRoutePermissionProvider
+{
+    IEnumerable<CrestRoutePermission> GetRoutes();
+}
+
+public sealed class CrestRoutePermissionProvider : ICrestRoutePermissionProvider
+{
+    public IEnumerable<CrestRoutePermission> GetRoutes() =>
     [
         new("/Admin", AdminPermissions.AccessAdminPanel),
         new("/Admin/Features", OrchardCore.Features.FeaturesPermissions.ManageFeatures),
@@ -61,54 +123,8 @@ public sealed class CrestRouteAuthorizationService(IAuthorizationService authori
         new("/Admin/Icons", SettingsPermissions.ManageSettings),
         new("/Admin/DesignSystem", SettingsPermissions.ManageSettings),
     ];
-
-    public async Task<CrestRouteAccess[]> GetAuthorizedRoutesAsync(ClaimsPrincipal user)
-    {
-        var granted = new List<CrestRouteAccess>();
-        foreach (var route in Routes)
-        {
-            if (await authorization.AuthorizeAsync(user, route.Permission))
-            {
-                granted.Add(new CrestRouteAccess(route.Template));
-            }
-        }
-
-        return granted.ToArray();
-    }
-
-    public async Task<bool> CanAccessAsync(ClaimsPrincipal user, string? path)
-    {
-        var route = Routes.FirstOrDefault(candidate => Matches(candidate.Template, path));
-        return route is not null && await authorization.AuthorizeAsync(user, route.Permission);
-    }
-
-    public static bool Matches(string template, string? path)
-    {
-        var templateSegments = template.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-        var pathSegments = (path ?? string.Empty).Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (templateSegments.Length != pathSegments.Length)
-        {
-            return false;
-        }
-
-        for (var index = 0; index < templateSegments.Length; index++)
-        {
-            var segment = templateSegments[index];
-            if (segment.StartsWith('{') && segment.EndsWith('}'))
-            {
-                continue;
-            }
-
-            if (!string.Equals(segment, pathSegments[index], StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private sealed record CrestRoutePermission(string Template, Permission Permission);
 }
+
+public sealed record CrestRoutePermission(string Template, Permission Permission);
 
 public sealed record CrestRouteAccess(string Template);

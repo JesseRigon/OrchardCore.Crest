@@ -1,0 +1,273 @@
+@namespace Crest.Components.Navigation
+@using Microsoft.AspNetCore.Components.Web
+@using Radzen.Blazor
+
+@for (var index = 0; index < Items.Count; index++)
+{
+    var item = Items[index];
+    var renderFlyout = ShouldRenderFlyout(item);
+    var hasExpandableChildren = item.HasChildren && !renderFlyout;
+
+    @if (ShouldRenderTierSeparatorBefore(index))
+    {
+        <li @key="@($"auto-separator-{Level}-{index}")" class="@GetAutoSeparatorClass()" style="@GetItemStyle()">
+            <div class="crest-panel-menu__item-wrapper crest-panel-menu__separator-wrapper crest-panel-menu__separator-wrapper--auto" role="separator" aria-orientation="horizontal">
+                <span class="crest-panel-menu__separator-line"></span>
+            </div>
+        </li>
+    }
+
+    <li @key="item.Key" class="@GetItemClass(item)" style="@GetItemStyle()">
+        @if (item.IsSeparator)
+        {
+            <div class="crest-panel-menu__item-wrapper crest-panel-menu__separator-wrapper" role="separator" aria-orientation="horizontal">
+                <span class="crest-panel-menu__separator-line"></span>
+            </div>
+        }
+        else
+        {
+        <div class="crest-panel-menu__item-wrapper">
+            @if (hasExpandableChildren)
+            {
+                <button type="button"
+                        class="@GetItemLinkClass(item)"
+                        disabled="@item.IsDisabled"
+                        aria-expanded="@IsExpanded(item)"
+                        @onclick="@(() => ToggleExpanded(item))">
+                    @RenderItemContent(item)
+                    <RadzenIcon Icon="expand_more" class="@GetExpandIconClass(item)" title="Toggle submenu" />
+                </button>
+            }
+            else if (renderFlyout)
+            {
+                <button type="button"
+                        class="@GetItemLinkClass(item)"
+                        data-crest-panel-menu-flyout-anchor="@item.Key"
+                        disabled="@item.IsDisabled"
+                        aria-haspopup="menu"
+                        @onmouseover="@(args => OpenFlyout(item, args))"
+                        @onmouseout="CloseFlyoutSoon">
+                    @RenderItemContent(item)
+                    <RadzenIcon Icon="chevron_right" class="crest-panel-menu__action-rail crest-panel-menu__flyout-trigger" title="Open submenu" />
+                </button>
+            }
+            else if (item.HasLink && !item.IsDisabled)
+            {
+                <a class="@GetItemLinkClass(item)"
+                   href="@item.Href"
+                   target="@item.Target">
+                    @RenderItemContent(item)
+                </a>
+            }
+            else
+            {
+                <button type="button"
+                        class="@GetItemLinkClass(item)"
+                        disabled="@item.IsDisabled">
+                    @RenderItemContent(item)
+                </button>
+            }
+        </div>
+        }
+
+        @if (hasExpandableChildren)
+        {
+            <div class="@GetChildrenClass(item)"
+                 inert="@(!IsExpanded(item) ? "" : null)"
+                 aria-hidden="@(!IsExpanded(item) ? "true" : null)">
+                <div class="crest-panel-menu__children-inner">
+                    <ul class="crest-panel-menu__list crest-panel-menu__list--nested">
+                        <CrestPanelMenuItems Items="item.Items"
+                                             Level="@(Level + 1)"
+                                             ExpandedItemKeys="ExpandedItemKeys"
+                                             ExpandedChanged="ExpandedChanged"
+                                             FlyoutOpened="FlyoutOpened"
+                                             FlyoutCloseRequested="FlyoutCloseRequested"
+                                             FlyoutDepth="FlyoutDepth"
+                                             IndentItems="IndentItems"
+                                     IndentWhenCollapsed="IndentWhenCollapsed"
+                                     Collapsed="Collapsed"
+                                     LevelIndents="LevelIndents"
+                                     LevelBackgrounds="LevelBackgrounds"
+                                     LevelBaseSizes="LevelBaseSizes"
+                                     TierSeparators="TierSeparators" />
+                    </ul>
+                </div>
+            </div>
+        }
+    </li>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<CrestPanelMenuItem> Items { get; set; } = [];
+
+    [Parameter]
+    public int Level { get; set; }
+
+    [Parameter]
+    public ISet<string> ExpandedItemKeys { get; set; } = new HashSet<string>();
+
+    [Parameter]
+    public EventCallback<CrestPanelMenuExpansionChangedEventArgs> ExpandedChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<CrestPanelMenuFlyoutEventArgs> FlyoutOpened { get; set; }
+
+    [Parameter]
+    public EventCallback FlyoutCloseRequested { get; set; }
+
+    [Parameter]
+    public int FlyoutDepth { get; set; } = 2;
+
+    [Parameter]
+    public bool IndentItems { get; set; } = true;
+
+    [Parameter]
+    public bool IndentWhenCollapsed { get; set; }
+
+    [Parameter]
+    public bool Collapsed { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> LevelIndents { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<string> LevelBackgrounds { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<string> LevelBaseSizes { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<bool> TierSeparators { get; set; } = [];
+
+    private bool IsExpanded(CrestPanelMenuItem item) => item.HasChildren && !ShouldRenderFlyout(item) && ExpandedItemKeys.Contains(item.Key);
+
+    private async Task ToggleExpanded(CrestPanelMenuItem item)
+    {
+        if (item.HasChildren && !ShouldRenderFlyout(item))
+        {
+            await ExpandedChanged.InvokeAsync(new CrestPanelMenuExpansionChangedEventArgs(item, !IsExpanded(item)));
+        }
+    }
+
+    private async Task OpenFlyout(CrestPanelMenuItem item, MouseEventArgs args) =>
+        await FlyoutOpened.InvokeAsync(new CrestPanelMenuFlyoutEventArgs(item, args));
+
+    private async Task CloseFlyoutSoon() => await FlyoutCloseRequested.InvokeAsync();
+
+    private bool ShouldRenderFlyout(CrestPanelMenuItem item) => Level >= FlyoutDepth && item.HasChildren;
+
+    private bool ShouldRenderTierSeparatorBefore(int index)
+    {
+        if (!IsTierSeparatorEnabled() || index <= 0)
+        {
+            return false;
+        }
+
+        var current = Items[index];
+        var previous = Items[index - 1];
+        return !current.IsSeparator && !previous.IsSeparator;
+    }
+
+    private bool IsTierSeparatorEnabled()
+    {
+        return Level < TierSeparators.Count && TierSeparators[Level];
+    }
+
+    private string GetAutoSeparatorClass() => string.Join(' ', new[]
+    {
+        "crest-panel-menu__item",
+        $"crest-panel-menu__item--level-{Level}",
+        "crest-panel-menu__item--separator",
+        "crest-panel-menu__item--auto-separator",
+    });
+
+    private string GetItemClass(CrestPanelMenuItem item) => string.Join(' ', new[]
+    {
+        "crest-panel-menu__item",
+        $"crest-panel-menu__item--level-{Level}",
+        item.IsSeparator ? "crest-panel-menu__item--separator" : null,
+        item.HasChildren ? "crest-panel-menu__item--has-children" : null,
+        ShouldRenderFlyout(item) ? "crest-panel-menu__item--has-flyout" : null,
+        item.IsActive ? "crest-panel-menu__item--active" : null,
+        item.IsDisabled ? "crest-panel-menu__item--disabled" : null,
+        item.CssClass,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string GetItemLinkClass(CrestPanelMenuItem item) => string.Join(' ', new[]
+    {
+        "crest-panel-menu__item-link",
+        item.IsActive ? "crest-panel-menu__item-link--active" : null,
+        IsExpanded(item) ? "crest-panel-menu__item-link--expanded" : null,
+        item.HasLink ? "crest-panel-menu__item-link--linked" : null,
+        item.LinkCssClass,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string GetExpandIconClass(CrestPanelMenuItem item) => string.Join(' ', new[]
+    {
+        "crest-panel-menu__action-rail",
+        "crest-panel-menu__expand-icon",
+        IsExpanded(item) ? "crest-panel-menu__expand-icon--expanded" : null,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string GetChildrenClass(CrestPanelMenuItem item) => string.Join(' ', new[]
+    {
+        "crest-panel-menu__children",
+        IsExpanded(item) ? "crest-panel-menu__children--expanded" : "crest-panel-menu__children--collapsed",
+    });
+
+    private string GetItemStyle()
+    {
+        var indent = IndentItems && (!Collapsed || IndentWhenCollapsed) ? GetLevelIndent() : "0rem";
+        return $"--crest-panel-menu-node-inset: {indent}; --crest-panel-menu-level-background: var(--crest-panel-menu-tier-{Level + 1}-background, {GetLevelBackground()}); --crest-panel-menu-level-base-size: var(--crest-panel-menu-tier-{Level + 1}-base-size, {GetLevelBaseSize()});";
+    }
+
+    private string GetLevelIndent()
+    {
+        if (LevelIndents.Count == 0)
+        {
+            return "0rem";
+        }
+
+        return Level < LevelIndents.Count ? LevelIndents[Level] : LevelIndents[^1];
+    }
+
+    private string GetLevelBackground()
+    {
+        if (LevelBackgrounds.Count == 0)
+        {
+            return "transparent";
+        }
+
+        return Level < LevelBackgrounds.Count ? LevelBackgrounds[Level] : LevelBackgrounds[^1];
+    }
+
+    private string GetLevelBaseSize()
+    {
+        if (LevelBaseSizes.Count == 0)
+        {
+            return "1rem";
+        }
+
+        return Level < LevelBaseSizes.Count ? LevelBaseSizes[Level] : LevelBaseSizes[^1];
+    }
+
+    private static RenderFragment RenderItemContent(CrestPanelMenuItem item) => builder =>
+    {
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", "crest-panel-menu__item-content");
+
+        builder.OpenElement(2, "span");
+        builder.AddAttribute(3, "class", "crest-panel-menu__icon-rail");
+        builder.AddContent(4, item.Icon);
+        builder.CloseElement();
+
+        builder.OpenElement(5, "span");
+        builder.AddAttribute(6, "class", "crest-panel-menu__text-rail");
+        builder.AddContent(7, item.Text);
+        builder.CloseElement();
+
+        builder.CloseElement();
+    };
+}

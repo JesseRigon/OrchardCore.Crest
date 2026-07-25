@@ -122,6 +122,11 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         {
             var menu = await api.Crest.Rest.Navigation.GetAdminMenuAsync();
             iconRegistry.Register(menu.Icons);
+            if (Manifest is not null)
+            {
+                Manifest = Manifest with { AdminMenu = menu };
+            }
+
             AdminMenu = ToDisplayMenu(menu);
             ErrorMessage = null;
             return true;
@@ -304,7 +309,64 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
 
     private static DisplayMenu ToDisplayMenu(NavigationMenu menu) => new(
         menu.Name,
-        menu.Items.Select(ToDisplayMenuItem).ToArray());
+        menu.Items.Select(ToDisplayMenuItem).ToArray(),
+        (menu.Separators ?? []).Select(ToDisplayMenuSeparator).ToArray(),
+        ToDisplaySidebarSettings(menu.SidebarSettings));
+
+    private static DisplaySidebarSettings ToDisplaySidebarSettings(AdminSidebarSettings? settings) => settings is null
+        ? DisplaySidebarSettings.Default
+        : new DisplaySidebarSettings
+        {
+            Collapsible = settings.Collapsible,
+            ExpansionDurationMilliseconds = Math.Clamp(settings.ExpansionDurationMilliseconds, 100, 2000),
+            TierIndents = NormalizeStrings(settings.TierIndents, DisplaySidebarSettings.Default.TierIndents, 4),
+            TierBackgrounds = NormalizeStrings(settings.TierBackgrounds, DisplaySidebarSettings.Default.TierBackgrounds, 4),
+            TierSeparators = NormalizeBools(settings.TierSeparators, DisplaySidebarSettings.Default.TierSeparators, 3),
+            TierBaseSizes = settings.TierBaseSizes is { Count: > 0 }
+                ? NormalizeStrings(settings.TierBaseSizes, DisplaySidebarSettings.Default.TierBaseSizes, 3)
+                : NormalizeDoubles(settings.TierBaseRems, [1.0, 0.95, 0.9], 3)
+                    .Select(value => $"{Math.Clamp(value, 0.5, 2.0):0.###}rem")
+                    .ToArray(),
+        };
+
+    private static DisplayMenuSeparator ToDisplayMenuSeparator(NavigationSeparator separator) => new(
+        separator.Key,
+        separator.ParentKey,
+        separator.Order);
+
+    private static string[] NormalizeStrings(IReadOnlyList<string>? values, IReadOnlyList<string> defaults, int length)
+    {
+        var result = new string[length];
+        for (var index = 0; index < length; index++)
+        {
+            var value = values is not null && index < values.Count ? values[index] : defaults[Math.Min(index, defaults.Count - 1)];
+            result[index] = string.IsNullOrWhiteSpace(value) ? defaults[Math.Min(index, defaults.Count - 1)] : value;
+        }
+
+        return result;
+    }
+
+    private static bool[] NormalizeBools(IReadOnlyList<bool>? values, IReadOnlyList<bool> defaults, int length)
+    {
+        var result = new bool[length];
+        for (var index = 0; index < length; index++)
+        {
+            result[index] = values is not null && index < values.Count ? values[index] : defaults[Math.Min(index, defaults.Count - 1)];
+        }
+
+        return result;
+    }
+
+    private static double[] NormalizeDoubles(IReadOnlyList<double>? values, IReadOnlyList<double> defaults, int length)
+    {
+        var result = new double[length];
+        for (var index = 0; index < length; index++)
+        {
+            result[index] = values is not null && index < values.Count ? values[index] : defaults[Math.Min(index, defaults.Count - 1)];
+        }
+
+        return result;
+    }
 
     private static DisplayMenuItem ToDisplayMenuItem(NavigationItem item) => new(
         item.Text,

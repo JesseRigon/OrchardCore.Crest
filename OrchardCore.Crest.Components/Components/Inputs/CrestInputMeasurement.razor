@@ -1,0 +1,70 @@
+@namespace Crest.Components.Inputs
+@using Radzen.Blazor
+
+<div class="@CssClass" style="@Style">
+    <CrestInputNumericMath Value="@Value"
+                           ValueChanged="@OnValueChanged"
+                           Disabled="@Disabled"
+                           Placeholder="@Placeholder"
+                           Class="crest-input-measurement__number" />
+    <RadzenDropDown TValue="string"
+                    Data="@Units"
+                    TextProperty="Text"
+                    ValueProperty="Value"
+                    Value="@Unit"
+                    Change="@OnUnitChanged"
+                    Disabled="@Disabled"
+                    class="crest-input-measurement__unit" />
+</div>
+
+@code {
+    private static readonly CrestMeasurementUnitOption[] DefaultUnits =
+    [
+        new("rem", "rem"),
+        new("em", "em"),
+        new("px", "px"),
+        new("%", "%"),
+    ];
+
+    [Parameter]
+    public decimal Value { get; set; }
+
+    [Parameter]
+    public EventCallback<decimal> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Unit { get; set; } = "rem";
+
+    [Parameter]
+    public EventCallback<string> UnitChanged { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<CrestMeasurementUnitOption> Units { get; set; } = DefaultUnits;
+
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    private string CssClass => string.Join(' ', new[] { "crest-input-measurement", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private async Task OnValueChanged(decimal value) => await ValueChanged.InvokeAsync(value);
+
+    private async Task OnUnitChanged(object? value)
+    {
+        var unit = value?.ToString();
+        if (string.IsNullOrWhiteSpace(unit))
+        {
+            unit = Units.FirstOrDefault()?.Value ?? string.Empty;
+        }
+
+        await UnitChanged.InvokeAsync(unit);
+    }
+}

@@ -59,6 +59,7 @@ public sealed class CrestAdminMenuLayoutExportController(
             relativePath = Path.Combine(RecipesDirectoryName, fileName).Replace('\\', '/'),
             itemCount = layout.Items.Count,
             customItemCount = layout.CustomItems.Count,
+            separatorCount = layout.Separators.Count,
         });
     }
 }

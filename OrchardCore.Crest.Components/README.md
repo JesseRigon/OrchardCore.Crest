@@ -13,6 +13,7 @@ OrchardCore.Crest.Components/
   Components/                    # reusable Blazor components
     Forms/
     Inputs/
+    Navigation/
     Model/
   Models/                        # client-safe DTOs and request models
   Shapes/                        # early client-side shape/model experiments
@@ -21,6 +22,8 @@ OrchardCore.Crest.Components/
 ## Theme boundary
 
 Admin and Site themes are composition roots. They should reference `OrchardCore.Crest.Components`, `OrchardCore.Crest.Icons`, and other module UI assemblies they need.
+
+Reusable layout and navigation mechanics belong in this project. Theme-specific components should pass options into these primitives rather than hard-coding rail widths, indentation, animation timings, or compact behavior in feature CSS.
 
 ## Feature UI boundary
 

@@ -5,7 +5,10 @@
 @using Crest.Admin.Components.Admin
 @using Crest.Admin.Components.Shared
 @using Crest.Admin.DisplayManagement
+@using Crest.Components.Inputs
+@using Crest.Icons
 @using Crest.Icons.Components
+@using Microsoft.AspNetCore.SignalR.Client
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
 @using Radzen
@@ -13,8 +16,10 @@
 @implements IAsyncDisposable
 @inject IApi Api
 @inject IJSRuntime Js
+@inject NavigationManager Navigation
 @inject NotificationService Notifications
 @inject DisplayManager DisplayManager
+@inject ClientIconRegistry ClientIcons
 
     <CascadingValue Value="DragDrop">
         <RadzenStack Gap="1rem">
@@ -103,10 +108,32 @@
                                                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                                                         @if (SelectedMenu.IsDefault)
                                                         {
-                                                            <RadzenButton Text="Export layout JSON" Icon="download" ButtonStyle="ButtonStyle.Light" Click="ExportLayoutAsync" Disabled="@(IsBusy || IsExportingLayout)" />
+                                                            <RadzenButton Text="Export JSON" Icon="download" ButtonStyle="ButtonStyle.Light" Click="ExportLayoutAsync" Disabled="@(IsBusy || IsExportingLayout)" />
                                                         }
                                                         <RadzenButton Text="@(AllNodesCollapsed ? "Expand All" : "Collapse All")" Icon="@(AllNodesCollapsed ? "unfold_more" : "unfold_less")" ButtonStyle="ButtonStyle.Light" Click="ToggleCollapseAll" Disabled="@(IsBusy || SelectedMenu.Nodes.Length == 0)" />
-                                                        <RadzenButton Text="Add node" Icon="add" Click="AddNode" Disabled="@IsBusy" />
+                                                        <div class="admin-menu-actions">
+                                                            <RadzenButton Text="Add" Icon="add" Click="ToggleAddMenu" Disabled="@IsBusy" />
+                                                            @if (IsAddMenuOpen)
+                                                            {
+                                                                <div class="admin-menu-actions__popover" role="menu">
+                                                                    <RadzenButton Text="Node" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="AddNodeFromMenu" />
+                                                                    @if (SelectedMenu.IsDefault)
+                                                                    {
+                                                                        <RadzenButton Text="Separator" Icon="horizontal_rule" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="AddRootSeparatorFromMenuAsync" />
+                                                                    }
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                        @if (SelectedMenu.IsDefault)
+                                                        {
+                                                            <div class="admin-menu-actions">
+                                                                <RadzenButton Icon="settings" ButtonStyle="ButtonStyle.Light" Click="ToggleSidebarSettings" title="Sidebar settings" />
+                                                                @if (IsSidebarSettingsOpen)
+                                                                {
+                                                                    @SidebarSettingsFlyout()
+                                                                }
+                                                            </div>
+                                                        }
                                                     </RadzenStack>
                                                 </RadzenStack>
 
@@ -130,9 +157,9 @@
                                                     else
                                                     {
                                                         <ol class="admin-menu-tree__list admin-menu-tree__list--root">
-                                                            @foreach (var node in SelectedMenu.Nodes)
+                                                            @foreach (var entry in MenuEntries(null, SelectedMenu.Nodes))
                                                             {
-                                                                @NodeItem(node)
+                                                                @(entry.Node is not null ? NodeItem(entry.Node) : SeparatorItem(entry.Separator!))
                                                             }
                                                         </ol>
                                                     }
@@ -233,13 +260,66 @@
         width: 2rem;
     }
 
+    .admin-menu-node__icon-slot {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 1.35rem;
+        width: 1.35rem;
+        height: 1.35rem;
+        color: var(--rz-text-secondary-color, #6b7280);
+    }
+
+    .admin-menu-node__icon-slot .orchard-icon {
+        width: 1.35rem;
+        height: 1.35rem;
+    }
+
+    .admin-menu-node__icon-missing {
+        width: 0.55rem;
+        height: 0.55rem;
+        border: 1.5px solid currentColor;
+        border-radius: 999px;
+        opacity: 0.45;
+    }
+
+    .admin-menu-separator {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0.35rem 0;
+        border: 1px solid var(--rz-border-color);
+        border-radius: var(--rz-border-radius);
+        padding: 0.65rem;
+        color: var(--rz-text-secondary-color);
+        background: var(--rz-base-background-color);
+        transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+
+    .admin-menu-separator__line {
+        flex: 1 1 auto;
+        height: 1px;
+        border-radius: 999px;
+        background: var(--crest-panel-menu-separator-color, var(--rz-border-color, #e5e7eb));
+    }
+
+    .admin-menu-separator__content {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
     .admin-menu-node__collapse,
     .admin-menu-node__collapse .rz-button-icon {
         color: var(--rz-text-color) !important;
     }
 
     .admin-menu-node--drop-before > .admin-menu-node::before,
-    .admin-menu-node--drop-after > .admin-menu-node::after {
+    .admin-menu-node--drop-after > .admin-menu-node::after,
+    .admin-menu-node--drop-before > .admin-menu-separator::before,
+    .admin-menu-node--drop-after > .admin-menu-separator::after {
         content: '';
         position: absolute;
         left: 0.65rem;
@@ -254,7 +334,12 @@
         top: -3px;
     }
 
-    .admin-menu-node--drop-after > .admin-menu-node::after {
+    .admin-menu-node--drop-before > .admin-menu-separator::before {
+        top: -3px;
+    }
+
+    .admin-menu-node--drop-after > .admin-menu-node::after,
+    .admin-menu-node--drop-after > .admin-menu-separator::after {
         bottom: -3px;
     }
 
@@ -291,6 +376,64 @@
         background: var(--rz-base-background-color, #fff);
         box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
     }
+
+    .admin-menu-actions {
+        position: relative;
+        display: inline-flex;
+    }
+
+    .admin-menu-actions__popover,
+    .admin-menu-settings {
+        position: absolute;
+        top: calc(100% + 0.35rem);
+        right: 0;
+        z-index: 100;
+        border: 1px solid var(--rz-border-color);
+        border-radius: var(--rz-border-radius);
+        background: var(--rz-base-background-color, #fff);
+        box-shadow: var(--rz-shadow-4, 0 12px 30px rgba(15, 23, 42, 0.18));
+    }
+
+    .admin-menu-actions__popover {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        min-width: 10rem;
+        padding: 0.35rem;
+    }
+
+    .admin-menu-actions__popover .rz-button {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .admin-menu-settings {
+        width: min(34rem, 84vw);
+        max-height: min(42rem, 75vh);
+        overflow: auto;
+        padding: 1rem;
+    }
+
+    .admin-menu-settings__grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .admin-menu-settings__field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .admin-menu-settings__color {
+        width: 100%;
+        height: 2.25rem;
+        padding: 0.15rem;
+        border: 1px solid var(--rz-border-color);
+        border-radius: var(--rz-border-radius);
+        background: transparent;
+    }
 </style>
 
 @code {
@@ -299,6 +442,15 @@
     private const string LockedNewNodeId = "new";
     private const int MaxMenuTiers = 4;
     private const int MaxNodeDepth = MaxMenuTiers - 1;
+    private static readonly CrestMeasurementUnitOption[] CssSizeUnits =
+    [
+        new("rem", "rem"),
+        new("em", "em"),
+        new("px", "px"),
+        new("%", "%"),
+        new("vh", "vh"),
+        new("vw", "vw"),
+    ];
 
     private readonly DragDropManager DragDrop = new();
     private readonly HashSet<string> CollapsedNodeIds = [];
@@ -317,13 +469,14 @@
     private AdminMenuSummary? SelectedMenu => State.Menus.FirstOrDefault(menu => menu.Id == SelectedMenuId) ?? State.Menus.FirstOrDefault();
     private NodeTypeOption[] AvailableNodeTypes => SelectedMenu?.IsDefault == true ? [new(PlaceholderNodeType, "Placeholder")] : NodeTypes;
     private bool AllNodesCollapsed => SelectedMenu is not null && Flatten(SelectedMenu.Nodes).Where(node => node.Items.Length > 0).All(node => CollapsedNodeIds.Contains(node.Id));
+    private bool IsEditingNewBranch => IsNewBranchNode(EditingNodeId);
     private bool IsLoading { get; set; } = true;
     private bool IsBusy { get; set; }
     private bool IsExportingLayout { get; set; }
     private string? ErrorMessage { get; set; }
     private ElementReference TreeRoot;
     private DotNetObjectReference<AdminMenus>? DotNetRef;
-    private CancellationTokenSource? PollingCts;
+    private HubConnection? AdminMenuLayoutHub;
     private bool ShouldInitializeTree { get; set; }
     private string? EditingNodeId { get; set; }
     private AdminMenuNodeFormModel? EditingModel { get; set; }
@@ -331,6 +484,14 @@
     private string? MenuRenameText { get; set; }
     private string? RenamingNodeId { get; set; }
     private string? RenameText { get; set; }
+    private bool IsAddMenuOpen { get; set; }
+    private bool IsSidebarSettingsOpen { get; set; }
+    private AdminSidebarSettings SidebarSettingsModel { get; set; } = CreateDefaultSidebarSettings();
+    private decimal SidebarExpansionMilliseconds
+    {
+        get => SidebarSettingsModel.ExpansionDurationMilliseconds;
+        set => SidebarSettingsModel.ExpansionDurationMilliseconds = (int)Math.Clamp(value, 100, 2000);
+    }
 
     private IReadOnlyList<ParentOption> ParentOptions
     {
@@ -348,7 +509,7 @@
             }
 
             options.AddRange(Flatten(SelectedMenu.Nodes)
-                .Where(node => node.Id != EditingNodeId && !IsLockedNode(node) && !IsDescendantOf(node, EditingNodeId) && CanPlaceNodeUnder(EditingNodeId, node.Id))
+                .Where(node => node.Id != EditingNodeId && !IsNewBranchNode(node) && !IsDescendantOf(node, EditingNodeId) && CanPlaceNodeUnder(EditingNodeId, node.Id))
                 .Select(node => new ParentOption(node.Id, $"{new string('—', node.Depth)} {node.Text} ({NodeTypeLabel(node.Type)})")));
 
             return options;
@@ -358,8 +519,7 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadAsync();
-        PollingCts = new CancellationTokenSource();
-        _ = PollForExternalChangesAsync(PollingCts.Token);
+        await StartAdminMenuLayoutHubAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -385,6 +545,7 @@
         try
         {
             State = await Api.Crest.Rest.AdminMenus.ListAsync();
+            RegisterMenuIcons(State.Menus);
             SelectedMenuId ??= State.Menus.FirstOrDefault()?.Id;
             if (SelectedMenuId is not null && State.Menus.All(menu => menu.Id != SelectedMenuId))
             {
@@ -396,6 +557,7 @@
                 CollapseSelectedMenuNodes();
             }
 
+            SyncSidebarSettingsModel();
             ShouldInitializeTree = true;
             await DisplayManager.RefreshAdminMenuAsync();
         }
@@ -416,29 +578,34 @@
         }
     }
 
-    private async Task PollForExternalChangesAsync(CancellationToken cancellationToken)
+    private async Task StartAdminMenuLayoutHubAsync()
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        if (AdminMenuLayoutHub is not null)
+        {
+            return;
+        }
+
+        AdminMenuLayoutHub = new HubConnectionBuilder()
+            .WithUrl(new Uri(new Uri(Navigation.BaseUri), "api/crest/admin-menu-layout"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        AdminMenuLayoutHub.On("adminMenuLayoutInvalidated", async () =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadAsync(showLoading: false);
+                StateHasChanged();
+            });
+        });
 
         try
         {
-            while (await timer.WaitForNextTickAsync(cancellationToken))
-            {
-                if (IsBusy || EditingModel is not null || RenamingNodeId is not null || RenamingMenuId is not null)
-                {
-                    continue;
-                }
-
-                await InvokeAsync(async () =>
-                {
-                    await LoadAsync(showLoading: false);
-                    StateHasChanged();
-                });
-            }
+            await AdminMenuLayoutHub.StartAsync();
         }
-        catch (OperationCanceledException)
+        catch
         {
-            // Normal during component disposal.
+            // Manual refresh remains available if SignalR is unavailable.
         }
     }
 
@@ -455,7 +622,7 @@
                 return;
             }
 
-            Notifications.Notify(NotificationSeverity.Success, "Sidebar layout exported", $"{result.File} saved with {result.ItemCount} layout items and {result.CustomItemCount} custom items.");
+            Notifications.Notify(NotificationSeverity.Success, "Sidebar layout exported", $"{result.File} saved with {result.ItemCount} layout items, {result.CustomItemCount} custom items, and {result.SeparatorCount} separators.");
         }
         catch (Exception ex)
         {
@@ -480,6 +647,9 @@
         RenameText = null;
         RenamingMenuId = null;
         MenuRenameText = null;
+        IsAddMenuOpen = false;
+        IsSidebarSettingsOpen = false;
+        SyncSidebarSettingsModel();
         CollapseSelectedMenuNodes();
         ShouldInitializeTree = true;
     }
@@ -607,11 +777,11 @@
         }
     }
 
-    private RenderFragment NodeItem(AdminMenuNodeSummary node) => @<li class="admin-menu-tree__item" data-node-id="@node.Id" data-locked="@IsLockedNode(node).ToString().ToLowerInvariant()">
-        <div class="admin-menu-node @(IsLockedNode(node) ? "admin-menu-node--locked" : null)">
+    private RenderFragment NodeItem(AdminMenuNodeSummary node) => @<li class="admin-menu-tree__item" data-entry-id="@node.Id" data-entry-type="node" data-node-id="@node.Id" data-locked="@IsMoveLockedNode(node).ToString().ToLowerInvariant()">
+        <div class="admin-menu-node @(IsMoveLockedNode(node) ? "admin-menu-node--locked" : null)">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
-                    <span class="admin-menu-node__handle" draggable="@(!IsLockedNode(node) ? "true" : "false")" title="@(IsLockedNode(node) ? "The New menu branch is locked" : "Drag to move")">
+                    <span class="admin-menu-node__handle" draggable="@(!IsMoveLockedNode(node) ? "true" : "false")" title="@(IsMoveLockedNode(node) ? "The New menu branch has a fixed position" : "Drag to move")">
                         <RadzenIcon Icon="drag_indicator" />
                     </span>
                     @if (node.Items.Length > 0)
@@ -630,7 +800,7 @@
                     }
                     <RadzenStack Gap="0.15rem">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.45rem">
-                            <Crest.Icons.Components.OrchardIcon IconClass="@node.IconClass" Size="1rem" BoxSize="1.25rem" Color="var(--rz-text-secondary-color, #6b7280)" Class="admin-menu-node__icon" />
+                            @NodeIconPreview(node)
                             @if (SelectedMenu?.IsDefault == true && RenamingNodeId == node.Id)
                             {
                                 <span class="admin-menu-node__rename">
@@ -653,9 +823,9 @@
                             {
                                 <RadzenBadge Text="Disabled" BadgeStyle="BadgeStyle.Warning" />
                             }
-                            @if (IsLockedNode(node))
+                            @if (IsMoveLockedNode(node))
                             {
-                                <RadzenBadge Text="Locked" BadgeStyle="BadgeStyle.Secondary" />
+                                <RadzenBadge Text="Fixed" BadgeStyle="BadgeStyle.Secondary" />
                             }
                         </RadzenStack>
                         <RadzenText TextStyle="TextStyle.Caption" Text="@NodeMeta(node)" />
@@ -663,9 +833,13 @@
                 </RadzenStack>
 
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.35rem">
-                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditOrRenameNode(node))" Disabled="@(IsBusy || IsLockedNode(node))" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="@(node.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Click="@(() => ToggleNodeAsync(node))" Disabled="@(IsBusy || IsLockedNode(node))" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@(IsBusy || SelectedMenu?.IsDefault == true || IsLockedNode(node))" />
+                    @if (SelectedMenu?.IsDefault == true)
+                    {
+                        <RadzenButton Size="ButtonSize.Small" Icon="horizontal_rule" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => AddSeparatorAfterNodeAsync(node))" Disabled="@(IsBusy || IsNewBranchNode(node))" title="Add separator after this item" />
+                    }
+                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditOrRenameNode(node))" Disabled="@(IsBusy || !CanEditNode(node))" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="@(node.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Click="@(() => ToggleNodeAsync(node))" Disabled="@IsBusy" />
+                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@(IsBusy || SelectedMenu?.IsDefault == true || IsNewBranchNode(node))" />
                 </RadzenStack>
             </RadzenStack>
         </div>
@@ -678,13 +852,68 @@
         @if (node.Items.Length > 0 && !IsCollapsed(node.Id))
         {
             <ol class="admin-menu-tree__list">
-                @foreach (var child in node.Items)
+                @foreach (var entry in MenuEntries(node.Id, node.Items))
                 {
-                    @NodeItem(child)
+                    @(entry.Node is not null ? NodeItem(entry.Node) : SeparatorItem(entry.Separator!))
                 }
             </ol>
         }
     </li>;
+
+    private RenderFragment SeparatorItem(AdminMenuSeparatorSummary separator) => @<li class="admin-menu-tree__item" data-entry-id="@separator.Id" data-entry-type="separator" data-locked="false">
+        <div class="admin-menu-separator">
+            <div class="admin-menu-separator__content">
+                <span class="admin-menu-node__handle" draggable="true" title="Drag to move">
+                    <RadzenIcon Icon="drag_indicator" />
+                </span>
+                <span class="admin-menu-node__spacer"></span>
+                <RadzenText TextStyle="TextStyle.Subtitle2" Text="Separator" />
+                <span class="admin-menu-separator__line"></span>
+            </div>
+            <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteSeparatorAsync(separator))" Disabled="@IsBusy" title="Remove separator" />
+        </div>
+    </li>;
+
+    private RenderFragment NodeIconPreview(AdminMenuNodeSummary node) => @<span class="admin-menu-node__icon-slot"
+                                                                               title="@NodeIconTitle(node)"
+                                                                               aria-label="@NodeIconTitle(node)">
+        @if (node.Icon is not null)
+        {
+            <OrchardIcon IconKey="@node.Icon.Key"
+                         Library="@node.Icon.Library"
+                         Version="@node.Icon.Version"
+                         Name="@node.Icon.Name"
+                         SvgMarkup="@node.Icon.SvgMarkup"
+                         Size="1rem"
+                         BoxSize="1.35rem"
+                         Color="var(--rz-text-secondary-color, #6b7280)"
+                         Class="admin-menu-node__icon" />
+        }
+        else
+        {
+            <span class="admin-menu-node__icon-missing" aria-hidden="true"></span>
+        }
+    </span>;
+
+    private IEnumerable<MenuEntry> MenuEntries(string? parentId, AdminMenuNodeSummary[] nodes)
+    {
+        var entries = nodes
+            .Select(node => new MenuEntry(GetEditorOrder(parentId, node), 1, node, null))
+            .ToList();
+        if (SelectedMenu is not null)
+        {
+            entries.AddRange(SelectedMenu.Separators
+                .Where(separator => string.Equals(separator.ParentId, parentId, StringComparison.Ordinal))
+                .Select(separator => new MenuEntry(separator.Order, 0, null, separator)));
+        }
+
+        return entries
+            .OrderBy(entry => entry.Order)
+            .ThenBy(entry => entry.Kind);
+    }
+
+    private static int GetEditorOrder(string? parentId, AdminMenuNodeSummary node) =>
+        parentId is null && IsNewRootNode(node) ? int.MinValue : node.Order;
 
     private bool IsCollapsed(string nodeId) => CollapsedNodeIds.Contains(nodeId);
 
@@ -740,14 +969,30 @@
 
     [JSInvokable]
     public async Task OnMenuNodeDropped(string nodeId, string? parentNodeId, int position)
+        => await OnMenuEntryDropped(nodeId, "node", parentNodeId, position);
+
+    [JSInvokable]
+    public async Task OnMenuEntryDropped(string entryId, string? entryType, string? parentNodeId, int position)
     {
-        if (SelectedMenu is null || string.IsNullOrWhiteSpace(nodeId) || nodeId == parentNodeId)
+        if (SelectedMenu is null || string.IsNullOrWhiteSpace(entryId) || entryId == parentNodeId)
         {
             return;
         }
 
+        if (string.Equals(entryType, "separator", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!SelectedMenu.IsDefault || IsNewBranchNode(parentNodeId))
+            {
+                return;
+            }
+
+            await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.MoveSeparatorAsync(SelectedMenu.Id, entryId, new(parentNodeId, position)));
+            return;
+        }
+
+        var nodeId = entryId;
         var node = FindNode(SelectedMenu.Nodes, nodeId);
-        if (node is null || IsLockedNode(node) || IsLockedNode(parentNodeId) || IsDescendantOf(node, parentNodeId))
+        if (node is null || IsMoveLockedNode(node) || IsNewBranchNode(parentNodeId) || IsDescendantOf(node, parentNodeId))
         {
             return;
         }
@@ -763,6 +1008,7 @@
 
     private void AddNode()
     {
+        IsAddMenuOpen = false;
         EditingNodeId = null;
         EditingModel = new AdminMenuNodeFormModel
         {
@@ -773,9 +1019,149 @@
         };
     }
 
+    private void ToggleAddMenu()
+    {
+        IsAddMenuOpen = !IsAddMenuOpen;
+        IsSidebarSettingsOpen = false;
+    }
+
+    private async Task ToggleSidebarSettings()
+    {
+        IsAddMenuOpen = false;
+        if (IsSidebarSettingsOpen)
+        {
+            IsSidebarSettingsOpen = false;
+            SyncSidebarSettingsModel();
+            return;
+        }
+
+        await LoadAsync(showLoading: false);
+        SyncSidebarSettingsModel();
+        IsSidebarSettingsOpen = true;
+    }
+
+    private void AddNodeFromMenu()
+    {
+        IsAddMenuOpen = false;
+        AddNode();
+    }
+
+    private async Task AddRootSeparatorFromMenuAsync()
+    {
+        IsAddMenuOpen = false;
+        await AddRootSeparatorAsync();
+    }
+
+    private async Task AddRootSeparatorAsync()
+    {
+        IsAddMenuOpen = false;
+        if (SelectedMenu is null || !SelectedMenu.IsDefault)
+        {
+            return;
+        }
+
+        await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.CreateSeparatorAsync(SelectedMenu.Id, new(null, null)));
+    }
+
+    private async Task AddSeparatorAfterNodeAsync(AdminMenuNodeSummary node)
+    {
+        if (SelectedMenu is null || !SelectedMenu.IsDefault || IsNewBranchNode(node))
+        {
+            return;
+        }
+
+        await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.CreateSeparatorAsync(SelectedMenu.Id, new(node.ParentId, node.Order + 1)));
+    }
+
+    private RenderFragment SidebarSettingsFlyout() => @<div class="admin-menu-settings" role="dialog" aria-label="Sidebar settings">
+        <RadzenStack Gap="1rem">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                <RadzenText TextStyle="TextStyle.H6" Text="Sidebar settings" />
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => IsSidebarSettingsOpen = false)" title="Close settings" />
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenCheckBox TValue="bool" @bind-Value="SidebarSettingsModel.Collapsible" />
+                <RadzenLabel Text="Allow collapse/hover expand" />
+            </RadzenStack>
+
+            <div class="admin-menu-settings__field">
+                <RadzenLabel Text="Expansion speed (ms)" />
+                <CrestInputNumericMath Value="@SidebarExpansionMilliseconds"
+                                       ValueChanged="@SetSidebarExpansionMilliseconds"
+                                       Style="width: 100%;" />
+            </div>
+
+            <RadzenText TextStyle="TextStyle.Subtitle2" Text="Tier indentation" />
+            <div class="admin-menu-settings__grid">
+                @for (var index = 0; index < 3; index++)
+                {
+                    var currentIndex = index;
+                    var tier = currentIndex + 1;
+                    <div class="admin-menu-settings__field" @key="@($"indent-{currentIndex}")">
+                        <RadzenLabel Text="@($"Tier {tier}")" />
+                        <CrestInputMeasurement Value="@GetTierIndentValue(currentIndex)"
+                                               ValueChanged="@(value => SetTierIndentValue(currentIndex, value))"
+                                               Unit="@GetTierIndentUnit(currentIndex)"
+                                               UnitChanged="@(unit => SetTierIndentUnit(currentIndex, unit))"
+                                               Units="CssSizeUnits" />
+                    </div>
+                }
+            </div>
+
+            <RadzenText TextStyle="TextStyle.Subtitle2" Text="Generated separators" />
+            <div class="admin-menu-settings__grid">
+                @for (var index = 0; index < 3; index++)
+                {
+                    var currentIndex = index;
+                    var tier = currentIndex + 1;
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.4rem" @key="@($"separator-{currentIndex}")">
+                        <RadzenCheckBox TValue="bool" Value="@GetTierSeparator(currentIndex)" Change="@(value => SetTierSeparator(currentIndex, value))" />
+                        <RadzenLabel Text="@($"Tier {tier}")" />
+                    </RadzenStack>
+                }
+            </div>
+
+            <RadzenText TextStyle="TextStyle.Subtitle2" Text="Tier backgrounds" />
+            <div class="admin-menu-settings__grid">
+                @for (var index = 0; index < 4; index++)
+                {
+                    var currentIndex = index;
+                    var tier = currentIndex + 1;
+                    <div class="admin-menu-settings__field" @key="@($"background-{currentIndex}")">
+                        <RadzenLabel Text="@($"Tier {tier}")" />
+                        <input type="color" class="admin-menu-settings__color" value="@GetTierColor(currentIndex)" @onchange="@(args => SetTierBackground(currentIndex, args.Value?.ToString()))" />
+                    </div>
+                }
+            </div>
+
+            <RadzenText TextStyle="TextStyle.Subtitle2" Text="Tier base size" />
+            <div class="admin-menu-settings__grid">
+                @for (var index = 0; index < 3; index++)
+                {
+                    var currentIndex = index;
+                    var label = currentIndex == 2 ? "Tier 3-4" : $"Tier {currentIndex + 1}";
+                    <div class="admin-menu-settings__field" @key="@($"base-{currentIndex}")">
+                        <RadzenLabel Text="@label" />
+                        <CrestInputMeasurement Value="@GetTierBaseSizeValue(currentIndex)"
+                                               ValueChanged="@(value => SetTierBaseSizeValue(currentIndex, value))"
+                                               Unit="@GetTierBaseSizeUnit(currentIndex)"
+                                               UnitChanged="@(unit => SetTierBaseSizeUnit(currentIndex, unit))"
+                                               Units="CssSizeUnits" />
+                    </div>
+                }
+            </div>
+
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                <RadzenButton Text="Save" Icon="save" Click="SaveSidebarSettingsAsync" Disabled="@IsBusy" />
+                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => { SyncSidebarSettingsModel(); IsSidebarSettingsOpen = false; })" Disabled="@IsBusy" />
+            </RadzenStack>
+        </RadzenStack>
+    </div>;
+
     private void EditOrRenameNode(AdminMenuNodeSummary node)
     {
-        if (IsLockedNode(node))
+        if (!CanEditNode(node))
         {
             return;
         }
@@ -826,7 +1212,7 @@
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="6">
                         <RadzenLabel Text="Parent Node" />
-                        <RadzenDropDown TValue="string" Data="@ParentOptions" TextProperty="Text" ValueProperty="Value" @bind-Value="model.ParentNodeId" Placeholder="Root level" Style="width: 100%;" />
+                        <RadzenDropDown TValue="string" Data="@ParentOptions" TextProperty="Text" ValueProperty="Value" @bind-Value="model.ParentNodeId" Placeholder="Root level" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </RadzenColumn>
                 </RadzenRow>
 
@@ -849,22 +1235,18 @@
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="4">
                         <RadzenLabel Text="Priority" />
-                        <RadzenNumeric TValue="int" @bind-Value="model.Priority" Style="width: 100%;" />
+                        <RadzenNumeric TValue="int" @bind-Value="model.Priority" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="4">
                         <RadzenLabel Text="Position" />
-                        <RadzenNumeric TValue="int?" @bind-Value="model.Position" Placeholder="Append" Style="width: 100%;" />
+                        <RadzenNumeric TValue="int?" @bind-Value="model.Position" Placeholder="Append" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </RadzenColumn>
                 </RadzenRow>
 
                 <RadzenRow Gap="1rem">
-                    <RadzenColumn Size="12" SizeMD="8">
+                    <RadzenColumn Size="12">
                         <RadzenLabel Text="Permissions" />
-                        <RadzenTextBox @bind-Value="model.PermissionNamesText" Placeholder="Permission names, comma-separated" Style="width: 100%;" />
-                    </RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenCheckBox @bind-Value="model.Enabled" TValue="bool" />
-                        <RadzenLabel Text="Enabled" Style="margin-left: .5rem;" />
+                        <RadzenTextBox @bind-Value="model.PermissionNamesText" Placeholder="Permission names, comma-separated" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </RadzenColumn>
                 </RadzenRow>
 
@@ -912,12 +1294,6 @@
             return;
         }
 
-        if (IsLockedNode(RenamingNodeId))
-        {
-            CancelRename();
-            return;
-        }
-
         IsBusy = true;
         var result = await Api.Crest.Rest.AdminMenus.RenameNodeAsync(SelectedMenu.Id, RenamingNodeId, new(RenameText));
         await ApplyMenuResultAsync(result);
@@ -939,14 +1315,21 @@
             return;
         }
 
-        if (IsLockedNode(EditingNodeId) || IsLockedNode(model.ParentNodeId))
+        var editingNewBranch = IsNewBranchNode(EditingNodeId);
+        if (editingNewBranch)
+        {
+            model.ParentNodeId = FindNode(SelectedMenu.Nodes, EditingNodeId!)?.ParentId ?? string.Empty;
+            model.Position = FindNode(SelectedMenu.Nodes, EditingNodeId!)?.Order;
+        }
+
+        if (!editingNewBranch && IsNewBranchNode(model.ParentNodeId))
         {
             CancelEdit();
-            Notifications.Notify(NotificationSeverity.Warning, "Admin menu item locked", "The New menu branch is a built-in Orchard shortcut and cannot be edited.");
+            Notifications.Notify(NotificationSeverity.Warning, "Admin menu item fixed", "The New menu branch has a fixed structure. Text and icon overrides are allowed, but layout changes are not.");
             return;
         }
 
-        if (!CanPlaceNodeUnder(EditingNodeId, model.ParentNodeId))
+        if (!editingNewBranch && !CanPlaceNodeUnder(EditingNodeId, model.ParentNodeId))
         {
             ShowTierLimitError();
             return;
@@ -970,7 +1353,7 @@
 
     private async Task ToggleNodeAsync(AdminMenuNodeSummary node)
     {
-        if (SelectedMenu is null || IsLockedNode(node))
+        if (SelectedMenu is null)
         {
             return;
         }
@@ -980,12 +1363,22 @@
 
     private async Task DeleteNodeAsync(AdminMenuNodeSummary node)
     {
-        if (SelectedMenu is null || IsLockedNode(node))
+        if (SelectedMenu is null || IsNewBranchNode(node))
         {
             return;
         }
 
         await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.DeleteNodeAsync(SelectedMenu.Id, node.Id));
+    }
+
+    private async Task DeleteSeparatorAsync(AdminMenuSeparatorSummary separator)
+    {
+        if (SelectedMenu is null || !SelectedMenu.IsDefault)
+        {
+            return;
+        }
+
+        await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.DeleteSeparatorAsync(SelectedMenu.Id, separator.Id));
     }
 
     private async Task ApplyMenuResultAsync(AdminMenuSummary? menu)
@@ -997,10 +1390,145 @@
         }
 
         State = new(State.Menus.Select(existing => existing.Id == menu.Id ? menu : existing).ToArray());
+        RegisterMenuIcons(menu);
         SelectedMenuId = menu.Id;
+        SyncSidebarSettingsModel();
         ShouldInitializeTree = true;
         await DisplayManager.RefreshAdminMenuAsync();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private void RegisterMenuIcons(params AdminMenuSummary[] menus)
+    {
+        foreach (var menu in menus)
+        {
+            ClientIcons.Register(menu.Icons);
+        }
+    }
+
+    private async Task SaveSidebarSettingsAsync()
+    {
+        if (SelectedMenu is null || !SelectedMenu.IsDefault)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        var result = await Api.Crest.Rest.AdminMenus.UpdateSidebarSettingsAsync(SelectedMenu.Id, NormalizeSidebarSettings(SidebarSettingsModel));
+        await ApplyMenuResultAsync(result);
+        if (result is not null)
+        {
+            IsSidebarSettingsOpen = false;
+            Notifications.Notify(NotificationSeverity.Success, "Sidebar settings saved", "The sidebar settings were updated.");
+        }
+
+        IsBusy = false;
+    }
+
+    private void SyncSidebarSettingsModel()
+    {
+        SidebarSettingsModel = CloneSidebarSettings(SelectedMenu?.SidebarSettings ?? CreateDefaultSidebarSettings());
+    }
+
+    private static AdminSidebarSettings CloneSidebarSettings(AdminSidebarSettings settings) => new()
+    {
+        Collapsible = settings.Collapsible,
+        ExpansionDurationMilliseconds = settings.ExpansionDurationMilliseconds,
+        TierSeparators = settings.TierSeparators?.ToList() ?? [true, false, false],
+        TierIndents = settings.TierIndents?.ToList() ?? ["0rem", "0.75rem", "1.25rem", "1.75rem"],
+        TierBackgrounds = settings.TierBackgrounds?.ToList() ?? ["transparent", "transparent", "#f3f4f6", "transparent"],
+        TierBaseSizes = settings.TierBaseSizes is { Count: > 0 }
+            ? settings.TierBaseSizes.ToList()
+            : settings.TierBaseRems?.Select(value => $"{value:0.###}rem").ToList() ?? ["1rem", "0.95rem", "0.9rem"],
+        TierBaseRems = settings.TierBaseRems?.ToList() ?? [1.0, 0.95, 0.9],
+    };
+
+    private static AdminSidebarSettings CreateDefaultSidebarSettings() => new();
+
+    private static AdminSidebarSettings NormalizeSidebarSettings(AdminSidebarSettings settings)
+    {
+        var normalized = CloneSidebarSettings(settings);
+        normalized.ExpansionDurationMilliseconds = Math.Clamp(normalized.ExpansionDurationMilliseconds, 100, 2000);
+        EnsureLength(normalized.TierSeparators, 3, false);
+        EnsureLength(normalized.TierIndents, 4, "0rem");
+        EnsureLength(normalized.TierBackgrounds, 4, "transparent");
+        EnsureLength(normalized.TierBaseSizes, 3, "1rem");
+        EnsureLength(normalized.TierBaseRems, 3, 1.0);
+        normalized.TierIndents = normalized.TierIndents.Take(4).Select(NormalizeCssMeasurement).ToList();
+        normalized.TierBaseSizes = normalized.TierBaseSizes.Take(3).Select(NormalizeCssMeasurement).ToList();
+        normalized.TierBaseRems = normalized.TierBaseRems.Take(3).Select(value => Math.Clamp(value, 0.5, 2.0)).ToList();
+        return normalized;
+    }
+
+    private Task SetSidebarExpansionMilliseconds(decimal value)
+    {
+        SidebarExpansionMilliseconds = value;
+        return Task.CompletedTask;
+    }
+
+    private decimal GetTierIndentValue(int index) => ParseCssMeasurement(GetValue(SidebarSettingsModel.TierIndents, index, index == 0 ? "0rem" : $"{index * 0.75:0.##}rem")).Value;
+    private string GetTierIndentUnit(int index) => ParseCssMeasurement(GetValue(SidebarSettingsModel.TierIndents, index, index == 0 ? "0rem" : $"{index * 0.75:0.##}rem")).Unit;
+    private void SetTierIndentValue(int index, decimal value) => SetMeasurement(SidebarSettingsModel.TierIndents, index, value, GetTierIndentUnit(index));
+    private void SetTierIndentUnit(int index, string unit) => SetMeasurement(SidebarSettingsModel.TierIndents, index, GetTierIndentValue(index), unit);
+    private bool GetTierSeparator(int index) => GetValue(SidebarSettingsModel.TierSeparators, index, false);
+    private void SetTierSeparator(int index, bool value) => SetValue(SidebarSettingsModel.TierSeparators, index, value);
+    private decimal GetTierBaseSizeValue(int index) => ParseCssMeasurement(GetValue(SidebarSettingsModel.TierBaseSizes, index, index == 0 ? "1rem" : $"{1 - (index * 0.05m):0.###}rem")).Value;
+    private string GetTierBaseSizeUnit(int index) => ParseCssMeasurement(GetValue(SidebarSettingsModel.TierBaseSizes, index, index == 0 ? "1rem" : $"{1 - (index * 0.05m):0.###}rem")).Unit;
+    private void SetTierBaseSizeValue(int index, decimal value) => SetMeasurement(SidebarSettingsModel.TierBaseSizes, index, value, GetTierBaseSizeUnit(index));
+    private void SetTierBaseSizeUnit(int index, string unit) => SetMeasurement(SidebarSettingsModel.TierBaseSizes, index, GetTierBaseSizeValue(index), unit);
+    private string GetTierColor(int index) => ToColorInputValue(GetValue(SidebarSettingsModel.TierBackgrounds, index, "transparent"));
+    private void SetTierBackground(int index, string? value) => SetValue(SidebarSettingsModel.TierBackgrounds, index, string.IsNullOrWhiteSpace(value) ? "transparent" : value.Trim());
+
+    private static void SetMeasurement(IList<string> values, int index, decimal value, string unit)
+    {
+        unit = CssSizeUnits.Any(candidate => string.Equals(candidate.Value, unit, StringComparison.OrdinalIgnoreCase)) ? unit : "rem";
+        SetValue(values, index, $"{value:0.###}{unit}");
+    }
+
+    private static string NormalizeCssMeasurement(string value)
+    {
+        var parsed = ParseCssMeasurement(value);
+        return $"{parsed.Value:0.###}{parsed.Unit}";
+    }
+
+    private static (decimal Value, string Unit) ParseCssMeasurement(string? value)
+    {
+        value = string.IsNullOrWhiteSpace(value) ? "0rem" : value.Trim();
+        var unit = CssSizeUnits.FirstOrDefault(option => value.EndsWith(option.Value, StringComparison.OrdinalIgnoreCase))?.Value ?? "rem";
+        var number = unit.Length <= value.Length ? value[..^unit.Length] : value;
+        return decimal.TryParse(number, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? (parsed, unit)
+            : (0, unit);
+    }
+
+    private static string ToColorInputValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Equals("transparent", StringComparison.OrdinalIgnoreCase) || !value.StartsWith('#'))
+        {
+            return "#ffffff";
+        }
+
+        return value.Length == 4 || value.Length == 7 ? value : "#ffffff";
+    }
+
+    private static T GetValue<T>(IList<T> values, int index, T fallback)
+    {
+        EnsureLength(values, index + 1, fallback);
+        return values[index];
+    }
+
+    private static void SetValue<T>(IList<T> values, int index, T value)
+    {
+        EnsureLength(values, index + 1, value);
+        values[index] = value;
+    }
+
+    private static void EnsureLength<T>(IList<T> values, int length, T fallback)
+    {
+        while (values.Count < length)
+        {
+            values.Add(fallback);
+        }
     }
 
     private static IEnumerable<AdminMenuNodeSummary> Flatten(IEnumerable<AdminMenuNodeSummary> nodes)
@@ -1021,9 +1549,15 @@
     private static bool IsDescendantOf(AdminMenuNodeSummary node, string? candidateId) =>
         !string.IsNullOrWhiteSpace(candidateId) && Flatten(node.Items).Any(child => child.Id == candidateId);
 
-    private bool IsLockedNode(AdminMenuNodeSummary node) => SelectedMenu?.IsDefault == true && (node.Id == LockedNewNodeId || IsDescendantOfNewNode(node.Id));
+    private bool CanEditNode(AdminMenuNodeSummary node) => SelectedMenu?.IsDefault != true || IsNewBranchNode(node) || !IsMoveLockedNode(node);
 
-    private bool IsLockedNode(string? nodeId) =>
+    private bool IsMoveLockedNode(AdminMenuNodeSummary node) => IsNewBranchNode(node);
+
+    private bool IsNewBranchNode(AdminMenuNodeSummary node) => IsNewBranchNode(node.Id);
+
+    private static bool IsNewRootNode(AdminMenuNodeSummary node) => node.Id == LockedNewNodeId;
+
+    private bool IsNewBranchNode(string? nodeId) =>
         SelectedMenu?.IsDefault == true && !string.IsNullOrWhiteSpace(nodeId) && (nodeId == LockedNewNodeId || IsDescendantOfNewNode(nodeId));
 
     private bool IsDescendantOfNewNode(string nodeId)
@@ -1095,6 +1629,14 @@
         return parts.Count == 0 ? "No link metadata" : string.Join(" · ", parts);
     }
 
+    private static string NodeIconTitle(AdminMenuNodeSummary node)
+    {
+        var iconKey = node.Icon?.Key;
+        return string.IsNullOrWhiteSpace(iconKey)
+            ? "No icon assigned"
+            : $"Icon: {iconKey}";
+    }
+
     public async ValueTask DisposeAsync()
     {
         try
@@ -1106,13 +1648,17 @@
             // Ignore JS runtime disposal races during navigation.
         }
 
-        PollingCts?.Cancel();
-        PollingCts?.Dispose();
+        if (AdminMenuLayoutHub is not null)
+        {
+            await AdminMenuLayoutHub.DisposeAsync();
+        }
+
         DotNetRef?.Dispose();
     }
 
     private sealed record NodeTypeOption(string Value, string Text);
     private sealed record ParentOption(string Value, string Text);
+    private sealed record MenuEntry(int Order, int Kind, AdminMenuNodeSummary? Node, AdminMenuSeparatorSummary? Separator);
 
     private sealed class AdminMenuNodeFormModel
     {

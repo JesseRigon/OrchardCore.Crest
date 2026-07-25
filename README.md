@@ -94,6 +94,10 @@ The repository can remain a single git repository while publishing separate NuGe
 
 Project files are not fully package-ready yet. Some projects still have `IsPackable=false`; packaging metadata and dependency boundaries need to be finalized before publishing.
 
+## Development Recipes
+
+Reusable Crest development recipes live under `OrchardCore.Crest.Site/Recipes`: `OrchardCore.CrestBasicDev` for a focused Crest admin shell and `OrchardCore.CrestFullDev` for broad Orchard/Crest feature testing. Host apps should keep tenant/user autosetup recipes in the host repo.
+
 ## Validation
 
 Use the host application for end-to-end validation:

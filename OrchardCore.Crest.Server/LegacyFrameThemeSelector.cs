@@ -8,6 +8,8 @@ public sealed class LegacyFrameThemeSelector(IHttpContextAccessor httpContextAcc
 {
     public const string QueryParameter = "legacy-frame";
     public const string ThemeId = "OrchardCore.Crest.LegacyFrame";
+    private const string SecFetchDestHeader = "Sec-Fetch-Dest";
+    private const string IFrameFetchDestination = "iframe";
 
     public Task<ThemeSelectorResult?> GetThemeAsync()
     {
@@ -26,5 +28,6 @@ public sealed class LegacyFrameThemeSelector(IHttpContextAccessor httpContextAcc
 
     public static bool IsLegacyFrameRequest(HttpContext context) =>
         string.Equals(context.Request.Query[QueryParameter], "1", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(context.Request.Query[QueryParameter], "true", StringComparison.OrdinalIgnoreCase);
+        string.Equals(context.Request.Query[QueryParameter], "true", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(context.Request.Headers[SecFetchDestHeader], IFrameFetchDestination, StringComparison.OrdinalIgnoreCase);
 }

@@ -83,12 +83,14 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="CopyCrestIconAssets" AfterTargets="Build">
+  <Target Name="CopyCrestSharedAssets" AfterTargets="Build">
     <ItemGroup>
+      <_CrestSharedAsset Include="..\..\OrchardCore.Crest.Components\wwwroot\crest.components.css" />
+      <_CrestSharedAsset Include="..\..\OrchardCore.Crest.Components\wwwroot\crest.components.js" />
       <_CrestIconAsset Include="..\..\OrchardCore.Crest.Icons\wwwroot\icons.css" />
       <_CrestIconAsset Include="..\..\OrchardCore.Crest.Icons\wwwroot\icons.js" />
     </ItemGroup>
-    <Copy SourceFiles="@(_CrestIconAsset)" DestinationFolder="$(TargetDir)wwwroot" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_CrestSharedAsset);@(_CrestIconAsset)" DestinationFolder="$(TargetDir)wwwroot" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

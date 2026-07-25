@@ -194,6 +194,10 @@ public interface IAdminMenusApi
     Task<AdminMenuSummary?> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model);
     Task<AdminMenuSummary?> ToggleNodeAsync(string menuId, string nodeId);
     Task<AdminMenuSummary?> DeleteNodeAsync(string menuId, string nodeId);
+    Task<AdminMenuSummary?> CreateSeparatorAsync(string menuId, AdminMenuSeparatorEditModel model);
+    Task<AdminMenuSummary?> MoveSeparatorAsync(string menuId, string separatorId, AdminMenuSeparatorEditModel model);
+    Task<AdminMenuSummary?> DeleteSeparatorAsync(string menuId, string separatorId);
+    Task<AdminMenuSummary?> UpdateSidebarSettingsAsync(string menuId, AdminSidebarSettings settings);
     Task<AdminMenuLayoutExportResult?> ExportLayoutAsync(string? fileName = null);
 }
 
@@ -952,6 +956,39 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
     }
 
+    public async Task<AdminMenuSummary?> CreateSeparatorAsync(string menuId, AdminMenuSeparatorEditModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/separators")
+        {
+            Content = JsonContent.Create(model),
+        }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    public async Task<AdminMenuSummary?> DeleteSeparatorAsync(string menuId, string separatorId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Delete, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/separators/{Uri.EscapeDataString(separatorId)}")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    public async Task<AdminMenuSummary?> MoveSeparatorAsync(string menuId, string separatorId, AdminMenuSeparatorEditModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/separators/{Uri.EscapeDataString(separatorId)}/move")
+        {
+            Content = JsonContent.Create(model),
+        }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
+    public async Task<AdminMenuSummary?> UpdateSidebarSettingsAsync(string menuId, AdminSidebarSettings settings)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/sidebar-settings")
+        {
+            Content = JsonContent.Create(settings),
+        }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
     private async Task<AdminMenuSummary?> SendNodeAsync(HttpMethod method, string uri, object? model)
     {
         using var request = WithCredentials(new(method, uri));
@@ -1063,10 +1100,12 @@ public sealed record SiteSettingsUpdate(
     string ResourceDebugMode,
     string CacheMode);
 
-public sealed record NavigationMenu(string Name, NavigationItem[] Items, Crest.Icons.IconPack? Icons = null)
+public sealed record NavigationMenu(string Name, NavigationItem[] Items, Crest.Icons.IconPack? Icons = null, NavigationSeparator[]? Separators = null, AdminSidebarSettings? SidebarSettings = null)
 {
     public static NavigationMenu Empty(string name) => new(name, []);
 }
+
+public sealed record NavigationSeparator(string Key, string? ParentKey, int Order);
 
 public sealed record NavigationIcon(string? Key, string Library, string? Version, string? Style, string Name, string? SvgMarkup);
 
@@ -1325,7 +1364,20 @@ public sealed record AdminMenusState(AdminMenuSummary[] Menus)
     public static AdminMenusState Empty { get; } = new([]);
 }
 
-public sealed record AdminMenuSummary(string Id, string Name, bool Enabled, bool IsDefault, AdminMenuNodeSummary[] Nodes);
+public sealed record AdminMenuSummary(string Id, string Name, bool Enabled, bool IsDefault, AdminMenuSeparatorSummary[] Separators, AdminSidebarSettings SidebarSettings, Crest.Icons.IconPack? Icons, AdminMenuNodeSummary[] Nodes);
+
+public sealed class AdminSidebarSettings
+{
+    public bool Collapsible { get; set; } = true;
+    public int ExpansionDurationMilliseconds { get; set; } = 500;
+    public List<bool> TierSeparators { get; set; } = [true, false, false];
+    public List<string> TierIndents { get; set; } = ["0rem", "0.75rem", "1.25rem", "1.75rem"];
+    public List<string> TierBackgrounds { get; set; } = ["transparent", "transparent", "var(--rz-base-100, color-mix(in srgb, var(--rz-base-background-color) 88%, var(--rz-text-color) 12%))", "transparent"];
+    public List<string> TierBaseSizes { get; set; } = ["1rem", "0.95rem", "0.9rem"];
+    public List<double> TierBaseRems { get; set; } = [1.0, 0.95, 0.9];
+}
+
+public sealed record AdminMenuSeparatorSummary(string Id, string? ParentId, int Depth, int Order);
 
 public sealed record AdminMenuEditModel(string? Name, bool Enabled);
 
@@ -1335,6 +1387,7 @@ public sealed record AdminMenuNodeSummary(
     string Text,
     string? Url,
     string? IconClass,
+    NavigationIcon? Icon,
     bool Enabled,
     int Priority,
     string? DisplayPosition,
@@ -1362,7 +1415,9 @@ public sealed record AdminMenuNodeMoveModel(string? ParentNodeId, int? Position)
 
 public sealed record AdminMenuNodeRenameModel(string? Text);
 
-public sealed record AdminMenuLayoutExportResult(string File, string Path, int ItemCount, int CustomItemCount);
+public sealed record AdminMenuSeparatorEditModel(string? ParentNodeId, int? Position);
+
+public sealed record AdminMenuLayoutExportResult(string File, string Path, int ItemCount, int CustomItemCount, int SeparatorCount);
 
 public sealed record CrestThemeSettings(string RadzenTheme, Dictionary<string, string> Tokens)
 {

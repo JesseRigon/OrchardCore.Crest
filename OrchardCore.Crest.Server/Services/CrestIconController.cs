@@ -9,14 +9,16 @@ namespace Crest.Services;
 /// </summary>
 public sealed class CrestIconController(CrestIconSourceStore iconSourceStore)
 {
-    public async Task<NavigationMenu> ResolveMenuIconsAsync(NavigationMenu menu, CancellationToken cancellationToken = default)
+    public const string AdminMenuSearchIconKey = "iconify.mdi/current/default/magnify";
+
+    public async Task<NavigationMenu> ResolveMenuIconsAsync(NavigationMenu menu, IEnumerable<string>? additionalIconKeys = null, CancellationToken cancellationToken = default)
     {
         var resolved = menu with
         {
             Items = await Task.WhenAll(menu.Items.Select(item => ResolveItemIconsAsync(item, cancellationToken)))
         };
 
-        var iconKeys = CollectIconKeys(resolved.Items);
+        var iconKeys = CollectIconKeys(resolved.Items).Concat(additionalIconKeys ?? []);
         return resolved with
         {
             Icons = await iconSourceStore.BuildPackAsync(iconKeys, cancellationToken)

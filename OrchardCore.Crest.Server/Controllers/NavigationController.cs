@@ -28,10 +28,17 @@ public sealed class NavigationController(
 
         var navigationManager = access.GetRequiredService<INavigationManager>();
         var layoutService = access.GetRequiredService<CrestAdminMenuLayoutService>();
+        var sidebarSettingsStore = access.GetRequiredService<CrestAdminSidebarSettingsStore>();
+        var adminSettingsNormalizer = access.GetRequiredService<CrestAdminSettingsNormalizer>();
         var iconController = access.GetRequiredService<CrestIconController>();
 
         // Orchard builds, authorizes, and reduces this tree for the actual
         // request user. Apply the tenant-wide Crest layout only afterwards.
+        if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
+        {
+            await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
+        }
+
         var items = await navigationManager.BuildMenuAsync(menuName, ControllerContext);
 
         var menu = new NavigationMenu(
@@ -43,13 +50,19 @@ public sealed class NavigationController(
         if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
         {
             menu = await layoutService.ApplyAsync(menu);
+            menu = menu with { SidebarSettings = await sidebarSettingsStore.GetAsync(HttpContext.RequestAborted) };
         }
 
-        return Ok(await iconController.ResolveMenuIconsAsync(menu, HttpContext.RequestAborted));
+        return Ok(await iconController.ResolveMenuIconsAsync(
+            menu,
+            string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase) ? [CrestIconController.AdminMenuSearchIconKey] : null,
+            HttpContext.RequestAborted));
     }
 }
 
-public sealed record NavigationMenu(string Name, NavigationItem[] Items, IconPack? Icons = null);
+public sealed record NavigationMenu(string Name, NavigationItem[] Items, IconPack? Icons = null, NavigationSeparator[]? Separators = null, CrestAdminSidebarSettings? SidebarSettings = null);
+
+public sealed record NavigationSeparator(string Key, string? ParentKey, int Order);
 
 public sealed record NavigationIcon(string? Key, string Library, string? Version, string? Style, string Name, string? SvgMarkup);
 

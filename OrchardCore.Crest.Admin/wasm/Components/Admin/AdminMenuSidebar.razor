@@ -1,5 +1,7 @@
 @using Crest.Admin.DisplayManagement
 @using Crest.Admin.Components.Shared
+@using Crest.Components.Navigation
+@using Crest.Components.Overlay
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
@@ -9,7 +11,11 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<RadzenSidebar class="admin-menu-sidebar">
+<Crest.Components.Layout.CrestSidebar Class="@SidebarClass"
+                                      Style="@SidebarStyle"
+                                      data-testid="admin-menu-sidebar"
+                                      @onmouseenter="BeginHoverOpenAsync"
+                                      @onmouseleave="EndHoverOpen">
     <RadzenStack Gap="0.75rem" class="admin-menu-sidebar__content">
         @if (DisplayManager is null)
         {
@@ -23,28 +29,57 @@
         {
             @if (DisplayManager.Manifest?.AdminSettings.DisplayMenuFilter == true)
             {
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-menu-sidebar__filter-row">
-                    <RadzenTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="Search Menu" Style="width: 100%;" />
+                <div class="@FilterRowClass">
+                    @if (ShowSearchIcon)
+                    {
+                        <span class="crest-panel-menu__icon-rail admin-menu-sidebar__filter-search-icon" aria-hidden="true">
+                            @RenderMenuIcon(SearchIcon, 0)
+                        </span>
+                    }
+
+                    <span class="crest-panel-menu__text-rail admin-menu-sidebar__filter-input-rail">
+                        <RadzenTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="Search Menu" Style="width: 100%;" />
+                    </span>
+
                     @if (HasQuickAddItems)
                     {
-                        <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" class="admin-menu-sidebar__quickadd-button" Click="OpenQuickAdd" title="Quick Add" />
+                        <button type="button" class="admin-menu-sidebar__quickadd-toggle" @onclick="OpenQuickAdd" title="@QuickAddTitle" aria-label="@QuickAddTitle">
+                            @RenderMenuIcon(QuickAddSource?.Icon, 0)
+                        </button>
                     }
-                </RadzenStack>
+                </div>
             }
             else if (HasQuickAddItems)
             {
-                <button type="button" class="admin-menu-sidebar__quickadd-row" @onclick="OpenQuickAdd" title="Quick Add">
-                    <span class="admin-menu-sidebar__item-content">
-                        <RadzenIcon Icon="celebration" class="rz-navigation-item-icon admin-menu-sidebar__icon" />
-                        <span class="rz-navigation-item-text">Quick Add</span>
+                <button type="button" class="admin-menu-sidebar__quickadd-row" @onclick="OpenQuickAdd" title="@QuickAddTitle">
+                    <span class="crest-panel-menu__item-content">
+                        <span class="crest-panel-menu__icon-rail">
+                            @RenderMenuIcon(QuickAddSource?.Icon, 0)
+                        </span>
+                        <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
                     </span>
-                    <RadzenIcon Icon="add" class="admin-menu-sidebar__quickadd-add-icon" title="Open Quick Add" />
+                    <RadzenIcon Icon="add" class="admin-menu-sidebar__quickadd-add-icon" title="@($"Open {QuickAddTitle}")" />
                 </button>
             }
 
-            <RadzenPanelMenu class="admin-menu-sidebar__menu">
-                <AdminMenuPanelItems Items="VisibleMenuItems" ActiveItemKey="@ActiveItemKey" ActiveItemLink="@ActiveItemLink" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" FlyoutOpened="OpenFlyout" FlyoutCloseRequested="CloseFlyoutSoon" />
-            </RadzenPanelMenu>
+            <CrestPanelMenu Items="VisiblePanelMenuItems"
+                            Class="admin-menu-sidebar__menu"
+                            AriaLabel="Admin navigation"
+                            ExpandedItemKeys="ExpandedItemKeys"
+                            ExpandedChanged="SetExpanded"
+                            FlyoutOpened="OpenFlyout"
+                            FlyoutCloseRequested="CloseFlyoutSoon"
+                            Collapsed="@IsMenuCollapsed"
+                            IconRailWidth="4rem"
+                            ActionRailWidth="2rem"
+                            ItemHeight="2.5rem"
+                            Style="@PanelMenuStyle"
+                            LevelIndents="SidebarSettings.TierIndents"
+                            LevelBackgrounds="SidebarSettings.TierBackgrounds"
+                            LevelBaseSizes="SidebarSettings.TierBaseSizes"
+                            TierSeparators="SidebarSettings.TierSeparators"
+                            IndentTransitionDuration="@ExpansionDuration"
+                            CompactTransitionDuration="@ExpansionDuration" />
 
             @if (VisibleMenuItems.Length == 0)
             {
@@ -53,35 +88,69 @@
 
             @if (IsQuickAddOpen)
             {
-                <div class="admin-menu-sidebar__quickadd-popover" role="dialog" aria-modal="true" aria-label="Quick Add">
+                <div class="admin-menu-sidebar__quickadd-popover" role="dialog" aria-modal="true" aria-label="@QuickAddTitle">
                     <div class="admin-menu-sidebar__quickadd-header">
-                        <span class="admin-menu-sidebar__item-content">
-                            <RadzenIcon Icon="celebration" class="rz-navigation-item-icon admin-menu-sidebar__icon" />
-                            <span class="rz-navigation-item-text">Quick Add</span>
+                        <span class="crest-panel-menu__item-content">
+                            <span class="crest-panel-menu__icon-rail">
+                                @RenderMenuIcon(QuickAddSource?.Icon, 0)
+                            </span>
+                            <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
                         </span>
-                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" class="admin-menu-sidebar__quickadd-button" Click="CloseQuickAdd" title="Close Quick Add" />
+                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" class="admin-menu-sidebar__quickadd-button" Click="CloseQuickAdd" title="@($"Close {QuickAddTitle}")" />
                     </div>
-                    <RadzenPanelMenu class="admin-menu-sidebar__menu admin-menu-sidebar__quickadd-menu">
-                        <AdminMenuPanelItems Items="QuickAddItems" ActiveItemKey="@ActiveItemKey" ActiveItemLink="@ActiveItemLink" ExpandedItemKeys="ExpandedItemKeys" ExpandedChanged="SetExpanded" FlyoutOpened="OpenFlyout" FlyoutCloseRequested="CloseFlyoutSoon" />
-                    </RadzenPanelMenu>
+                    <CrestPanelMenu Items="QuickAddPanelMenuItems"
+                                    Class="admin-menu-sidebar__menu admin-menu-sidebar__quickadd-menu"
+                                    AriaLabel="Quick Add"
+                                    ExpandedItemKeys="ExpandedItemKeys"
+                                    ExpandedChanged="SetExpanded"
+                                    FlyoutOpened="OpenFlyout"
+                                    FlyoutCloseRequested="CloseFlyoutSoon"
+                                    Collapsed="false"
+                                    IconRailWidth="4rem"
+                                    ActionRailWidth="2rem"
+                                    ItemHeight="2.5rem"
+                                    Style="@PanelMenuStyle"
+                                    LevelIndents="SidebarSettings.TierIndents"
+                                    LevelBackgrounds="SidebarSettings.TierBackgrounds"
+                                    LevelBaseSizes="SidebarSettings.TierBaseSizes"
+                                    TierSeparators="SidebarSettings.TierSeparators"
+                                    IndentTransitionDuration="@ExpansionDuration"
+                                    CompactTransitionDuration="@ExpansionDuration" />
                 </div>
             }
         }
     </RadzenStack>
-</RadzenSidebar>
+    @if (IsSidebarCollapsible)
+    {
+        <button type="button"
+                class="admin-menu-sidebar__mode-toggle"
+                aria-label="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                aria-pressed="@IsPinnedExpanded"
+                title="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                @onclick="TogglePinnedExpanded">
+            <RadzenIcon Icon="@(IsPinnedExpanded ? "chevron_left" : "chevron_right")" />
+        </button>
+    }
+</Crest.Components.Layout.CrestSidebar>
 
-<Flyout IsOpen="@(ActiveFlyoutItem is not null)"
-        Left="FlyoutLeft"
-        Top="FlyoutTop"
-        Class="admin-menu-sidebar__flyout admin-menu-sidebar__flyout--detached"
-        Role="menu"
-        OnMouseEnter="@(_ => KeepFlyoutOpen())"
-        OnMouseLeave="@(_ => CloseFlyout())">
+<CrestPopup IsOpen="@(ActiveFlyoutItem is not null)"
+            AnchorMode="CrestPopupAnchorMode.Element"
+            AnchorSelector="@FlyoutAnchorSelector"
+            AnchorPoint="CrestPopupAnchorPoint.TopRight"
+            FlipAboveAnchorPoint="CrestPopupAnchorPoint.BottomRight"
+            OffsetX="12"
+            OffsetY="0"
+            ZIndex="1200"
+            WindowAware="true"
+            Class="admin-menu-sidebar__flyout admin-menu-sidebar__flyout--detached"
+            Role="menu"
+            OnMouseEnter="@(_ => KeepFlyoutOpen())"
+            OnMouseLeave="@(_ => CloseFlyout())">
     @if (ActiveFlyoutItem is not null)
     {
         <AdminMenuFlyoutItems Items="ActiveFlyoutItem.Items" />
     }
-</Flyout>
+</CrestPopup>
 
 @code {
     [CascadingParameter]
@@ -92,20 +161,52 @@
     private string? MenuFilter { get; set; }
     private bool IsQuickAddOpen { get; set; }
     private DisplayMenuItem? ActiveFlyoutItem { get; set; }
-    private double FlyoutLeft { get; set; }
-    private double FlyoutTop { get; set; }
+    private string? FlyoutAnchorSelector { get; set; }
     private CancellationTokenSource? FlyoutCloseDelay { get; set; }
+    private CancellationTokenSource? HoverOpenDelay { get; set; }
     private string? BrowserPathAndQuery { get; set; }
+    private bool IsPinnedExpanded { get; set; } = true;
+    private bool IsHoverReady { get; set; }
 
     private DisplayMenu? Menu => DisplayManager?.AdminMenu;
     private DisplayMenuItem? QuickAddSource => Menu is null ? null : FindQuickAddSource(Menu.Items);
     private DisplayMenuItem[] QuickAddItems => QuickAddSource?.Items ?? [];
-    private bool HasQuickAddItems => DisplayManager?.Manifest?.AdminSettings.DisplayNewMenu == true && QuickAddItems.Length > 0;
+    private bool HasQuickAddItems => QuickAddItems.Length > 0;
+    private string QuickAddTitle => string.IsNullOrWhiteSpace(QuickAddSource?.Text) ? "Quick Add" : QuickAddSource.Text;
     private DisplayMenuItem[] SidebarMenuItems => Menu is null ? [] : RemoveQuickAddSource(Menu.Items);
     private DisplayMenuItem[] VisibleMenuItems => string.IsNullOrWhiteSpace(MenuFilter) ? SidebarMenuItems : FilterItems(SidebarMenuItems, MenuFilter);
+    private CrestPanelMenuItem[] VisiblePanelMenuItems => MapMenuItems(VisibleMenuItems, null);
+    private CrestPanelMenuItem[] QuickAddPanelMenuItems => MapMenuItems(QuickAddItems, QuickAddSource?.StableKey);
     private DisplayMenuItem? ActiveItem => Menu is null ? null : FindBestActiveItem(Menu.Items);
     private string? ActiveItemKey => ActiveItem?.StableKey;
     private string? ActiveItemLink => ActiveItem?.Link;
+    private DisplaySidebarSettings SidebarSettings => Menu?.SidebarSettings ?? DisplaySidebarSettings.Default;
+    private bool IsSidebarCollapsible => SidebarSettings.Collapsible;
+    private bool IsEffectivelyPinnedExpanded => !IsSidebarCollapsible || IsPinnedExpanded;
+    private string ExpansionDuration => $"{SidebarSettings.ExpansionDurationMilliseconds}ms";
+    private string SidebarStyle => string.Join(' ', new[] { $"--admin-menu-sidebar-expansion-duration: {ExpansionDuration};" }
+        .Concat(SidebarSettings.TierIndents.Select((value, index) => $"--crest-panel-menu-tier-{index + 1}-indent: {value};")));
+    private bool ShowSearchIcon => !HasQuickAddItems;
+    private string FilterRowClass => string.Join(' ', new[]
+    {
+        "admin-menu-sidebar__filter-row",
+        "crest-panel-menu__item-link",
+        HasQuickAddItems ? "admin-menu-sidebar__filter-row--quickadd" : "admin-menu-sidebar__filter-row--search",
+    });
+    private string PanelMenuStyle => string.Join(' ', SidebarSettings.TierBackgrounds.Select((value, index) => $"--crest-panel-menu-tier-{index + 1}-background: {value};")
+        .Concat(SidebarSettings.TierBaseSizes.Select((value, index) => $"--crest-panel-menu-tier-{index + 1}-base-size: {value};"))
+        .Append($"--crest-panel-menu-tier-4-base-size: {GetTierFourBaseSize()};"));
+    private static DisplayIcon SearchIcon { get; } = new("iconify.mdi/current/default/magnify", "iconify.mdi", "current", "default", "magnify", null);
+
+    private string GetTierFourBaseSize() => SidebarSettings.TierBaseSizes.Length >= 3
+        ? SidebarSettings.TierBaseSizes[2]
+        : SidebarSettings.TierBaseSizes.LastOrDefault() ?? DisplaySidebarSettings.Default.TierBaseSizes[2];
+    private string SidebarClass => IsEffectivelyPinnedExpanded
+        ? "admin-menu-sidebar admin-menu-sidebar--pinned admin-menu-sidebar--expanded"
+        : IsHoverReady
+            ? "admin-menu-sidebar admin-menu-sidebar--compact admin-menu-sidebar--expanded admin-menu-sidebar--hover-ready"
+            : "admin-menu-sidebar admin-menu-sidebar--compact";
+    private bool IsMenuCollapsed => IsSidebarCollapsible && !IsPinnedExpanded && !IsHoverReady;
 
     protected override void OnInitialized()
     {
@@ -119,6 +220,12 @@
             if (firstRender)
             {
                 BrowserPathAndQuery = await JS.InvokeAsync<string>("crestAdminMenus.getPathAndQuery");
+                var savedPinnedState = await JS.InvokeAsync<bool?>("crestAdminMenus.getSidebarPinnedState");
+                if (IsSidebarCollapsible && savedPinnedState.HasValue)
+                {
+                    IsPinnedExpanded = savedPinnedState.Value;
+                }
+
                 StateHasChanged();
             }
 
@@ -154,26 +261,47 @@
         Navigation.LocationChanged -= OnLocationChanged;
         FlyoutCloseDelay?.Cancel();
         FlyoutCloseDelay?.Dispose();
+        HoverOpenDelay?.Cancel();
+        HoverOpenDelay?.Dispose();
     }
 
-    private void OpenFlyout(DisplayMenuItem item, MouseEventArgs args)
+    private void OpenFlyout(CrestPanelMenuFlyoutEventArgs args)
     {
+        if (args.Item.Source is not DisplayMenuItem item)
+        {
+            return;
+        }
+
         KeepFlyoutOpen();
         ActiveFlyoutItem = item;
-        FlyoutLeft = Math.Max(args.ClientX + 12, 292);
-        FlyoutTop = Math.Max(args.ClientY - 18, 72);
+        FlyoutAnchorSelector = $"[data-crest-panel-menu-flyout-anchor=\"{EscapeCssAttributeValue(args.Item.Key)}\"]";
         StateHasChanged();
     }
 
     private void KeepFlyoutOpen()
     {
         FlyoutCloseDelay?.Cancel();
+        if (IsSidebarCollapsible && !IsPinnedExpanded)
+        {
+            IsHoverReady = true;
+        }
     }
+
+    private static string EscapeCssAttributeValue(string value) => value
+        .Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace("\"", "\\\"", StringComparison.Ordinal);
 
     private void CloseFlyout()
     {
         FlyoutCloseDelay?.Cancel();
         ActiveFlyoutItem = null;
+        FlyoutAnchorSelector = null;
+        if (IsSidebarCollapsible && !IsPinnedExpanded)
+        {
+            IsHoverReady = false;
+            IsQuickAddOpen = false;
+        }
+
         StateHasChanged();
     }
 
@@ -195,9 +323,18 @@
         if (!delay.IsCancellationRequested)
         {
             ActiveFlyoutItem = null;
+            FlyoutAnchorSelector = null;
+            if (IsSidebarCollapsible && !IsPinnedExpanded)
+            {
+                IsHoverReady = false;
+                IsQuickAddOpen = false;
+            }
+
             await InvokeAsync(StateHasChanged);
         }
     }
+
+    private void SetExpanded(CrestPanelMenuExpansionChangedEventArgs args) => SetExpanded(args.Item.Key, args.Expanded);
 
     private void SetExpanded(string key, bool expanded)
     {
@@ -227,6 +364,67 @@
 
     private void CloseQuickAdd()
     {
+        IsQuickAddOpen = false;
+    }
+
+    private async Task TogglePinnedExpanded()
+    {
+        if (!IsSidebarCollapsible)
+        {
+            return;
+        }
+
+        IsPinnedExpanded = !IsPinnedExpanded;
+        IsHoverReady = false;
+        IsQuickAddOpen = false;
+        CloseFlyout();
+
+        try
+        {
+            await JS.InvokeVoidAsync("crestAdminMenus.setSidebarPinnedState", IsPinnedExpanded);
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    private async Task BeginHoverOpenAsync()
+    {
+        if (!IsSidebarCollapsible || IsPinnedExpanded)
+        {
+            return;
+        }
+
+        HoverOpenDelay?.Cancel();
+        HoverOpenDelay?.Dispose();
+        var delay = new CancellationTokenSource();
+        HoverOpenDelay = delay;
+
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1), delay.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (!delay.IsCancellationRequested && !IsPinnedExpanded)
+        {
+            IsHoverReady = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void EndHoverOpen()
+    {
+        HoverOpenDelay?.Cancel();
+        if (ActiveFlyoutItem is not null)
+        {
+            return;
+        }
+
+        IsHoverReady = false;
         IsQuickAddOpen = false;
     }
 
@@ -419,5 +617,73 @@
                 yield return child;
             }
         }
+    }
+
+    private CrestPanelMenuItem[] MapMenuItems(IEnumerable<DisplayMenuItem> items, string? parentKey, int level = 0)
+    {
+        var itemArray = items.ToArray();
+        var entries = new List<(int Order, int Kind, CrestPanelMenuItem Item)>();
+
+        for (var index = 0; index < itemArray.Length; index++)
+        {
+            var item = itemArray[index];
+            entries.Add((index, 1, new CrestPanelMenuItem
+            {
+                Key = item.StableKey,
+                Text = item.Text,
+                Href = item.HasChildren || !item.HasLink || item.Link == "#" ? null : item.Link,
+                Target = item.Target,
+                Icon = RenderMenuIcon(item.Icon, level),
+                Items = MapMenuItems(item.Items, item.StableKey, level + 1),
+                IsActive = IsPanelItemActive(item),
+                CssClass = GetPanelMenuItemCssClass(item, level),
+                LinkCssClass = IsPanelItemActive(item)
+                    ? "admin-menu-sidebar__item-content--active"
+                    : item.HasLink ? "admin-menu-sidebar__item-content--not-active" : null,
+                Source = item,
+            }));
+        }
+
+        if (Menu is not null)
+        {
+            entries.AddRange(Menu.Separators
+                .Where(separator => string.Equals(separator.ParentKey, parentKey, StringComparison.Ordinal))
+                .Select(separator => (separator.Order, 0, new CrestPanelMenuItem
+                {
+                    Key = separator.Key,
+                    IsSeparator = true,
+                    CssClass = $"admin-menu-sidebar__separator admin-menu-sidebar__separator--level-{level}",
+                    Source = separator,
+                })));
+        }
+
+        return entries
+            .OrderBy(entry => entry.Order)
+            .ThenBy(entry => entry.Kind)
+            .Select(entry => entry.Item)
+            .ToArray();
+    }
+
+    private RenderFragment RenderMenuIcon(DisplayIcon? icon, int level) => builder =>
+    {
+        builder.OpenComponent(0, level == 0 ? typeof(AdminMenuIcon) : typeof(AdminMenuSubIcon));
+        builder.AddAttribute(1, "Icon", icon);
+        builder.CloseComponent();
+    };
+
+    private static string GetPanelMenuItemCssClass(DisplayMenuItem item, int level)
+    {
+        var itemClass = $"admin-menu-sidebar__item admin-menu-sidebar__item--level-{level}";
+        return level >= 2 && item.HasChildren ? itemClass + " admin-menu-sidebar__item--has-flyout" : itemClass;
+    }
+
+    private bool IsPanelItemActive(DisplayMenuItem item)
+    {
+        if (!item.HasLink || string.IsNullOrWhiteSpace(ActiveItemLink))
+        {
+            return false;
+        }
+
+        return item.StableKey == ActiveItemKey || string.Equals(NormalizePathOnly(item.Link!), NormalizePathOnly(ActiveItemLink), StringComparison.OrdinalIgnoreCase);
     }
 }

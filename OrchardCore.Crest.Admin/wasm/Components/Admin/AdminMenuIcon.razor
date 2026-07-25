@@ -2,16 +2,23 @@
 @using Crest.Admin.DisplayManagement
 @using Crest.Icons.Components
 
-<OrchardIcon Name="@Icon?.Name"
-             IconKey="@Icon?.Key"
-             Library="@Icon?.Library"
-             Version="@Icon?.Version"
-             SvgMarkup="@Icon?.SvgMarkup"
-             Alt="@Alt"
-             Size="1.25rem"
-             BoxSize="1.5rem"
-             Opacity="1"
-             Class="rz-navigation-item-icon admin-menu-sidebar__icon" />
+@if (Icon is not null)
+{
+    <OrchardIcon Name="@Icon.Name"
+                 IconKey="@Icon.Key"
+                 Library="@Icon.Library"
+                 Version="@Icon.Version"
+                 SvgMarkup="@Icon.SvgMarkup"
+                 Alt="@Alt"
+                 Size="calc(var(--crest-panel-menu-level-base-size, 1rem) * 1.25)"
+                 BoxSize="calc(var(--crest-panel-menu-level-base-size, 1rem) * 1.5)"
+                 Opacity="1"
+                 Class="rz-navigation-item-icon admin-menu-sidebar__icon" />
+}
+else
+{
+    <span class="rz-navigation-item-icon admin-menu-sidebar__icon admin-menu-sidebar__icon-placeholder admin-menu-sidebar__icon-placeholder--dot" aria-hidden="true"></span>
+}
 
 @code {
     [Parameter]

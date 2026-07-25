@@ -1,6 +1,8 @@
 # Admin menu layout
 
-Crest treats the built-in Orchard admin menu as a generated sidebar layout. Tenant changes made in the Admin Menus page are stored in the tenant document store as layout overrides.
+Crest treats the built-in Orchard admin menu as a generated sidebar layout. Tenant node/order/icon/separator changes made in the Admin Menus page are stored in the tenant document store as layout overrides.
+
+Sidebar component settings, such as collapse behavior, tier spacing, generated separators, and tier backgrounds, are tenant site settings. They are edited from the same Admin Menus page for UX, but they are not part of the menu layout overlay JSON.
 
 ## Recipe import
 
@@ -17,7 +19,7 @@ The `file` value is resolved relative to the recipe file. Crest registers this r
 
 ## UI export
 
-The Admin Menus page shows an `Export layout JSON` button on the built-in Sidebar Layout. The button exports the current tenant layout to:
+The Admin Menus page shows an `Export JSON` button on the built-in Sidebar Layout. The button exports the current tenant layout to:
 
 ```text
 <host content root>/recipes/crest-admin-menu-layout.json

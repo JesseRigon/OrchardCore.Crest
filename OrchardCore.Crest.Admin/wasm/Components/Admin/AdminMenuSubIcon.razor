@@ -10,14 +10,14 @@
                  Version="@Icon?.Version"
                  SvgMarkup="@Icon?.SvgMarkup"
                  Alt="@Alt"
-                 Size="1rem"
-                 BoxSize="1.25rem"
+                 Size="calc(var(--crest-panel-menu-level-base-size, 1rem) * 1.1)"
+                 BoxSize="calc(var(--crest-panel-menu-level-base-size, 1rem) * 1.35)"
                  Opacity="0.8"
                  Class="rz-navigation-item-icon admin-menu-sidebar__icon" />
 }
 else
 {
-    <span class="rz-navigation-item-icon admin-menu-sidebar__icon admin-menu-sidebar__icon-placeholder" aria-hidden="true"></span>
+    <span class="rz-navigation-item-icon admin-menu-sidebar__icon admin-menu-sidebar__icon-placeholder admin-menu-sidebar__icon-placeholder--dot" aria-hidden="true"></span>
 }
 
 @code {

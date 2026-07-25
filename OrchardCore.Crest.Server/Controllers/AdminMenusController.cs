@@ -1,3 +1,4 @@
+using Crest.Icons;
 using Crest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,6 +18,8 @@ public sealed class AdminMenusController(
     IAdminMenuService adminMenuService,
     INavigationManager navigationManager,
     CrestAdminMenuLayoutService layoutService,
+    CrestAdminSidebarSettingsStore sidebarSettingsStore,
+    CrestAdminSettingsNormalizer adminSettingsNormalizer,
     CrestIconController iconController) : ControllerBase
 {
     [HttpGet]
@@ -247,6 +250,86 @@ public sealed class AdminMenusController(
         return Ok(AdminMenuSummary.From(menu));
     }
 
+    [HttpPost("{menuId}/separators")]
+    public async Task<ActionResult<AdminMenuSummary>> CreateSeparatorAsync(string menuId, AdminMenuSeparatorEditModel model)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        {
+            return BadRequest("Separators are currently supported by the Sidebar Layout menu only.");
+        }
+
+        var baseMenu = await BuildDefaultNavigationMenuAsync();
+        if (await layoutService.IsLockedNewBranchAsync(baseMenu, model.ParentNodeId))
+        {
+            return BadRequest("The New menu branch is locked and cannot be edited.");
+        }
+
+        await layoutService.CreateSeparatorAsync(baseMenu, model.ParentNodeId, model.Position);
+        return Ok(await GetDefaultMenuSummaryAsync());
+    }
+
+    [HttpPost("{menuId}/sidebar-settings")]
+    public async Task<ActionResult<AdminMenuSummary>> UpdateSidebarSettingsAsync(string menuId, [FromBody] CrestAdminSidebarSettings settings)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        {
+            return BadRequest("Sidebar settings are supported by the Sidebar Layout menu only.");
+        }
+
+        var normalized = await sidebarSettingsStore.SaveAsync(settings, HttpContext.RequestAborted);
+        return Ok((await GetDefaultMenuSummaryAsync()) with { SidebarSettings = normalized });
+    }
+
+    [HttpDelete("{menuId}/separators/{separatorId}")]
+    public async Task<ActionResult<AdminMenuSummary>> DeleteSeparatorAsync(string menuId, string separatorId)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        {
+            return BadRequest("Separators are currently supported by the Sidebar Layout menu only.");
+        }
+
+        await layoutService.DeleteSeparatorAsync(await BuildDefaultNavigationMenuAsync(), separatorId);
+        return Ok(await GetDefaultMenuSummaryAsync());
+    }
+
+    [HttpPost("{menuId}/separators/{separatorId}/move")]
+    public async Task<ActionResult<AdminMenuSummary>> MoveSeparatorAsync(string menuId, string separatorId, AdminMenuSeparatorEditModel model)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        {
+            return BadRequest("Separators are currently supported by the Sidebar Layout menu only.");
+        }
+
+        var baseMenu = await BuildDefaultNavigationMenuAsync();
+        if (await layoutService.IsLockedNewBranchAsync(baseMenu, model.ParentNodeId))
+        {
+            return BadRequest("The New menu branch is locked and cannot be edited.");
+        }
+
+        await layoutService.MoveSeparatorAsync(baseMenu, separatorId, model.ParentNodeId, model.Position);
+        return Ok(await GetDefaultMenuSummaryAsync());
+    }
+
     [HttpPut("{menuId}/nodes/{nodeId}")]
     public async Task<ActionResult<AdminMenuSummary>> UpdateNodeAsync(string menuId, string nodeId, AdminMenuNodeEditModel model)
     {
@@ -258,22 +341,29 @@ public sealed class AdminMenusController(
         if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
-            if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId) || await layoutService.IsLockedNewBranchAsync(baseMenu, model.ParentNodeId))
+            var editingNewBranch = await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId);
+            if (!editingNewBranch && await layoutService.IsLockedNewBranchAsync(baseMenu, model.ParentNodeId))
             {
-                return BadRequest("The New menu branch is locked and cannot be edited.");
+                return BadRequest("The New menu branch has a fixed structure and cannot accept moved items.");
             }
 
             if (await layoutService.IsCustomAsync(nodeId))
             {
                 await layoutService.UpdateCustomAsync(baseMenu, nodeId, model.Text.Trim(), null, model.IconClass?.Trim());
-                if (model.ParentNodeId is not null)
+                if (!editingNewBranch && model.ParentNodeId is not null)
                 {
                     await layoutService.MoveAsync(baseMenu, nodeId, model.ParentNodeId, model.Position);
                 }
             }
             else
             {
-                await layoutService.UpdateItemAsync(baseMenu, nodeId, model.Text, model.IconClass, model.ParentNodeId, model.Position);
+                await layoutService.UpdateItemAsync(
+                    baseMenu,
+                    nodeId,
+                    model.Text,
+                    model.IconClass,
+                    editingNewBranch ? null : model.ParentNodeId,
+                    editingNewBranch ? null : model.Position);
             }
 
             return Ok(await GetDefaultMenuSummaryAsync());
@@ -320,11 +410,6 @@ public sealed class AdminMenusController(
         }
 
         var baseMenu = await BuildDefaultNavigationMenuAsync();
-        if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId))
-        {
-            return BadRequest("The New menu branch is locked and cannot be edited.");
-        }
-
         await layoutService.RenameAsync(baseMenu, nodeId, model.Text);
         return Ok(await GetDefaultMenuSummaryAsync());
     }
@@ -381,11 +466,6 @@ public sealed class AdminMenusController(
         if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
-            if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId))
-            {
-                return BadRequest("The New menu branch is locked and cannot be edited.");
-            }
-
             await layoutService.ToggleAsync(baseMenu, nodeId);
             return Ok(await GetDefaultMenuSummaryAsync());
         }
@@ -456,24 +536,41 @@ public sealed class AdminMenusController(
     private async Task<AdminMenuSummary> GetDefaultMenuSummaryAsync()
     {
         var layout = await layoutService.GetAsync();
+        var sidebarSettings = await sidebarSettingsStore.GetAsync(HttpContext.RequestAborted);
         var baseMenu = await BuildDefaultNavigationMenuAsync();
-        var items = layoutService.ApplyForManagement(baseMenu.Items, layout);
+        var managedMenu = await iconController.ResolveMenuIconsAsync(baseMenu with
+        {
+            Items = layoutService.ApplyForManagement(baseMenu.Items, layout),
+        }, [CrestIconController.AdminMenuSearchIconKey], HttpContext.RequestAborted);
+        var items = managedMenu.Items;
+        var separators = layout.Separators
+            .Where(separator => !string.IsNullOrWhiteSpace(separator.Key))
+            .Select(separator => new AdminMenuSeparatorSummary(
+                separator.Key,
+                string.IsNullOrWhiteSpace(separator.ParentKey) ? null : separator.ParentKey,
+                0,
+                separator.Order))
+            .ToArray();
         return new AdminMenuSummary(
             CrestAdminMenuLayoutService.DefaultMenuId,
             CrestAdminMenuLayoutService.DefaultMenuName,
             true,
             true,
+            separators,
+            sidebarSettings,
+            managedMenu.Icons,
             items.Select((item, index) => AdminMenuNodeSummary.From(item, layout, layoutService, null, 0, index)).ToArray());
     }
 
     private async Task<NavigationMenu> BuildDefaultNavigationMenuAsync()
     {
+        await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
         var items = await navigationManager.BuildMenuAsync("admin", ControllerContext);
         var menu = new NavigationMenu("admin", items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
             .ToArray());
 
-        return await iconController.ResolveMenuIconsAsync(menu, HttpContext.RequestAborted);
+        return menu;
     }
 
     private async Task<AdminMenu?> LoadMenuForUpdateAsync(string menuId)
@@ -676,6 +773,9 @@ public sealed record AdminMenuSummary(
     string Name,
     bool Enabled,
     bool IsDefault,
+    AdminMenuSeparatorSummary[] Separators,
+    CrestAdminSidebarSettings SidebarSettings,
+    IconPack? Icons,
     AdminMenuNodeSummary[] Nodes)
 {
     public static AdminMenuSummary From(AdminMenu menu) => new(
@@ -683,8 +783,17 @@ public sealed record AdminMenuSummary(
         menu.Name,
         menu.Enabled,
         false,
+        [],
+        CrestAdminSidebarSettings.Default,
+        null,
         menu.MenuItems.OfType<AdminNode>().Select((node, index) => AdminMenuNodeSummary.From(node, null, 0, index)).ToArray());
 }
+
+public sealed record AdminMenuSeparatorSummary(
+    string Id,
+    string? ParentId,
+    int Depth,
+    int Order);
 
 public sealed record AdminMenuNodeSummary(
     string Id,
@@ -692,6 +801,7 @@ public sealed record AdminMenuNodeSummary(
     string Text,
     string? Url,
     string? IconClass,
+    NavigationIcon? Icon,
     bool Enabled,
     int Priority,
     string? DisplayPosition,
@@ -709,6 +819,7 @@ public sealed record AdminMenuNodeSummary(
         GetText(node),
         node is LinkAdminNode link ? link.LinkUrl : null,
         GetIconClass(node),
+        null,
         node.Enabled,
         node.Priority,
         node.Position,
@@ -747,6 +858,7 @@ public sealed record AdminMenuNodeSummary(
             item.Text,
             item.Link,
             GetIconClass(item),
+            item.Icon,
             !layoutService.IsHidden(layout, item.Key),
             0,
             item.Position,
@@ -833,3 +945,5 @@ public sealed record AdminMenuNodeEditModel(
 public sealed record AdminMenuNodeMoveModel(string? ParentNodeId, int? Position);
 
 public sealed record AdminMenuNodeRenameModel(string? Text);
+
+public sealed record AdminMenuSeparatorEditModel(string? ParentNodeId, int? Position);

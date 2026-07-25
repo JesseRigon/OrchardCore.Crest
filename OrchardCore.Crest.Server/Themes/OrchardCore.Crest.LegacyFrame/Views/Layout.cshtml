@@ -33,7 +33,21 @@
         .ta-navbar-top,
         .ta-left-sidebar,
         .ta-content-header,
+        .ta-content-header-title,
+        .ta-content-header-info,
         .admin-toolbar,
+        .navbar,
+        .sidebar,
+        .left-sidebar,
+        .main-sidebar,
+        .layout-sidebar,
+        .layout-header,
+        .layout-navigation,
+        .layout-navbar,
+        .admin-menu-sidebar,
+        .admin-topbar,
+        .legacy-admin-frame-page,
+        iframe.legacy-admin-frame,
         #ta-left-sidebar,
         #ta-navbar-top,
         #layout-navigation,
@@ -66,7 +80,23 @@
     <script>
         (() => {
             const parameter = 'legacy-frame';
+            const isLocalDocumentReference = value => {
+                if (!value) {
+                    return true;
+                }
+
+                const trimmed = value.trim().toLowerCase();
+                return trimmed.startsWith('#')
+                    || trimmed.startsWith('javascript:')
+                    || trimmed.startsWith('mailto:')
+                    || trimmed.startsWith('tel:');
+            };
+
             const ensureLegacyFrame = url => {
+                if (isLocalDocumentReference(url)) {
+                    return url;
+                }
+
                 try {
                     const parsed = new URL(url, window.location.href);
                     if (parsed.origin !== window.location.origin || !parsed.pathname.toLowerCase().startsWith('/admin')) {
@@ -80,9 +110,54 @@
                 }
             };
 
+            const ensureCurrentLocation = () => {
+                const framed = ensureLegacyFrame(window.location.href);
+                if (framed !== window.location.pathname + window.location.search + window.location.hash) {
+                    window.history.replaceState(window.history.state, document.title, framed);
+                }
+            };
+
+            const ensureFormMarker = form => {
+                if (!(form instanceof HTMLFormElement)) {
+                    return;
+                }
+
+                const rawAction = form.getAttribute('action');
+                if (!isLocalDocumentReference(rawAction)) {
+                    form.action = ensureLegacyFrame(form.action || window.location.href);
+                }
+
+                if ((form.method || 'get').toLowerCase() === 'get' && !form.querySelector(`input[name="${parameter}"]`)) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = parameter;
+                    input.value = '1';
+                    form.appendChild(input);
+                }
+            };
+
+            const rewriteAdminLinksAndForms = root => {
+                root.querySelectorAll?.('a[href]').forEach(anchor => {
+                    if (isLocalDocumentReference(anchor.getAttribute('href'))) {
+                        return;
+                    }
+
+                    anchor.href = ensureLegacyFrame(anchor.href);
+                });
+
+                root.querySelectorAll?.('form').forEach(ensureFormMarker);
+            };
+
+            ensureCurrentLocation();
+            rewriteAdminLinksAndForms(document);
+
             document.addEventListener('click', event => {
                 const anchor = event.target.closest?.('a[href]');
                 if (!anchor) {
+                    return;
+                }
+
+                if (isLocalDocumentReference(anchor.getAttribute('href'))) {
                     return;
                 }
 
@@ -95,28 +170,28 @@
                     return;
                 }
 
-                form.action = ensureLegacyFrame(form.action || window.location.href);
+                ensureFormMarker(form);
             }, true);
 
-            if (window.fetch) {
-                const originalFetch = window.fetch.bind(window);
-                window.fetch = (resource, options) => {
-                    if (typeof resource === 'string') {
-                        return originalFetch(ensureLegacyFrame(resource), options);
-                    }
-
-                    if (resource instanceof Request) {
-                        return originalFetch(new Request(ensureLegacyFrame(resource.url), resource), options);
-                    }
-
-                    return originalFetch(resource, options);
-                };
-            }
-
-            const originalOpen = XMLHttpRequest.prototype.open;
-            XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-                return originalOpen.call(this, method, ensureLegacyFrame(url), ...rest);
+            const originalPushState = window.history.pushState;
+            window.history.pushState = function (state, title, url) {
+                return originalPushState.call(this, state, title, url && !isLocalDocumentReference(url) ? ensureLegacyFrame(url) : url);
             };
+
+            const originalReplaceState = window.history.replaceState;
+            window.history.replaceState = function (state, title, url) {
+                return originalReplaceState.call(this, state, title, url && !isLocalDocumentReference(url) ? ensureLegacyFrame(url) : url);
+            };
+
+            new MutationObserver(mutations => {
+                for (const mutation of mutations) {
+                    mutation.addedNodes.forEach(node => {
+                        if (node instanceof Element) {
+                            rewriteAdminLinksAndForms(node);
+                        }
+                    });
+                }
+            }).observe(document.documentElement, { childList: true, subtree: true });
         })();
     </script>
 

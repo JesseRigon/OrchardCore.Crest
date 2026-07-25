@@ -31,6 +31,8 @@ public sealed class AppController(
     IOptions<AdminOptions> adminOptions,
     IAuthorizationService authorization,
     CrestAdminMenuLayoutService layoutService,
+    CrestAdminSidebarSettingsStore sidebarSettingsStore,
+    CrestAdminSettingsNormalizer adminSettingsNormalizer,
     CrestIconController iconController,
     CrestRouteAuthorizationService routeAuthorization) : ControllerBase
 {
@@ -40,19 +42,25 @@ public sealed class AppController(
         if (!await authorization.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel)) return Forbid();
         var descriptor = await shellDescriptorManager.GetShellDescriptorAsync();
         var site = await siteService.GetSiteSettingsAsync();
+        var adminSettings = await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
         var featureIds = descriptor.Features.Select(feature => feature.Id).Order(StringComparer.Ordinal).ToArray();
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
         var tenants = await GetAvailableTenantsAsync();
         var adminItems = await navigationManager.BuildMenuAsync("admin", ControllerContext);
-        var adminMenu = await iconController.ResolveMenuIconsAsync(await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
+        var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
-            .ToArray())), HttpContext.RequestAborted);
+            .ToArray()));
+        adminMenu = adminMenu with { SidebarSettings = await sidebarSettingsStore.GetAsync(HttpContext.RequestAborted) };
+        adminMenu = await iconController.ResolveMenuIconsAsync(
+            adminMenu,
+            [CrestIconController.AdminMenuSearchIconKey],
+            HttpContext.RequestAborted);
 
         return Ok(new AppManifest(
             Tenant.From(shellSettings),
             tenants,
             SiteSettings.From(site),
-            AdminSettingsDto.From(site.GetOrCreate<AdminSettings>()),
+            AdminSettingsDto.From(adminSettings),
             new AdminDescriptor(NormalizeAdminPath(adminOptions.Value.AdminUrlPrefix)),
             descriptor.SerialNumber,
             ComputeFeatureHash(descriptor.SerialNumber, featureIds),

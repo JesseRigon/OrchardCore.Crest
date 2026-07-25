@@ -47,6 +47,15 @@ body:has(.icon-selector__modal-backdrop) .admin-menu-sidebar__flyout {
     flex: 1;
 }
 
+.icon-selector__dialog-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.85rem 1.1rem 1rem;
+    border-top: 1px solid var(--rz-border-color);
+    background: var(--rz-base-background-color, #fff);
+}
+
 .icon-selector__filters {
     position: relative;
     z-index: 2;
@@ -289,6 +298,11 @@ body:has(.icon-selector__modal-backdrop) .admin-menu-sidebar__flyout {
 
     .icon-selector__dialog-body {
         grid-template-columns: 1fr;
+    }
+
+    .icon-selector__dialog-footer {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .icon-selector__filters {

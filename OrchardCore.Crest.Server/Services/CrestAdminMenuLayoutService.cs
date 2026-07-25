@@ -4,7 +4,9 @@ using OrchardCore.Documents;
 
 namespace Crest.Services;
 
-public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuLayoutDocument> documents)
+public sealed class CrestAdminMenuLayoutService(
+    IDocumentManager<CrestAdminMenuLayoutDocument> documents,
+    ICrestAdminMenuLayoutInvalidator invalidator)
 {
     public const string DefaultMenuId = "__crest_default_admin_menu";
     public const string DefaultMenuName = "Sidebar Layout";
@@ -14,7 +16,8 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
 
     public async Task<CrestAdminMenuLayoutDocument> LoadAsync() => await documents.GetOrCreateMutableAsync();
 
-    public Task SaveAsync(CrestAdminMenuLayoutDocument document) => documents.UpdateAsync(document);
+    public Task SaveAsync(CrestAdminMenuLayoutDocument document) =>
+        documents.UpdateAsync(document, _ => invalidator.InvalidateTenantAsync());
 
     public async Task<CrestAdminMenuLayoutFile> ExportAsync()
     {
@@ -23,6 +26,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         {
             Items = layout.Items.ToList(),
             CustomItems = layout.CustomItems.ToList(),
+            Separators = layout.Separators.ToList(),
         };
     }
 
@@ -31,13 +35,18 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         var layout = await LoadAsync();
         layout.Items = file.Items ?? [];
         layout.CustomItems = file.CustomItems ?? [];
+        layout.Separators = file.Separators ?? [];
         await SaveAsync(layout);
     }
 
     public async Task<NavigationMenu> ApplyAsync(NavigationMenu menu)
     {
         var layout = await GetAsync();
-        return menu with { Items = Apply(menu.Items, layout) };
+        return menu with
+        {
+            Items = Apply(menu.Items, layout),
+            Separators = GetSeparators(menu.Items, layout, includeHidden: false),
+        };
     }
 
     public NavigationItem[] Apply(NavigationItem[] items, CrestAdminMenuLayoutDocument layout) => Apply(items, layout, includeHidden: false);
@@ -127,7 +136,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         moved.Order = index;
 
         await SaveAsync(layout);
-        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        return ApplyToMenu(baseMenu, layout);
     }
 
     public async Task<NavigationMenu> ToggleAsync(NavigationMenu baseMenu, string itemKey)
@@ -136,7 +145,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         var item = GetOrCreateOverride(layout, itemKey);
         item.Hidden = !item.Hidden;
         await SaveAsync(layout);
-        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        return ApplyToMenu(baseMenu, layout);
     }
 
     public async Task<NavigationMenu> CreateCustomAsync(NavigationMenu baseMenu, string text, string? url, string? iconClass, string? parentKey, int? position)
@@ -155,7 +164,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         item.ParentKey = string.IsNullOrWhiteSpace(parentKey) ? null : parentKey;
         item.Order = position;
         await SaveAsync(layout);
-        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        return ApplyToMenu(baseMenu, layout);
     }
 
     public async Task<NavigationMenu> UpdateCustomAsync(NavigationMenu baseMenu, string key, string text, string? url, string? iconClass)
@@ -170,7 +179,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
             await SaveAsync(layout);
         }
 
-        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        return ApplyToMenu(baseMenu, layout);
     }
 
     public async Task<NavigationMenu> UpdateItemAsync(NavigationMenu baseMenu, string key, string? text, string? iconClass, string? parentKey, int? position)
@@ -183,7 +192,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
 
         if (!flat.TryGetValue(key, out var node) || key == parentKey || IsDescendant(flat, layout, key, parentKey))
         {
-            return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+            return ApplyToMenu(baseMenu, layout);
         }
 
         var item = GetOrCreateOverride(layout, key);
@@ -205,7 +214,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         }
 
         await SaveAsync(layout);
-        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        return ApplyToMenu(baseMenu, layout);
     }
 
     public async Task<NavigationMenu> RenameAsync(NavigationMenu baseMenu, string key, string? text)
@@ -218,7 +227,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
 
         if (!flat.TryGetValue(key, out var node))
         {
-            return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+            return ApplyToMenu(baseMenu, layout);
         }
 
         var item = GetOrCreateOverride(layout, key);
@@ -228,7 +237,7 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
             : renamedText;
 
         await SaveAsync(layout);
-        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        return ApplyToMenu(baseMenu, layout);
     }
 
     public async Task<NavigationMenu> DeleteCustomAsync(NavigationMenu baseMenu, string key)
@@ -242,7 +251,77 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         }
 
         await SaveAsync(layout);
-        return baseMenu with { Items = Apply(baseMenu.Items, layout) };
+        return ApplyToMenu(baseMenu, layout);
+    }
+
+    public async Task<NavigationMenu> CreateSeparatorAsync(NavigationMenu baseMenu, string? parentKey, int? position)
+    {
+        var layout = await LoadAsync();
+        var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
+        Flatten(baseMenu.Items, null, flat);
+        FlattenCustom(layout, flat);
+        SnapshotKnownItems(layout, flat);
+
+        parentKey = string.IsNullOrWhiteSpace(parentKey) ? null : parentKey;
+        if (parentKey is not null && !flat.ContainsKey(parentKey))
+        {
+            parentKey = null;
+        }
+
+        var childCount = flat.Values.Count(node => string.Equals(GetEffectiveParent(layout, node), parentKey, StringComparison.Ordinal));
+        var separatorCount = layout.Separators.Count(separator => string.Equals(separator.ParentKey, parentKey, StringComparison.Ordinal));
+        var order = Math.Clamp(position ?? childCount + separatorCount, 0, childCount + separatorCount);
+
+        ShiftSiblingOrders(layout, flat, parentKey, order);
+        layout.Separators.Add(new CrestAdminMenuSeparator
+        {
+            Key = "separator-" + Guid.NewGuid().ToString("n"),
+            ParentKey = parentKey,
+            Order = order,
+        });
+
+        await SaveAsync(layout);
+        return ApplyToMenu(baseMenu, layout);
+    }
+
+    public async Task<NavigationMenu> DeleteSeparatorAsync(NavigationMenu baseMenu, string key)
+    {
+        var layout = await LoadAsync();
+        layout.Separators.RemoveAll(separator => string.Equals(separator.Key, key, StringComparison.Ordinal));
+        await SaveAsync(layout);
+        return ApplyToMenu(baseMenu, layout);
+    }
+
+    public async Task<NavigationMenu> MoveSeparatorAsync(NavigationMenu baseMenu, string key, string? parentKey, int? position)
+    {
+        var layout = await LoadAsync();
+        var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
+        Flatten(baseMenu.Items, null, flat);
+        FlattenCustom(layout, flat);
+        SnapshotKnownItems(layout, flat);
+
+        var separator = layout.Separators.FirstOrDefault(separator => string.Equals(separator.Key, key, StringComparison.Ordinal));
+        if (separator is null)
+        {
+            return ApplyToMenu(baseMenu, layout);
+        }
+
+        parentKey = string.IsNullOrWhiteSpace(parentKey) ? null : parentKey;
+        if (parentKey is not null && (!flat.ContainsKey(parentKey) || IsDescendant(flat, layout, parentKey, key)))
+        {
+            parentKey = null;
+        }
+
+        var maxPosition = flat.Values.Count(node => string.Equals(GetEffectiveParent(layout, node), parentKey, StringComparison.Ordinal))
+            + layout.Separators.Count(candidate => !string.Equals(candidate.Key, key, StringComparison.Ordinal) && string.Equals(candidate.ParentKey, parentKey, StringComparison.Ordinal));
+        var order = Math.Clamp(position ?? maxPosition, 0, maxPosition);
+
+        ShiftSiblingOrders(layout, flat, parentKey, order, excludeSeparatorKey: key);
+        separator.ParentKey = parentKey;
+        separator.Order = order;
+
+        await SaveAsync(layout);
+        return ApplyToMenu(baseMenu, layout);
     }
 
     public async Task<bool> IsCustomAsync(string key)
@@ -271,6 +350,12 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         var item = GetOverride(layout, node.Key);
         return !string.IsNullOrWhiteSpace(item.ParentKey) ? item.ParentKey : node.BaseParentKey;
     }
+
+    private NavigationMenu ApplyToMenu(NavigationMenu baseMenu, CrestAdminMenuLayoutDocument layout) => baseMenu with
+    {
+        Items = Apply(baseMenu.Items, layout),
+        Separators = GetSeparators(baseMenu.Items, layout, includeHidden: false),
+    };
 
     private static NavigationItem[] Build(List<LayoutNode> nodes, Dictionary<string, List<LayoutNode>> childMap, CrestAdminMenuLayoutDocument layout) => nodes
         .OrderBy(node => GetOverride(layout, node.Key).Order ?? node.BaseOrder)
@@ -338,6 +423,40 @@ public sealed class CrestAdminMenuLayoutService(IDocumentManager<CrestAdminMenuL
         }
 
         return false;
+    }
+
+    private static NavigationSeparator[] GetSeparators(NavigationItem[] items, CrestAdminMenuLayoutDocument layout, bool includeHidden)
+    {
+        var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
+        Flatten(items, null, flat);
+        FlattenCustom(layout, flat);
+        var visible = flat.Values
+            .Where(node => includeHidden || !IsHiddenWithAncestor(flat, layout, node))
+            .ToDictionary(node => node.Key, StringComparer.Ordinal);
+
+        return layout.Separators
+            .Where(separator => !string.IsNullOrWhiteSpace(separator.Key))
+            .Where(separator => string.IsNullOrWhiteSpace(separator.ParentKey) || visible.ContainsKey(separator.ParentKey))
+            .Select(separator => new NavigationSeparator(separator.Key, string.IsNullOrWhiteSpace(separator.ParentKey) ? null : separator.ParentKey, separator.Order))
+            .ToArray();
+    }
+
+    private static void ShiftSiblingOrders(CrestAdminMenuLayoutDocument layout, Dictionary<string, LayoutNode> flat, string? parentKey, int fromOrder, string? excludeSeparatorKey = null)
+    {
+        foreach (var node in flat.Values.Where(node => string.Equals(GetEffectiveParent(layout, node), parentKey, StringComparison.Ordinal)))
+        {
+            var item = GetOrCreateOverride(layout, node.Key);
+            var order = item.Order ?? node.BaseOrder;
+            if (order >= fromOrder)
+            {
+                item.Order = order + 1;
+            }
+        }
+
+        foreach (var separator in layout.Separators.Where(separator => !string.Equals(separator.Key, excludeSeparatorKey, StringComparison.Ordinal) && string.Equals(separator.ParentKey, parentKey, StringComparison.Ordinal) && separator.Order >= fromOrder))
+        {
+            separator.Order++;
+        }
     }
 
     private static string[] ToIconClasses(string iconClass) =>
@@ -418,12 +537,66 @@ public sealed class CrestAdminMenuLayoutDocument : Document
 {
     public List<CrestAdminMenuLayoutItem> Items { get; set; } = [];
     public List<CrestAdminMenuCustomItem> CustomItems { get; set; } = [];
+    public List<CrestAdminMenuSeparator> Separators { get; set; } = [];
 }
 
 public sealed class CrestAdminMenuLayoutFile
 {
     public List<CrestAdminMenuLayoutItem> Items { get; set; } = [];
     public List<CrestAdminMenuCustomItem> CustomItems { get; set; } = [];
+    public List<CrestAdminMenuSeparator> Separators { get; set; } = [];
+}
+
+public sealed class CrestAdminSidebarSettings
+{
+    public bool Collapsible { get; set; } = true;
+    public int ExpansionDurationMilliseconds { get; set; } = 500;
+    public List<bool> TierSeparators { get; set; } = [true, false, false];
+    public List<string> TierIndents { get; set; } = ["0rem", "0.75rem", "1.25rem", "1.75rem"];
+    public List<string> TierBackgrounds { get; set; } = ["transparent", "transparent", "var(--rz-base-100, color-mix(in srgb, var(--rz-base-background-color) 88%, var(--rz-text-color) 12%))", "transparent"];
+    public List<string> TierBaseSizes { get; set; } = ["1rem", "0.95rem", "0.9rem"];
+    public List<double> TierBaseRems { get; set; } = [1.0, 0.95, 0.9];
+
+    public static CrestAdminSidebarSettings Default => new();
+
+    public static CrestAdminSidebarSettings Normalize(CrestAdminSidebarSettings? settings)
+    {
+        var source = settings ?? Default;
+        var normalized = new CrestAdminSidebarSettings
+        {
+            Collapsible = source.Collapsible,
+            ExpansionDurationMilliseconds = source.ExpansionDurationMilliseconds,
+            TierSeparators = source.TierSeparators?.ToList() ?? [],
+            TierIndents = source.TierIndents?.ToList() ?? [],
+            TierBackgrounds = source.TierBackgrounds?.ToList() ?? [],
+            TierBaseSizes = source.TierBaseSizes?.ToList() ?? [],
+            TierBaseRems = source.TierBaseRems?.ToList() ?? [],
+        };
+
+        normalized.ExpansionDurationMilliseconds = Math.Clamp(normalized.ExpansionDurationMilliseconds, 100, 2000);
+        normalized.TierSeparators = NormalizeList(normalized.TierSeparators, Default.TierSeparators, 3);
+        normalized.TierIndents = NormalizeList(normalized.TierIndents, Default.TierIndents, 4);
+        normalized.TierBackgrounds = NormalizeList(normalized.TierBackgrounds, Default.TierBackgrounds, 4);
+        normalized.TierBaseSizes = NormalizeList(
+            normalized.TierBaseSizes is { Count: > 0 } ? normalized.TierBaseSizes : normalized.TierBaseRems.Select(value => $"{value:0.###}rem"),
+            Default.TierBaseSizes,
+            3);
+        normalized.TierBaseRems = NormalizeList(normalized.TierBaseRems, Default.TierBaseRems, 3)
+            .Select(value => Math.Clamp(value, 0.5, 2.0))
+            .ToList();
+        return normalized;
+    }
+
+    private static List<T> NormalizeList<T>(IEnumerable<T>? source, IReadOnlyList<T> defaults, int length)
+    {
+        var values = source?.ToList() ?? [];
+        while (values.Count < length)
+        {
+            values.Add(defaults[Math.Min(values.Count, defaults.Count - 1)]);
+        }
+
+        return values.Take(length).ToList();
+    }
 }
 
 public sealed class CrestAdminMenuLayoutItem
@@ -443,4 +616,11 @@ public sealed class CrestAdminMenuCustomItem
     public string Text { get; set; } = string.Empty;
     public string? Url { get; set; }
     public string? IconClass { get; set; }
+}
+
+public sealed class CrestAdminMenuSeparator
+{
+    public string Key { get; set; } = string.Empty;
+    public string? ParentKey { get; set; }
+    public int Order { get; set; }
 }
