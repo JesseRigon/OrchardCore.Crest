@@ -55,7 +55,7 @@ public sealed class NavigationController(
 
         return Ok(await iconController.ResolveMenuIconsAsync(
             menu,
-            string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase) ? [CrestIconController.AdminMenuSearchIconKey] : null,
+            string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase) ? CrestIconController.AdminMenuChromeIconKeys : null,
             HttpContext.RequestAborted));
     }
 }

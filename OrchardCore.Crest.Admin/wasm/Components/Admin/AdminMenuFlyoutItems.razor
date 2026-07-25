@@ -1,5 +1,6 @@
 @using Crest.Admin.DisplayManagement
 @using Crest.Admin.Components.Shared
+@using Crest.Icons.Components
 @using Radzen.Blazor
 
 <ul class="admin-menu-sidebar__flyout-list" role="menu">
@@ -26,7 +27,12 @@
                     <span class="admin-menu-sidebar__flyout-text">@item.Text</span>
                     @if (hasChildren)
                     {
-                        <RadzenIcon Icon="chevron_right" class="admin-menu-sidebar__flyout-chevron" title="Open submenu" />
+                        <OrchardIcon IconKey="iconify.mdi/current/default/chevron-right"
+                                     Name="chevron-right"
+                                     Library="iconify.mdi"
+                                     Version="current"
+                                     Alt="Open submenu"
+                                     Class="admin-menu-sidebar__flyout-chevron" />
                     }
                 </div>
             }

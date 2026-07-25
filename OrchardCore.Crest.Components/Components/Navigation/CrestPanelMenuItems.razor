@@ -35,7 +35,7 @@
                         aria-expanded="@IsExpanded(item)"
                         @onclick="@(() => ToggleExpanded(item))">
                     @RenderItemContent(item)
-                    <RadzenIcon Icon="expand_more" class="@GetExpandIconClass(item)" title="Toggle submenu" />
+                    @RenderActionIcon(item, GetExpandIconClass(item), "iconify.mdi/current/default/chevron-down", "Toggle submenu")
                 </button>
             }
             else if (renderFlyout)
@@ -45,10 +45,10 @@
                         data-crest-panel-menu-flyout-anchor="@item.Key"
                         disabled="@item.IsDisabled"
                         aria-haspopup="menu"
-                        @onmouseover="@(args => OpenFlyout(item, args))"
-                        @onmouseout="CloseFlyoutSoon">
+                    @onmouseover="@(args => OpenFlyout(item, args))"
+                    @onmouseout="CloseFlyoutSoon">
                     @RenderItemContent(item)
-                    <RadzenIcon Icon="chevron_right" class="crest-panel-menu__action-rail crest-panel-menu__flyout-trigger" title="Open submenu" />
+                    @RenderActionIcon(item, "crest-panel-menu__action-rail crest-panel-menu__flyout-trigger", "iconify.mdi/current/default/chevron-right", "Open submenu")
                 </button>
             }
             else if (item.HasLink && !item.IsDisabled)
@@ -90,7 +90,8 @@
                                      LevelIndents="LevelIndents"
                                      LevelBackgrounds="LevelBackgrounds"
                                      LevelBaseSizes="LevelBaseSizes"
-                                     TierSeparators="TierSeparators" />
+                                     TierSeparators="TierSeparators"
+                                     ActionIcon="ActionIcon" />
                     </ul>
                 </div>
             </div>
@@ -140,6 +141,9 @@
 
     [Parameter]
     public IReadOnlyList<bool> TierSeparators { get; set; } = [];
+
+    [Parameter]
+    public RenderFragment<CrestPanelMenuActionIconContext>? ActionIcon { get; set; }
 
     private bool IsExpanded(CrestPanelMenuItem item) => item.HasChildren && !ShouldRenderFlyout(item) && ExpandedItemKeys.Contains(item.Key);
 
@@ -269,5 +273,24 @@
         builder.CloseElement();
 
         builder.CloseElement();
+    };
+
+    private RenderFragment RenderActionIcon(CrestPanelMenuItem item, string cssClass, string iconKey, string title) => builder =>
+    {
+        if (ActionIcon is not null)
+        {
+            builder.AddContent(0, ActionIcon(new CrestPanelMenuActionIconContext(item, cssClass, iconKey, title)));
+            return;
+        }
+
+        var fallbackIcon = iconKey.EndsWith("/chevron-down", StringComparison.OrdinalIgnoreCase)
+            ? "expand_more"
+            : "chevron_right";
+
+        builder.OpenComponent<RadzenIcon>(1);
+        builder.AddAttribute(2, "Icon", fallbackIcon);
+        builder.AddAttribute(3, "class", cssClass);
+        builder.AddAttribute(4, "title", title);
+        builder.CloseComponent();
     };
 }

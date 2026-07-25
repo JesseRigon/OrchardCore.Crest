@@ -228,6 +228,10 @@
     margin-right: 0.5rem;
 }
 
+.admin-menu-sidebar__filter-row--quickadd .admin-menu-sidebar__filter-input-rail {
+    margin-left: max(0.5rem, var(--crest-panel-menu-tier-1-indent, 0rem));
+}
+
 .admin-menu-sidebar__filter-input-rail .rz-textbox {
     width: 100% !important;
     height: calc(var(--crest-panel-menu-item-height, 2.5rem) - 0.35rem);
@@ -264,11 +268,24 @@
 }
 
 .admin-menu-sidebar__quickadd-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: var(--crest-panel-menu-action-rail-width, 2rem);
     min-width: var(--crest-panel-menu-action-rail-width, 2rem);
     height: var(--crest-panel-menu-item-height, 2.5rem);
-    padding: 0 !important;
+    border: 0;
+    border-radius: var(--rz-border-radius, 4px);
+    padding: 0;
     color: var(--rz-primary, #2f6f4e);
+    background: transparent;
+    cursor: pointer;
+}
+
+.admin-menu-sidebar__quickadd-button:hover,
+.admin-menu-sidebar__quickadd-button:focus-visible {
+    background: var(--rz-button-light-hover-background-color, var(--rz-menu-item-hover-background-color, color-mix(in srgb, var(--rz-primary, #2f6f4e) 8%, transparent)));
+    outline: none;
 }
 
 .admin-menu-sidebar__quickadd-row {
@@ -368,6 +385,14 @@
     color: var(--rz-primary, #2f6f4e);
     background: var(--rz-menu-item-hover-background-color, color-mix(in srgb, var(--rz-primary, #2f6f4e) 8%, transparent));
     outline: none;
+}
+
+.admin-menu-sidebar__mode-toggle-icon {
+    transition: transform var(--admin-menu-sidebar-expansion-duration, 500ms) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.admin-menu-sidebar__mode-toggle-icon--collapse {
+    transform: rotate(180deg);
 }
 
 @media (min-width: 1025px) {

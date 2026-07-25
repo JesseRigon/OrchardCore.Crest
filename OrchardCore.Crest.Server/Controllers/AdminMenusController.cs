@@ -541,7 +541,7 @@ public sealed class AdminMenusController(
         var managedMenu = await iconController.ResolveMenuIconsAsync(baseMenu with
         {
             Items = layoutService.ApplyForManagement(baseMenu.Items, layout),
-        }, [CrestIconController.AdminMenuSearchIconKey], HttpContext.RequestAborted);
+        }, CrestIconController.AdminMenuChromeIconKeys, HttpContext.RequestAborted);
         var items = managedMenu.Items;
         var separators = layout.Separators
             .Where(separator => !string.IsNullOrWhiteSpace(separator.Key))

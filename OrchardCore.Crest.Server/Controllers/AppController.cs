@@ -53,7 +53,7 @@ public sealed class AppController(
         adminMenu = adminMenu with { SidebarSettings = await sidebarSettingsStore.GetAsync(HttpContext.RequestAborted) };
         adminMenu = await iconController.ResolveMenuIconsAsync(
             adminMenu,
-            [CrestIconController.AdminMenuSearchIconKey],
+            CrestIconController.AdminMenuChromeIconKeys,
             HttpContext.RequestAborted);
 
         return Ok(new AppManifest(

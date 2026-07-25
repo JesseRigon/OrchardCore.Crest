@@ -2,6 +2,7 @@
 @using Crest.Admin.Components.Shared
 @using Crest.Components.Navigation
 @using Crest.Components.Overlay
+@using Crest.Icons.Components
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
@@ -58,7 +59,7 @@
                         </span>
                         <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
                     </span>
-                    <RadzenIcon Icon="add" class="admin-menu-sidebar__quickadd-add-icon" title="@($"Open {QuickAddTitle}")" />
+                    @RenderChromeIcon(QuickAddSource?.Icon, "admin-menu-sidebar__quickadd-add-icon", $"Open {QuickAddTitle}")
                 </button>
             }
 
@@ -78,6 +79,7 @@
                             LevelBackgrounds="SidebarSettings.TierBackgrounds"
                             LevelBaseSizes="SidebarSettings.TierBaseSizes"
                             TierSeparators="SidebarSettings.TierSeparators"
+                            ActionIcon="RenderPanelActionIcon"
                             IndentTransitionDuration="@ExpansionDuration"
                             CompactTransitionDuration="@ExpansionDuration" />
 
@@ -96,7 +98,9 @@
                             </span>
                             <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
                         </span>
-                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" class="admin-menu-sidebar__quickadd-button" Click="CloseQuickAdd" title="@($"Close {QuickAddTitle}")" />
+                        <button type="button" class="admin-menu-sidebar__quickadd-button admin-menu-sidebar__quickadd-close-button" @onclick="CloseQuickAdd" title="@($"Close {QuickAddTitle}")" aria-label="@($"Close {QuickAddTitle}")">
+                            @RenderChromeIcon(CloseIcon, "admin-menu-sidebar__quickadd-close-icon", $"Close {QuickAddTitle}")
+                        </button>
                     </div>
                     <CrestPanelMenu Items="QuickAddPanelMenuItems"
                                     Class="admin-menu-sidebar__menu admin-menu-sidebar__quickadd-menu"
@@ -114,6 +118,7 @@
                                     LevelBackgrounds="SidebarSettings.TierBackgrounds"
                                     LevelBaseSizes="SidebarSettings.TierBaseSizes"
                                     TierSeparators="SidebarSettings.TierSeparators"
+                                    ActionIcon="RenderPanelActionIcon"
                                     IndentTransitionDuration="@ExpansionDuration"
                                     CompactTransitionDuration="@ExpansionDuration" />
                 </div>
@@ -128,7 +133,7 @@
                 aria-pressed="@IsPinnedExpanded"
                 title="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
                 @onclick="TogglePinnedExpanded">
-            <RadzenIcon Icon="@(IsPinnedExpanded ? "chevron_left" : "chevron_right")" />
+            @RenderChromeIcon(ChevronRightIcon, $"admin-menu-sidebar__mode-toggle-icon{(IsPinnedExpanded ? " admin-menu-sidebar__mode-toggle-icon--collapse" : null)}", IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")
         </button>
     }
 </Crest.Components.Layout.CrestSidebar>
@@ -196,7 +201,11 @@
     private string PanelMenuStyle => string.Join(' ', SidebarSettings.TierBackgrounds.Select((value, index) => $"--crest-panel-menu-tier-{index + 1}-background: {value};")
         .Concat(SidebarSettings.TierBaseSizes.Select((value, index) => $"--crest-panel-menu-tier-{index + 1}-base-size: {value};"))
         .Append($"--crest-panel-menu-tier-4-base-size: {GetTierFourBaseSize()};"));
-    private static DisplayIcon SearchIcon { get; } = new("iconify.mdi/current/default/magnify", "iconify.mdi", "current", "default", "magnify", null);
+    private static DisplayIcon SearchIcon { get; } = CreateIcon("magnify");
+    private static DisplayIcon ChevronRightIcon { get; } = CreateIcon("chevron-right");
+    private static DisplayIcon CloseIcon { get; } = CreateIcon("close");
+
+    private static DisplayIcon CreateIcon(string name) => new($"iconify.mdi/current/default/{name}", "iconify.mdi", "current", "default", name, null);
 
     private string GetTierFourBaseSize() => SidebarSettings.TierBaseSizes.Length >= 3
         ? SidebarSettings.TierBaseSizes[2]
@@ -670,6 +679,37 @@
         builder.AddAttribute(1, "Icon", icon);
         builder.CloseComponent();
     };
+
+    private RenderFragment RenderPanelActionIcon(CrestPanelMenuActionIconContext context) => builder =>
+    {
+        builder.OpenComponent<OrchardIcon>(0);
+        builder.AddAttribute(1, "IconKey", context.IconKey);
+        builder.AddAttribute(2, "Name", GetIconNameFromKey(context.IconKey));
+        builder.AddAttribute(3, "Library", "iconify.mdi");
+        builder.AddAttribute(4, "Version", "current");
+        builder.AddAttribute(5, "Alt", context.Title);
+        builder.AddAttribute(6, "Class", context.CssClass);
+        builder.CloseComponent();
+    };
+
+    private RenderFragment RenderChromeIcon(DisplayIcon? icon, string cssClass, string title) => builder =>
+    {
+        builder.OpenComponent<OrchardIcon>(0);
+        builder.AddAttribute(1, "IconKey", icon?.Key);
+        builder.AddAttribute(2, "Name", icon?.Name);
+        builder.AddAttribute(3, "Library", icon?.Library);
+        builder.AddAttribute(4, "Version", icon?.Version);
+        builder.AddAttribute(5, "SvgMarkup", icon?.SvgMarkup);
+        builder.AddAttribute(6, "Alt", title);
+        builder.AddAttribute(7, "Class", cssClass);
+        builder.CloseComponent();
+    };
+
+    private static string GetIconNameFromKey(string iconKey)
+    {
+        var index = iconKey.LastIndexOf('/');
+        return index >= 0 && index < iconKey.Length - 1 ? iconKey[(index + 1)..] : iconKey;
+    }
 
     private static string GetPanelMenuItemCssClass(DisplayMenuItem item, int level)
     {

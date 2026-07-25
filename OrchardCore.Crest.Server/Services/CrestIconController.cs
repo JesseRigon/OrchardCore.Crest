@@ -10,6 +10,17 @@ namespace Crest.Services;
 public sealed class CrestIconController(CrestIconSourceStore iconSourceStore)
 {
     public const string AdminMenuSearchIconKey = "iconify.mdi/current/default/magnify";
+    public const string AdminMenuChevronRightIconKey = "iconify.mdi/current/default/chevron-right";
+    public const string AdminMenuChevronDownIconKey = "iconify.mdi/current/default/chevron-down";
+    public const string AdminMenuCloseIconKey = "iconify.mdi/current/default/close";
+
+    public static readonly string[] AdminMenuChromeIconKeys =
+    [
+        AdminMenuSearchIconKey,
+        AdminMenuChevronRightIconKey,
+        AdminMenuChevronDownIconKey,
+        AdminMenuCloseIconKey,
+    ];
 
     public async Task<NavigationMenu> ResolveMenuIconsAsync(NavigationMenu menu, IEnumerable<string>? additionalIconKeys = null, CancellationToken cancellationToken = default)
     {

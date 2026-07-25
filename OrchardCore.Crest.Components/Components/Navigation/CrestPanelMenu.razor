@@ -17,7 +17,8 @@
                              LevelIndents="LevelIndents"
                              LevelBackgrounds="LevelBackgrounds"
                              LevelBaseSizes="LevelBaseSizes"
-                             TierSeparators="TierSeparators" />
+                             TierSeparators="TierSeparators"
+                             ActionIcon="ActionIcon" />
     </ul>
 </nav>
 
@@ -74,6 +75,9 @@
 
     [Parameter]
     public IReadOnlyList<bool> TierSeparators { get; set; } = DefaultTierSeparators;
+
+    [Parameter]
+    public RenderFragment<CrestPanelMenuActionIconContext>? ActionIcon { get; set; }
 
     [Parameter]
     public string IconRailWidth { get; set; } = "4rem";
