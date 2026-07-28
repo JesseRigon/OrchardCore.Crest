@@ -6,44 +6,44 @@
 @inject IApi Api
 @inject NotificationService Notifications
 
-    <RadzenStack Gap="1rem">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-                    <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.H4" Text="Themes" />
-                        <RadzenText TextStyle="TextStyle.Body2" Text="Select the current site and admin themes, and enable or disable available Orchard themes." />
-                    </RadzenStack>
-                    <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
-                </RadzenStack>
+    <CrestStack Gap="1rem">
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <CrestStack Gap="0.25rem">
+                        <CrestText TextStyle="TextStyle.H4" Text="Themes" />
+                        <CrestText TextStyle="TextStyle.Body2" Text="Select the current site and admin themes, and enable or disable available Orchard themes." />
+                    </CrestStack>
+                    <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+                </CrestStack>
 
                 @if (!string.IsNullOrWhiteSpace(ErrorMessage))
                 {
-                    <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">
+                    <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">
                         @ErrorMessage
-                    </RadzenAlert>
+                    </CrestAlert>
                 }
 
                 @if (IsLoading)
                 {
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-                        <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                        <RadzenText Text="Loading themes..." />
-                    </RadzenStack>
+                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                        <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                        <CrestText Text="Loading themes..." />
+                    </CrestStack>
                 }
                 else if (State.Themes.Length == 0)
                 {
-                    <RadzenCard>
-                        <RadzenText Text="There are no themes installed." />
-                    </RadzenCard>
+                    <CrestCard>
+                        <CrestText Text="There are no themes installed." />
+                    </CrestCard>
                 }
                 else
                 {
-                    <RadzenStack Gap="0.75rem">
-                        <RadzenText TextStyle="TextStyle.H6" Text="Current themes" />
+                    <CrestStack Gap="0.75rem">
+                        <CrestText TextStyle="TextStyle.H6" Text="Current themes" />
                         <div class="theme-grid current-theme-grid">
                             @if (State.CurrentSiteTheme is { } currentSiteTheme)
                             {
-                                <RadzenCard class="theme-card theme-card--current">
-                                    <RadzenText TextStyle="TextStyle.Caption" Text="Current site theme" class="theme-card__slot" />
+                                <CrestCard class="theme-card theme-card--current">
+                                    <CrestText TextStyle="TextStyle.Caption" Text="Current site theme" class="theme-card__slot" />
                                     <div class="theme-card__preview">
                                         <img src="@currentSiteTheme.PreviewImageUrl" alt="@($"{currentSiteTheme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentSiteTheme.Id))" hidden="@PreviewFailed(currentSiteTheme.Id)" />
                                         @if (PreviewFailed(currentSiteTheme.Id))
@@ -55,41 +55,41 @@
                                         }
                                     </div>
 
-                                    <RadzenStack Gap="0.75rem" class="theme-card__body">
-                                        <RadzenStack Gap="0.35rem">
-                                            <RadzenText TextStyle="TextStyle.H6" Text="@currentSiteTheme.Name" />
-                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                <RadzenText TextStyle="TextStyle.Caption" Text="Site theme" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <RadzenText TextStyle="TextStyle.Caption" Text="Current site" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <RadzenText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                            </RadzenStack>
-                                        </RadzenStack>
+                                    <CrestStack Gap="0.75rem" class="theme-card__body">
+                                        <CrestStack Gap="0.35rem">
+                                            <CrestText TextStyle="TextStyle.H6" Text="@currentSiteTheme.Name" />
+                                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
+                                                <CrestText TextStyle="TextStyle.Caption" Text="Site theme" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="Current site" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                            </CrestStack>
+                                        </CrestStack>
 
                                         @if (!string.IsNullOrWhiteSpace(currentSiteTheme.Description))
                                         {
-                                            <RadzenText TextStyle="TextStyle.Body2" Text="@currentSiteTheme.Description" class="theme-card__description" />
+                                            <CrestText TextStyle="TextStyle.Body2" Text="@currentSiteTheme.Description" class="theme-card__description" />
                                         }
 
-                                        <RadzenText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentSiteTheme)" />
-                                        <RadzenButton Text="Reset site theme" ButtonStyle="ButtonStyle.Light" Click="ResetSiteThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
-                                    </RadzenStack>
-                                </RadzenCard>
+                                        <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentSiteTheme)" />
+                                        <CrestButton Text="Reset site theme" ButtonStyle="ButtonStyle.Light" Click="ResetSiteThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
+                                    </CrestStack>
+                                </CrestCard>
                             }
                             else
                             {
-                                <RadzenCard class="theme-card theme-card--empty">
-                                    <RadzenText TextStyle="TextStyle.Caption" Text="Current site theme" class="theme-card__slot" />
+                                <CrestCard class="theme-card theme-card--empty">
+                                    <CrestText TextStyle="TextStyle.Caption" Text="Current site theme" class="theme-card__slot" />
                                     <div class="theme-card__placeholder theme-card__placeholder--empty">
                                         <CrestIcon IconKey="iconify.mdi/current/default/web-off" />
                                         <span>No site theme selected</span>
                                     </div>
-                                </RadzenCard>
+                                </CrestCard>
                             }
 
                             @if (State.CurrentAdminTheme is { } currentAdminTheme)
                             {
-                                <RadzenCard class="theme-card theme-card--current">
-                                    <RadzenText TextStyle="TextStyle.Caption" Text="Current admin theme" class="theme-card__slot" />
+                                <CrestCard class="theme-card theme-card--current">
+                                    <CrestText TextStyle="TextStyle.Caption" Text="Current admin theme" class="theme-card__slot" />
                                     <div class="theme-card__preview">
                                         <img src="@currentAdminTheme.PreviewImageUrl" alt="@($"{currentAdminTheme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentAdminTheme.Id))" hidden="@PreviewFailed(currentAdminTheme.Id)" />
                                         @if (PreviewFailed(currentAdminTheme.Id))
@@ -101,53 +101,53 @@
                                         }
                                     </div>
 
-                                    <RadzenStack Gap="0.75rem" class="theme-card__body">
-                                        <RadzenStack Gap="0.35rem">
-                                            <RadzenText TextStyle="TextStyle.H6" Text="@currentAdminTheme.Name" />
-                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                <RadzenText TextStyle="TextStyle.Caption" Text="Admin theme" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <RadzenText TextStyle="TextStyle.Caption" Text="Current admin" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <RadzenText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                            </RadzenStack>
-                                        </RadzenStack>
+                                    <CrestStack Gap="0.75rem" class="theme-card__body">
+                                        <CrestStack Gap="0.35rem">
+                                            <CrestText TextStyle="TextStyle.H6" Text="@currentAdminTheme.Name" />
+                                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
+                                                <CrestText TextStyle="TextStyle.Caption" Text="Admin theme" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="Current admin" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                            </CrestStack>
+                                        </CrestStack>
 
                                         @if (!string.IsNullOrWhiteSpace(currentAdminTheme.Description))
                                         {
-                                            <RadzenText TextStyle="TextStyle.Body2" Text="@currentAdminTheme.Description" class="theme-card__description" />
+                                            <CrestText TextStyle="TextStyle.Body2" Text="@currentAdminTheme.Description" class="theme-card__description" />
                                         }
 
-                                        <RadzenText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentAdminTheme)" />
-                                        <RadzenButton Text="Reset admin theme" ButtonStyle="ButtonStyle.Light" Click="ResetAdminThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
-                                    </RadzenStack>
-                                </RadzenCard>
+                                        <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentAdminTheme)" />
+                                        <CrestButton Text="Reset admin theme" ButtonStyle="ButtonStyle.Light" Click="ResetAdminThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
+                                    </CrestStack>
+                                </CrestCard>
                             }
                             else
                             {
-                                <RadzenCard class="theme-card theme-card--empty">
-                                    <RadzenText TextStyle="TextStyle.Caption" Text="Current admin theme" class="theme-card__slot" />
+                                <CrestCard class="theme-card theme-card--empty">
+                                    <CrestText TextStyle="TextStyle.Caption" Text="Current admin theme" class="theme-card__slot" />
                                     <div class="theme-card__placeholder theme-card__placeholder--empty">
                                         <CrestIcon IconKey="iconify.mdi/current/default/shield-account" />
                                         <span>No admin theme selected</span>
                                     </div>
-                                </RadzenCard>
+                                </CrestCard>
                             }
                         </div>
-                    </RadzenStack>
+                    </CrestStack>
 
-                    <RadzenStack Gap="0.75rem">
-                        <RadzenText TextStyle="TextStyle.H6" Text="Available alternatives" />
+                    <CrestStack Gap="0.75rem">
+                        <CrestText TextStyle="TextStyle.H6" Text="Available alternatives" />
                         @if (!AlternateThemes.Any())
                         {
-                            <RadzenCard>
-                                <RadzenText Text="There are no alternate themes installed." />
-                            </RadzenCard>
+                            <CrestCard>
+                                <CrestText Text="There are no alternate themes installed." />
+                            </CrestCard>
                         }
                         else
                         {
                             <div class="theme-grid">
                                 @foreach (var theme in AlternateThemes)
                                 {
-                                    <RadzenCard class="theme-card">
+                                    <CrestCard class="theme-card">
                                         <div class="theme-card__preview">
                                             <img src="@theme.PreviewImageUrl" alt="@($"{theme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(theme.Id))" hidden="@PreviewFailed(theme.Id)" />
                                             @if (PreviewFailed(theme.Id))
@@ -159,48 +159,48 @@
                                             }
                                         </div>
 
-                                        <RadzenStack Gap="0.75rem" class="theme-card__body">
-                                            <RadzenStack Gap="0.35rem">
-                                                <RadzenText TextStyle="TextStyle.H6" Text="@theme.Name" />
-                                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                    <RadzenText TextStyle="TextStyle.Caption" Text="@(theme.IsAdmin ? "Admin theme" : "Site theme")" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                        <CrestStack Gap="0.75rem" class="theme-card__body">
+                                            <CrestStack Gap="0.35rem">
+                                                <CrestText TextStyle="TextStyle.H6" Text="@theme.Name" />
+                                                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
+                                                    <CrestText TextStyle="TextStyle.Caption" Text="@(theme.IsAdmin ? "Admin theme" : "Site theme")" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
                                                     @if (theme.Enabled)
                                                     {
-                                                        <RadzenText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                        <CrestText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
                                                     }
                                                     else
                                                     {
-                                                        <RadzenText TextStyle="TextStyle.Caption" Text="Disabled" Style="background: var(--rz-warning); color: var(--rz-on-warning); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                        <CrestText TextStyle="TextStyle.Caption" Text="Disabled" Style="background: var(--rz-warning); color: var(--rz-on-warning); border-radius: 999px; padding: 0.15rem 0.5rem;" />
                                                     }
-                                                </RadzenStack>
-                                            </RadzenStack>
+                                                </CrestStack>
+                                            </CrestStack>
 
                                             @if (!string.IsNullOrWhiteSpace(theme.Description))
                                             {
-                                                <RadzenText TextStyle="TextStyle.Body2" Text="@theme.Description" class="theme-card__description" />
+                                                <CrestText TextStyle="TextStyle.Body2" Text="@theme.Description" class="theme-card__description" />
                                             }
 
-                                            <RadzenText TextStyle="TextStyle.Caption" Text="@ThemeMeta(theme)" />
+                                            <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(theme)" />
 
-                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap; margin-top: auto;">
-                                                <RadzenButton Text="@(theme.IsAdmin ? "Use as admin" : "Use as site")" ButtonStyle="ButtonStyle.Primary" Click="@(() => SetCurrentAsync(theme))" Disabled="@IsBusy" />
+                                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap; margin-top: auto;">
+                                                <CrestButton Text="@(theme.IsAdmin ? "Use as admin" : "Use as site")" ButtonStyle="ButtonStyle.Primary" Click="@(() => SetCurrentAsync(theme))" Disabled="@IsBusy" />
                                                 @if (theme.Enabled)
                                                 {
-                                                    <RadzenButton Text="Disable" ButtonStyle="ButtonStyle.Light" Click="@(() => DisableAsync(theme))" Disabled="@IsBusy" />
+                                                    <CrestButton Text="Disable" ButtonStyle="ButtonStyle.Light" Click="@(() => DisableAsync(theme))" Disabled="@IsBusy" />
                                                 }
                                                 else
                                                 {
-                                                    <RadzenButton Text="Enable" ButtonStyle="ButtonStyle.Secondary" Click="@(() => EnableAsync(theme))" Disabled="@IsBusy" />
+                                                    <CrestButton Text="Enable" ButtonStyle="ButtonStyle.Secondary" Click="@(() => EnableAsync(theme))" Disabled="@IsBusy" />
                                                 }
-                                            </RadzenStack>
-                                        </RadzenStack>
-                                    </RadzenCard>
+                                            </CrestStack>
+                                        </CrestStack>
+                                    </CrestCard>
                                 }
                             </div>
                         }
-                    </RadzenStack>
+                    </CrestStack>
                 }
-    </RadzenStack>
+    </CrestStack>
 
 
 <style>

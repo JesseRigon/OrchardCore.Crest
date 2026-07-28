@@ -3,73 +3,73 @@
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 
-<RadzenStack Gap="1rem">
-            <RadzenTabs>
+<CrestStack Gap="1rem">
+            <CrestTabs>
                 <Tabs>
-            <RadzenTabsItem Text="App">
+            <CrestTabsItem Text="App">
                 @if (DisplayManager?.Manifest is null)
                 {
-                    <RadzenText Text="Loading app manifest..." />
+                    <CrestText Text="Loading app manifest..." />
                 }
                 else
                 {
-                    <RadzenStack Gap="0.75rem">
-                        <RadzenText TextStyle="TextStyle.H6" Text="@DisplayManager.Manifest.Site.SiteName" />
-                        <RadzenText Text="@($"Tenant: {DisplayManager.Manifest.Tenant.Name} · State: {DisplayManager.Manifest.Tenant.State} · Admin: {DisplayManager.Manifest.Admin.BasePath}")" />
-                        <RadzenText TextStyle="TextStyle.Caption" Text="@($"Feature hash: {DisplayManager.Manifest.FeatureHash}")" />
-                        <RadzenText Text="@($"Enabled features: {DisplayManager.Manifest.Features.Length}")" />
-                        <RadzenText Text="@($"Roles: {DisplayManager.Roles.Length}")" />
-                    </RadzenStack>
+                    <CrestStack Gap="0.75rem">
+                        <CrestText TextStyle="TextStyle.H6" Text="@DisplayManager.Manifest.Site.SiteName" />
+                        <CrestText Text="@($"Tenant: {DisplayManager.Manifest.Tenant.Name} · State: {DisplayManager.Manifest.Tenant.State} · Admin: {DisplayManager.Manifest.Admin.BasePath}")" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@($"Feature hash: {DisplayManager.Manifest.FeatureHash}")" />
+                        <CrestText Text="@($"Enabled features: {DisplayManager.Manifest.Features.Length}")" />
+                        <CrestText Text="@($"Roles: {DisplayManager.Roles.Length}")" />
+                    </CrestStack>
                 }
-            </RadzenTabsItem>
+            </CrestTabsItem>
 
-            <RadzenTabsItem Text="Site">
+            <CrestTabsItem Text="Site">
                 @if (Site is null)
                 {
-                    <RadzenText Text="Loading site settings..." />
+                    <CrestText Text="Loading site settings..." />
                 }
                 else
                 {
-                    <RadzenStack Gap="1rem" Style="max-width: 48rem;">
-                        <RadzenTextBox @bind-Value="Site.SiteName" Placeholder="Site name" />
-                        <RadzenTextBox @bind-Value="Site.PageTitleFormat" Placeholder="Page title format" />
-                        <RadzenTextBox @bind-Value="Site.BaseUrl" Placeholder="Base URL" />
-                        <RadzenTextBox @bind-Value="Site.TimeZoneId" Placeholder="Time zone ID" />
-                        <RadzenTextBox @bind-Value="Site.Calendar" Placeholder="Calendar" />
-                        <RadzenNumeric @bind-Value="Site.PageSize" Placeholder="Page size" />
-                        <RadzenNumeric @bind-Value="Site.MaxPageSize" Placeholder="Max page size" />
-                        <RadzenNumeric @bind-Value="Site.MaxPagedCount" Placeholder="Max paged count" />
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                            <RadzenButton Text="Save site settings" Click="SaveSiteAsync" Disabled="@IsLoading" />
-                            <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
-                        </RadzenStack>
+                    <CrestStack Gap="1rem" Style="max-width: 48rem;">
+                        <CrestTextBox @bind-Value="Site.SiteName" Placeholder="Site name" />
+                        <CrestTextBox @bind-Value="Site.PageTitleFormat" Placeholder="Page title format" />
+                        <CrestTextBox @bind-Value="Site.BaseUrl" Placeholder="Base URL" />
+                        <CrestTextBox @bind-Value="Site.TimeZoneId" Placeholder="Time zone ID" />
+                        <CrestTextBox @bind-Value="Site.Calendar" Placeholder="Calendar" />
+                        <CrestNumeric @bind-Value="Site.PageSize" Placeholder="Page size" />
+                        <CrestNumeric @bind-Value="Site.MaxPageSize" Placeholder="Max page size" />
+                        <CrestNumeric @bind-Value="Site.MaxPagedCount" Placeholder="Max paged count" />
+                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <CrestButton Text="Save site settings" Click="SaveSiteAsync" Disabled="@IsLoading" />
+                            <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+                        </CrestStack>
                         @if (!string.IsNullOrWhiteSpace(Status))
                         {
-                            <RadzenText TextStyle="TextStyle.Caption" Text="@Status" />
+                            <CrestText TextStyle="TextStyle.Caption" Text="@Status" />
                         }
-                    </RadzenStack>
+                    </CrestStack>
                 }
-            </RadzenTabsItem>
+            </CrestTabsItem>
 
-            <RadzenTabsItem Text="Content">
-                <RadzenStack Gap="1rem">
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                        <RadzenTextBox @bind-Value="ContentHandle" Placeholder="alias:main-menu" Style="min-width: 18rem;" />
-                        <RadzenButton Text="Load by handle" Click="LoadContentItemAsync" Disabled="@IsLoading" />
-                    </RadzenStack>
+            <CrestTabsItem Text="Content">
+                <CrestStack Gap="1rem">
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <CrestTextBox @bind-Value="ContentHandle" Placeholder="alias:main-menu" Style="min-width: 18rem;" />
+                        <CrestButton Text="Load by handle" Click="LoadContentItemAsync" Disabled="@IsLoading" />
+                    </CrestStack>
 
                     @if (DisplayManager?.CurrentContentItem is not null)
                     {
-                        <RadzenCard>
-                            <RadzenText TextStyle="TextStyle.H6" Text="@DisplayManager.CurrentContentItem.DisplayText" />
-                            <RadzenText Text="@($"{DisplayManager.CurrentContentItem.ContentType} · {DisplayManager.CurrentContentItem.ContentItemId}")" />
-                        </RadzenCard>
+                        <CrestCard>
+                            <CrestText TextStyle="TextStyle.H6" Text="@DisplayManager.CurrentContentItem.DisplayText" />
+                            <CrestText Text="@($"{DisplayManager.CurrentContentItem.ContentType} · {DisplayManager.CurrentContentItem.ContentItemId}")" />
+                        </CrestCard>
                     }
 
-                    <RadzenText TextStyle="TextStyle.H6" Text="Content types" />
+                    <CrestText TextStyle="TextStyle.H6" Text="Content types" />
                     @if (DisplayManager?.ContentTypes.Length is null or 0)
                     {
-                        <RadzenText Text="No content types returned." />
+                        <CrestText Text="No content types returned." />
                     }
                     else
                     {
@@ -80,11 +80,11 @@
                             }
                         </ul>
                     }
-                </RadzenStack>
-            </RadzenTabsItem>
+                </CrestStack>
+            </CrestTabsItem>
                 </Tabs>
-            </RadzenTabs>
-</RadzenStack>
+            </CrestTabs>
+</CrestStack>
 
 @code {
     [CascadingParameter]

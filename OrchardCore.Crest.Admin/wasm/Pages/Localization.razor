@@ -7,41 +7,41 @@
 @inject IApi Api
 @inject NotificationService Notifications
 
-<RadzenStack Gap="1rem" class="localization-page" data-testid="localization-page">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+<CrestStack Gap="1rem" class="localization-page" data-testid="localization-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <div>
-            <RadzenText TextStyle="TextStyle.H4" Text="Cultures" />
-            <RadzenText TextStyle="TextStyle.Body2" Text="Choose the tenant cultures Orchard serves and the default culture used when no request culture is selected." />
+            <CrestText TextStyle="TextStyle.H4" Text="Cultures" />
+            <CrestText TextStyle="TextStyle.Body2" Text="Choose the tenant cultures Orchard serves and the default culture used when no request culture is selected." />
         </div>
         @if (HasDynamicTranslations)
         {
-            <RadzenButton Text="Edit translations" Icon="translate" ButtonStyle="ButtonStyle.Light" Click="OpenTranslations" />
+            <CrestButton Text="Edit translations" Icon="translate" ButtonStyle="ButtonStyle.Light" Click="OpenTranslations" />
         }
-    </RadzenStack>
+    </CrestStack>
 
     @if (IsLoading)
     {
-        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
     }
     else if (Model is null)
     {
-        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">Localization settings are unavailable for this tenant.</RadzenAlert>
+        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">Localization settings are unavailable for this tenant.</CrestAlert>
     }
     else
     {
         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
         {
-            <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+            <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
         }
 
-        <RadzenCard>
-            <RadzenStack Gap="0.75rem">
-                <RadzenText TextStyle="TextStyle.Subtitle1" Text="Supported cultures" />
-                <RadzenText TextStyle="TextStyle.Body2" Text="These are the valid .NET/BCP 47 cultures Orchard passes to its request-localization pipeline." />
+        <CrestCard>
+            <CrestStack Gap="0.75rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="Supported cultures" />
+                <CrestText TextStyle="TextStyle.Body2" Text="These are the valid .NET/BCP 47 cultures Orchard passes to its request-localization pipeline." />
 
                 @if (SupportedCultureOptions.Length == 0)
                 {
-                    <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">At least one culture is required.</RadzenAlert>
+                    <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">At least one culture is required.</CrestAlert>
                 }
                 else
                 {
@@ -53,15 +53,15 @@
                                     <div class="localization-page__culture-name">@DisplayCultureName(culture)</div>
                                     <div class="localization-page__culture-code">@(string.IsNullOrEmpty(culture.Value) ? "Invariant culture" : culture.Value)</div>
                                 </div>
-                                <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" title="Remove culture" aria-label="@($"Remove {DisplayCultureName(culture)}")" Disabled="@(SupportedCultureOptions.Length == 1 || IsSaving)" Click="@(() => RemoveCulture(culture.Value))" />
+                                <CrestButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" title="Remove culture" aria-label="@($"Remove {DisplayCultureName(culture)}")" Disabled="@(SupportedCultureOptions.Length == 1 || IsSaving)" Click="@(() => RemoveCulture(culture.Value))" />
                             </div>
                         }
                     </div>
                 }
 
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
                     <div class="localization-page__add-picker">
-                        <RadzenLabel Text="Add a standard culture" />
+                        <CrestLabel Text="Add a standard culture" />
                         <CrestDropDown TValue="string"
                                         Data="AvailableCultureOptions"
                                         Value="@SelectedCultureToAdd"
@@ -73,24 +73,24 @@
                                         FilterPlaceholder="Filter cultures"
                                         class="localization-page__culture-dropdown" />
                     </div>
-                    <RadzenButton Text="Add culture" Icon="add" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(SelectedCultureToAdd))" Click="AddSelectedCultureAsync" />
-                </RadzenStack>
+                    <CrestButton Text="Add culture" Icon="add" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(SelectedCultureToAdd))" Click="AddSelectedCultureAsync" />
+                </CrestStack>
 
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
                     <div class="localization-page__add-picker">
-                        <RadzenLabel Text="Add a valid custom culture code" />
-                        <RadzenTextBox @bind-Value="CustomCultureCode" Placeholder="Example: en-GB" Style="width: 100%;" Disabled="@IsSaving" />
+                        <CrestLabel Text="Add a valid custom culture code" />
+                        <CrestTextBox @bind-Value="CustomCultureCode" Placeholder="Example: en-GB" Style="width: 100%;" Disabled="@IsSaving" />
                     </div>
-                    <RadzenButton Text="Add custom culture" Icon="add" ButtonStyle="ButtonStyle.Light" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(CustomCultureCode))" Click="AddCustomCultureAsync" />
-                </RadzenStack>
-                <RadzenText TextStyle="TextStyle.Caption" Text="Custom entries must be culture names recognized by .NET/BCP 47. Orchard stores them in tenant localization settings and validates them again on save." />
-            </RadzenStack>
-        </RadzenCard>
+                    <CrestButton Text="Add custom culture" Icon="add" ButtonStyle="ButtonStyle.Light" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(CustomCultureCode))" Click="AddCustomCultureAsync" />
+                </CrestStack>
+                <CrestText TextStyle="TextStyle.Caption" Text="Custom entries must be culture names recognized by .NET/BCP 47. Orchard stores them in tenant localization settings and validates them again on save." />
+            </CrestStack>
+        </CrestCard>
 
-        <RadzenCard>
-            <RadzenStack Gap="0.75rem">
-                <RadzenText TextStyle="TextStyle.Subtitle1" Text="Default culture" />
-                <RadzenText TextStyle="TextStyle.Body2" Text="This is used when a request does not select one of the supported cultures." />
+        <CrestCard>
+            <CrestStack Gap="0.75rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="Default culture" />
+                <CrestText TextStyle="TextStyle.Body2" Text="This is used when a request does not select one of the supported cultures." />
                 <CrestDropDown TValue="string"
                                 Data="SupportedCultureOptions"
                                 Value="@Model.DefaultCulture"
@@ -102,17 +102,17 @@
                                 FilterPlaceholder="Filter supported cultures"
                                 class="localization-page__culture-dropdown" />
                 <div>
-                    <RadzenCheckBox @bind-Value="Model.FallBackToParentCulture" Name="fallback-to-parent" Disabled="@IsSaving" />
+                    <CrestCheckBox @bind-Value="Model.FallBackToParentCulture" Name="fallback-to-parent" Disabled="@IsSaving" />
                     <label for="fallback-to-parent"> Fall back to parent cultures</label>
                 </div>
-            </RadzenStack>
-        </RadzenCard>
+            </CrestStack>
+        </CrestCard>
 
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-            <RadzenButton Text="Save" Icon="save" Disabled="@(IsSaving || SupportedCultureOptions.Length == 0)" Click="SaveAsync" />
-        </RadzenStack>
+        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <CrestButton Text="Save" Icon="save" Disabled="@(IsSaving || SupportedCultureOptions.Length == 0)" Click="SaveAsync" />
+        </CrestStack>
     }
-</RadzenStack>
+</CrestStack>
 
 @code {
     [CascadingParameter] public DisplayManager? DisplayManager { get; set; }

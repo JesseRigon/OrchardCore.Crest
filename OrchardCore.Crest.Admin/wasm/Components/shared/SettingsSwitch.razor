@@ -2,7 +2,7 @@
 @using Crest.Components.Primitives
 
 <div class="settings-switch">
-    <RadzenCheckBox TValue="bool" Value="@Value" Change="@OnChanged" />
+    <CrestCheckBox TValue="bool" Value="@Value" Change="@OnChanged" />
     <div class="settings-switch__content">
         <label class="settings-switch__label" @onclick="ToggleAsync">@Label</label>
         @if (!string.IsNullOrWhiteSpace(Hint))

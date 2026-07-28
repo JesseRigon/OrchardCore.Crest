@@ -8,64 +8,64 @@
 @inject NotificationService Notifications
 @inject DisplayManager DisplayManager
 
-<RadzenStack Gap="1rem">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-        <RadzenStack Gap="0.25rem">
-            <RadzenText TextStyle="TextStyle.H4" Text="Admin Settings" />
-            <RadzenText TextStyle="TextStyle.Body2" Text="Manage Orchard admin UI options and route access planning." />
-        </RadzenStack>
-        <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
-    </RadzenStack>
+<CrestStack Gap="1rem">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="Admin Settings" />
+            <CrestText TextStyle="TextStyle.Body2" Text="Manage Orchard admin UI options and route access planning." />
+        </CrestStack>
+        <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
+    </CrestStack>
 
-    <RadzenCard>
+    <CrestCard>
         @if (!string.IsNullOrWhiteSpace(ErrorMessage))
         {
-            <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+            <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
         }
         else if (IsLoading)
         {
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-                <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                <RadzenText Text="Loading settings..." />
-            </RadzenStack>
+            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                <CrestText Text="Loading settings..." />
+            </CrestStack>
         }
         else
         {
             <CrestMainContentTabs @bind-SelectedIndex="SelectedTabIndex" aria-label="Admin settings sections">
-                <RadzenTabsItem Text="Admin" Icon="admin_panel_settings">
-                    <RadzenTemplateForm TItem="AdminSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
-                        <RadzenStack Gap="1rem">
-                            <RadzenText TextStyle="TextStyle.H5" Text="Admin" />
+                <CrestTabsItem Text="Admin" Icon="admin_panel_settings">
+                    <CrestTemplateForm TItem="AdminSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
+                        <CrestStack Gap="1rem">
+                            <CrestText TextStyle="TextStyle.H5" Text="Admin" />
                             <SettingsSwitch Label="Enable theme toggler" Hint="Whether or not to display a theme toggler." @bind-Value="Model.DisplayThemeToggler" />
                             <SettingsSwitch Label="Enable Admin Menu filter" Hint="Whether a quick search to filter the admin menu is displayed." @bind-Value="Model.DisplayMenuFilter" />
                             <SettingsSwitch Label="Display titles in top bar" Hint="Whether the titles are displayed in the top bar." @bind-Value="Model.DisplayTitlesInTopbar" />
-                            <RadzenFieldset Text="Title bar">
-                                <RadzenStack Gap="0.75rem">
+                            <CrestFieldset Text="Title bar">
+                                <CrestStack Gap="0.75rem">
                                     <SettingsSwitch Label="Display culture label" Hint="Show the culture name beside its flag. The default is the flag icon only." @bind-Value="TitleBarModel.DisplayCultureLabel" />
                                     <CrestDropDown Data="@AvatarShapes" @bind-Value="TitleBarModel.TenantAvatarShape" TextProperty="Label" ValueProperty="Value" Placeholder="Tenant avatar shape" Style="width: 100%;" />
-                                    <RadzenTextBox @bind-Value="TitleBarModel.TenantAvatarImageUrl" Placeholder="Tenant avatar image URL (optional)" Style="width: 100%;" />
+                                    <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarImageUrl" Placeholder="Tenant avatar image URL (optional)" Style="width: 100%;" />
                                     @if (string.Equals(TitleBarModel.TenantAvatarShape, "Custom", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        <RadzenTextBox @bind-Value="TitleBarModel.TenantAvatarClipPath" Placeholder="CSS/SVG clip-path, for example polygon(...) or url(#clip)" Style="width: 100%;" />
-                                        <RadzenTextBox @bind-Value="TitleBarModel.TenantAvatarBorderRadius" Placeholder="Optional border radius" Style="width: 100%;" />
+                                        <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarClipPath" Placeholder="CSS/SVG clip-path, for example polygon(...) or url(#clip)" Style="width: 100%;" />
+                                        <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarBorderRadius" Placeholder="Optional border radius" Style="width: 100%;" />
                                     }
-                                </RadzenStack>
-                            </RadzenFieldset>
-                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                                <RadzenButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
-                            </RadzenStack>
-                        </RadzenStack>
-                    </RadzenTemplateForm>
-                </RadzenTabsItem>
-                <RadzenTabsItem Text="Site Map" Icon="account_tree">
-                    <RadzenStack Gap="1rem">
-                        <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.H5" Text="Site Map" />
-                            <RadzenText TextStyle="TextStyle.Body2" Text="Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up." />
-                        </RadzenStack>
+                                </CrestStack>
+                            </CrestFieldset>
+                            <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                                <CrestButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                            </CrestStack>
+                        </CrestStack>
+                    </CrestTemplateForm>
+                </CrestTabsItem>
+                <CrestTabsItem Text="Site Map" Icon="account_tree">
+                    <CrestStack Gap="1rem">
+                        <CrestStack Gap="0.25rem">
+                            <CrestText TextStyle="TextStyle.H5" Text="Site Map" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up." />
+                        </CrestStack>
                         @if (RouteNodes.Length == 0)
                         {
-                            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">No routes were discovered for the admin site map.</RadzenAlert>
+                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">No routes were discovered for the admin site map.</CrestAlert>
                         }
                         else
                         {
@@ -76,12 +76,12 @@
                                 }
                             </ol>
                         }
-                    </RadzenStack>
-                </RadzenTabsItem>
+                    </CrestStack>
+                </CrestTabsItem>
             </CrestMainContentTabs>
         }
-    </RadzenCard>
-</RadzenStack>
+    </CrestCard>
+</CrestStack>
 
 <style>
     .admin-menu-tree__list { list-style: none; margin: 0; padding-left: 1.25rem; }
@@ -141,28 +141,28 @@
 
     private RenderFragment RenderRouteNode(RouteNode node) => @<li class="admin-menu-tree__item">
         <div class="admin-menu-node">
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
+            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
                     <span class="admin-menu-node__handle" title="Drag to move"><CrestIcon IconKey="iconify.mdi/current/default/drag" /></span>
                     @if (node.Items.Length > 0)
                     {
-                        <RadzenButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" title="Expand/collapse coming soon" />
+                        <CrestButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" title="Expand/collapse coming soon" />
                     }
                     else
                     {
                         <span class="admin-menu-node__spacer"></span>
                     }
-                    <RadzenStack Gap="0.1rem" Style="flex: 1; min-width: 0;">
-                        <RadzenText TextStyle="TextStyle.Subtitle2" Text="@node.Text" />
-                        <RadzenText TextStyle="TextStyle.Caption" Text="@node.Meta" />
-                    </RadzenStack>
-                </RadzenStack>
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.35rem">
-                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Disabled="true" title="Edit route permissions coming soon" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="visibility_off" ButtonStyle="ButtonStyle.Light" Disabled="true" title="Toggle route access coming soon" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Disabled="true" title="Delete route override coming soon" />
-                </RadzenStack>
-            </RadzenStack>
+                    <CrestStack Gap="0.1rem" Style="flex: 1; min-width: 0;">
+                        <CrestText TextStyle="TextStyle.Subtitle2" Text="@node.Text" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@node.Meta" />
+                    </CrestStack>
+                </CrestStack>
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.35rem">
+                    <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Disabled="true" title="Edit route permissions coming soon" />
+                    <CrestButton Size="ButtonSize.Small" Icon="visibility_off" ButtonStyle="ButtonStyle.Light" Disabled="true" title="Toggle route access coming soon" />
+                    <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Disabled="true" title="Delete route override coming soon" />
+                </CrestStack>
+            </CrestStack>
         </div>
         @if (node.Items.Length > 0)
         {

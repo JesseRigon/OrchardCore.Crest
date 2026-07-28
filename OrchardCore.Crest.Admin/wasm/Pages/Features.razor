@@ -5,119 +5,119 @@
 @inject IApi Api
 @inject NotificationService Notifications
 
-<RadzenStack Gap="1rem" data-testid="features-page">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
-        <RadzenStack Gap="0.25rem">
-            <RadzenText TextStyle="TextStyle.H4" Text="Features" />
-            <RadzenText TextStyle="TextStyle.Body2" Text="Enable and disable Orchard features for this tenant." />
-        </RadzenStack>
-        <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
-    </RadzenStack>
+<CrestStack Gap="1rem" data-testid="features-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="Features" />
+            <CrestText TextStyle="TextStyle.Body2" Text="Enable and disable Orchard features for this tenant." />
+        </CrestStack>
+        <CrestButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+    </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
     }
 
-    <RadzenCard>
-        <RadzenStack Gap="0.85rem">
-            <RadzenRow Gap="0.75rem">
-                <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenTextBox @bind-Value="SearchText" Placeholder="Search name, ID, category, description, or dependency..." Style="width: 100%;" data-testid="features-search" />
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="3">
+    <CrestCard>
+        <CrestStack Gap="0.85rem">
+            <CrestRow Gap="0.75rem">
+                <CrestColumn Size="12" SizeMD="6">
+                    <CrestTextBox @bind-Value="SearchText" Placeholder="Search name, ID, category, description, or dependency..." Style="width: 100%;" data-testid="features-search" />
+                </CrestColumn>
+                <CrestColumn Size="12" SizeMD="3">
                     <CrestDropDown @bind-Value="StatusFilter" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" data-testid="features-status-filter" />
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="3">
-                    <RadzenCheckBox @bind-Value="HideAlwaysEnabled" TValue="bool" />
-                    <RadzenLabel Text="Hide always enabled" Style="margin-left: 0.45rem;" />
-                </RadzenColumn>
-            </RadzenRow>
+                </CrestColumn>
+                <CrestColumn Size="12" SizeMD="3">
+                    <CrestCheckBox @bind-Value="HideAlwaysEnabled" TValue="bool" />
+                    <CrestLabel Text="Hide always enabled" Style="margin-left: 0.45rem;" />
+                </CrestColumn>
+            </CrestRow>
 
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                <RadzenText Text="Bulk actions" TextStyle="TextStyle.Subtitle2" />
-                <RadzenButton Text="Enable" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => ApplyBulkAsync(BulkAction.Enable))" Disabled="@(!CanApplyBulk)" />
-                <RadzenButton Text="Disable" Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => RequestBulkDisable())" Disabled="@(!CanApplyBulk)" />
-                <RadzenButton Text="Toggle" Icon="swap_horiz" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@(() => RequestBulkToggle())" Disabled="@(!CanApplyBulk)" />
-                <RadzenText Text="@($"Showing {FilteredFeatures.Length} of {AllFeatures.Length} features")" TextStyle="TextStyle.Caption" class="features-count" />
-            </RadzenStack>
-        </RadzenStack>
-    </RadzenCard>
+            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <CrestText Text="Bulk actions" TextStyle="TextStyle.Subtitle2" />
+                <CrestButton Text="Enable" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => ApplyBulkAsync(BulkAction.Enable))" Disabled="@(!CanApplyBulk)" />
+                <CrestButton Text="Disable" Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => RequestBulkDisable())" Disabled="@(!CanApplyBulk)" />
+                <CrestButton Text="Toggle" Icon="swap_horiz" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@(() => RequestBulkToggle())" Disabled="@(!CanApplyBulk)" />
+                <CrestText Text="@($"Showing {FilteredFeatures.Length} of {AllFeatures.Length} features")" TextStyle="TextStyle.Caption" class="features-count" />
+            </CrestStack>
+        </CrestStack>
+    </CrestCard>
 
     @if (IsLoading)
     {
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-            <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-            <RadzenText Text="Loading features..." />
-        </RadzenStack>
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <CrestText Text="Loading features..." />
+        </CrestStack>
     }
     else if (FilteredFeatures.Length == 0)
     {
-        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">Nothing here. The current search or filters returned no features.</RadzenAlert>
+        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">Nothing here. The current search or filters returned no features.</CrestAlert>
     }
     else
     {
         @foreach (var group in GroupedFeatures)
         {
             <section class="feature-group" data-testid="feature-category">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
                     <input type="checkbox" checked="@IsGroupSelected(group.Items)" @onchange="@((ChangeEventArgs args) => SelectGroup(group.Items, args.Value is true))" aria-label="@($"Select all features in {group.Category}")" />
-                    <RadzenText TextStyle="TextStyle.H5" Text="@group.Category" />
-                    <RadzenBadge Text="@group.Items.Length.ToString()" BadgeStyle="BadgeStyle.Secondary" />
-                </RadzenStack>
+                    <CrestText TextStyle="TextStyle.H5" Text="@group.Category" />
+                    <CrestBadge Text="@group.Items.Length.ToString()" BadgeStyle="BadgeStyle.Secondary" />
+                </CrestStack>
 
-                <RadzenStack Gap="0.6rem">
+                <CrestStack Gap="0.6rem">
                     @foreach (var feature in group.Items)
                     {
-                        <RadzenCard class="feature-card" data-feature-id="@feature.Id">
+                        <CrestCard class="feature-card" data-feature-id="@feature.Id">
                             <div class="feature-card__selection">
                                 <input type="checkbox" checked="@SelectedIds.Contains(feature.Id)" @onchange="@((ChangeEventArgs args) => SelectFeature(feature.Id, args.Value is true))" aria-label="@($"Select {feature.Name}")" />
                             </div>
-                            <RadzenStack Gap="0.45rem" class="feature-card__content">
-                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                    <RadzenText TextStyle="TextStyle.H6" Text="@feature.Name" />
-                                    <RadzenText TextStyle="TextStyle.Caption" Text="@feature.Id" />
-                                    <RadzenBadge Text="@(feature.Enabled ? "Enabled" : "Disabled")" BadgeStyle="@(feature.Enabled ? BadgeStyle.Success : BadgeStyle.Light)" />
+                            <CrestStack Gap="0.45rem" class="feature-card__content">
+                                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                                    <CrestText TextStyle="TextStyle.H6" Text="@feature.Name" />
+                                    <CrestText TextStyle="TextStyle.Caption" Text="@feature.Id" />
+                                    <CrestBadge Text="@(feature.Enabled ? "Enabled" : "Disabled")" BadgeStyle="@(feature.Enabled ? BadgeStyle.Success : BadgeStyle.Light)" />
                                     @if (feature.AlwaysEnabled)
                                     {
-                                        <RadzenBadge Text="Always enabled" BadgeStyle="BadgeStyle.Info" />
+                                        <CrestBadge Text="Always enabled" BadgeStyle="BadgeStyle.Info" />
                                     }
                                     @if (feature.EnabledByDependencyOnly)
                                     {
-                                        <RadzenBadge Text="Dependency only" BadgeStyle="BadgeStyle.Warning" />
+                                        <CrestBadge Text="Dependency only" BadgeStyle="BadgeStyle.Warning" />
                                     }
-                                </RadzenStack>
+                                </CrestStack>
 
                                 @if (!string.IsNullOrWhiteSpace(feature.Description))
                                 {
-                                    <RadzenText TextStyle="TextStyle.Body2" Text="@feature.Description" />
+                                    <CrestText TextStyle="TextStyle.Body2" Text="@feature.Description" />
                                 }
 
                                 @if (feature.Dependencies.Length > 0)
                                 {
-                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.35rem" Wrap="FlexWrap.Wrap">
-                                        <RadzenText Text="Depends on:" TextStyle="TextStyle.Caption" />
+                                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.35rem" Wrap="FlexWrap.Wrap">
+                                        <CrestText Text="Depends on:" TextStyle="TextStyle.Caption" />
                                         @foreach (var dependency in feature.Dependencies)
                                         {
-                                            <RadzenBadge Text="@DependencyName(dependency)" BadgeStyle="@(IsDependencyAvailable(dependency) ? BadgeStyle.Secondary : BadgeStyle.Danger)" />
+                                            <CrestBadge Text="@DependencyName(dependency)" BadgeStyle="@(IsDependencyAvailable(dependency) ? BadgeStyle.Secondary : BadgeStyle.Danger)" />
                                         }
-                                    </RadzenStack>
+                                    </CrestStack>
                                 }
-                            </RadzenStack>
+                            </CrestStack>
 
                             <div class="feature-card__actions">
                                 @if (feature.Enabled)
                                 {
-                                    <RadzenButton Text="Disable" Icon="block" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RequestDisable(feature))" Disabled="@(IsBusy || !CanDisable(feature))" />
+                                    <CrestButton Text="Disable" Icon="block" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RequestDisable(feature))" Disabled="@(IsBusy || !CanDisable(feature))" />
                                 }
                                 else
                                 {
-                                    <RadzenButton Text="Enable" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => SetFeatureAsync(feature, true))" Disabled="@(IsBusy || !CanEnable(feature))" />
+                                    <CrestButton Text="Enable" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => SetFeatureAsync(feature, true))" Disabled="@(IsBusy || !CanEnable(feature))" />
                                 }
                             </div>
-                        </RadzenCard>
+                        </CrestCard>
                     }
-                </RadzenStack>
+                </CrestStack>
             </section>
         }
     }
@@ -125,10 +125,10 @@
     @if (Confirmation is not null)
     {
         <div class="feature-dialog-backdrop" data-testid="feature-confirm-dialog">
-            <RadzenCard class="feature-dialog">
-                <RadzenStack Gap="1rem">
-                    <RadzenText TextStyle="TextStyle.H5" Text="@Confirmation.Title" />
-                    <RadzenText Text="@Confirmation.Message" />
+            <CrestCard class="feature-dialog">
+                <CrestStack Gap="1rem">
+                    <CrestText TextStyle="TextStyle.H5" Text="@Confirmation.Title" />
+                    <CrestText Text="@Confirmation.Message" />
                     @if (Confirmation.Dependents.Length > 0)
                     {
                         <ul>
@@ -138,15 +138,15 @@
                             }
                         </ul>
                     }
-                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelConfirmation" />
-                        <RadzenButton Text="Continue" ButtonStyle="ButtonStyle.Danger" Click="ConfirmAsync" Disabled="@IsBusy" />
-                    </RadzenStack>
-                </RadzenStack>
-            </RadzenCard>
+                    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                        <CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelConfirmation" />
+                        <CrestButton Text="Continue" ButtonStyle="ButtonStyle.Danger" Click="ConfirmAsync" Disabled="@IsBusy" />
+                    </CrestStack>
+                </CrestStack>
+            </CrestCard>
         </div>
     }
-</RadzenStack>
+</CrestStack>
 
 @code {
     private Feature[] AllFeatures { get; set; } = [];

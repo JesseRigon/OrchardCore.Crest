@@ -5,22 +5,22 @@
 @using Crest.Components.Primitives
 @inject IApi Api
 
-<RadzenStack Gap="1rem" data-testid="roles-page">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
-        <RadzenStack Gap="0.25rem">
-            <RadzenText TextStyle="TextStyle.H4" Text="Roles" />
-            <RadzenText TextStyle="TextStyle.Body2" Text="Browse Orchard roles and their system and administrator status." />
-        </RadzenStack>
-        <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
-    </RadzenStack>
+<CrestStack Gap="1rem" data-testid="roles-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="Roles" />
+            <CrestText TextStyle="TextStyle.Body2" Text="Browse Orchard roles and their system and administrator status." />
+        </CrestStack>
+        <CrestButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+    </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
     }
 
-    <RadzenRow Gap="1rem">
-        <RadzenColumn Size="12" SizeLG="4">
+    <CrestRow Gap="1rem">
+        <CrestColumn Size="12" SizeLG="4">
             <CrestModelList TItem="Role"
                             Title="Roles"
                             Items="@AllRoles"
@@ -33,42 +33,42 @@
                             ShowCreate="false"
                             IsBusy="@IsLoading"
                             EmptyText="No roles are available." />
-        </RadzenColumn>
-        <RadzenColumn Size="12" SizeLG="8">
+        </CrestColumn>
+        <CrestColumn Size="12" SizeLG="8">
             @if (IsLoading)
             {
-                <RadzenCard><RadzenProgressBar Mode="ProgressBarMode.Indeterminate" /></RadzenCard>
+                <CrestCard><CrestProgressBar Mode="ProgressBarMode.Indeterminate" /></CrestCard>
             }
             else if (SelectedRole is null)
             {
-                <RadzenCard><RadzenText Text="Select a role to inspect its Orchard status." /></RadzenCard>
+                <CrestCard><CrestText Text="Select a role to inspect its Orchard status." /></CrestCard>
             }
             else
             {
-                <RadzenCard data-testid="role-detail">
-                    <RadzenStack Gap="1rem">
-                        <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.H5" Text="@SelectedRole.Name" />
-                            <RadzenText TextStyle="TextStyle.Body2" Text="@(string.IsNullOrWhiteSpace(SelectedRole.Description) ? "No role description has been set." : SelectedRole.Description)" />
-                        </RadzenStack>
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                            <RadzenBadge Text="@(SelectedRole.IsSystem ? "System role" : "Custom role")" BadgeStyle="@(SelectedRole.IsSystem ? BadgeStyle.Info : BadgeStyle.Secondary)" />
+                <CrestCard data-testid="role-detail">
+                    <CrestStack Gap="1rem">
+                        <CrestStack Gap="0.25rem">
+                            <CrestText TextStyle="TextStyle.H5" Text="@SelectedRole.Name" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="@(string.IsNullOrWhiteSpace(SelectedRole.Description) ? "No role description has been set." : SelectedRole.Description)" />
+                        </CrestStack>
+                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                            <CrestBadge Text="@(SelectedRole.IsSystem ? "System role" : "Custom role")" BadgeStyle="@(SelectedRole.IsSystem ? BadgeStyle.Info : BadgeStyle.Secondary)" />
                             @if (SelectedRole.IsAdmin)
                             {
-                                <RadzenBadge Text="Administrator" BadgeStyle="BadgeStyle.Success" />
+                                <CrestBadge Text="Administrator" BadgeStyle="BadgeStyle.Success" />
                             }
-                        </RadzenStack>
+                        </CrestStack>
                         @if (SelectedRole.IsSystem)
                         {
-                            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">System roles are managed by Orchard and cannot be deleted.</RadzenAlert>
+                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">System roles are managed by Orchard and cannot be deleted.</CrestAlert>
                         }
-                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">Role permissions will be added with the dedicated permission editor so they retain Orchard’s effective-permission behavior.</RadzenAlert>
-                    </RadzenStack>
-                </RadzenCard>
+                        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">Role permissions will be added with the dedicated permission editor so they retain Orchard’s effective-permission behavior.</CrestAlert>
+                    </CrestStack>
+                </CrestCard>
             }
-        </RadzenColumn>
-    </RadzenRow>
-</RadzenStack>
+        </CrestColumn>
+    </CrestRow>
+</CrestStack>
 
 @code {
     private Role[] AllRoles { get; set; } = [];

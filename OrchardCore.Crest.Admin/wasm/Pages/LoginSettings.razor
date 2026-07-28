@@ -4,41 +4,41 @@
 @using Crest.Components.Primitives
 @inject IApi Api
 
-<RadzenStack Gap="1rem" data-testid="login-settings-page">
-    <RadzenText TextStyle="TextStyle.H4" Text="User Login Settings" />
+<CrestStack Gap="1rem" data-testid="login-settings-page">
+    <CrestText TextStyle="TextStyle.H4" Text="User Login Settings" />
     @if (Model is null)
     {
-        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
     }
     else
     {
-        <RadzenFieldset Text="General">
-            <RadzenCheckBox @bind-Value="Model.AllowRememberMe" Name="allow-remember-me" /><label for="allow-remember-me"> Allow user to be remembered during login</label><br />
-            <RadzenCheckBox @bind-Value="Model.AllowChangingUsername" Name="allow-changing-username" /><label for="allow-changing-username"> Allow user to change their username</label><br />
-            <RadzenCheckBox @bind-Value="Model.AllowChangingEmail" Name="allow-changing-email" /><label for="allow-changing-email"> Allow user to change their email address</label><br />
-            <RadzenCheckBox @bind-Value="Model.AllowChangingPhoneNumber" Name="allow-changing-phone" /><label for="allow-changing-phone"> Allow user to change their phone number</label><br />
-            <RadzenCheckBox @bind-Value="Model.UseSiteTheme" Name="use-site-theme" /><label for="use-site-theme"> Use site theme for login page</label><br />
-            <RadzenCheckBox @bind-Value="Model.DisableLocalLogin" Name="disable-local-login" /><label for="disable-local-login"> Disable local password login</label>
-        </RadzenFieldset>
-        <RadzenFieldset Text="Two-Factor Authentication">
-            <RadzenCheckBox @bind-Value="Model.AllowRememberClientTwoFactorAuthentication" Name="remember-two-factor" /><label for="remember-two-factor"> Allow users to remember client</label><br />
-            <RadzenCheckBox @bind-Value="Model.RequireTwoFactorAuthentication" Name="require-two-factor" /><label for="require-two-factor"> Require two-factor authentication</label><br />
-            <RadzenLabel Text="Number of recovery codes to generate" Component="recovery-codes" />
-            <RadzenNumeric @bind-Value="Model.NumberOfRecoveryCodesToGenerate" Name="recovery-codes" Min="1" /><br />
-            <RadzenCheckBox @bind-Value="Model.UseSiteThemeForTwoFactorAuthentication" Name="two-factor-site-theme" /><label for="two-factor-site-theme"> Use site theme for two-factor authentication pages</label>
-        </RadzenFieldset>
-        <RadzenFieldset Text="External Login">
-            <RadzenCheckBox @bind-Value="Model.UseExternalProviderIfOnlyOneDefined" Name="use-external-provider" /><label for="use-external-provider"> Use external provider for login</label><br />
-            <RadzenCheckBox @bind-Value="Model.UseScriptToSyncProperties" Name="sync-external-properties" /><label for="sync-external-properties"> Use a script to sync user properties from external provider claims</label>
+        <CrestFieldset Text="General">
+            <CrestCheckBox @bind-Value="Model.AllowRememberMe" Name="allow-remember-me" /><label for="allow-remember-me"> Allow user to be remembered during login</label><br />
+            <CrestCheckBox @bind-Value="Model.AllowChangingUsername" Name="allow-changing-username" /><label for="allow-changing-username"> Allow user to change their username</label><br />
+            <CrestCheckBox @bind-Value="Model.AllowChangingEmail" Name="allow-changing-email" /><label for="allow-changing-email"> Allow user to change their email address</label><br />
+            <CrestCheckBox @bind-Value="Model.AllowChangingPhoneNumber" Name="allow-changing-phone" /><label for="allow-changing-phone"> Allow user to change their phone number</label><br />
+            <CrestCheckBox @bind-Value="Model.UseSiteTheme" Name="use-site-theme" /><label for="use-site-theme"> Use site theme for login page</label><br />
+            <CrestCheckBox @bind-Value="Model.DisableLocalLogin" Name="disable-local-login" /><label for="disable-local-login"> Disable local password login</label>
+        </CrestFieldset>
+        <CrestFieldset Text="Two-Factor Authentication">
+            <CrestCheckBox @bind-Value="Model.AllowRememberClientTwoFactorAuthentication" Name="remember-two-factor" /><label for="remember-two-factor"> Allow users to remember client</label><br />
+            <CrestCheckBox @bind-Value="Model.RequireTwoFactorAuthentication" Name="require-two-factor" /><label for="require-two-factor"> Require two-factor authentication</label><br />
+            <CrestLabel Text="Number of recovery codes to generate" Component="recovery-codes" />
+            <CrestNumeric @bind-Value="Model.NumberOfRecoveryCodesToGenerate" Name="recovery-codes" Min="1" /><br />
+            <CrestCheckBox @bind-Value="Model.UseSiteThemeForTwoFactorAuthentication" Name="two-factor-site-theme" /><label for="two-factor-site-theme"> Use site theme for two-factor authentication pages</label>
+        </CrestFieldset>
+        <CrestFieldset Text="External Login">
+            <CrestCheckBox @bind-Value="Model.UseExternalProviderIfOnlyOneDefined" Name="use-external-provider" /><label for="use-external-provider"> Use external provider for login</label><br />
+            <CrestCheckBox @bind-Value="Model.UseScriptToSyncProperties" Name="sync-external-properties" /><label for="sync-external-properties"> Use a script to sync user properties from external provider claims</label>
             @if (Model.UseScriptToSyncProperties)
             {
-                <RadzenTextArea @bind-Value="Model.SyncPropertiesScript" Rows="16" Style="width:100%; margin-top: .75rem" Placeholder="External login synchronization script" />
+                <CrestTextArea @bind-Value="Model.SyncPropertiesScript" Rows="16" Style="width:100%; margin-top: .75rem" Placeholder="External login synchronization script" />
             }
-        </RadzenFieldset>
-        <RadzenButton Text="Save" Icon="save" Click="SaveAsync" />
-        @if (!string.IsNullOrWhiteSpace(Error)) { <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-danger)">@Error</RadzenText> }
+        </CrestFieldset>
+        <CrestButton Text="Save" Icon="save" Click="SaveAsync" />
+        @if (!string.IsNullOrWhiteSpace(Error)) { <CrestText TextStyle="TextStyle.Body2" Style="color: var(--rz-danger)">@Error</CrestText> }
     }
-</RadzenStack>
+</CrestStack>
 
 @code {
     private CrestLoginSettings? Model;

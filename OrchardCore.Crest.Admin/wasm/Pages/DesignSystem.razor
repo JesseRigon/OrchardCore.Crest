@@ -7,66 +7,66 @@
 @inject DisplayManager DisplayManager
 @inject NotificationService Notifications
 
-    <RadzenStack Gap="1rem">
-        <RadzenStack Gap="0.25rem">
-            <RadzenText TextStyle="TextStyle.H4" Text="Design System" />
-            <RadzenText TextStyle="TextStyle.Body2" Text="Edit Orchard Crest UI Framework primitive design tokens for the active tenant without switching or creating Orchard themes." />
-        </RadzenStack>
+    <CrestStack Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="Design System" />
+            <CrestText TextStyle="TextStyle.Body2" Text="Edit Orchard Crest UI Framework primitive design tokens for the active tenant without switching or creating Orchard themes." />
+        </CrestStack>
 
-        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
             These settings are tenant site settings for now. They override Crest primitive design tokens at runtime while the selected Orchard theme remains the same.
-        </RadzenAlert>
+        </CrestAlert>
 
-        <RadzenCard>
-            <RadzenTemplateForm TItem="DesignSystemModel" Data="@Model" Submit="SaveAsync">
-                <RadzenStack Gap="1rem">
-                    <RadzenRow Gap="1rem">
-                        <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenLabel Text="Crest base theme" />
+        <CrestCard>
+            <CrestTemplateForm TItem="DesignSystemModel" Data="@Model" Submit="SaveAsync">
+                <CrestStack Gap="1rem">
+                    <CrestRow Gap="1rem">
+                        <CrestColumn Size="12" SizeMD="6">
+                            <CrestLabel Text="Crest base theme" />
                             <CrestDropDown TValue="string" Data="@RadzenThemes" @bind-Value="Model.RadzenTheme" Style="width: 100%;" />
-                        </RadzenColumn>
-                        <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenLabel Text="Border radius" />
-                            <RadzenTextBox @bind-Value="Model.Radius" Placeholder="6px" Style="width: 100%;" />
-                        </RadzenColumn>
-                    </RadzenRow>
+                        </CrestColumn>
+                        <CrestColumn Size="12" SizeMD="6">
+                            <CrestLabel Text="Border radius" />
+                            <CrestTextBox @bind-Value="Model.Radius" Placeholder="6px" Style="width: 100%;" />
+                        </CrestColumn>
+                    </CrestRow>
 
-                    <RadzenRow Gap="1rem">
-                        <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenLabel Text="Accent 1" />
-                            <RadzenColorPicker @bind-Value="Model.Primary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
-                        </RadzenColumn>
-                        <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenLabel Text="Accent 2" />
-                            <RadzenColorPicker @bind-Value="Model.Secondary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
-                        </RadzenColumn>
-                        <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenLabel Text="Surface 1" />
-                            <RadzenColorPicker @bind-Value="Model.Surface" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
-                        </RadzenColumn>
-                        <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenLabel Text="Surface 2" />
-                            <RadzenColorPicker @bind-Value="Model.Background" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
-                        </RadzenColumn>
-                    </RadzenRow>
+                    <CrestRow Gap="1rem">
+                        <CrestColumn Size="12" SizeMD="3">
+                            <CrestLabel Text="Accent 1" />
+                            <CrestColorPicker @bind-Value="Model.Primary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
+                        </CrestColumn>
+                        <CrestColumn Size="12" SizeMD="3">
+                            <CrestLabel Text="Accent 2" />
+                            <CrestColorPicker @bind-Value="Model.Secondary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
+                        </CrestColumn>
+                        <CrestColumn Size="12" SizeMD="3">
+                            <CrestLabel Text="Surface 1" />
+                            <CrestColorPicker @bind-Value="Model.Surface" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
+                        </CrestColumn>
+                        <CrestColumn Size="12" SizeMD="3">
+                            <CrestLabel Text="Surface 2" />
+                            <CrestColorPicker @bind-Value="Model.Background" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
+                        </CrestColumn>
+                    </CrestRow>
 
                     <div class="design-system-preview">
-                        <RadzenText TextStyle="TextStyle.H6" Text="Preview" />
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Style="flex-wrap: wrap;">
-                            <RadzenButton Text="Primary Action" ButtonStyle="ButtonStyle.Primary" />
-                            <RadzenButton Text="Secondary Action" ButtonStyle="ButtonStyle.Secondary" />
-                            <RadzenButton Text="Light Action" ButtonStyle="ButtonStyle.Light" />
-                        </RadzenStack>
+                        <CrestText TextStyle="TextStyle.H6" Text="Preview" />
+                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Style="flex-wrap: wrap;">
+                            <CrestButton Text="Primary Action" ButtonStyle="ButtonStyle.Primary" />
+                            <CrestButton Text="Secondary Action" ButtonStyle="ButtonStyle.Secondary" />
+                            <CrestButton Text="Light Action" ButtonStyle="ButtonStyle.Light" />
+                        </CrestStack>
                     </div>
 
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                        <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@DisplayManager.IsBusy" />
-                        <RadzenButton Text="Reset defaults" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@DisplayManager.IsBusy" />
-                    </RadzenStack>
-                </RadzenStack>
-            </RadzenTemplateForm>
-        </RadzenCard>
-    </RadzenStack>
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                        <CrestButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@DisplayManager.IsBusy" />
+                        <CrestButton Text="Reset defaults" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@DisplayManager.IsBusy" />
+                    </CrestStack>
+                </CrestStack>
+            </CrestTemplateForm>
+        </CrestCard>
+    </CrestStack>
 
 @code {
     private static readonly string[] RadzenThemes =

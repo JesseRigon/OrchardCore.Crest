@@ -6,22 +6,22 @@
 @inject IApi Api
 @inject NavigationManager Navigation
 
-<RadzenStack Gap="1rem" data-testid="user-editor-page">
-    <RadzenText TextStyle="TextStyle.H4" Text="@(IsNew ? "Add User" : "Edit User")" />
-    @if (Model is null) { <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" /> }
+<CrestStack Gap="1rem" data-testid="user-editor-page">
+    <CrestText TextStyle="TextStyle.H4" Text="@(IsNew ? "Add User" : "Edit User")" />
+    @if (Model is null) { <CrestProgressBar Mode="ProgressBarMode.Indeterminate" /> }
     else
     {
-        <RadzenLabel Text="Username" Component="username" /><RadzenTextBox Name="username" @bind-Value="Model.UserName" Style="width:100%" />
-        <RadzenLabel Text="Email" Component="email" /><RadzenTextBox Name="email" @bind-Value="Model.Email" Style="width:100%" />
-        <RadzenLabel Text="Phone number" Component="phone" /><RadzenTextBox Name="phone" @bind-Value="Model.PhoneNumber" Style="width:100%" />
-        <RadzenLabel Text="@(IsNew ? "Password" : "New password (leave blank to retain)")" Component="password" /><RadzenPassword Name="password" @bind-Value="Model.Password" Style="width:100%" />
-        <RadzenCheckBox @bind-Value="Model.EmailConfirmed" Name="email-confirmed" /><label for="email-confirmed"> Email confirmed</label><br />
-        <RadzenCheckBox @bind-Value="Model.IsEnabled" Name="user-enabled" /><label for="user-enabled"> Enabled</label>
-        <RadzenLabel Text="Roles (comma-separated)" Component="roles" /><RadzenTextBox Name="roles" @bind-Value="Roles" Style="width:100%" />
-        <RadzenStack Orientation="Orientation.Horizontal"><RadzenButton Text="Save" Icon="save" Click="SaveAsync" /><RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="Cancel" /></RadzenStack>
-        @if (!string.IsNullOrWhiteSpace(Error)) { <RadzenText Style="color: var(--rz-danger)">@Error</RadzenText> }
+        <CrestLabel Text="Username" Component="username" /><CrestTextBox Name="username" @bind-Value="Model.UserName" Style="width:100%" />
+        <CrestLabel Text="Email" Component="email" /><CrestTextBox Name="email" @bind-Value="Model.Email" Style="width:100%" />
+        <CrestLabel Text="Phone number" Component="phone" /><CrestTextBox Name="phone" @bind-Value="Model.PhoneNumber" Style="width:100%" />
+        <CrestLabel Text="@(IsNew ? "Password" : "New password (leave blank to retain)")" Component="password" /><CrestPassword Name="password" @bind-Value="Model.Password" Style="width:100%" />
+        <CrestCheckBox @bind-Value="Model.EmailConfirmed" Name="email-confirmed" /><label for="email-confirmed"> Email confirmed</label><br />
+        <CrestCheckBox @bind-Value="Model.IsEnabled" Name="user-enabled" /><label for="user-enabled"> Enabled</label>
+        <CrestLabel Text="Roles (comma-separated)" Component="roles" /><CrestTextBox Name="roles" @bind-Value="Roles" Style="width:100%" />
+        <CrestStack Orientation="Orientation.Horizontal"><CrestButton Text="Save" Icon="save" Click="SaveAsync" /><CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="Cancel" /></CrestStack>
+        @if (!string.IsNullOrWhiteSpace(Error)) { <CrestText Style="color: var(--rz-danger)">@Error</CrestText> }
     }
-</RadzenStack>
+</CrestStack>
 
 @code {
     [Parameter] public string? Id { get; set; }

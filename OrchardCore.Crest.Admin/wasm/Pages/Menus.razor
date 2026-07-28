@@ -8,82 +8,82 @@
 @inject IApi Api
 @inject NotificationService Notifications
 
-<RadzenStack Gap="1rem">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-        <RadzenStack Gap="0.25rem">
-            <RadzenText TextStyle="TextStyle.H4" Text="Menus" />
-            <RadzenText TextStyle="TextStyle.Body2" Text="Manage standard Orchard site menus and nested menu items." />
-        </RadzenStack>
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-            <RadzenButton Text="New menu" Icon="add" Click="StartCreateMenu" Disabled="@IsBusy" />
-            <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
-        </RadzenStack>
-    </RadzenStack>
+<CrestStack Gap="1rem">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="Menus" />
+            <CrestText TextStyle="TextStyle.Body2" Text="Manage standard Orchard site menus and nested menu items." />
+        </CrestStack>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <CrestButton Text="New menu" Icon="add" Click="StartCreateMenu" Disabled="@IsBusy" />
+            <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
+        </CrestStack>
+    </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
     }
 
     @if (IsLoading)
     {
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-            <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-            <RadzenText Text="Loading menus..." />
-        </RadzenStack>
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <CrestText Text="Loading menus..." />
+        </CrestStack>
     }
     else
     {
-        <RadzenRow Gap="1rem">
-            <RadzenColumn Size="12" SizeLG="4">
-                <RadzenCard>
-                    <RadzenStack Gap="0.75rem">
-                        <RadzenText TextStyle="TextStyle.H6" Text="Menus" />
-                        <RadzenTextBox @bind-Value="MenuSearch" Placeholder="Search menus..." Style="width: 100%;" />
+        <CrestRow Gap="1rem">
+            <CrestColumn Size="12" SizeLG="4">
+                <CrestCard>
+                    <CrestStack Gap="0.75rem">
+                        <CrestText TextStyle="TextStyle.H6" Text="Menus" />
+                        <CrestTextBox @bind-Value="MenuSearch" Placeholder="Search menus..." Style="width: 100%;" />
                         @if (FilteredMenus.Length == 0)
                         {
-                            <RadzenText Text="No standard menus found." />
+                            <CrestText Text="No standard menus found." />
                         }
                         else
                         {
-                            <RadzenStack Gap="0.35rem">
+                            <CrestStack Gap="0.35rem">
                                 @foreach (var menu in FilteredMenus)
                                 {
                                     <div class="admin-menu-list-item @(menu.Id == SelectedMenuId ? "admin-menu-list-item--selected" : null) @(!menu.Published ? "admin-menu-list-item--disabled" : null)">
-                                        <RadzenButton Text="@menu.Name" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
-                                        <RadzenBadge Text="@(menu.Published ? "Published" : "Draft")" BadgeStyle="@(menu.Published ? BadgeStyle.Success : BadgeStyle.Warning)" />
-                                        <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@IsBusy" title="Rename menu" />
-                                        <RadzenButton Size="ButtonSize.Small" Icon="@(menu.Published ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@IsBusy" title="Publish/unpublish menu" />
-                                        <RadzenButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@IsBusy" title="Duplicate menu" />
-                                        <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@IsBusy" title="Delete menu" />
+                                        <CrestButton Text="@menu.Name" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
+                                        <CrestBadge Text="@(menu.Published ? "Published" : "Draft")" BadgeStyle="@(menu.Published ? BadgeStyle.Success : BadgeStyle.Warning)" />
+                                        <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@IsBusy" title="Rename menu" />
+                                        <CrestButton Size="ButtonSize.Small" Icon="@(menu.Published ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@IsBusy" title="Publish/unpublish menu" />
+                                        <CrestButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@IsBusy" title="Duplicate menu" />
+                                        <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@IsBusy" title="Delete menu" />
                                     </div>
                                 }
-                            </RadzenStack>
+                            </CrestStack>
                         }
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenColumn>
+                    </CrestStack>
+                </CrestCard>
+            </CrestColumn>
 
-            <RadzenColumn Size="12" SizeLG="8">
+            <CrestColumn Size="12" SizeLG="8">
                 @if (SelectedMenu is null)
                 {
-                    <RadzenCard><RadzenText Text="Select a standard menu to edit its items." /></RadzenCard>
+                    <CrestCard><CrestText Text="Select a standard menu to edit its items." /></CrestCard>
                 }
                 else
                 {
-                    <RadzenCard>
-                        <RadzenStack Gap="0.85rem">
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-                                <RadzenStack Gap="0.2rem">
-                                    <RadzenText TextStyle="TextStyle.H5" Text="@SelectedMenu.Name" />
-                                    <RadzenText TextStyle="TextStyle.Caption" Text="Standard Orchard menu items. Link and HTML menu items are editable here; content-picker menu items should still be edited in the legacy Orchard editor for now." />
-                                </RadzenStack>
-                                <RadzenButton Text="Add menu item" Icon="add" Click="StartCreateNode" Disabled="@(IsBusy || AvailableNodeTypes.Length == 0)" />
-                            </RadzenStack>
+                    <CrestCard>
+                        <CrestStack Gap="0.85rem">
+                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                                <CrestStack Gap="0.2rem">
+                                    <CrestText TextStyle="TextStyle.H5" Text="@SelectedMenu.Name" />
+                                    <CrestText TextStyle="TextStyle.Caption" Text="Standard Orchard menu items. Link and HTML menu items are editable here; content-picker menu items should still be edited in the legacy Orchard editor for now." />
+                                </CrestStack>
+                                <CrestButton Text="Add menu item" Icon="add" Click="StartCreateNode" Disabled="@(IsBusy || AvailableNodeTypes.Length == 0)" />
+                            </CrestStack>
 
                             @if (SelectedMenu.Nodes.Length == 0)
                             {
-                                <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">This menu does not have any items yet.</RadzenAlert>
+                                <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">This menu does not have any items yet.</CrestAlert>
                             }
                             else
                             {
@@ -94,60 +94,60 @@
                                     }
                                 </ol>
                             }
-                        </RadzenStack>
-                    </RadzenCard>
+                        </CrestStack>
+                    </CrestCard>
                 }
-            </RadzenColumn>
-        </RadzenRow>
+            </CrestColumn>
+        </CrestRow>
     }
 
     @if (MenuDialogModel is not null)
     {
         <div class="admin-menu-editor-dialog-backdrop">
-            <RadzenCard class="admin-menu-editor-dialog" Style="max-width: 32rem; width: min(32rem, calc(100vw - 2rem));">
-                <RadzenTemplateForm TItem="MenuFormModel" Data="@MenuDialogModel" Submit="@(_ => SaveMenuDialogAsync())">
-                    <RadzenStack Gap="1rem">
-                        <RadzenText TextStyle="TextStyle.H5" Text="@MenuDialogTitle" />
-                        <RadzenFormField Text="Menu name" Style="width: 100%;"><RadzenTextBox @bind-Value="MenuDialogModel.Name" Style="width: 100%;" /></RadzenFormField>
-                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelMenuDialog" />
-                            <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
-                        </RadzenStack>
-                    </RadzenStack>
-                </RadzenTemplateForm>
-            </RadzenCard>
+            <CrestCard class="admin-menu-editor-dialog" Style="max-width: 32rem; width: min(32rem, calc(100vw - 2rem));">
+                <CrestTemplateForm TItem="MenuFormModel" Data="@MenuDialogModel" Submit="@(_ => SaveMenuDialogAsync())">
+                    <CrestStack Gap="1rem">
+                        <CrestText TextStyle="TextStyle.H5" Text="@MenuDialogTitle" />
+                        <CrestFormField Text="Menu name" Style="width: 100%;"><CrestTextBox @bind-Value="MenuDialogModel.Name" Style="width: 100%;" /></CrestFormField>
+                        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelMenuDialog" />
+                            <CrestButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                        </CrestStack>
+                    </CrestStack>
+                </CrestTemplateForm>
+            </CrestCard>
         </div>
     }
 
     @if (NodeDialogModel is not null)
     {
         <div class="admin-menu-editor-dialog-backdrop">
-            <RadzenCard class="admin-menu-editor-dialog" Style="max-width: 44rem; width: min(44rem, calc(100vw - 2rem));">
-                <RadzenTemplateForm TItem="NodeFormModel" Data="@NodeDialogModel" Submit="@(_ => SaveNodeDialogAsync())">
-                    <RadzenStack Gap="1rem">
-                        <RadzenText TextStyle="TextStyle.H5" Text="@NodeDialogTitle" />
-                        <RadzenRow Gap="1rem">
-                            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Type" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.Type" Data="AvailableNodeTypes" TextProperty="DisplayName" ValueProperty="Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
-                            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Parent" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.ParentNodeId" Data="ParentOptions" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="Root" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
-                            <RadzenColumn Size="12"><RadzenFormField Text="Text" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Text" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
-                            <RadzenColumn Size="12" SizeMD="8"><RadzenFormField Text="URL" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Url" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
-                            <RadzenColumn Size="12" SizeMD="4"><RadzenFormField Text="Target" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Target" Placeholder="_blank" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+            <CrestCard class="admin-menu-editor-dialog" Style="max-width: 44rem; width: min(44rem, calc(100vw - 2rem));">
+                <CrestTemplateForm TItem="NodeFormModel" Data="@NodeDialogModel" Submit="@(_ => SaveNodeDialogAsync())">
+                    <CrestStack Gap="1rem">
+                        <CrestText TextStyle="TextStyle.H5" Text="@NodeDialogTitle" />
+                        <CrestRow Gap="1rem">
+                            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Type" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.Type" Data="AvailableNodeTypes" TextProperty="DisplayName" ValueProperty="Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Parent" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.ParentNodeId" Data="ParentOptions" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="Root" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12"><CrestFormField Text="Text" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Text" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12" SizeMD="8"><CrestFormField Text="URL" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Url" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="Target" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Target" Placeholder="_blank" Style="width: 100%;" /></CrestFormField></CrestColumn>
                             @if (string.Equals(NodeDialogModel.Type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase))
                             {
-                                <RadzenColumn Size="12"><RadzenFormField Text="HTML" Style="width: 100%;"><RadzenTextArea @bind-Value="NodeDialogModel.Html" Rows="5" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                                <CrestColumn Size="12"><CrestFormField Text="HTML" Style="width: 100%;"><CrestTextArea @bind-Value="NodeDialogModel.Html" Rows="5" Style="width: 100%;" /></CrestFormField></CrestColumn>
                             }
-                            <RadzenColumn Size="12"><RadzenFormField Text="Permission names" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.PermissionNamesText" Placeholder="Comma-separated permission names" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
-                        </RadzenRow>
-                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelNodeDialog" />
-                            <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
-                        </RadzenStack>
-                    </RadzenStack>
-                </RadzenTemplateForm>
-            </RadzenCard>
+                            <CrestColumn Size="12"><CrestFormField Text="Permission names" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.PermissionNamesText" Placeholder="Comma-separated permission names" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                        </CrestRow>
+                        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelNodeDialog" />
+                            <CrestButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                        </CrestStack>
+                    </CrestStack>
+                </CrestTemplateForm>
+            </CrestCard>
         </div>
     }
-</RadzenStack>
+</CrestStack>
 
 <style>
     .admin-menu-list-item { display: flex; align-items: center; gap: 0.25rem; border: 1px solid var(--rz-border-color); border-radius: var(--rz-border-radius); padding: 0.15rem; }
@@ -290,24 +290,24 @@
 
     private RenderFragment MenuNode(StandardMenuNodeSummary node) => @<li class="admin-menu-tree__item">
         <div class="admin-menu-node">
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
+            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
                     <span class="admin-menu-node__handle" draggable="true" title="Drag to move"><CrestIcon IconKey="iconify.mdi/current/default/drag" /></span>
-                    @if (node.Items.Length > 0) { <RadzenButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" /> }
+                    @if (node.Items.Length > 0) { <CrestButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" /> }
                     else { <span class="admin-menu-node__spacer"></span> }
-                    <RadzenStack Gap="0.1rem" Style="flex: 1; min-width: 0;">
-                        <RadzenText TextStyle="TextStyle.Subtitle2" Text="@node.Text" />
-                        <RadzenText TextStyle="TextStyle.Caption" Text="@NodeMeta(node)" />
-                    </RadzenStack>
-                </RadzenStack>
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.35rem">
-                    <RadzenButton Size="ButtonSize.Small" Icon="arrow_upward" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveNodeAsync(node, -1))" Disabled="@(IsBusy || node.Order == 0)" title="Move up" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="arrow_downward" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveNodeAsync(node, 1))" Disabled="@IsBusy" title="Move down" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => StartEditNode(node))" Disabled="@(IsBusy || !CanEdit(node))" title="Edit menu item" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Click="@(() => DuplicateNodeAsync(node))" Disabled="@IsBusy" title="Duplicate menu item" />
-                    <RadzenButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@IsBusy" title="Delete menu item" />
-                </RadzenStack>
-            </RadzenStack>
+                    <CrestStack Gap="0.1rem" Style="flex: 1; min-width: 0;">
+                        <CrestText TextStyle="TextStyle.Subtitle2" Text="@node.Text" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@NodeMeta(node)" />
+                    </CrestStack>
+                </CrestStack>
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.35rem">
+                    <CrestButton Size="ButtonSize.Small" Icon="arrow_upward" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveNodeAsync(node, -1))" Disabled="@(IsBusy || node.Order == 0)" title="Move up" />
+                    <CrestButton Size="ButtonSize.Small" Icon="arrow_downward" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveNodeAsync(node, 1))" Disabled="@IsBusy" title="Move down" />
+                    <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => StartEditNode(node))" Disabled="@(IsBusy || !CanEdit(node))" title="Edit menu item" />
+                    <CrestButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Click="@(() => DuplicateNodeAsync(node))" Disabled="@IsBusy" title="Duplicate menu item" />
+                    <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteNodeAsync(node))" Disabled="@IsBusy" title="Delete menu item" />
+                </CrestStack>
+            </CrestStack>
         </div>
         @if (node.Items.Length > 0)
         {

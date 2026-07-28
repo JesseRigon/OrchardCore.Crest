@@ -8,140 +8,140 @@
 @inject IApi Api
 @inject NotificationService Notifications
 
-<RadzenStack Gap="1rem">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-        <RadzenStack Gap="0.25rem">
-            <RadzenText TextStyle="TextStyle.H4" Text="Icons" />
-            <RadzenText TextStyle="TextStyle.Body2" Text="Manage server-side icon providers used by the icon selector, admin menus, and icon packs." />
-        </RadzenStack>
-        <RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="LoadAsync" Disabled="@IsBusy" />
-    </RadzenStack>
+<CrestStack Gap="1rem">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="Icons" />
+            <CrestText TextStyle="TextStyle.Body2" Text="Manage server-side icon providers used by the icon selector, admin menus, and icon packs." />
+        </CrestStack>
+        <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="LoadAsync" Disabled="@IsBusy" />
+    </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</RadzenAlert>
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
     }
 
     @if (IsLoading)
     {
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-            <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-            <RadzenText Text="Loading icon provider settings..." />
-        </RadzenStack>
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <CrestText Text="Loading icon provider settings..." />
+        </CrestStack>
     }
     else
     {
-        <RadzenRow Gap="1rem">
-            <RadzenColumn Size="12" SizeLG="6">
-                <RadzenCard>
-                    <RadzenTemplateForm TItem="IconifyProviderModel" Data="@Model" Submit="@(_ => SaveAsync())">
-                        <RadzenStack Gap="1rem">
-                            <RadzenStack Gap="0.25rem">
-                                <RadzenText TextStyle="TextStyle.H5" Text="Iconify" />
-                                <RadzenText TextStyle="TextStyle.Body2" Text="Default example provider. Uses the Iconify API contract and can point at the public API or a self-hosted compatible server." />
-                            </RadzenStack>
+        <CrestRow Gap="1rem">
+            <CrestColumn Size="12" SizeLG="6">
+                <CrestCard>
+                    <CrestTemplateForm TItem="IconifyProviderModel" Data="@Model" Submit="@(_ => SaveAsync())">
+                        <CrestStack Gap="1rem">
+                            <CrestStack Gap="0.25rem">
+                                <CrestText TextStyle="TextStyle.H5" Text="Iconify" />
+                                <CrestText TextStyle="TextStyle.Body2" Text="Default example provider. Uses the Iconify API contract and can point at the public API or a self-hosted compatible server." />
+                            </CrestStack>
 
                             <SettingsSwitch Label="Enable Iconify provider" Hint="When enabled, Iconify appears in icon search and can resolve selected Iconify icon keys for response icon packs." @bind-Value="Model.Enabled" />
 
-                            <RadzenFormField Text="API base URL" Style="width: 100%;">
-                                <RadzenTextBox @bind-Value="Model.BaseUrl" Placeholder="https://api.iconify.design" Style="width: 100%;" />
-                            </RadzenFormField>
+                            <CrestFormField Text="API base URL" Style="width: 100%;">
+                                <CrestTextBox @bind-Value="Model.BaseUrl" Placeholder="https://api.iconify.design" Style="width: 100%;" />
+                            </CrestFormField>
 
-                            <RadzenFormField Text="API key" Style="width: 100%;">
-                                <RadzenPassword @bind-Value="Model.ApiKey" Placeholder="Optional" Style="width: 100%;" />
-                            </RadzenFormField>
+                            <CrestFormField Text="API key" Style="width: 100%;">
+                                <CrestPassword @bind-Value="Model.ApiKey" Placeholder="Optional" Style="width: 100%;" />
+                            </CrestFormField>
 
-                            <RadzenFormField Text="API key header" Style="width: 100%;">
-                                <RadzenTextBox @bind-Value="Model.ApiKeyHeader" Placeholder="Authorization" Style="width: 100%;" />
-                            </RadzenFormField>
+                            <CrestFormField Text="API key header" Style="width: 100%;">
+                                <CrestTextBox @bind-Value="Model.ApiKeyHeader" Placeholder="Authorization" Style="width: 100%;" />
+                            </CrestFormField>
 
-                            <RadzenFormField Text="Allowed prefixes" Style="width: 100%;">
-                                <RadzenTextBox @bind-Value="Model.Prefixes" Placeholder="Optional comma-separated list, for example mdi, lucide, material-symbols" Style="width: 100%;" />
-                            </RadzenFormField>
-                            <RadzenText TextStyle="TextStyle.Caption" Text="Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API." />
+                            <CrestFormField Text="Allowed prefixes" Style="width: 100%;">
+                                <CrestTextBox @bind-Value="Model.Prefixes" Placeholder="Optional comma-separated list, for example mdi, lucide, material-symbols" Style="width: 100%;" />
+                            </CrestFormField>
+                            <CrestText TextStyle="TextStyle.Caption" Text="Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API." />
 
                             @if (IsCustomIconifyServer)
                             {
-                                <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+                                <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
                                     Custom Iconify servers are remote-only and are not cached by Orchard Crest UI Framework.
-                                </RadzenAlert>
+                                </CrestAlert>
                             }
 
-                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
-                                <RadzenButton Text="Save provider settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
-                                <RadzenButton Text="Reset Iconify defaults" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@IsSaving" />
-                            </RadzenStack>
-                        </RadzenStack>
-                    </RadzenTemplateForm>
-                </RadzenCard>
-            </RadzenColumn>
+                            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                                <CrestButton Text="Save provider settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                                <CrestButton Text="Reset Iconify defaults" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@IsSaving" />
+                            </CrestStack>
+                        </CrestStack>
+                    </CrestTemplateForm>
+                </CrestCard>
+            </CrestColumn>
 
-            <RadzenColumn Size="12" SizeLG="6">
-                <RadzenCard>
-                    <RadzenStack Gap="1rem">
-                        <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.H5" Text="Public Iconify local cache" />
-                            <RadzenText TextStyle="TextStyle.Body2" Text="Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache." />
-                        </RadzenStack>
+            <CrestColumn Size="12" SizeLG="6">
+                <CrestCard>
+                    <CrestStack Gap="1rem">
+                        <CrestStack Gap="0.25rem">
+                            <CrestText TextStyle="TextStyle.H5" Text="Public Iconify local cache" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache." />
+                        </CrestStack>
 
-                        <RadzenRow>
-                            <RadzenColumn Size="6">
-                                <RadzenText TextStyle="TextStyle.Caption" Text="Status" />
-                                <RadzenText Text="@(LocalMirror.IsAvailable ? "Available" : "Remote fallback")" />
-                            </RadzenColumn>
-                            <RadzenColumn Size="6">
-                                <RadzenText TextStyle="TextStyle.Caption" Text="Version" />
-                                <RadzenText Text="@(LocalMirror.Version ?? "Not initialized")" />
-                            </RadzenColumn>
-                            <RadzenColumn Size="6">
-                                <RadzenText TextStyle="TextStyle.Caption" Text="Prefixes" />
-                                <RadzenText Text="@LocalMirror.PrefixCount.ToString("n0")" />
-                            </RadzenColumn>
-                            <RadzenColumn Size="6">
-                                <RadzenText TextStyle="TextStyle.Caption" Text="Icons" />
-                                <RadzenText Text="@LocalMirror.IconCount.ToString("n0")" />
-                            </RadzenColumn>
-                        </RadzenRow>
+                        <CrestRow>
+                            <CrestColumn Size="6">
+                                <CrestText TextStyle="TextStyle.Caption" Text="Status" />
+                                <CrestText Text="@(LocalMirror.IsAvailable ? "Available" : "Remote fallback")" />
+                            </CrestColumn>
+                            <CrestColumn Size="6">
+                                <CrestText TextStyle="TextStyle.Caption" Text="Version" />
+                                <CrestText Text="@(LocalMirror.Version ?? "Not initialized")" />
+                            </CrestColumn>
+                            <CrestColumn Size="6">
+                                <CrestText TextStyle="TextStyle.Caption" Text="Prefixes" />
+                                <CrestText Text="@LocalMirror.PrefixCount.ToString("n0")" />
+                            </CrestColumn>
+                            <CrestColumn Size="6">
+                                <CrestText TextStyle="TextStyle.Caption" Text="Icons" />
+                                <CrestText Text="@LocalMirror.IconCount.ToString("n0")" />
+                            </CrestColumn>
+                        </CrestRow>
 
-                        <RadzenText TextStyle="TextStyle.Caption" Text="@($"Root: {(string.IsNullOrWhiteSpace(LocalMirror.RootPath) ? "not configured" : LocalMirror.RootPath)}")" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@($"Root: {(string.IsNullOrWhiteSpace(LocalMirror.RootPath) ? "not configured" : LocalMirror.RootPath)}")" />
                         @if (LocalMirror.LastSyncUtc is not null)
                         {
-                            <RadzenText TextStyle="TextStyle.Caption" Text="@($"Source commit: {LocalMirror.LastSyncUtc:u}")" />
+                            <CrestText TextStyle="TextStyle.Caption" Text="@($"Source commit: {LocalMirror.LastSyncUtc:u}")" />
                         }
                         @if (!string.IsNullOrWhiteSpace(LocalMirror.LastError))
                         {
-                            <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+                            <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
                                 Last cache error: @LocalMirror.LastError
-                            </RadzenAlert>
+                            </CrestAlert>
                         }
 
-                        <RadzenText TextStyle="TextStyle.Caption" Text="The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server." />
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenColumn>
+                        <CrestText TextStyle="TextStyle.Caption" Text="The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server." />
+                    </CrestStack>
+                </CrestCard>
+            </CrestColumn>
 
-            <RadzenColumn Size="12" SizeLG="6">
-                <RadzenCard>
-                    <RadzenStack Gap="1rem">
-                        <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.H5" Text="Provider search preview" />
-                            <RadzenText TextStyle="TextStyle.Body2" Text="This uses the same icon selector component as menu editors. Selecting an icon stores the normalized icon key." />
-                        </RadzenStack>
+            <CrestColumn Size="12" SizeLG="6">
+                <CrestCard>
+                    <CrestStack Gap="1rem">
+                        <CrestStack Gap="0.25rem">
+                            <CrestText TextStyle="TextStyle.H5" Text="Provider search preview" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="This uses the same icon selector component as menu editors. Selecting an icon stores the normalized icon key." />
+                        </CrestStack>
 
                         <IconSelector @bind-Value="SelectedIcon" />
 
                         @if (!string.IsNullOrWhiteSpace(SelectedIcon))
                         {
-                            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
                                 Selected icon: @SelectedIcon
-                            </RadzenAlert>
+                            </CrestAlert>
                         }
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenColumn>
-        </RadzenRow>
+                    </CrestStack>
+                </CrestCard>
+            </CrestColumn>
+        </CrestRow>
     }
-</RadzenStack>
+</CrestStack>
 
 @code {
     private IconifyProviderModel Model { get; set; } = IconifyProviderModel.From(IconifyIconProviderSettings.Default);

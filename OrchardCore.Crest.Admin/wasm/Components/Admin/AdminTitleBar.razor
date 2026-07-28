@@ -12,7 +12,7 @@
 @inject IJSRuntime Js
 
 <header class="admin-titlebar">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-titlebar__left">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-titlebar__left">
         <CrestAvatar ImageUrl="@TitleBarSettings.TenantAvatarImageUrl"
                      FallbackText="@TenantInitial"
                      AriaLabel="@($"{SelectedTenantName} tenant")"
@@ -33,14 +33,14 @@
                         Template="TenantOptionTemplate"
                         class="admin-titlebar__tenant-selector"
                         Style="color: var(--crest-color-text-2, var(--crest-color-text-1, #1f2937)); border-color: transparent;" />
-    </RadzenStack>
+    </CrestStack>
 
     @if (DisplayManager?.Manifest?.AdminSettings.DisplayTitlesInTopbar == true && !string.IsNullOrWhiteSpace(CurrentTitle))
     {
         <div class="admin-titlebar__page-title">@CurrentTitle</div>
     }
 
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem" class="admin-titlebar__right">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem" class="admin-titlebar__right">
         @if (CultureOptions.Length > 1)
         {
             <CrestDropDown TValue="string"
@@ -64,7 +64,7 @@
             </button>
         }
 
-        <RadzenProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="Open user menu">
+        <CrestProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="Open user menu">
             <Template>
                 <CrestAvatar FallbackText="@UserInitials"
                              AriaLabel="@UserName"
@@ -74,18 +74,18 @@
                              Class="admin-titlebar__avatar" />
             </Template>
             <ChildContent>
-                <RadzenProfileMenuItem Text="@UserName" Path="/Admin/Profile" />
-                <RadzenProfileMenuItem Text="Admin dashboard" Path="/Admin" />
-                <RadzenProfileMenuItem Text="Open site" Path="/" />
-                <RadzenProfileMenuItem Text="Sign in as another user" Click="SignInAsAnotherUserAsync" class="admin-titlebar__profile-separator" />
+                <CrestProfileMenuItem Text="@UserName" Path="/Admin/Profile" />
+                <CrestProfileMenuItem Text="Admin dashboard" Path="/Admin" />
+                <CrestProfileMenuItem Text="Open site" Path="/" />
+                <CrestProfileMenuItem Text="Sign in as another user" Click="SignInAsAnotherUserAsync" class="admin-titlebar__profile-separator" />
                 @foreach (var user in OtherKnownUsers)
                 {
-                    <RadzenProfileMenuItem Text="@UserLabel(user)" Click="@(() => SignInAsUserAsync(user))" />
+                    <CrestProfileMenuItem Text="@UserLabel(user)" Click="@(() => SignInAsUserAsync(user))" />
                 }
-                <RadzenProfileMenuItem Text="Logout" Click="LogoutAsync" class="admin-titlebar__profile-separator" />
+                <CrestProfileMenuItem Text="Logout" Click="LogoutAsync" class="admin-titlebar__profile-separator" />
             </ChildContent>
-        </RadzenProfileMenu>
-    </RadzenStack>
+        </CrestProfileMenu>
+    </CrestStack>
 </header>
 
 @code {

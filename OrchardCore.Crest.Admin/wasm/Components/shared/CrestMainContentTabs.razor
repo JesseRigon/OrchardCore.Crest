@@ -2,7 +2,7 @@
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 
-<RadzenTabs @attributes="Attributes"
+<CrestTabs @attributes="Attributes"
             class="crest-main-content-tabs"
             RenderMode="TabRenderMode.Client"
             SelectedIndex="@SelectedIndex"
@@ -11,7 +11,7 @@
     <Tabs>
         @ChildContent
     </Tabs>
-</RadzenTabs>
+</CrestTabs>
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }

@@ -7,79 +7,79 @@
 @inject IApi Api
 @using Microsoft.AspNetCore.Components
 
-<RadzenStack Gap="1rem" data-testid="security-headers-page">
-    <RadzenText TextStyle="TextStyle.H4" Text="Security Headers" />
+<CrestStack Gap="1rem" data-testid="security-headers-page">
+    <CrestText TextStyle="TextStyle.H4" Text="Security Headers" />
 
     @if (Model is null)
     {
-        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
     }
     else
     {
         @if (Model.FromConfiguration)
         {
-            <RadzenAlert AlertStyle="AlertStyle.Warning">Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source.</RadzenAlert>
+            <CrestAlert AlertStyle="AlertStyle.Warning">Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source.</CrestAlert>
         }
 
         <CrestMainContentTabs data-testid="security-headers-tabs">
-            <RadzenTabsItem Text="Content Security Policy">
-                <RadzenStack Gap="1rem" class="pt-3">
-                    <RadzenCheckBox @bind-Value="EnableSandbox" Name="enable-sandbox" />
+            <CrestTabsItem Text="Content Security Policy">
+                <CrestStack Gap="1rem" class="pt-3">
+                    <CrestCheckBox @bind-Value="EnableSandbox" Name="enable-sandbox" />
                     <label for="enable-sandbox">Enable sandbox</label>
-                    <RadzenText TextStyle="TextStyle.Body2" Text="Enables a sandbox for the requested resource, similar to the iframe sandbox attribute." />
-                    <RadzenCheckBox @bind-Value="UpgradeInsecureRequests" Name="upgrade-insecure-requests" />
+                    <CrestText TextStyle="TextStyle.Body2" Text="Enables a sandbox for the requested resource, similar to the iframe sandbox attribute." />
+                    <CrestCheckBox @bind-Value="UpgradeInsecureRequests" Name="upgrade-insecure-requests" />
                     <label for="upgrade-insecure-requests">Upgrade insecure requests</label>
-                    <RadzenDataGrid Data="ContentSecurityPolicies" TItem="SecurityPolicyOption" AllowPaging="false" AllowSorting="false">
+                    <CrestDataGrid Data="ContentSecurityPolicies" TItem="SecurityPolicyOption" AllowPaging="false" AllowSorting="false">
                         <Columns>
-                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="Directive" />
-                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Title="Allowed sources">
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="Directive" />
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="Allowed sources">
                                 <Template Context="option">
-                                    <RadzenTextBox Value="@GetContentSecurityPolicy(option.Key)" Change="@(value => SetContentSecurityPolicy(option.Key, value?.ToString()))" Style="width: 100%;" Placeholder="'self' https://cdn.example.com" />
+                                    <CrestTextBox Value="@GetContentSecurityPolicy(option.Key)" Change="@(value => SetContentSecurityPolicy(option.Key, value?.ToString()))" Style="width: 100%;" Placeholder="'self' https://cdn.example.com" />
                                 </Template>
-                            </RadzenDataGridColumn>
+                            </CrestDataGridColumn>
                         </Columns>
-                    </RadzenDataGrid>
-                    <RadzenText TextStyle="TextStyle.Body2" Text="Controls the resources the browser is allowed to load for a page." />
-                </RadzenStack>
-            </RadzenTabsItem>
-            <RadzenTabsItem Text="Permissions Policy">
-                <RadzenStack Gap="1rem" class="pt-3">
-                    <RadzenDataGrid Data="PermissionsPolicies" TItem="SecurityPolicyOption" AllowPaging="false" AllowSorting="false">
+                    </CrestDataGrid>
+                    <CrestText TextStyle="TextStyle.Body2" Text="Controls the resources the browser is allowed to load for a page." />
+                </CrestStack>
+            </CrestTabsItem>
+            <CrestTabsItem Text="Permissions Policy">
+                <CrestStack Gap="1rem" class="pt-3">
+                    <CrestDataGrid Data="PermissionsPolicies" TItem="SecurityPolicyOption" AllowPaging="false" AllowSorting="false">
                         <Columns>
-                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="Feature" />
-                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Title="Allowed by">
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="Feature" />
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="Allowed by">
                                 <Template Context="option">
                                     <CrestDropDown TValue="string" Value="@GetPermissionOrigin(option.Key)" Change="@(value => SetPermissionOrigin(option.Key, value?.ToString() ?? "()"))" Data="PermissionOriginOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
                                 </Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="SecurityPolicyOption" Title="Additional origins">
+                            </CrestDataGridColumn>
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="Additional origins">
                                 <Template Context="option">
                                     @if (GetPermissionOrigin(option.Key) == "self")
                                     {
-                                        <RadzenTextBox Value="@GetAdditionalOrigins(option.Key)" Change="@(value => SetAdditionalOrigins(option.Key, value?.ToString()))" Style="width: 100%;" Placeholder="https://www.example.com https://app.example.com" />
+                                        <CrestTextBox Value="@GetAdditionalOrigins(option.Key)" Change="@(value => SetAdditionalOrigins(option.Key, value?.ToString()))" Style="width: 100%;" Placeholder="https://www.example.com https://app.example.com" />
                                     }
                                 </Template>
-                            </RadzenDataGridColumn>
+                            </CrestDataGridColumn>
                         </Columns>
-                    </RadzenDataGrid>
-                    <RadzenText TextStyle="TextStyle.Body2" Text="Controls which browser features and APIs are available to this site." />
-                </RadzenStack>
-            </RadzenTabsItem>
-            <RadzenTabsItem Text="Referrer Policy">
-                <RadzenStack Gap="1rem" class="pt-3">
-                    <RadzenFormField Text="Referrer policy" Style="width: 100%; max-width: 42rem;">
+                    </CrestDataGrid>
+                    <CrestText TextStyle="TextStyle.Body2" Text="Controls which browser features and APIs are available to this site." />
+                </CrestStack>
+            </CrestTabsItem>
+            <CrestTabsItem Text="Referrer Policy">
+                <CrestStack Gap="1rem" class="pt-3">
+                    <CrestFormField Text="Referrer policy" Style="width: 100%; max-width: 42rem;">
                         <CrestDropDown TValue="string" @bind-Value="ReferrerPolicy" Data="ReferrerPolicyOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
-                    </RadzenFormField>
-                    <RadzenText TextStyle="TextStyle.Body2" Text="Controls how much referrer information the browser includes when navigating away from a page." />
-                </RadzenStack>
-            </RadzenTabsItem>
+                    </CrestFormField>
+                    <CrestText TextStyle="TextStyle.Body2" Text="Controls how much referrer information the browser includes when navigating away from a page." />
+                </CrestStack>
+            </CrestTabsItem>
         </CrestMainContentTabs>
 
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-            <RadzenButton Text="Save" Click="SaveAsync" />
-        </RadzenStack>
+        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <CrestButton Text="Save" Click="SaveAsync" />
+        </CrestStack>
     }
-</RadzenStack>
+</CrestStack>
 
 @code {
     [SupplyParameterFromQuery(Name = "groupId")]

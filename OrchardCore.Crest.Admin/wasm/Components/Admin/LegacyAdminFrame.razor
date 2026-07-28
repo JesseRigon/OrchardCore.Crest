@@ -4,17 +4,17 @@
 
 <CrestAppContainer>
     <div class="legacy-admin-frame-page">
-        <RadzenStack Gap="1rem" Style="height: 100%; min-height: 0;">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-                    <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.H4" Text="@Title" />
-                        <RadzenText TextStyle="TextStyle.Body2" Text="This Orchard admin page is running inside the Crest Admin shell." />
-                    </RadzenStack>
-                    <RadzenButton Text="Open full page" ButtonStyle="ButtonStyle.Light" Click="OpenFullPage" />
-                </RadzenStack>
+        <CrestStack Gap="1rem" Style="height: 100%; min-height: 0;">
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <CrestStack Gap="0.25rem">
+                        <CrestText TextStyle="TextStyle.H4" Text="@Title" />
+                        <CrestText TextStyle="TextStyle.Body2" Text="This Orchard admin page is running inside the Crest Admin shell." />
+                    </CrestStack>
+                    <CrestButton Text="Open full page" ButtonStyle="ButtonStyle.Light" Click="OpenFullPage" />
+                </CrestStack>
 
                 <iframe class="legacy-admin-frame" src="@FrameUrl" title="@Title"></iframe>
-        </RadzenStack>
+        </CrestStack>
     </div>
 </CrestAppContainer>
 

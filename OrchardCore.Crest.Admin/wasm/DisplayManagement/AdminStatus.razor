@@ -3,10 +3,10 @@
 @using Crest.Components.Primitives
 @inherits ShapeTemplate
 
-<RadzenStack Gap="0.25rem">
-    <RadzenText TextStyle="TextStyle.H6" Text="Crest Admin" />
-    <RadzenText Text="@($"Signed in as {UserName}")" />
-</RadzenStack>
+<CrestStack Gap="0.25rem">
+    <CrestText TextStyle="TextStyle.H6" Text="Crest Admin" />
+    <CrestText Text="@($"Signed in as {UserName}")" />
+</CrestStack>
 
 @code {
     [Parameter]

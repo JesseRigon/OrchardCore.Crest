@@ -21,11 +21,11 @@
     <div class="primary-nav-menu__content">
         @if (DisplayManager is null)
         {
-            <RadzenText TextStyle="TextStyle.Body2" Text="Display manager is unavailable." />
+            <CrestText TextStyle="TextStyle.Body2" Text="Display manager is unavailable." />
         }
         else if (Menu is null)
         {
-            <RadzenText TextStyle="TextStyle.Body2" Text="Loading admin menu..." />
+            <CrestText TextStyle="TextStyle.Body2" Text="Loading admin menu..." />
         }
         else
         {
@@ -40,7 +40,7 @@
                     }
 
                     <span class="crest-panel-menu__text-rail primary-nav-menu__filter-input-rail">
-                        <RadzenTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="Search Menu" Style="width: 100%;" />
+                        <CrestTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="Search Menu" Style="width: 100%;" />
                     </span>
 
                     @if (HasQuickAddItems)
@@ -87,7 +87,7 @@
 
             @if (VisibleMenuItems.Length == 0)
             {
-                <RadzenText TextStyle="TextStyle.Body2" Text="No admin menu items returned." />
+                <CrestText TextStyle="TextStyle.Body2" Text="No admin menu items returned." />
             }
 
         }

@@ -8,30 +8,30 @@
 @inject CrestRoutingOptions Routing
 @inject NavigationManager Navigation
 
-<RadzenStack Gap="1rem" Style="padding: 2rem;">
-    <RadzenText TextStyle="TextStyle.H3" Text="OrchardCore.Crest" />
+<CrestStack Gap="1rem" Style="padding: 2rem;">
+    <CrestText TextStyle="TextStyle.H3" Text="OrchardCore.Crest" />
 
     @if (DisplayManager.IsAuthenticated)
     {
-        <RadzenText Text="@($"Signed in as {DisplayManager.User.UserName}")" />
-        <RadzenButton Text="Logout" Click="LogoutAsync" Disabled="@DisplayManager.IsBusy" />
+        <CrestText Text="@($"Signed in as {DisplayManager.User.UserName}")" />
+        <CrestButton Text="Logout" Click="LogoutAsync" Disabled="@DisplayManager.IsBusy" />
     }
     else
     {
-        <RadzenTemplateForm TItem="LoginForm" Data="@_login" Submit="@((LoginForm form) => LoginAsync(form))">
-            <RadzenStack Gap="0.75rem" Style="max-width: 22rem;">
-                <RadzenTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="Username or email" />
-                <RadzenPassword Name="Password" @bind-Value="_login.Password" Placeholder="Password" />
-                <RadzenCheckBox @bind-Value="_login.RememberMe" />
-                <RadzenButton ButtonType="ButtonType.Submit" Text="Login" Disabled="@DisplayManager.IsBusy" />
+        <CrestTemplateForm TItem="LoginForm" Data="@_login" Submit="@((LoginForm form) => LoginAsync(form))">
+            <CrestStack Gap="0.75rem" Style="max-width: 22rem;">
+                <CrestTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="Username or email" />
+                <CrestPassword Name="Password" @bind-Value="_login.Password" Placeholder="Password" />
+                <CrestCheckBox @bind-Value="_login.RememberMe" />
+                <CrestButton ButtonType="ButtonType.Submit" Text="Login" Disabled="@DisplayManager.IsBusy" />
                 @if (DisplayManager.ErrorMessage is not null)
                 {
-                    <RadzenText TextStyle="TextStyle.Caption" Text="@DisplayManager.ErrorMessage" />
+                    <CrestText TextStyle="TextStyle.Caption" Text="@DisplayManager.ErrorMessage" />
                 }
-            </RadzenStack>
-        </RadzenTemplateForm>
+            </CrestStack>
+        </CrestTemplateForm>
     }
-</RadzenStack>
+</CrestStack>
 
 @code {
     private LoginForm _login = new();

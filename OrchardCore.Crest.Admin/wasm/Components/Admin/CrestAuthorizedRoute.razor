@@ -6,22 +6,22 @@
 
 @if (!DisplayManager.IsInitialized)
 {
-    <RadzenStack Gap="1rem" Style="padding: 2rem;">
-        <RadzenText Text="Loading..." />
-    </RadzenStack>
+    <CrestStack Gap="1rem" Style="padding: 2rem;">
+        <CrestText Text="Loading..." />
+    </CrestStack>
 }
 else if (!DisplayManager.IsAuthenticated)
 {
-    <RadzenStack Gap="1rem" Style="padding: 2rem;">
-        <RadzenText Text="Sign in is required." />
-    </RadzenStack>
+    <CrestStack Gap="1rem" Style="padding: 2rem;">
+        <CrestText Text="Sign in is required." />
+    </CrestStack>
 }
 else if (!DisplayManager.IsRouteAuthorized(Navigation.Uri))
 {
-    <RadzenStack data-testid="crest-route-forbidden" Gap="0.5rem" Style="padding: 2rem;">
-        <RadzenText TextStyle="TextStyle.H4" Text="Access denied" />
-        <RadzenText Text="You do not have permission to access this admin page." />
-    </RadzenStack>
+    <CrestStack data-testid="crest-route-forbidden" Gap="0.5rem" Style="padding: 2rem;">
+        <CrestText TextStyle="TextStyle.H4" Text="Access denied" />
+        <CrestText Text="You do not have permission to access this admin page." />
+    </CrestStack>
 }
 else
 {

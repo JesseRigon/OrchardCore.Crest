@@ -4,7 +4,7 @@
 
 @if (Items.Length == 0)
 {
-    <RadzenText TextStyle="TextStyle.Body2" Text="No menu items returned." />
+    <CrestText TextStyle="TextStyle.Body2" Text="No menu items returned." />
 }
 else
 {
@@ -12,14 +12,14 @@ else
         @foreach (var item in Items)
         {
             <li>
-                <RadzenStack Gap="0.25rem">
-                    <RadzenText Text="@item.Text" />
-                    <RadzenText TextStyle="TextStyle.Caption" Text="@GetDetails(item)" />
+                <CrestStack Gap="0.25rem">
+                    <CrestText Text="@item.Text" />
+                    <CrestText TextStyle="TextStyle.Caption" Text="@GetDetails(item)" />
                     @if (item.Items.Length > 0)
                     {
                         <NavigationItems Items="item.Items" />
                     }
-                </RadzenStack>
+                </CrestStack>
             </li>
         }
     </ul>
