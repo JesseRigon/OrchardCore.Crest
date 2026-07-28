@@ -470,7 +470,7 @@ namespace Crest.Components.Primitives
         {
             if (e.Key == "Enter" && !e.ShiftKey && JSRuntime != null)
             {
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", inputElement, "");
+                await JSRuntime.InvokeAsync<string>("Crest.setInputValue", inputElement, "");
                 preventDefault = true;
                 await OnSendMessage();
             }
@@ -496,7 +496,7 @@ namespace Crest.Components.Primitives
             if (!firstRender && messagesContainer.Context != null && JSRuntime != null)
             {
                 // Scroll to bottom when new messages are added
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.chatScrollAfterRender", ".rz-chat-messages", 100);
+                await JSRuntime.InvokeVoidAsync("Crest.chatScrollAfterRender", ".rz-chat-messages", 100);
             }
         }
 

@@ -115,7 +115,7 @@ namespace Crest.Components.Primitives
                 var minArg = Min.HasValue ? (object)Min.Value.ToString(CultureInfo.InvariantCulture) : null;
                 var maxArg = Max.HasValue ? (object)Max.Value.ToString(CultureInfo.InvariantCulture) : null;
                 _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                    "Crest.Components.Primitives.createNumeric", Element, IsInteger(),
+                    "Crest.createNumeric", Element, IsInteger(),
                     Culture.NumberFormat.NumberDecimalSeparator, minArg, maxArg, IsNullable);
             }
 
@@ -125,7 +125,7 @@ namespace Crest.Components.Primitives
                 var end = pendingSelectionEnd ?? start;
                 pendingSelectionStart = null;
                 pendingSelectionEnd = null;
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.setSelectionRange", input, start, end);
+                await JSRuntime.InvokeVoidAsync("Crest.setSelectionRange", input, start, end);
             }
         }
 
@@ -152,7 +152,7 @@ namespace Crest.Components.Primitives
             var minArg = Min.HasValue ? Min.Value.ToString(CultureInfo.InvariantCulture) : "null";
             var maxArg = Max.HasValue ? Max.Value.ToString(CultureInfo.InvariantCulture) : "null";
             string isNull = IsNullable.ToString().ToLowerInvariant();
-            return (Min != null || Max != null) ? $@"Crest.Components.Primitives.numericOnInput(event, {minArg}, {maxArg}, {isNull})" : "";
+            return (Min != null || Max != null) ? $@"Crest.numericOnInput(event, {minArg}, {maxArg}, {isNull})" : "";
         }
 
         private string GetOnPaste()
@@ -160,7 +160,7 @@ namespace Crest.Components.Primitives
             var minArg = Min.HasValue ? Min.Value.ToString(CultureInfo.InvariantCulture) : "null";
             var maxArg = Max.HasValue ? Max.Value.ToString(CultureInfo.InvariantCulture) : "null";
 
-            return (Min != null || Max != null) ? $@"Crest.Components.Primitives.numericOnPaste(event, {minArg}, {maxArg})" : "";
+            return (Min != null || Max != null) ? $@"Crest.numericOnPaste(event, {minArg}, {maxArg})" : "";
         }
 
         bool? isNullable;
@@ -633,7 +633,7 @@ namespace Crest.Components.Primitives
             {
                 if (JSRuntime != null)
                 {
-                    await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", input, FormattedValue);
+                    await JSRuntime.InvokeAsync<string>("Crest.setInputValue", input, FormattedValue);
                 }
                 return;
             }
@@ -641,7 +641,7 @@ namespace Crest.Components.Primitives
             Value = newValue;
             if (!ValueChanged.HasDelegate && JSRuntime != null)
             {
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", input, FormattedValue);
+                await JSRuntime.InvokeAsync<string>("Crest.setInputValue", input, FormattedValue);
             }
 
             await ValueChanged.InvokeAsync(Value);
@@ -830,14 +830,14 @@ namespace Crest.Components.Primitives
 
                 if (JSRuntime != null)
                 {
-                    var selection = await JSRuntime.InvokeAsync<int[]>("Crest.Components.Primitives.getSelectionRange", input);
+                    var selection = await JSRuntime.InvokeAsync<int[]>("Crest.getSelectionRange", input);
                     if (selection != null && selection.Length >= 2)
                     {
                         pendingSelectionStart = selection[0];
                         pendingSelectionEnd = selection[1];
                     }
 
-                    var value = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", input);
+                    var value = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", input);
                     await SetValue(value);
                 }
 

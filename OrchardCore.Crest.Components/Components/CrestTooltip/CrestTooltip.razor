@@ -54,7 +54,7 @@
         if (tooltip != null)
         {
             var enumName = Enum.GetName(typeof(TooltipPosition), tooltip.Options.Position);
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.openTooltip",
+            await JSRuntime.InvokeVoidAsync("Crest.openTooltip",
                 tooltip.Element,
                 UniqueID,
                 tooltip.Options.Delay,
@@ -120,7 +120,7 @@ private DotNetObjectReference<CrestTooltip>? reference;
                 try
                 {
                     tooltips.Remove(lastTooltip);
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closeTooltip", UniqueID);   
+                    await JSRuntime.InvokeVoidAsync("Crest.closeTooltip", UniqueID);   
                 }
                 catch
                 {
@@ -146,7 +146,7 @@ private DotNetObjectReference<CrestTooltip>? reference;
         {
             try
             {
-               await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyPopup", UniqueID);
+               await JSRuntime.InvokeVoidAsync("Crest.destroyPopup", UniqueID);
             }
             catch
             {
@@ -186,6 +186,6 @@ private DotNetObjectReference<CrestTooltip>? reference;
 
     void OnNavigate()
     {
-        JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", UniqueID);
+        JSRuntime.InvokeVoidAsync("Crest.closePopup", UniqueID);
     }
 }

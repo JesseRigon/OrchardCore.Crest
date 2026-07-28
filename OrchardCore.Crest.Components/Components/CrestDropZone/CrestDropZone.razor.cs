@@ -102,7 +102,7 @@ namespace Crest.Components.Primitives
 
             if (Visible && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.prepareDrag", Element);
+                await JSRuntime.InvokeVoidAsync("Crest.prepareDrag", Element);
             }
         }
 

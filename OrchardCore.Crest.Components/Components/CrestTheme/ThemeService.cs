@@ -502,7 +502,7 @@ namespace Crest.Components.Primitives
                 {
                     if (Href != null)
                     {
-                        jsRuntime.InvokeVoid("Crest.Components.Primitives.setTheme", Href, Wcag == true ? WcagHref : null!);
+                        jsRuntime.InvokeVoid("Crest.setTheme", Href, Wcag == true ? WcagHref : null!);
                     }
                 }
                 catch (Exception)

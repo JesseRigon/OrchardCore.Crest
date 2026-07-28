@@ -169,7 +169,7 @@ namespace Crest.Components.Primitives
                 await Change.InvokeAsync(selectedIndex);
                 if (JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.scrollCarouselItem", items[selectedIndex].element, AnimationDuration.HasValue ? (object)AnimationDuration.Value : null);
+                    await JSRuntime.InvokeVoidAsync("Crest.scrollCarouselItem", items[selectedIndex].element, AnimationDuration.HasValue ? (object)AnimationDuration.Value : null);
                 }
                 RefreshItems();
                 StateHasChanged();
@@ -371,7 +371,7 @@ namespace Crest.Components.Primitives
 
                 if (JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.scrollCarouselItem", items[selectedIndex].element, AnimationDuration.HasValue ? (object)AnimationDuration.Value : null);
+                    await JSRuntime.InvokeVoidAsync("Crest.scrollCarouselItem", items[selectedIndex].element, AnimationDuration.HasValue ? (object)AnimationDuration.Value : null);
                 }
             }
         }
@@ -556,7 +556,7 @@ namespace Crest.Components.Primitives
                 if (Visible)
                 {
                     scrollDisposable = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createCarousel", itemsElement, Reference);
+                        "Crest.createCarousel", itemsElement, Reference);
                 }
             }
         }

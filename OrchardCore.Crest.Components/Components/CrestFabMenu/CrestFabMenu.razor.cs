@@ -192,11 +192,11 @@ public partial class CrestFabMenu : CrestComponent
         {
             if (isOpen)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.registerFabMenu", Element, Reference);
+                JSRuntime.InvokeVoid("Crest.registerFabMenu", Element, Reference);
             }
             else
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.unregisterFabMenu", Element);
+                JSRuntime.InvokeVoid("Crest.unregisterFabMenu", Element);
             }
         }
     }
@@ -258,7 +258,7 @@ public partial class CrestFabMenu : CrestComponent
         {
             if (IsOpen && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.unregisterFabMenu", Element);
+                JSRuntime.InvokeVoid("Crest.unregisterFabMenu", Element);
             }
         }
         catch { }

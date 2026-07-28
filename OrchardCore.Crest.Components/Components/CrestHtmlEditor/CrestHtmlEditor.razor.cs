@@ -308,7 +308,7 @@ namespace Crest.Components.Primitives
                 return;
             }
 
-            State = await JSRuntime.InvokeAsync<CrestHtmlEditorCommandState>("Crest.Components.Primitives.execCommand", ContentEditable, name, value);
+            State = await JSRuntime.InvokeAsync<CrestHtmlEditorCommandState>("Crest.execCommand", ContentEditable, name, value);
 
             await OnExecuteAsync(name);
 
@@ -386,7 +386,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.saveSelection", ContentEditable);
+                await JSRuntime.InvokeVoidAsync("Crest.saveSelection", ContentEditable);
             }
         }
 
@@ -397,7 +397,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.restoreSelection", ContentEditable);
+                await JSRuntime.InvokeVoidAsync("Crest.restoreSelection", ContentEditable);
             }
         }
 
@@ -411,7 +411,7 @@ namespace Crest.Components.Primitives
                 return ValueTask.FromResult(new HtmlEditorTableSelection());
             }
 
-            return JSRuntime.InvokeAsync<HtmlEditorTableSelection>("Crest.Components.Primitives.getTableSelection", ContentEditable);
+            return JSRuntime.InvokeAsync<HtmlEditorTableSelection>("Crest.getTableSelection", ContentEditable);
         }
 
         /// <summary>
@@ -429,7 +429,7 @@ namespace Crest.Components.Primitives
             value ??= new HtmlEditorTableCommandArgs();
             value.DefaultColumnHeader ??= TableStrings.DefaultColumnHeader ?? Localize(nameof(CrestStrings.HtmlEditorTable_DefaultColumnHeader));
 
-            State = await JSRuntime.InvokeAsync<CrestHtmlEditorCommandState>("Crest.Components.Primitives.execTableCommand", ContentEditable, name, value);
+            State = await JSRuntime.InvokeAsync<CrestHtmlEditorCommandState>("Crest.execTableCommand", ContentEditable, name, value);
 
             if (State?.Success == false && !string.IsNullOrEmpty(State.Message))
             {
@@ -458,7 +458,7 @@ namespace Crest.Components.Primitives
                 return;
             }
 
-            State = await JSRuntime.InvokeAsync<CrestHtmlEditorCommandState>("Crest.Components.Primitives.queryCommands", ContentEditable);
+            State = await JSRuntime.InvokeAsync<CrestHtmlEditorCommandState>("Crest.queryCommands", ContentEditable);
 
             await UpdateTableSelectionAsync();
 
@@ -474,7 +474,7 @@ namespace Crest.Components.Primitives
             }
 
             TableSelection = fromContextMenu
-                ? await JSRuntime.InvokeAsync<HtmlEditorTableSelection>("Crest.Components.Primitives.getContextTableSelection", ContentEditable)
+                ? await JSRuntime.InvokeAsync<HtmlEditorTableSelection>("Crest.getContextTableSelection", ContentEditable)
                 : await GetTableSelectionAsync();
         }
 
@@ -515,7 +515,7 @@ namespace Crest.Components.Primitives
                 return ValueTask.FromResult<T>(default!);
             }
 
-            return JSRuntime.InvokeAsync<T>("Crest.Components.Primitives.selectionAttributes", selector, attributes, ContentEditable);
+            return JSRuntime.InvokeAsync<T>("Crest.selectionAttributes", selector, attributes, ContentEditable);
         }
 
         /// <inheritdoc />
@@ -535,7 +535,7 @@ namespace Crest.Components.Primitives
                         await _jsRef.DisposeAsync();
                     }
 
-                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createEditor", ContentEditable, UploadUrl, Paste.HasDelegate, Reference, shortcuts.Keys);
+                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createEditor", ContentEditable, UploadUrl, Paste.HasDelegate, Reference, shortcuts.Keys);
                 }
             }
 
@@ -565,7 +565,7 @@ namespace Crest.Components.Primitives
 
             if (requiresUpdate && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.innerHTML", ContentEditable, Html);
+                await JSRuntime.InvokeVoidAsync("Crest.innerHTML", ContentEditable, Html);
             }
         }
 

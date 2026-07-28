@@ -76,7 +76,7 @@ namespace Crest.Components.Primitives
 
                 try
                 {
-                    var matches = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.mediaQuery", Query, Reference);
+                    var matches = await JSRuntime.InvokeAsync<bool>("Crest.mediaQuery", Query, Reference);
 
                     await Change.InvokeAsync(matches);
                 }
@@ -101,7 +101,7 @@ namespace Crest.Components.Primitives
 
                 try
                 {
-                    _ = JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.mediaQuery", Reference);
+                    _ = JSRuntime.InvokeVoidAsync("Crest.mediaQuery", Reference);
                 }
                 catch
                 {

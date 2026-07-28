@@ -258,7 +258,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.toggleMenuItem", Element);
+                await JSRuntime.InvokeVoidAsync("Crest.toggleMenuItem", Element);
             }
         }
 
@@ -271,7 +271,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.toggleMenuItem", Element, "event", false);
+                await JSRuntime.InvokeVoidAsync("Crest.toggleMenuItem", Element, "event", false);
             }
         }
 
@@ -284,7 +284,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.toggleMenuItem", Element, "event", true);
+                await JSRuntime.InvokeVoidAsync("Crest.toggleMenuItem", Element, "event", true);
             }
         }
     }

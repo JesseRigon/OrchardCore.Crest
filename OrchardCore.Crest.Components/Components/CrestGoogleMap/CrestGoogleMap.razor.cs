@@ -132,7 +132,7 @@ namespace Crest.Components.Primitives
         {
             if (!firstRender && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.updateMap", UniqueID, ApiKey, Zoom, Center);
+                await JSRuntime.InvokeVoidAsync("Crest.updateMap", UniqueID, ApiKey, Zoom, Center);
             }
         }
 
@@ -233,13 +233,13 @@ namespace Crest.Components.Primitives
 
                     if (Visible)
                     {
-                        _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createMap", Element, Reference, UniqueID, ApiKey, MapId, Zoom, Center,
+                        _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createMap", Element, Reference, UniqueID, ApiKey, MapId, Zoom, Center,
                              data.Select(m => new GoogleMapMarkerData { Title = m.Title, Label = m.Label, Position = m.Position }), Options, FitBoundsToMarkersOnUpdate, Culture.TwoLetterISOLanguageName);
                     }
                 }
                 else if (Visible && _jsRef != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.updateMap", UniqueID, ApiKey, null, null,
+                    await JSRuntime.InvokeVoidAsync("Crest.updateMap", UniqueID, ApiKey, null, null,
                                  data.Select(m => new GoogleMapMarkerData { Title = m.Title, Label = m.Label, Position = m.Position }), Options, FitBoundsToMarkersOnUpdate, Culture.TwoLetterISOLanguageName);
                 }
             }

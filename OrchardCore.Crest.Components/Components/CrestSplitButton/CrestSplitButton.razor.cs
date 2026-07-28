@@ -206,18 +206,18 @@ namespace Crest.Components.Primitives
                             focusedIndex = 0;
                         }
 
-                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", Element, PopupID);
+                        await JSRuntime.InvokeVoidAsync("Crest.togglePopup", Element, PopupID);
 
                         if (IsOpen)
                         {
-                            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", MenuId);
+                            await JSRuntime.InvokeVoidAsync("Crest.focusElement", MenuId);
                         }
                     }
                     else
                     {
                         IsOpen = false;
 
-                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID);
+                        await JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID);
                         await Click.InvokeAsync(null);
                     }
                 }
@@ -242,7 +242,7 @@ namespace Crest.Components.Primitives
 
                 if (JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", MenuId);
+                    await JSRuntime.InvokeVoidAsync("Crest.focusElement", MenuId);
                 }
             }
         }
@@ -256,7 +256,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID);
+                JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID);
             }
         }
 
@@ -310,7 +310,7 @@ namespace Crest.Components.Primitives
                 return string.Empty;
             }
 
-            return $"Crest.Components.Primitives.togglePopup(this.parentNode, '{PopupID}')";
+            return $"Crest.togglePopup(this.parentNode, '{PopupID}')";
         }
 
         /// <inheritdoc />
@@ -352,13 +352,13 @@ namespace Crest.Components.Primitives
                 if (Visible)
                 {
                     _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createSplitButton", Element, PopupID);
+                        "Crest.createSplitButton", Element, PopupID);
                 }
                 else
                 {
                     IsOpen = false;
 
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyPopup", PopupID);
+                    await JSRuntime.InvokeVoidAsync("Crest.destroyPopup", PopupID);
                 }
             }
         }
@@ -370,7 +370,7 @@ namespace Crest.Components.Primitives
 
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.destroyPopup", PopupID);
+                JSRuntime.InvokeVoid("Crest.destroyPopup", PopupID);
             }
 
             _jsRef?.InvokeVoidAsync("dispose");
@@ -391,8 +391,8 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", Element, PopupID);
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", MenuId);
+                await JSRuntime.InvokeVoidAsync("Crest.togglePopup", Element, PopupID);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", MenuId);
             }
         }
 
@@ -427,7 +427,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", ToggleButtonId);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", ToggleButtonId);
             }
         }
 
@@ -472,7 +472,7 @@ namespace Crest.Components.Primitives
 
                 if (JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", ToggleButtonId);
+                    await JSRuntime.InvokeVoidAsync("Crest.focusElement", ToggleButtonId);
                 }
             }
             else if (key == "Escape")

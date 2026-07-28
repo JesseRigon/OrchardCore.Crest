@@ -74,7 +74,7 @@ namespace Crest.Components.Primitives
             var menu = menus.LastOrDefault();
             if (menu != null && menu.MouseEventArgs != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.openContextMenu",
+                await JSRuntime.InvokeVoidAsync("Crest.openContextMenu",
                     menu.MouseEventArgs.ClientX,
                     menu.MouseEventArgs.ClientY,
                     UniqueID,
@@ -111,8 +111,8 @@ namespace Crest.Components.Primitives
             if (lastTooltip != null)
             {
                 menus.Remove(lastTooltip);
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", UniqueID);
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.restoreContextMenuFocus", UniqueID);
+                await JSRuntime.InvokeVoidAsync("Crest.closePopup", UniqueID);
+                await JSRuntime.InvokeVoidAsync("Crest.restoreContextMenuFocus", UniqueID);
             }
 
             await InvokeAsync(() => { StateHasChanged(); });
@@ -142,7 +142,7 @@ namespace Crest.Components.Primitives
             {
                 try 
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyPopup", UniqueID);
+                    await JSRuntime.InvokeVoidAsync("Crest.destroyPopup", UniqueID);
                 }
                 catch
                 { }
@@ -183,7 +183,7 @@ namespace Crest.Components.Primitives
         {
             if (UniqueID != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.closePopup", UniqueID);
+                JSRuntime.InvokeVoid("Crest.closePopup", UniqueID);
             }
         }
     }

@@ -120,7 +120,7 @@ namespace Crest.Components.Primitives
                 if (Visible && JSRuntime != null)
                 {
                     _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createSignaturePad", Element, Reference, StrokeColor, StrokeWidth, Disabled || ReadOnly, Value);
+                        "Crest.createSignaturePad", Element, Reference, StrokeColor, StrokeWidth, Disabled || ReadOnly, Value);
                 }
             }
             else if (_needsUpdate && _jsRef != null)

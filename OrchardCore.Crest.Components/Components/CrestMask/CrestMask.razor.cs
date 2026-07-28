@@ -92,7 +92,7 @@ namespace Crest.Components.Primitives
             string? newValue;
             if (!Immediate && JSRuntime != null && !string.IsNullOrEmpty(Mask))
             {
-                newValue = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", Element);
+                newValue = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", Element);
             }
             else
             {
@@ -117,9 +117,9 @@ namespace Crest.Components.Primitives
                 return;
             }
 
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.mask", GetId(), Mask, Pattern, CharacterPattern);
+            await JSRuntime.InvokeVoidAsync("Crest.mask", GetId(), Mask, Pattern, CharacterPattern);
 
-            Value = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", Element);
+            Value = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", Element);
 
             await ValueChanged.InvokeAsync(Value);
             if (FieldIdentifier.FieldName != null) { EditContext?.NotifyFieldChanged(FieldIdentifier); }
@@ -179,11 +179,11 @@ namespace Crest.Components.Primitives
 
                 if (Visible)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.mask", GetId(), Mask, Pattern, CharacterPattern);
+                    await JSRuntime.InvokeVoidAsync("Crest.mask", GetId(), Mask, Pattern, CharacterPattern);
                     if (!Immediate)
                     {
                         _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                            "Crest.Components.Primitives.createMask", Element, GetId(), Mask, Pattern, CharacterPattern);
+                            "Crest.createMask", Element, GetId(), Mask, Pattern, CharacterPattern);
                     }
                 }
             }

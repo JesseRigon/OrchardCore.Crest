@@ -108,7 +108,7 @@ namespace Crest.Components.Primitives
 
                 if (Visible)
                 {
-                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createFormField", Element);
+                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createFormField", Element);
                 }
             }
         }

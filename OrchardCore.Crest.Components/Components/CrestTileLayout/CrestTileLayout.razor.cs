@@ -204,13 +204,13 @@ namespace Crest.Components.Primitives
 
             item.SetDragging(true);
 
-            var rect = await JSRuntime.InvokeAsync<Rect>("Crest.Components.Primitives.clientRect", cellsElement);
+            var rect = await JSRuntime.InvokeAsync<Rect>("Crest.clientRect", cellsElement);
 
             var cellWidth = Columns > 0 ? (rect.Width - ((Columns - 1) * Gap)) / Columns : rect.Width;
             strideX = cellWidth + Gap;
             strideY = RowHeight + Gap;
 
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.capturePointer", cellsElement, pointerId);
+            await JSRuntime.InvokeVoidAsync("Crest.capturePointer", cellsElement, pointerId);
         }
 
         private async Task OnPointerMove(PointerEventArgs args)
@@ -287,7 +287,7 @@ namespace Crest.Components.Primitives
             {
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.releasePointer", cellsElement, pointerId);
+                    await JSRuntime.InvokeVoidAsync("Crest.releasePointer", cellsElement, pointerId);
                 }
                 catch
                 {
@@ -349,7 +349,7 @@ namespace Crest.Components.Primitives
             {
                 try
                 {
-                    JSRuntime.InvokeVoid("Crest.Components.Primitives.releasePointer", cellsElement, pointerId);
+                    JSRuntime.InvokeVoid("Crest.releasePointer", cellsElement, pointerId);
                 }
                 catch
                 {

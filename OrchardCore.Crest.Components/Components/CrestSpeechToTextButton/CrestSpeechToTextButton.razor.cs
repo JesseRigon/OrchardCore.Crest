@@ -98,7 +98,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.toggleDictation", Reference, Language);
+                await JSRuntime.InvokeVoidAsync("Crest.toggleDictation", Reference, Language);
             }
         }
 

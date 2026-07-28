@@ -211,7 +211,7 @@
             LogicalFilterOperator = Column.GetLogicalFilterOperator()
         });
 
-        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", $"{filterId}");
+        await JSRuntime.InvokeVoidAsync("Crest.closePopup", $"{filterId}");
         await Grid.ReloadInternal();
     }
 
@@ -221,7 +221,7 @@
 
         Grid.SaveSettings();
 
-        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", $"{filterId}");
+        await JSRuntime.InvokeVoidAsync("Crest.closePopup", $"{filterId}");
 
         await Grid.FilterCleared.InvokeAsync(new DataGridColumnFilterEventArgs<TItem>()
         {

@@ -2155,7 +2155,7 @@ public partial class CrestSpreadsheet : CrestComponent, IAsyncDisposable, ISprea
         {
             dotNetRef = DotNetObjectReference.Create(this);
             // Serialize one map of key -> isGlobal; the JS gate needs nothing more than that.
-            jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createSpreadsheet", Element, dotNetRef,
+            jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createSpreadsheet", Element, dotNetRef,
                 shortcuts.ToDictionary(s => s.Key, s => s.Value.Global));
         }
     }

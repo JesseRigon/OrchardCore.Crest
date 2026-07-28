@@ -159,7 +159,7 @@
         if (lastDialog != null)
         {
             dialogs.Remove(lastDialog);
-            if (dialogs.Count == 0) await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.closeDialog");
+            if (dialogs.Count == 0) await JSRuntime.InvokeAsync<string>("Crest.closeDialog");
         }
 
         await InvokeAsync(() =>
@@ -273,7 +273,7 @@
 
         try
         {
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closeSideDialog");
+            await JSRuntime.InvokeVoidAsync("Crest.closeSideDialog");
         }
         catch (Exception ex) when (ex is JSDisconnectedException || ex is OperationCanceledException || ex is JSException)
         {
@@ -335,13 +335,13 @@
             if (!sideDialogJsOpened)
             {
                 sideDialogJsOpened = true;
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.openSideDialog", sideDialogOptions, Service?.Reference);
+                await JSRuntime.InvokeAsync<string>("Crest.openSideDialog", sideDialogOptions, Service?.Reference);
             }
 
             if (sideDialogOptions is { Resizable: true } && resizeBarElement.HasValue)
             {
                 sideDialogResizeHandleJsModule =
-                    await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createSideDialogResizer",
+                    await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createSideDialogResizer",
                         resizeBarElement, sideDialogElement, sideDialogOptions);
             }
         }

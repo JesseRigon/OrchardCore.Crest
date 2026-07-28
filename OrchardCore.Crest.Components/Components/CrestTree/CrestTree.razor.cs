@@ -647,7 +647,7 @@ namespace Crest.Components.Primitives
             {
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.scrollIntoViewIfNeededById", CurrentItems[focusedIndex].ElementId);
+                    await JSRuntime.InvokeVoidAsync("Crest.scrollIntoViewIfNeededById", CurrentItems[focusedIndex].ElementId);
                 }
                 catch
                 {

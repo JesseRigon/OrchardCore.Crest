@@ -404,7 +404,7 @@ namespace Crest.Components.Primitives
 
                 if (!string.IsNullOrEmpty(id) && JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.delayedFocus", id, 200);
+                    await JSRuntime.InvokeVoidAsync("Crest.delayedFocus", id, 200);
                 }
             }
             else if (IsArrowKey(key) || key == "Home" || key == "End")
@@ -417,8 +417,8 @@ namespace Crest.Components.Primitives
                     return;
                 }
 
-                var rect = await JSRuntime.InvokeAsync<Rect>("Crest.Components.Primitives.clientRect", GetId() + "-resize");
-                var splitterRect = await JSRuntime.InvokeAsync<Rect>("Crest.Components.Primitives.clientRect", Splitter.ElementId);
+                var rect = await JSRuntime.InvokeAsync<Rect>("Crest.clientRect", GetId() + "-resize");
+                var splitterRect = await JSRuntime.InvokeAsync<Rect>("Crest.clientRect", Splitter.ElementId);
 
                 await Splitter.StartResize(new PointerEventArgs()
                 {
@@ -463,7 +463,7 @@ namespace Crest.Components.Primitives
                     deltaY = key == "ArrowUp" ? -stepY : key == "ArrowDown" ? stepY : 0;
                 }
 
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.resizeSplitter", UniqueID, new MouseEventArgs()
+                await JSRuntime.InvokeVoidAsync("Crest.resizeSplitter", UniqueID, new MouseEventArgs()
                 {
                     ClientX = rect.Left + deltaX,
                     ClientY = rect.Top + deltaY,

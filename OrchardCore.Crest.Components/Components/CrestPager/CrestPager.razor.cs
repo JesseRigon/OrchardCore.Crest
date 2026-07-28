@@ -674,7 +674,7 @@ namespace Crest.Components.Primitives
                 shouldFocus = false;
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", ActiveButtonId);
+                    await JSRuntime.InvokeVoidAsync("Crest.focusElement", ActiveButtonId);
                 }
                 catch (Exception)
                 {

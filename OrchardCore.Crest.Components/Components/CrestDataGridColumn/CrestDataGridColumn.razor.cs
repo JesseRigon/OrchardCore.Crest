@@ -1577,7 +1577,7 @@ namespace Crest.Components.Primitives
             var jsRuntime = Grid.GetJSRuntime();
             if (jsRuntime != null)
             {
-                await jsRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", $"{GetColumnPopupID()}");
+                await jsRuntime.InvokeVoidAsync("Crest.closePopup", $"{GetColumnPopupID()}");
             }
         }
 

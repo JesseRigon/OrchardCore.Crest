@@ -373,7 +373,7 @@ namespace Crest.Components.Primitives
                 if (Visible)
                 {
                     accordionJs = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createAccordion", Element, Multiple);
+                        "Crest.createAccordion", Element, Multiple);
                 }
             }
         }

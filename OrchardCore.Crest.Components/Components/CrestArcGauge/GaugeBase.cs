@@ -66,7 +66,7 @@ namespace Crest.Components.Primitives
 
                 if (Visible && JSRuntime != null)
                 {
-                    var rect = await JSRuntime.InvokeAsync<Rect>("Crest.Components.Primitives.createGauge", Element, Reference);
+                    var rect = await JSRuntime.InvokeAsync<Rect>("Crest.createGauge", Element, Reference);
 
                     if (!widthAndHeightAreSet)
                     {
@@ -172,7 +172,7 @@ namespace Crest.Components.Primitives
             {
                 if (Visible == false && JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyGauge", Element);
+                    await JSRuntime.InvokeVoidAsync("Crest.destroyGauge", Element);
                 }
             }
 
@@ -191,7 +191,7 @@ namespace Crest.Components.Primitives
 
             if (Visible && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.destroyGauge", Element);
+                JSRuntime.InvokeVoid("Crest.destroyGauge", Element);
             }
 
             GC.SuppressFinalize(this);

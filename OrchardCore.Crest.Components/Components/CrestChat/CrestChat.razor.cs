@@ -779,7 +779,7 @@ namespace Crest.Components.Primitives
             // Handle normal message sending
             if (e.Key == "Enter" && !e.ShiftKey && JSRuntime != null)
             {
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", inputElement, "");
+                await JSRuntime.InvokeAsync<string>("Crest.setInputValue", inputElement, "");
                 preventDefault = true;
                 await OnSendMessage();
             }
@@ -952,7 +952,7 @@ namespace Crest.Components.Primitives
                 return;
             }
 
-            var isNearBottom = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.isScrolledToBottom", mentionPopupElement, 8);
+            var isNearBottom = await JSRuntime.InvokeAsync<bool>("Crest.isScrolledToBottom", mentionPopupElement, 8);
             if (!isNearBottom)
             {
                 return;
@@ -1141,7 +1141,7 @@ namespace Crest.Components.Primitives
                 return false;
             }
 
-            var selection = await JSRuntime.InvokeAsync<int[]?>("Crest.Components.Primitives.getSelectionRange", inputElement);
+            var selection = await JSRuntime.InvokeAsync<int[]?>("Crest.getSelectionRange", inputElement);
             if (selection == null || selection.Length < 2)
             {
                 return false;
@@ -1178,8 +1178,8 @@ namespace Crest.Components.Primitives
                 segment.Start -= segmentToRemove.Length;
             }
 
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.setInputValue", inputElement, CurrentInput);
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.setSelectionRange", inputElement, segmentToRemove.Start, segmentToRemove.Start);
+            await JSRuntime.InvokeVoidAsync("Crest.setInputValue", inputElement, CurrentInput);
+            await JSRuntime.InvokeVoidAsync("Crest.setSelectionRange", inputElement, segmentToRemove.Start, segmentToRemove.Start);
             await DetectMentionTrigger(CurrentInput);
             await InvokeAsync(StateHasChanged);
             return true;
@@ -1272,16 +1272,16 @@ namespace Crest.Components.Primitives
                     if (firstRender)
                     {
                         // Always scroll to bottom on first render
-                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.chatScrollToBottom", messagesContainer);
+                        await JSRuntime.InvokeVoidAsync("Crest.chatScrollToBottom", messagesContainer);
                     }
                     else if (currentCount > previousMessageCount)
                     {
                         // New messages added - only scroll if user is near bottom
-                        var isNearBottom = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.chatIsNearBottom", messagesContainer, 50);
+                        var isNearBottom = await JSRuntime.InvokeAsync<bool>("Crest.chatIsNearBottom", messagesContainer, 50);
 
                         if (isNearBottom)
                         {
-                            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.chatScrollToBottom", messagesContainer);
+                            await JSRuntime.InvokeVoidAsync("Crest.chatScrollToBottom", messagesContainer);
                         }
                         else
                         {
@@ -1304,7 +1304,7 @@ namespace Crest.Components.Primitives
         {
             if (hasNewMessages && messagesContainer.Context != null && JSRuntime != null)
             {
-                var isNearBottom = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.chatIsNearBottom", messagesContainer, 50);
+                var isNearBottom = await JSRuntime.InvokeAsync<bool>("Crest.chatIsNearBottom", messagesContainer, 50);
 
                 if (isNearBottom)
                 {
@@ -1322,7 +1322,7 @@ namespace Crest.Components.Primitives
 
             if (messagesContainer.Context != null && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.chatScrollToBottom", messagesContainer);
+                await JSRuntime.InvokeVoidAsync("Crest.chatScrollToBottom", messagesContainer);
             }
         }
 

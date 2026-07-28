@@ -392,7 +392,7 @@ namespace Crest.Components.Primitives
                 previousSelectedIndex = selectedIndex;
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.selectTab", $"{GetId()}-tabpanel-{selectedIndex}", selectedIndex);
+                    await JSRuntime.InvokeVoidAsync("Crest.selectTab", $"{GetId()}-tabpanel-{selectedIndex}", selectedIndex);
                 }
                 catch (JSDisconnectedException)
                 {
@@ -438,7 +438,7 @@ namespace Crest.Components.Primitives
 
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.selectTab", $"{GetId()}-tabpanel-{selectedIndex}", selectedIndex);
+                    await JSRuntime.InvokeVoidAsync("Crest.selectTab", $"{GetId()}-tabpanel-{selectedIndex}", selectedIndex);
                 }
                 catch (JSDisconnectedException)
                 {

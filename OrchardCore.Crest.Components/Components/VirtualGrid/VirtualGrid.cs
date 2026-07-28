@@ -212,7 +212,7 @@ public partial class VirtualGrid : ComponentBase, IAsyncDisposable, IVirtualGrid
         {
             reference = DotNetObjectReference.Create(this);
 
-            region = await JSRuntime.InvokeAsync<VirtualRegion>("Crest.Components.Primitives.createVirtualItemContainer", scrollable, content, reference);
+            region = await JSRuntime.InvokeAsync<VirtualRegion>("Crest.createVirtualItemContainer", scrollable, content, reference);
 
             Render(0, 0);
         }
@@ -334,7 +334,7 @@ public partial class VirtualGrid : ComponentBase, IAsyncDisposable, IVirtualGrid
 
         if (ScrollLeft != scrollX || ScrollTop != scrollY)
         {
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.scrollElementTo", scrollable, scrollX, scrollY);
+            await JSRuntime.InvokeVoidAsync("Crest.scrollElementTo", scrollable, scrollX, scrollY);
         }
     }
 

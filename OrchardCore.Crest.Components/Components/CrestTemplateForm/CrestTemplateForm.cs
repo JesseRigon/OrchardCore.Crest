@@ -185,7 +185,7 @@ namespace Crest.Components.Primitives
 
                     if (Action != null && JSRuntime != null)
                     {
-                        await JSRuntime.InvokeVoidAsync($"Crest.Components.Primitives.submit", Element);
+                        await JSRuntime.InvokeVoidAsync($"Crest.submit", Element);
                     }
                 }
                 else
@@ -197,7 +197,7 @@ namespace Crest.Components.Primitives
             {
                 if (Action != null && JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync($"Crest.Components.Primitives.submit", Element);
+                    await JSRuntime.InvokeVoidAsync($"Crest.submit", Element);
                 }
             }
         }

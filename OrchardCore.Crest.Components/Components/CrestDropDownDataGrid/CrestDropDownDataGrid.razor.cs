@@ -221,22 +221,22 @@ namespace Crest.Components.Primitives
             {
                 if (OpenOnFocus)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.openPopup", Element, PopupID, true, null, null, null, Reference, nameof(OnClose));
+                    await JSRuntime.InvokeVoidAsync("Crest.openPopup", Element, PopupID, true, null, null, null, Reference, nameof(OnClose));
                 }
                 else
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", Element, PopupID, true, Reference, nameof(OnClose));
+                    await JSRuntime.InvokeVoidAsync("Crest.togglePopup", Element, PopupID, true, Reference, nameof(OnClose));
                 }
 
                 if (FocusFilterOnPopup)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", isFilter ? UniqueID : SearchID);
+                    await JSRuntime.InvokeVoidAsync("Crest.focusElement", isFilter ? UniqueID : SearchID);
                 }
             }
 
             if (list != null && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.selectListItem", search, list, selectedIndex);
+                await JSRuntime.InvokeVoidAsync("Crest.selectListItem", search, list, selectedIndex);
             }
         }
 
@@ -244,7 +244,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID, Reference, nameof(OnClose), null, key == "Tab");
+                await JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID, Reference, nameof(OnClose), null, key == "Tab");
             }
 
             isPopupOpen = false;
@@ -642,7 +642,7 @@ namespace Crest.Components.Primitives
                     selectedIndex = items.IndexOf(SelectedItem);
                     if (selectedIndex >= 0 && JSRuntime != null)
                     {
-                        await JSRuntime.InvokeAsync<int[]>("Crest.Components.Primitives.focusTableRow", grid.GridId(), "ArrowDown", selectedIndex - 1, null);
+                        await JSRuntime.InvokeAsync<int[]>("Crest.focusTableRow", grid.GridId(), "ArrowDown", selectedIndex - 1, null);
                     }
                 }
             }
@@ -798,7 +798,7 @@ namespace Crest.Components.Primitives
                 if (prevOrder != args.OrderBy && JSRuntime != null)
                 {
                     prevOrder = args.OrderBy!;
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.noop");
+                    await JSRuntime.InvokeVoidAsync("Crest.noop");
                 }
             }
             else
@@ -813,7 +813,7 @@ namespace Crest.Components.Primitives
                 
                 if (grid != null && JSRuntime != null)
                 {
-                    await JSRuntime.InvokeAsync<int[]>("Crest.Components.Primitives.focusTableRow", grid.GridId(), "ArrowDown", selectedIndex - 1, null);
+                    await JSRuntime.InvokeAsync<int[]>("Crest.focusTableRow", grid.GridId(), "ArrowDown", selectedIndex - 1, null);
 
                     await grid.OnRowSelect(items[selectedIndex], false);
                 }
@@ -891,7 +891,7 @@ namespace Crest.Components.Primitives
                             if (grid != null && !isFirstRender && JSRuntime != null)
                             {
                                 InvokeAsync(() => grid.SelectRow(SelectedItem!, false));
-                                JSRuntime.InvokeAsync<int[]>("Crest.Components.Primitives.focusTableRow", grid.GridId(), "ArrowDown", Items.ToList().IndexOf(SelectedItem!) - 1, null);
+                                JSRuntime.InvokeAsync<int[]>("Crest.focusTableRow", grid.GridId(), "ArrowDown", Items.ToList().IndexOf(SelectedItem!) - 1, null);
                             }
                         }
                         catch { }
@@ -999,13 +999,13 @@ namespace Crest.Components.Primitives
                     if (shouldChange && JSRuntime != null)
                     {
                         selectedIndex = newSelectedIndex;
-                        await JSRuntime.InvokeAsync<int[]>("Crest.Components.Primitives.focusTableRow", gridInstance.GridId(), key, selectedIndex + (key == "ArrowUp" ? 1 : -1), null);
+                        await JSRuntime.InvokeAsync<int[]>("Crest.focusTableRow", gridInstance.GridId(), key, selectedIndex + (key == "ArrowUp" ? 1 : -1), null);
                         await gridInstance.OnRowSelect(items[selectedIndex], false);
                     }
 
                     if (!Multiple && JSRuntime != null)
                     {
-                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.popupOpened", PopupID);
+                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.popupOpened", PopupID);
 
                         if (shouldChange && (!popupOpened || gridInstance.IsVirtualizationAllowed()))
                         {
@@ -1029,13 +1029,13 @@ namespace Crest.Components.Primitives
                     if (shouldChange && JSRuntime != null)
                     {
                         selectedIndex = newSelectedIndex;
-                        await JSRuntime.InvokeAsync<int[]>("Crest.Components.Primitives.focusTableRow", gridInstance.GridId(), key == "Home" ? "ArrowDown" : "ArrowUp", key == "Home" ? selectedIndex - 1 : selectedIndex + 1, null);
+                        await JSRuntime.InvokeAsync<int[]>("Crest.focusTableRow", gridInstance.GridId(), key == "Home" ? "ArrowDown" : "ArrowUp", key == "Home" ? selectedIndex - 1 : selectedIndex + 1, null);
                         await gridInstance.OnRowSelect(items[selectedIndex], false);
                     }
 
                     if (!Multiple && JSRuntime != null)
                     {
-                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.popupOpened", PopupID);
+                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.popupOpened", PopupID);
 
                         if (shouldChange && (!popupOpened || gridInstance.IsVirtualizationAllowed()))
                         {
@@ -1061,13 +1061,13 @@ namespace Crest.Components.Primitives
                     {
                         var previousIndex = selectedIndex;
                         selectedIndex = newSelectedIndex;
-                        await JSRuntime.InvokeAsync<int[]>("Crest.Components.Primitives.focusTableRow", gridInstance.GridId(), key == "PageUp" ? "ArrowUp" : "ArrowDown", previousIndex, null);
+                        await JSRuntime.InvokeAsync<int[]>("Crest.focusTableRow", gridInstance.GridId(), key == "PageUp" ? "ArrowUp" : "ArrowDown", previousIndex, null);
                         await gridInstance.OnRowSelect(items[selectedIndex], false);
                     }
 
                     if (!Multiple && JSRuntime != null)
                     {
-                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.popupOpened", PopupID);
+                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.popupOpened", PopupID);
 
                         if (shouldChange && (!popupOpened || gridInstance.IsVirtualizationAllowed()))
                         {
@@ -1099,7 +1099,7 @@ namespace Crest.Components.Primitives
                     return;
                 }
 
-                var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.popupOpened", PopupID);
+                var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.popupOpened", PopupID);
 
                 if (!popupOpened)
                 {
@@ -1128,7 +1128,7 @@ namespace Crest.Components.Primitives
             {
                 preventKeydown = false;
                 await ClosePopup(key);
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", UniqueID);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", UniqueID);
             }
             else if (key == "Tab")
             {
@@ -1138,7 +1138,7 @@ namespace Crest.Components.Primitives
 
                 if (JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusNext", Element, args.ShiftKey);
+                    await JSRuntime.InvokeVoidAsync("Crest.focusNext", Element, args.ShiftKey);
                 }
             }
             else if (key == "Delete" && AllowClear)
@@ -1177,7 +1177,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                searchText = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", search) ?? string.Empty;
+                searchText = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", search) ?? string.Empty;
             }
 
             if (searchText != previousSearch)
@@ -1196,7 +1196,7 @@ namespace Crest.Components.Primitives
             if (key == "Escape" && JSRuntime != null)
             {
                 await ClosePopup(key);
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", UniqueID);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", UniqueID);
             }
         }
 
@@ -1244,7 +1244,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.repositionPopup", Element, PopupID);
+                await JSRuntime.InvokeAsync<string>("Crest.repositionPopup", Element, PopupID);
             }
         }
 
@@ -1281,7 +1281,7 @@ namespace Crest.Components.Primitives
             await SearchTextChanged.InvokeAsync(searchText);
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", search, "");
+                await JSRuntime.InvokeAsync<string>("Crest.setInputValue", search, "");
             }
             await DebounceFilter();
         }
@@ -1354,7 +1354,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", UniqueID, true);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", UniqueID, true);
             }
 
             OpenOnFocus = of;
@@ -1395,7 +1395,7 @@ namespace Crest.Components.Primitives
 
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.destroyPopup", PopupID);
+                JSRuntime.InvokeVoid("Crest.destroyPopup", PopupID);
             }
 
             GC.SuppressFinalize(this);

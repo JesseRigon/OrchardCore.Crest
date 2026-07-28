@@ -107,7 +107,7 @@ public partial class CrestToc : CrestComponent, IAsyncDisposable
             try
             {
                 await UnregisterScrollListenerAsync();
-                scrollListenerRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createScrollListener", Reference, items.Select(items => items.Selector), Selector);
+                scrollListenerRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createScrollListener", Reference, items.Select(items => items.Selector), Selector);
             } 
             catch (JSDisconnectedException)
             {

@@ -82,7 +82,7 @@ namespace Crest.Components.Primitives
         {
             try
             {
-                var cookies = await jsRuntime.InvokeAsync<string>("Crest.Components.Primitives.getCookies");
+                var cookies = await jsRuntime.InvokeAsync<string>("Crest.getCookies");
 
                 var themeCookie = cookies?.Split("; ").Select(x =>
                 {
@@ -119,7 +119,7 @@ namespace Crest.Components.Primitives
                 cookie += "; Secure";
             }
 
-            jsRuntime.InvokeVoid("Crest.Components.Primitives.setCookie", cookie);
+            jsRuntime.InvokeVoid("Crest.setCookie", cookie);
         }
 
         /// <inheritdoc />

@@ -206,7 +206,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                return await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.outerHTML", Element);
+                return await JSRuntime.InvokeAsync<string>("Crest.outerHTML", Element);
             }
             return string.Empty;
         }
@@ -222,7 +222,7 @@ namespace Crest.Components.Primitives
             if (JSRuntime != null)
             {
                 var svg = await ToSvg();
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.downloadSvgAsPng", svg, fileName, width, height);
+                await JSRuntime.InvokeVoidAsync("Crest.downloadSvgAsPng", svg, fileName, width, height);
             }
         }
 
@@ -243,7 +243,7 @@ namespace Crest.Components.Primitives
 
                 if (!string.IsNullOrEmpty(svg))
                 {
-                    await using var png = await JSRuntime.InvokeAsync<IJSStreamReference>("Crest.Components.Primitives.svgToPng", svg, width, height);
+                    await using var png = await JSRuntime.InvokeAsync<IJSStreamReference>("Crest.svgToPng", svg, width, height);
                     using var stream = await png.OpenReadStreamAsync(maxAllowedSize: 32 * 1024 * 1024);
                     using var memoryStream = new MemoryStream();
                     await stream.CopyToAsync(memoryStream);

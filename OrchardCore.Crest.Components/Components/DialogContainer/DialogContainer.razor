@@ -311,7 +311,7 @@
 
             if (Service?.Reference != null)
             {
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.openDialog", dialogOptions, Service.Reference, DotNetReference);
+                await JSRuntime.InvokeAsync<string>("Crest.openDialog", dialogOptions, Service.Reference, DotNetReference);
             }
         }
     }

@@ -117,7 +117,7 @@ namespace Crest.Components.Primitives
 
                 if (string.IsNullOrEmpty(uri.Fragment))
                 {
-                    JSRuntime.InvokeVoid("Crest.Components.Primitives.scrollToTop", GetId());
+                    JSRuntime.InvokeVoid("Crest.scrollToTop", GetId());
                 }
             }
         }

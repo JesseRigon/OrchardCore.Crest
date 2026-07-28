@@ -241,7 +241,7 @@
         if (firstRender)
         {
             reference = DotNetObjectReference.Create(this);
-            var rect = await JSRuntime.InvokeAsync<Rect>("Crest.Components.Primitives.createResizable", contentView, reference);
+            var rect = await JSRuntime.InvokeAsync<Rect>("Crest.createResizable", contentView, reference);
             if (rect.Height > 0 && MaxAppointmentsInSlot == null)
             {
                 contentHeight = rect.Height;
@@ -271,7 +271,7 @@
     {
         try
         {
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyResizable", contentView);
+            await JSRuntime.InvokeVoidAsync("Crest.destroyResizable", contentView);
         }
         catch
         {

@@ -632,7 +632,7 @@ namespace Crest.Components.Primitives
                 focusedIndex = target;
                 StateHasChanged();
 
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", GetId() + target.ToString(System.Globalization.CultureInfo.InvariantCulture) + "s");
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", GetId() + target.ToString(System.Globalization.CultureInfo.InvariantCulture) + "s");
             }
         }
 

@@ -148,7 +148,7 @@ namespace Crest.Components.Primitives
                 return Task.CompletedTask;
             }
 
-            return JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.startSplitterResize",
+            return JSRuntime.InvokeVoidAsync("Crest.startSplitterResize",
                 UniqueID,
                 Reference,
                 pane.UniqueID,

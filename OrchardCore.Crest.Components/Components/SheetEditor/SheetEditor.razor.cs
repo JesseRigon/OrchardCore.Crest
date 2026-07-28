@@ -95,7 +95,7 @@ public partial class SheetEditor : ComponentBase, IAsyncDisposable
         {
             dotNetRef = DotNetObjectReference.Create(this);
 
-            jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createSheetEditor", element, value, AutoFocus, dotNetRef);
+            jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createSheetEditor", element, value, AutoFocus, dotNetRef);
         }
         else
         {

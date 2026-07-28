@@ -132,7 +132,7 @@ namespace Crest.Components.Primitives
 
             if (Visible && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.ganttSyncScroll", GetId());
+                await JSRuntime.InvokeVoidAsync("Crest.ganttSyncScroll", GetId());
             }
 
             if (pendingZoomLevel.HasValue && scheduler != null)
@@ -150,7 +150,7 @@ namespace Crest.Components.Primitives
 
             if (scrollToFirstEvent && Visible && JSRuntime != null)
             {
-                var scrolled = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.ganttScrollToFirstEvent", GetId());
+                var scrolled = await JSRuntime.InvokeAsync<bool>("Crest.ganttScrollToFirstEvent", GetId());
                 if (scrolled)
                 {
                     scrollToFirstEvent = false;
@@ -162,7 +162,7 @@ namespace Crest.Components.Primitives
         {
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.ganttSyncScrollDispose", GetId()!);
+                JSRuntime.InvokeVoid("Crest.ganttSyncScrollDispose", GetId()!);
             }
 
             base.Dispose();

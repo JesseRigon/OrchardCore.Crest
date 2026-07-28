@@ -634,7 +634,7 @@ namespace Crest.Components.Primitives
             {
                 if (JSRuntime != null)
                 {
-                    var result = await JSRuntime.InvokeAsync<int[]>("Crest.Components.Primitives.focusTableRow", UniqueID, key, focusedIndex, focusedCellIndex, IsVirtualizationAllowed());
+                    var result = await JSRuntime.InvokeAsync<int[]>("Crest.focusTableRow", UniqueID, key, focusedIndex, focusedCellIndex, IsVirtualizationAllowed());
                     focusedIndex = result[0];
                     focusedCellIndex = result[1];
                     hasActiveRow = true;
@@ -661,7 +661,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.clearFocusedHeaderCell", UniqueID);
+                await JSRuntime.InvokeVoidAsync("Crest.clearFocusedHeaderCell", UniqueID);
             }
         }
 
@@ -785,7 +785,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                var inputValue = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", getFilterInputId(column));
+                var inputValue = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", getFilterInputId(column));
                 if (!object.Equals(column.GetFilterValue(), inputValue))
                 {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -1204,7 +1204,7 @@ namespace Crest.Components.Primitives
                 {
                     if (JSRuntime != null)
                     {
-                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", $"{PopupID}{column.GetFilterProperty()}");
+                        await JSRuntime.InvokeVoidAsync("Crest.closePopup", $"{PopupID}{column.GetFilterProperty()}");
                     }
                 }
             }
@@ -1242,7 +1242,7 @@ namespace Crest.Components.Primitives
 
             if (closePopup && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closeAllPopups", $"{PopupID}{column.GetFilterProperty()}");
+                await JSRuntime.InvokeVoidAsync("Crest.closeAllPopups", $"{PopupID}{column.GetFilterProperty()}");
             }
 
             if (shouldReload)
@@ -1267,7 +1267,7 @@ namespace Crest.Components.Primitives
                 {
                     if (JSRuntime != null)
                     {
-                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", $"{PopupID}{column.GetFilterProperty()}");
+                        await JSRuntime.InvokeVoidAsync("Crest.closePopup", $"{PopupID}{column.GetFilterProperty()}");
                     }
                 }
             }
@@ -1275,7 +1275,7 @@ namespace Crest.Components.Primitives
 
             if (closePopup && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closeAllPopups", $"{PopupID}{column.GetFilterProperty()}");
+                await JSRuntime.InvokeVoidAsync("Crest.closeAllPopups", $"{PopupID}{column.GetFilterProperty()}");
             }
         }
 
@@ -1936,7 +1936,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.startColumnResize", getColumnUniqueId(columnIndex), Reference, columnIndex, clientX);
+                await JSRuntime.InvokeVoidAsync("Crest.startColumnResize", getColumnUniqueId(columnIndex), Reference, columnIndex, clientX);
             }
         }
 
@@ -1949,7 +1949,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.stopColumnResize", getColumnUniqueId(columnIndex), Reference, columnIndex);
+                await JSRuntime.InvokeVoidAsync("Crest.stopColumnResize", getColumnUniqueId(columnIndex), Reference, columnIndex);
             }
         }
 
@@ -1962,7 +1962,7 @@ namespace Crest.Components.Primitives
             uniqueIDOfColumnToReoder = uniqueID;
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.startColumnReorder", getColumnUniqueId(columnIndex), GetId(), Reference);
+                await JSRuntime.InvokeVoidAsync("Crest.startColumnReorder", getColumnUniqueId(columnIndex), GetId(), Reference);
             }
         }
 
@@ -1972,7 +1972,7 @@ namespace Crest.Components.Primitives
             uniqueIDOfColumnToReoder = uniqueID;
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.startColumnReorder", getColumnUniqueId(columnIndex), GetId(), Reference);
+                await JSRuntime.InvokeVoidAsync("Crest.startColumnReorder", getColumnUniqueId(columnIndex), GetId(), Reference);
             }
         }
 
@@ -2992,7 +2992,7 @@ namespace Crest.Components.Primitives
                 if (Visible && JSRuntime != null)
                 {
                     _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createDataGrid", Element);
+                        "Crest.createDataGrid", Element);
                 }
             }
         }
@@ -3750,7 +3750,7 @@ namespace Crest.Components.Primitives
             if (indexOfColumnToReoder != null && uniqueIDOfColumnToReoder != null && AllowGrouping && JSRuntime != null)
             {
                 var callbackKey = $"{getColumnUniqueId(indexOfColumnToReoder.Value)}end";
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.invokeCrestCallback", callbackKey);
+                await JSRuntime.InvokeVoidAsync("Crest.invokeCrestCallback", callbackKey);
 
                 var column = allColumns.Where(c => (!string.IsNullOrEmpty(c.UniqueID) ? c.UniqueID : c.Property) == uniqueIDOfColumnToReoder).FirstOrDefault();
 
@@ -3933,7 +3933,7 @@ namespace Crest.Components.Primitives
             {
                 foreach (var column in allColumns.ToList().Where(c => c.GetVisible()))
                 {
-                    JSRuntime.InvokeVoid("Crest.Components.Primitives.destroyPopup", $"{PopupID}{column.GetFilterProperty()}");
+                    JSRuntime.InvokeVoid("Crest.destroyPopup", $"{PopupID}{column.GetFilterProperty()}");
                 }
             }
         }
@@ -3960,7 +3960,7 @@ namespace Crest.Components.Primitives
             {
                 foreach (var column in allColumns.ToList().Where(c => c.GetVisible()))
                 {
-                    JSRuntime.InvokeVoid("Crest.Components.Primitives.destroyPopup", $"{PopupID}{column.GetFilterProperty()}");
+                    JSRuntime.InvokeVoid("Crest.destroyPopup", $"{PopupID}{column.GetFilterProperty()}");
                 }
             }
 

@@ -139,7 +139,7 @@ namespace Crest.Components.Primitives
                         _jsRef = null;
                     }
 
-                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createSlider", UniqueID, Reference, Element, Range, Range ? minHandle : handle, maxHandle, Min, Max, Value, Step, Orientation == Orientation.Vertical);
+                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createSlider", UniqueID, Reference, Element, Range, Range ? minHandle : handle, maxHandle, Min, Max, Value, Step, Orientation == Orientation.Vertical);
 
                     StateHasChanged();
                 }

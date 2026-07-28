@@ -283,7 +283,7 @@ namespace Crest.Components.Primitives
 
             try
             {
-                JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.updateRangeNavigatorLabels", Element, isDate, inputStart, inputEnd);
+                JSRuntime.InvokeVoidAsync("Crest.updateRangeNavigatorLabels", Element, isDate, inputStart, inputEnd);
             }
             catch
             {
@@ -361,7 +361,7 @@ namespace Crest.Components.Primitives
 
                 if (JSRuntime != null)
                 {
-                    var rect = await JSRuntime.InvokeAsync<double[]>("Crest.Components.Primitives.createRangeNavigator", Element, Reference);
+                    var rect = await JSRuntime.InvokeAsync<double[]>("Crest.createRangeNavigator", Element, Reference);
                     if (rect != null && rect.Length >= 2 && rect[0] > 0)
                     {
                         Width = rect[0];
@@ -383,7 +383,7 @@ namespace Crest.Components.Primitives
             {
                 try
                 {
-                    JSRuntime!.InvokeVoidAsync("Crest.Components.Primitives.disposeElement", Element);
+                    JSRuntime!.InvokeVoidAsync("Crest.disposeElement", Element);
                 }
                 catch
                 {

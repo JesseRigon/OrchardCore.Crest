@@ -118,7 +118,7 @@ namespace Crest.Components.Primitives
                 if (Visible)
                 {
                     _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createMenu", Element, ClickToOpen);
+                        "Crest.createMenu", Element, ClickToOpen);
                 }
             }
         }

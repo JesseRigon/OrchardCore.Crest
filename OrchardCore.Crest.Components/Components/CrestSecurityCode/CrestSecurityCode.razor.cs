@@ -125,7 +125,7 @@ namespace Crest.Components.Primitives
                         await _jsRef.DisposeAsync();
                     }
 
-                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createSecurityCode", GetId(), Reference, Element,
+                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createSecurityCode", GetId(), Reference, Element,
                         Type == SecurityCodeType.Numeric ? true : false);
 
                     StateHasChanged();
@@ -173,7 +173,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusSecurityCode", Element);
+                await JSRuntime.InvokeVoidAsync("Crest.focusSecurityCode", Element);
             }
         }
     }

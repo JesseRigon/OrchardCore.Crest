@@ -420,7 +420,7 @@ else
 
     string getFilterOpen()
     {
-        return Grid.FilterPopupRenderMode == PopupRenderMode.Initial ? $"Crest.Components.Primitives.togglePopup(this, '{Column.GetColumnPopupID()}', false, null, null, true, true)" : "";
+        return Grid.FilterPopupRenderMode == PopupRenderMode.Initial ? $"Crest.togglePopup(this, '{Column.GetColumnPopupID()}', false, null, null, true, true)" : "";
     }
 
     async Task ToggleFilter()
@@ -434,7 +434,7 @@ else
             var jsRuntime = Grid.GetJSRuntime();
             if (jsRuntime != null)
             {
-                await jsRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", filterButton, Column.GetColumnPopupID(), false, null, null, true, true);
+                await jsRuntime.InvokeVoidAsync("Crest.togglePopup", filterButton, Column.GetColumnPopupID(), false, null, null, true, true);
             }
         }
 
@@ -460,7 +460,7 @@ else
 
     string? getBlur()
     {
-        return IsAdvancedNumeric() ? "Crest.Components.Primitives.blur(this, event)" : null;
+        return IsAdvancedNumeric() ? "Crest.blur(this, event)" : null;
     }
 
     bool IsAdvancedNumeric()
@@ -485,7 +485,7 @@ else
 
             if (Column.FilterValueTemplate == null)
             {
-                var firstInputValue = await jsRuntime.InvokeAsync<string>("Crest.Components.Primitives.getNumericValue", Grid.getFilterInputId(Column) + "f");
+                var firstInputValue = await jsRuntime.InvokeAsync<string>("Crest.getNumericValue", Grid.getFilterInputId(Column) + "f");
                 if (!object.Equals($"{Column.GetFilterValue()}", $"{firstInputValue}"))
                 {
                     Column.SetFilterValue(!string.IsNullOrEmpty(firstInputValue) ? Convert.ChangeType(firstInputValue, targetType) : null);
@@ -494,7 +494,7 @@ else
 
             if (Column.SecondFilterValueTemplate == null)
             {
-                var secondInputValue = await jsRuntime.InvokeAsync<string>("Crest.Components.Primitives.getNumericValue", Grid.getFilterInputId(Column) + "s");
+                var secondInputValue = await jsRuntime.InvokeAsync<string>("Crest.getNumericValue", Grid.getFilterInputId(Column) + "s");
                 if (!object.Equals($"{Column.GetSecondFilterValue()}", $"{secondInputValue}"))
                 {
                     Column.SetFilterValue(!string.IsNullOrEmpty(secondInputValue) ? Convert.ChangeType(secondInputValue, targetType) : null, false);
@@ -622,7 +622,7 @@ else
             var jsRuntime = Grid.GetJSRuntime();
             if (jsRuntime != null)
             {
-                await jsRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", filterButton, Column.GetColumnPopupID(), false, null, null, true, true);
+                await jsRuntime.InvokeVoidAsync("Crest.togglePopup", filterButton, Column.GetColumnPopupID(), false, null, null, true, true);
             }
         }
     }
@@ -637,7 +637,7 @@ else
             var jsRuntime = Grid.GetJSRuntime();
             if (jsRuntime != null)
             {
-                await jsRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", Grid.GridId());
+                await jsRuntime.InvokeVoidAsync("Crest.focusElement", Grid.GridId());
             }
         }
     }

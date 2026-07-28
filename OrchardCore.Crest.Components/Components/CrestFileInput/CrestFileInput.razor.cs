@@ -157,7 +157,7 @@ namespace Crest.Components.Primitives
 
             try
             {
-                uploadValue = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.readFileAsBase64", fileUpload, MaxFileSize, MaxWidth, MaxHeight);
+                uploadValue = await JSRuntime.InvokeAsync<string>("Crest.readFileAsBase64", fileUpload, MaxFileSize, MaxWidth, MaxHeight);
 
                 if (typeof(TValue) == typeof(byte[]))
                 {
@@ -220,9 +220,9 @@ namespace Crest.Components.Primitives
 
                 if (Visible && JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.uploads", Reference, Name ?? GetId());
+                    await JSRuntime.InvokeVoidAsync("Crest.uploads", Reference, Name ?? GetId());
                     _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createFileInput", Element);
+                        "Crest.createFileInput", Element);
                 }
             }
         }
@@ -303,7 +303,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.removeFileFromFileInput", fileUpload);
+                await JSRuntime.InvokeVoidAsync("Crest.removeFileFromFileInput", fileUpload);
             }
 
             StateHasChanged();

@@ -245,7 +245,7 @@ namespace Crest.Components.Primitives
                 return;
             }
 
-            await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.upload", fileUpload, Url, Multiple, false, ParameterName);
+            await JSRuntime.InvokeAsync<string>("Crest.upload", fileUpload, Url, Multiple, false, ParameterName);
         }
 
         readonly IDictionary<string, string> headers = new Dictionary<string, string>();
@@ -311,7 +311,7 @@ namespace Crest.Components.Primitives
 
                 if (Visible && JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.uploads", Reference, Name ?? GetId());
+                    await JSRuntime.InvokeVoidAsync("Crest.uploads", Reference, Name ?? GetId());
 
                     _jsParamsChanged = false;
 
@@ -323,7 +323,7 @@ namespace Crest.Components.Primitives
                     }
 
                     _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createUpload", Element,
+                        "Crest.createUpload", Element,
                         !string.IsNullOrEmpty(Url) ? Url : null, Auto, Multiple,
                         ParameterName, Method, Stream);
                 }
@@ -422,7 +422,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.removeFileFromUpload", Reference, file.Name, Name ?? GetId());
+                await JSRuntime.InvokeVoidAsync("Crest.removeFileFromUpload", Reference, file.Name, Name ?? GetId());
             }
 
             if (fireChangeEvent)

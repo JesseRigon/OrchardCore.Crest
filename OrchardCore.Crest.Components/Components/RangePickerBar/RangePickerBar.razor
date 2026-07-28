@@ -43,7 +43,7 @@
         selfRef ??= DotNetObjectReference.Create(this);
         try
         {
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.beginRangePickKeyHandler", selfRef);
+            await JSRuntime.InvokeVoidAsync("Crest.beginRangePickKeyHandler", selfRef);
         }
         catch (JSDisconnectedException)
         {
@@ -113,7 +113,7 @@
 
         if (selfRef is not null)
         {
-            try { await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.endRangePickKeyHandler"); }
+            try { await JSRuntime.InvokeVoidAsync("Crest.endRangePickKeyHandler"); }
             catch (JSDisconnectedException) { }
             catch (JSException) { }
             catch (ObjectDisposedException) { }

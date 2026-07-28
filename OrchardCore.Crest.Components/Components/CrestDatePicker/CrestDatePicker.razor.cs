@@ -1181,7 +1181,7 @@ namespace Crest.Components.Primitives
             }
 
             DateTime? newValue;
-            var inputValue = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", input);
+            var inputValue = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", input);
             bool valid = TryParseInput(inputValue, out DateTime value);
 
             var nullable = Nullable.GetUnderlyingType(typeof(TValue)) != null || AllowClear;
@@ -1196,11 +1196,11 @@ namespace Crest.Components.Primitives
 
                 if (nullable)
                 {
-                    await JSRuntime!.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", input, "");
+                    await JSRuntime!.InvokeAsync<string>("Crest.setInputValue", input, "");
                 }
                 else
                 {
-                    await JSRuntime!.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", input, FormattedValue);
+                    await JSRuntime!.InvokeAsync<string>("Crest.setInputValue", input, FormattedValue);
                 }
 
             }
@@ -1255,7 +1255,7 @@ namespace Crest.Components.Primitives
                 return;
             }
 
-            var inputValue = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", input);
+            var inputValue = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", input);
             bool valid = TryParseInput(inputValue, out DateTime value);
 
             if (!valid || DateAttributes(value).Disabled)
@@ -1648,7 +1648,7 @@ namespace Crest.Components.Primitives
             }
             else if (JSRuntime != null)
             {
-                _ = JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID);
+                _ = JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID);
             }
 
             contentStyle = "display:none;";
@@ -1916,7 +1916,7 @@ namespace Crest.Components.Primitives
 
             if (shouldClose && !firstRender && IsJSRuntimeAvailable && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyPopup", PopupID);
+                await JSRuntime.InvokeVoidAsync("Crest.destroyPopup", PopupID);
             }
 
             if (EditContext != null && ValueExpression != null && FieldIdentifier.Model != EditContext.Model)
@@ -1939,7 +1939,7 @@ namespace Crest.Components.Primitives
 
             if (Visible && !Disabled && !ReadOnly && !Inline && PopupRenderMode == PopupRenderMode.Initial && JSRuntime != null)
             {
-                _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createDatePicker", Element, PopupID, Reference, nameof(OnPopupClose));
+                _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createDatePicker", Element, PopupID, Reference, nameof(OnPopupClose));
             }
 
             if (shouldFocusDay && JSRuntime != null)
@@ -1947,7 +1947,7 @@ namespace Crest.Components.Primitives
                 shouldFocusDay = false;
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", GetDayCellId(FocusedDate));
+                    await JSRuntime.InvokeVoidAsync("Crest.focusElement", GetDayCellId(FocusedDate));
                 }
                 catch { }
             }
@@ -1972,7 +1972,7 @@ namespace Crest.Components.Primitives
 
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.destroyPopup", PopupID);
+                JSRuntime.InvokeVoid("Crest.destroyPopup", PopupID);
                 if (_jsRef != null)
                 {
                     _jsRef.InvokeVoid("dispose");
@@ -2063,7 +2063,7 @@ namespace Crest.Components.Primitives
 
                 if (PopupRenderMode == PopupRenderMode.Initial && JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.openPopup", Element, PopupID, false, null, null, null, Reference, nameof(OnPopupClose), true, true);
+                    await JSRuntime.InvokeVoidAsync("Crest.openPopup", Element, PopupID, false, null, null, null, Reference, nameof(OnPopupClose), true, true);
                 }
                 else if (popup != null)
                 {
@@ -2102,7 +2102,7 @@ namespace Crest.Components.Primitives
 
             if (PopupRenderMode == PopupRenderMode.Initial && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", Element, PopupID, false, Reference, nameof(OnPopupClose), true, true);
+                await JSRuntime.InvokeVoidAsync("Crest.togglePopup", Element, PopupID, false, Reference, nameof(OnPopupClose), true, true);
             }
             else if (popup != null)
             {
@@ -2121,7 +2121,7 @@ namespace Crest.Components.Primitives
 
             if (PopupRenderMode == PopupRenderMode.Initial && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID);
+                await JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID);
             }
             else if (popup != null)
             {

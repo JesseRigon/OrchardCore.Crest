@@ -118,7 +118,7 @@ namespace Crest.Components.Primitives
 
                 if (JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", GetId() + next.ToString(System.Globalization.CultureInfo.InvariantCulture) + "r");
+                    await JSRuntime.InvokeVoidAsync("Crest.focusElement", GetId() + next.ToString(System.Globalization.CultureInfo.InvariantCulture) + "r");
                 }
             }
             else

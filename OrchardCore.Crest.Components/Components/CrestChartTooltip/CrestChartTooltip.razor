@@ -35,7 +35,7 @@
         {
             try
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.openChartTooltip",
+                await JSRuntime.InvokeVoidAsync("Crest.openChartTooltip",
                     tooltip.Chart,
                     x,
                     y,
@@ -58,7 +58,7 @@
 
         if (tooltip != null)
         {
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.openChartTooltip",
+            await JSRuntime.InvokeVoidAsync("Crest.openChartTooltip",
                 tooltip.Chart,
                 tooltip.X,
                 tooltip.Y,
@@ -107,7 +107,7 @@ private DotNetObjectReference<CrestChartTooltip>? reference;
             {
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closeTooltip", UniqueID);
+                    await JSRuntime.InvokeVoidAsync("Crest.closeTooltip", UniqueID);
                 }
                 catch
                 {
@@ -129,7 +129,7 @@ private DotNetObjectReference<CrestChartTooltip>? reference;
             {
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closeTooltip", UniqueID);
+                    await JSRuntime.InvokeVoidAsync("Crest.closeTooltip", UniqueID);
                 }
                 catch
                 {
@@ -144,7 +144,7 @@ private DotNetObjectReference<CrestChartTooltip>? reference;
         {
             try
             {
-               await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyPopup", UniqueID);
+               await JSRuntime.InvokeVoidAsync("Crest.destroyPopup", UniqueID);
             }
             catch
             {
@@ -184,7 +184,7 @@ private DotNetObjectReference<CrestChartTooltip>? reference;
 
     void OnNavigate()
     {
-        JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", UniqueID);
+        JSRuntime.InvokeVoidAsync("Crest.closePopup", UniqueID);
     }
 
     private sealed class ChartTooltip

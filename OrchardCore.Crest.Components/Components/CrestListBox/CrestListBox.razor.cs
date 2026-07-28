@@ -169,10 +169,10 @@ namespace Crest.Components.Primitives
 
             if (AllowFiltering && key.Length == 1 && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", SearchID);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", SearchID);
                 if (JSRuntime is not IJSInProcessRuntime)
                 {
-                    await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", search, key);
+                    await JSRuntime.InvokeAsync<string>("Crest.setInputValue", search, key);
                 }
             }
 
@@ -224,7 +224,7 @@ namespace Crest.Components.Primitives
 
                     if (!Disabled && JSRuntime != null)
                     {
-                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.preventArrows", Element);
+                        await JSRuntime.InvokeVoidAsync("Crest.preventArrows", Element);
                         reload = true;
                     }
 

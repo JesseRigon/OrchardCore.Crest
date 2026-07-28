@@ -62,7 +62,7 @@ namespace Crest.Components.Primitives
                 if (Visible)
                 {
                     _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                        "Crest.Components.Primitives.createProfileMenu", Element);
+                        "Crest.createProfileMenu", Element);
                 }
             }
 

@@ -47,7 +47,7 @@ internal class CrestAnchor : ComponentBase
     {
         if (Attributes?.TryGetValue("href", out var href) == true)
         {
-            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.scrollIntoView", href?.ToString());
+            await JSRuntime.InvokeVoidAsync("Crest.scrollIntoView", href?.ToString());
         }
     }
 }

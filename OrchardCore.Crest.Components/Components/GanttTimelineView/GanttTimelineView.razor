@@ -309,7 +309,7 @@
             var ganttId = Gantt?.GanttElementId;
             if (ganttId != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.ganttInitDragResize", ganttId, dotnetRef, timelineRangeMs, allowDrag, allowResize, RowHeightPx);
+                await JSRuntime.InvokeVoidAsync("Crest.ganttInitDragResize", ganttId, dotnetRef, timelineRangeMs, allowDrag, allowResize, RowHeightPx);
             }
         }
     }
@@ -321,7 +321,7 @@
         {
             try
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.ganttDisposeDragResize", ganttId);
+                await JSRuntime.InvokeVoidAsync("Crest.ganttDisposeDragResize", ganttId);
             }
             catch
             {

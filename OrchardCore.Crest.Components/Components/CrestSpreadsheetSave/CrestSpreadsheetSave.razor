@@ -51,7 +51,7 @@
         stream.Position = 0;
 
         using var streamRef = new DotNetStreamReference(stream);
-        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.downloadFile", FileName, streamRef);
+        await JSRuntime.InvokeVoidAsync("Crest.downloadFile", FileName, streamRef);
     }
 
     private async Task DownloadCsvAsync()
@@ -77,6 +77,6 @@
             ? "sheet.csv"
             : Path.ChangeExtension(FileName, ".csv");
 
-        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.downloadFile", csvName, streamRef);
+        await JSRuntime.InvokeVoidAsync("Crest.downloadFile", csvName, streamRef);
     }
 }

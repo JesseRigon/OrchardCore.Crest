@@ -298,12 +298,12 @@ namespace Crest.Components.Primitives
 
                     if (MouseEnter.HasDelegate)
                     {
-                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.addMouseEnter", GetId(), Reference);
+                        await JSRuntime.InvokeVoidAsync("Crest.addMouseEnter", GetId(), Reference);
                     }
 
                     if (MouseLeave.HasDelegate)
                     {
-                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.addMouseLeave", GetId(), Reference);
+                        await JSRuntime.InvokeVoidAsync("Crest.addMouseLeave", GetId(), Reference);
                     }
                 }
             }
@@ -341,7 +341,7 @@ namespace Crest.Components.Primitives
         {
             if (ContextMenu.HasDelegate && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.addContextMenu", GetId(), Reference);
+                await JSRuntime.InvokeVoidAsync("Crest.addContextMenu", GetId(), Reference);
             }
         }
 
@@ -371,17 +371,17 @@ namespace Crest.Components.Primitives
                 {
                     if (ContextMenu.HasDelegate)
                     {
-                        JSRuntime.InvokeVoid("Crest.Components.Primitives.removeContextMenu", UniqueID);
+                        JSRuntime.InvokeVoid("Crest.removeContextMenu", UniqueID);
                     }
 
                     if (MouseEnter.HasDelegate)
                     {
-                        JSRuntime.InvokeVoid("Crest.Components.Primitives.removeMouseEnter", UniqueID);
+                        JSRuntime.InvokeVoid("Crest.removeMouseEnter", UniqueID);
                     }
 
                     if (MouseLeave.HasDelegate)
                     {
-                        JSRuntime.InvokeVoid("Crest.Components.Primitives.removeMouseLeave", UniqueID);
+                        JSRuntime.InvokeVoid("Crest.removeMouseLeave", UniqueID);
                     }
                 }
                 catch (JSDisconnectedException)
@@ -409,17 +409,17 @@ namespace Crest.Components.Primitives
                 {
                     if (ContextMenu.HasDelegate)
                     {
-                        JSRuntime.InvokeVoid("Crest.Components.Primitives.removeContextMenu", UniqueID);
+                        JSRuntime.InvokeVoid("Crest.removeContextMenu", UniqueID);
                     }
 
                     if (MouseEnter.HasDelegate)
                     {
-                        JSRuntime.InvokeVoid("Crest.Components.Primitives.removeMouseEnter", UniqueID);
+                        JSRuntime.InvokeVoid("Crest.removeMouseEnter", UniqueID);
                     }
 
                     if (MouseLeave.HasDelegate)
                     {
-                        JSRuntime.InvokeVoid("Crest.Components.Primitives.removeMouseLeave", UniqueID);
+                        JSRuntime.InvokeVoid("Crest.removeMouseLeave", UniqueID);
                     }
                 }
                 catch (JSDisconnectedException)

@@ -675,7 +675,7 @@ namespace Crest.Components.Primitives
             }
             else if (JSRuntime != null)
             {
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", input, FormattedValue);
+                await JSRuntime.InvokeAsync<string>("Crest.setInputValue", input, FormattedValue);
             }
         }
 

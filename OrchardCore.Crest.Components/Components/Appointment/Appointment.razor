@@ -154,7 +154,7 @@
         if (firstRender && Scheduler?.HasAppointmentMoveDelegate() == true)
         {
             dotnetRef = DotNetObjectReference.Create(this);
-            jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.Components.Primitives.createDraggable", element, dotnetRef, nameof(OnDragStartAsync));
+            jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>("Crest.createDraggable", element, dotnetRef, nameof(OnDragStartAsync));
         }
     }
 

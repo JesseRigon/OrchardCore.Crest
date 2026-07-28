@@ -166,7 +166,7 @@ namespace Crest.Components.Primitives
                 {
                     if (JSRuntime != null)
                     {
-                        selectedIndex = await JSRuntime.InvokeAsync<int>("Crest.Components.Primitives.focusListItem", search, list, key == "ArrowDown", selectedIndex);
+                        selectedIndex = await JSRuntime.InvokeAsync<int>("Crest.focusListItem", search, list, key == "ArrowDown", selectedIndex);
                     }
                 }
                 catch (Exception)
@@ -208,7 +208,7 @@ namespace Crest.Components.Primitives
                 return;
             }
 
-            var value = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", search);
+            var value = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", search);
 
             value = $"{value}";
             
@@ -280,7 +280,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID);
+                await JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID);
             }
         }
 
@@ -367,7 +367,7 @@ namespace Crest.Components.Primitives
                 return string.Empty;
             }
 
-            return $"Crest.Components.Primitives.openPopup(this.parentNode, '{PopupID}', true)";
+            return $"Crest.openPopup(this.parentNode, '{PopupID}', true)";
         }
 
         /// <summary>
@@ -393,7 +393,7 @@ namespace Crest.Components.Primitives
 
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.destroyPopup", PopupID);
+                JSRuntime.InvokeVoid("Crest.destroyPopup", PopupID);
             }
 
             if (_jsRef != null)
@@ -430,7 +430,7 @@ namespace Crest.Components.Primitives
                 }
 
                 _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                    "Crest.Components.Primitives.createAutoComplete", Element, PopupID, OpenOnFocus, Reference, nameof(OnPopupOpen), nameof(OnPopupClose));
+                    "Crest.createAutoComplete", Element, PopupID, OpenOnFocus, Reference, nameof(OnPopupOpen), nameof(OnPopupClose));
             }
         }
 
@@ -471,7 +471,7 @@ namespace Crest.Components.Primitives
             {
                 popupOpened = false;
                 selectedIndex = -1;
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyPopup", PopupID);
+                await JSRuntime.InvokeVoidAsync("Crest.destroyPopup", PopupID);
             }
         }
 

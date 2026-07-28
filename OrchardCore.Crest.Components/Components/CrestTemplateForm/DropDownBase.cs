@@ -376,7 +376,7 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", GetId());
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", GetId());
             }
         }
 
@@ -422,7 +422,7 @@ namespace Crest.Components.Primitives
             await SearchTextChanged.InvokeAsync(searchText);
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", search, "");
+                await JSRuntime.InvokeAsync<string>("Crest.setInputValue", search, "");
             }
 
             internalValue = collectionAssignment.GetCleared();
@@ -648,7 +648,7 @@ namespace Crest.Components.Primitives
                 return string.Empty;
             }
 
-            return $"Crest.Components.Primitives.togglePopup(this.parentNode, '{PopupID}', true);Crest.Components.Primitives.focusElement('{SearchID}');";
+            return $"Crest.togglePopup(this.parentNode, '{PopupID}', true);Crest.focusElement('{SearchID}');";
         }
 
         /// <summary>
@@ -662,7 +662,7 @@ namespace Crest.Components.Primitives
                 return string.Empty;
             }
 
-            return $"Crest.Components.Primitives.togglePopup(this, '{PopupID}', true);Crest.Components.Primitives.focusElement('{SearchID}');";
+            return $"Crest.togglePopup(this, '{PopupID}', true);Crest.focusElement('{SearchID}');";
         }
 
         /// <summary>
@@ -700,8 +700,8 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", Element, PopupID, true);
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", isFilter ? UniqueID : SearchID);
+                await JSRuntime.InvokeVoidAsync("Crest.togglePopup", Element, PopupID, true);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", isFilter ? UniqueID : SearchID);
             }
 
             isPopupOpen = true;
@@ -711,11 +711,11 @@ namespace Crest.Components.Primitives
                 if (IsVirtualizationAllowed() && !LoadData.HasDelegate)
                 {
                     var totalCount = View != null ? View.Cast<object>().Count() : 0;
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusVirtualListItem", list, selectedIndex, totalCount);
+                    await JSRuntime.InvokeVoidAsync("Crest.focusVirtualListItem", list, selectedIndex, totalCount);
                 }
                 else
                 {
-                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.selectListItem", search, list, selectedIndex);
+                    await JSRuntime.InvokeVoidAsync("Crest.selectListItem", search, list, selectedIndex);
                 }
             }
         }
@@ -793,14 +793,14 @@ namespace Crest.Components.Primitives
                                 }
                             }
 
-                            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusVirtualListItem", list, selectedIndex, virtualTotalCount);
+                            await JSRuntime.InvokeVoidAsync("Crest.focusVirtualListItem", list, selectedIndex, virtualTotalCount);
                         }
                         else
                         {
-                            selectedIndex = await JSRuntime.InvokeAsync<int>("Crest.Components.Primitives.focusListItem", search, list, key == "ArrowDown" || key == "ArrowRight", selectedIndex);
+                            selectedIndex = await JSRuntime.InvokeAsync<int>("Crest.focusListItem", search, list, key == "ArrowDown" || key == "ArrowRight", selectedIndex);
                         }
 
-                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.popupOpened", PopupID);
+                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.popupOpened", PopupID);
 
                         if (!Multiple && !popupOpened && shouldSelectOnChange != false)
                         {
@@ -831,14 +831,14 @@ namespace Crest.Components.Primitives
                         {
                             selectedIndex = key == "Home" ? 0 : virtualTotalCount - 1;
 
-                            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusVirtualListItem", list, selectedIndex, virtualTotalCount);
+                            await JSRuntime.InvokeVoidAsync("Crest.focusVirtualListItem", list, selectedIndex, virtualTotalCount);
                         }
                         else
                         {
-                            selectedIndex = await JSRuntime.InvokeAsync<int>("Crest.Components.Primitives.focusListItem", search, list, key == "Home", key == "Home" ? -1 : items.Count);
+                            selectedIndex = await JSRuntime.InvokeAsync<int>("Crest.focusListItem", search, list, key == "Home", key == "Home" ? -1 : items.Count);
                         }
 
-                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.popupOpened", PopupID);
+                        var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.popupOpened", PopupID);
 
                         if (!Multiple && !popupOpened && shouldSelectOnChange != false)
                         {
@@ -875,7 +875,7 @@ namespace Crest.Components.Primitives
                             ? View?.Cast<object>().AsQueryable().Skip(selectedIndex).FirstOrDefault()
                             : items.ElementAtOrDefault(selectedIndex);
 
-                        await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", search, $"{searchText}".Trim());
+                        await JSRuntime.InvokeAsync<string>("Crest.setInputValue", search, $"{searchText}".Trim());
 
                         if (itemToSelect != null)
                         {
@@ -886,16 +886,16 @@ namespace Crest.Components.Primitives
                         {
                             if (useVirtualization)
                             {
-                                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusVirtualListItem", list, selectedIndex, effectiveCount);
+                                await JSRuntime.InvokeVoidAsync("Crest.focusVirtualListItem", list, selectedIndex, effectiveCount);
                             }
                             else
                             {
-                                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.selectListItem", search, list, selectedIndex);
+                                await JSRuntime.InvokeVoidAsync("Crest.selectListItem", search, list, selectedIndex);
                             }
                         }
                     }
 
-                    var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.Components.Primitives.popupOpened", PopupID);
+                    var popupOpened = await JSRuntime.InvokeAsync<bool>("Crest.popupOpened", PopupID);
 
                     if (!popupOpened)
                     {
@@ -1007,11 +1007,11 @@ namespace Crest.Components.Primitives
                         {
                             if (useVirtualization)
                             {
-                                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusVirtualListItem", list, result.Index, virtualTotalCount);
+                                await JSRuntime.InvokeVoidAsync("Crest.focusVirtualListItem", list, result.Index, virtualTotalCount);
                             }
                             else
                             {
-                                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.selectListItem", list, list, result.Index);
+                                await JSRuntime.InvokeVoidAsync("Crest.selectListItem", list, list, result.Index);
                             }
                         }
                     }
@@ -1025,7 +1025,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID, null, null, null, key == "Tab");
+                await JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID, null, null, null, key == "Tab");
             }
 
             isPopupOpen = false;
@@ -1060,7 +1060,7 @@ namespace Crest.Components.Primitives
         {
             if (JSRuntime != null)
             {
-                searchText = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", search) ?? string.Empty;
+                searchText = await JSRuntime.InvokeAsync<string>("Crest.getInputValue", search) ?? string.Empty;
             }
 
             if (!LoadData.HasDelegate)
@@ -1105,8 +1105,8 @@ namespace Crest.Components.Primitives
 
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.updateActiveDescendant", list, null, -1);
-                await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.repositionPopup", Element, PopupID);
+                await JSRuntime.InvokeVoidAsync("Crest.updateActiveDescendant", list, null, -1);
+                await JSRuntime.InvokeAsync<string>("Crest.repositionPopup", Element, PopupID);
             }
             await InvokeAsync(() => SearchTextChanged.InvokeAsync(SearchText));
         }
@@ -1242,7 +1242,7 @@ namespace Crest.Components.Primitives
             var shouldClose = visibleChanged && !Visible;
             if (shouldClose && !firstRender && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyPopup", PopupID);
+                await JSRuntime.InvokeVoidAsync("Crest.destroyPopup", PopupID);
             }
         }
 

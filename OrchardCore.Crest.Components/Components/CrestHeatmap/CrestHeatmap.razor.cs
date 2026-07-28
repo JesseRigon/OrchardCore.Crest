@@ -97,7 +97,7 @@ namespace Crest.Components.Primitives
             if (firstRender)
             {
                 reference = DotNetObjectReference.Create(this);
-                var rect = await JSRuntime!.InvokeAsync<Rect>("Crest.Components.Primitives.createResizable", Element, reference);
+                var rect = await JSRuntime!.InvokeAsync<Rect>("Crest.createResizable", Element, reference);
                 Width = rect.Width;
                 Height = rect.Height;
                 StateHasChanged();
@@ -239,7 +239,7 @@ namespace Crest.Components.Primitives
         {
             if (IsJSRuntimeAvailable)
             {
-                JSRuntime!.InvokeVoidAsync("Crest.Components.Primitives.disposeElement", Element);
+                JSRuntime!.InvokeVoidAsync("Crest.disposeElement", Element);
             }
 
             base.Dispose();

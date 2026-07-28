@@ -1503,7 +1503,7 @@ namespace Crest.Components.Primitives
                 if (Visible && JSRuntime != null)
                 {
                     var mouseMoveThrottle = MouseMoveThrottle ?? (JSRuntime is IJSInProcessRuntime ? 0 : 50);
-                    var rect = await JSRuntime.InvokeAsync<Rect>("Crest.Components.Primitives.createChart", Element, Reference, mouseMoveThrottle);
+                    var rect = await JSRuntime.InvokeAsync<Rect>("Crest.createChart", Element, Reference, mouseMoveThrottle);
 
                     if (!widthAndHeightAreSet)
                     {
@@ -1614,7 +1614,7 @@ namespace Crest.Components.Primitives
             {
                 if (Visible == false)
                 {
-                    await JSRuntime!.InvokeVoidAsync("Crest.Components.Primitives.disposeElement", Element);
+                    await JSRuntime!.InvokeVoidAsync("Crest.disposeElement", Element);
                 }
             }
         }
@@ -1671,7 +1671,7 @@ namespace Crest.Components.Primitives
         /// Returns the SVG markup of the rendered chart as a string.
         /// The plot area and axes are included, with theme styles inlined so the SVG renders standalone.
         /// Legends and tooltips are HTML overlays and are not included.
-        /// To download it, pass the result to the <c>Crest.Components.Primitives.downloadFile</c> JavaScript helper.
+        /// To download it, pass the result to the <c>Crest.downloadFile</c> JavaScript helper.
         /// </summary>
         /// <returns>
         /// A <see cref="Task{String}"/> representing the asynchronous operation. The task result contains the SVG markup of the chart.
@@ -1680,7 +1680,7 @@ namespace Crest.Components.Primitives
         {
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
-                return await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.chartToSvg", Element);
+                return await JSRuntime.InvokeAsync<string>("Crest.chartToSvg", Element);
             }
 
             return string.Empty;
@@ -1700,7 +1700,7 @@ namespace Crest.Components.Primitives
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
                 var svg = await ToSvg();
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.downloadSvgAsPng", svg, fileName, width, height);
+                await JSRuntime.InvokeVoidAsync("Crest.downloadSvgAsPng", svg, fileName, width, height);
             }
         }
 
@@ -1722,7 +1722,7 @@ namespace Crest.Components.Primitives
 
                 if (!string.IsNullOrEmpty(svg))
                 {
-                    await using var png = await JSRuntime.InvokeAsync<IJSStreamReference>("Crest.Components.Primitives.svgToPng", svg, width, height);
+                    await using var png = await JSRuntime.InvokeAsync<IJSStreamReference>("Crest.svgToPng", svg, width, height);
                     using var stream = await png.OpenReadStreamAsync(maxAllowedSize: 32 * 1024 * 1024);
                     using var memoryStream = new MemoryStream();
                     await stream.CopyToAsync(memoryStream);
@@ -1742,7 +1742,7 @@ namespace Crest.Components.Primitives
 
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Crest.Components.Primitives.disposeElement", Element);
+                JSRuntime.InvokeVoid("Crest.disposeElement", Element);
             }
 
             GC.SuppressFinalize(this);
