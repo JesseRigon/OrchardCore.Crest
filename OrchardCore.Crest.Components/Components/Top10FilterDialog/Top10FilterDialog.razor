@@ -1,0 +1,49 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inherits SpreadsheetDialogBase
+
+@namespace Crest.Components.Primitives.Spreadsheet
+<CrestStack Gap="1rem" Style="min-width:320px">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Top10Show)) class="rz-text-subtitle2" />
+        <RadzenDropDown TValue="bool" Data=@DirectionOptions
+            TextProperty="Text" ValueProperty="Value"
+            @bind-Value=@bottom InputSize="InputSize.Small" />
+        <CrestNumeric TValue="int" @bind-Value=@count Min="1" Max="100" InputSize="InputSize.Small" />
+        <RadzenDropDown TValue="bool" Data=@UnitOptions
+            TextProperty="Text" ValueProperty="Value"
+            @bind-Value=@percent InputSize="InputSize.Small" />
+    </CrestStack>
+
+    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-spreadsheet-dialog-actions">
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined"
+            Click=@OnCancel />
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat"
+            Click=@OnOk />
+    </CrestStack>
+</CrestStack>
+
+@code {
+#nullable enable
+
+    /// <summary>Result returned by the dialog.</summary>
+    public sealed record Result(int Count, bool Percent, bool Bottom);
+
+    private bool bottom;          // false = top, true = bottom
+    private bool percent;         // false = items, true = percent
+    private int count = 10;
+
+    private object[] DirectionOptions =>
+    [
+        new { Text = L(nameof(CrestStrings.Spreadsheet_Top10DirectionTop)), Value = false },
+        new { Text = L(nameof(CrestStrings.Spreadsheet_Top10DirectionBottom)), Value = true },
+    ];
+
+    private object[] UnitOptions =>
+    [
+        new { Text = L(nameof(CrestStrings.Spreadsheet_Top10UnitItems)), Value = false },
+        new { Text = L(nameof(CrestStrings.Spreadsheet_Top10UnitPercent)), Value = true },
+    ];
+
+    private void OnOk() => DialogService.Close(new Result(count, percent, bottom));
+}

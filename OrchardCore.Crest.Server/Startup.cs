@@ -41,8 +41,9 @@ public sealed class Startup : StartupBase
         services.AddScoped<IRoleUpdatedEventHandler, CrestRolePermissionInvalidationHandler>();
         services.AddScoped<IThemeSelector, LegacyFrameThemeSelector>();
         services.AddScoped<CrestAdminMenuLayoutService>();
-        services.AddScoped<CrestAdminSidebarSettingsStore>();
+        services.AddScoped<CrestPrimaryNavMenuSettingsStore>();
         services.AddScoped<CrestAdminSettingsNormalizer>();
+        services.AddScoped<CrestTitleBarSettingsStore>();
         services.AddNavigationProvider<CrestAdminMenu>();
         services.AddScoped<IIconProvider, IconifyIconProvider>();
         services.AddScoped<IIconProviderSettingsStore, CrestIconProviderSettingsStore>();

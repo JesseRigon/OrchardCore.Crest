@@ -1,0 +1,16 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Rendering
+
+@inherits SchedulerViewBase
+
+@namespace Crest.Components.Primitives
+@code {
+    public override RenderFragment Render()
+    {
+        var appointments = Scheduler?.GetAppointmentsInRange(StartDate, EndDate).ToList() ?? new List<AppointmentData>();
+
+        return @<CascadingValue Value=@Scheduler>
+                <WeekView HeaderFormat=@HeaderFormat MinutesPerSlot=@MinutesPerSlot StartDate=@StartDate EndDate=@EndDate StartTime=@StartTime EndTime=@EndTime Appointments=@appointments TimeFormat="@TimeFormat" AppointmentMove=OnAppointmentMove />
+            </CascadingValue>;
+    }
+}

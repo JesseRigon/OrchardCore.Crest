@@ -1,0 +1,18 @@
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inherits CrestSpreadsheetToolBase
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestButton aria-label=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_InsertColumnAfter))) Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" Click=@OnInsertColumnAfterClick Icon="add_column_right" ButtonType="ButtonType.Button" Disabled=@IsDisabled
+    title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_InsertColumnAfter)) ?? "Insert Column After") />
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.Editing;
+
+    private async Task OnInsertColumnAfterClick()
+    {
+        if (Worksheet is null || Spreadsheet is null)
+        {
+            return;
+        }
+        await Spreadsheet.ExecuteAsync(new InsertColumnCommand(Worksheet, Worksheet.Selection.Range.End.Column + 1));
+    }
+}

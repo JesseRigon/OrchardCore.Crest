@@ -1,22 +1,20 @@
 @namespace Crest.Icons.Components
 @using Microsoft.AspNetCore.Components
-@using Microsoft.JSInterop
 @using Crest.Icons
-@inject IJSRuntime JS
 @inject ClientIconRegistry ClientIcons
 
-@if (!string.IsNullOrWhiteSpace(EffectiveSvgMarkup))
+@if (!string.IsNullOrWhiteSpace(_effectiveSvgMarkup))
 {
     <span class="@CssClass"
           style="@CssStyle"
           role="@Role"
           aria-label="@AriaLabel"
           aria-hidden="@AriaHidden"
-          data-icon-library="@EffectiveLibrary"
-          data-icon-version="@EffectiveVersion"
-          data-icon-name="@EffectiveName"
+          data-icon-library="@_effectiveLibrary"
+          data-icon-version="@_effectiveVersion"
+          data-icon-name="@_effectiveName"
           @attributes="AdditionalAttributes">
-        @((MarkupString)EffectiveSvgMarkup)
+        @((MarkupString)_effectiveSvgMarkup)
     </span>
 }
 
@@ -63,20 +61,47 @@
     [Parameter(CaptureUnmatchedValues = true)]
     public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
-    protected override async Task OnParametersSetAsync()
+    private IconRenderState? _renderedState;
+    private bool _shouldRender = true;
+    private string? _effectiveLibrary;
+    private string? _effectiveVersion;
+    private string? _effectiveName;
+    private string? _effectiveSvgMarkup;
+
+    protected override void OnParametersSet()
     {
-        if (string.Equals(EffectiveLibrary, "missing", StringComparison.OrdinalIgnoreCase) ||
-            (!string.IsNullOrWhiteSpace(EffectiveName) && string.IsNullOrWhiteSpace(EffectiveSvgMarkup)))
+        var state = new IconRenderState(
+            IconKey,
+            Name,
+            Library,
+            Version,
+            SvgMarkup,
+            IconClass,
+            Alt,
+            Size,
+            BoxSize,
+            Color,
+            Opacity,
+            Class,
+            Style,
+            AdditionalAttributes,
+            string.IsNullOrWhiteSpace(SvgMarkup) ? ClientIcons.Version : 0);
+
+        _shouldRender = !state.Equals(_renderedState);
+        if (!_shouldRender)
         {
-            await JS.InvokeVoidAsync("console.error", $"Missing SVG icon: library='{EffectiveLibrary}', version='{EffectiveVersion}', name='{EffectiveName}'.");
+            return;
         }
+
+        _renderedState = state;
+        var resolved = ResolveIcon();
+        _effectiveLibrary = !string.IsNullOrWhiteSpace(SvgMarkup) ? Library : resolved?.Library ?? Library;
+        _effectiveVersion = !string.IsNullOrWhiteSpace(SvgMarkup) ? Version : resolved?.Version ?? Version;
+        _effectiveName = !string.IsNullOrWhiteSpace(SvgMarkup) ? Name : resolved?.Name ?? Name;
+        _effectiveSvgMarkup = !string.IsNullOrWhiteSpace(SvgMarkup) ? SvgMarkup : resolved?.SvgMarkup;
     }
 
-    private ResolvedIcon? Resolved => ResolveIcon();
-    private string? EffectiveLibrary => !string.IsNullOrWhiteSpace(SvgMarkup) ? Library : Resolved?.Library ?? Library;
-    private string? EffectiveVersion => !string.IsNullOrWhiteSpace(SvgMarkup) ? Version : Resolved?.Version ?? Version;
-    private string? EffectiveName => !string.IsNullOrWhiteSpace(SvgMarkup) ? Name : Resolved?.Name ?? Name;
-    private string? EffectiveSvgMarkup => !string.IsNullOrWhiteSpace(SvgMarkup) ? SvgMarkup : Resolved?.SvgMarkup;
+    protected override bool ShouldRender() => _shouldRender;
 
     private ResolvedIcon? ResolveIcon()
     {
@@ -129,4 +154,21 @@
     private string? Role => HasAlt ? "img" : null;
     private string? AriaLabel => HasAlt ? Alt : null;
     private string? AriaHidden => HasAlt ? null : "true";
+
+    private sealed record IconRenderState(
+        string? IconKey,
+        string? Name,
+        string? Library,
+        string? Version,
+        string? SvgMarkup,
+        string? IconClass,
+        string? Alt,
+        string? Size,
+        string? BoxSize,
+        string? Color,
+        string? Opacity,
+        string? Class,
+        string? Style,
+        IReadOnlyDictionary<string, object>? AdditionalAttributes,
+        long RegistryVersion);
 }

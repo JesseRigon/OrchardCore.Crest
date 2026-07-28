@@ -5,7 +5,7 @@ using Crest.Admin.Options;
 using Crest.Admin.Theme;
 using Crest.Icons;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Radzen;
+using Crest.Components.Primitives;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -27,7 +27,7 @@ builder.Services.AddScoped<DisplayManager>();
 builder.Services.AddScoped<CrestRoutingOptions>();
 builder.Services.AddScoped<CrestThemeEngine>();
 builder.Services.AddCrestIconClient();
-builder.Services.AddRadzenComponents();
+builder.Services.AddCrestComponents();
 
 var app = builder.Build();
 

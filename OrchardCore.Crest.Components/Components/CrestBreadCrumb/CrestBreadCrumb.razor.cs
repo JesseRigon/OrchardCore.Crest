@@ -1,0 +1,93 @@
+﻿using Microsoft.AspNetCore.Components;
+using System.Collections.Generic;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// A breadcrumb navigation component that displays the current page's location within the application hierarchy.
+    /// CrestBreadCrumb shows a trail of links representing the path from the root to the current page, helping users understand their location and navigate back.
+    /// Provides secondary navigation with items separated by a visual divider (typically ">"), with each item linking to its respective page.
+    /// Common uses include multi-level navigation indicating current location, e-commerce category navigation (Home > Electronics > Laptops), documentation section paths, and file system or folder navigation.
+    /// Items are defined using CrestBreadCrumbItem components as child content.
+    /// The last item typically represents the current page and is often not clickable.
+    /// </summary>
+    /// <example>
+    /// Basic breadcrumb:
+    /// <code>
+    /// &lt;CrestBreadCrumb&gt;
+    ///     &lt;CrestBreadCrumbItem Text="Home" Path="/" /&gt;
+    ///     &lt;CrestBreadCrumbItem Text="Products" Path="/products" /&gt;
+    ///     &lt;CrestBreadCrumbItem Text="Laptops" /&gt;
+    /// &lt;/CrestBreadCrumb&gt;
+    /// </code>
+    /// Breadcrumb with icons and custom template:
+    /// <code>
+    /// &lt;CrestBreadCrumb&gt;
+    ///     &lt;CrestBreadCrumbItem Text="Home" Path="/" Icon="home" /&gt;
+    ///     &lt;CrestBreadCrumbItem Text="Settings" Path="/settings" Icon="settings" /&gt;
+    ///     &lt;CrestBreadCrumbItem Text="Profile" Icon="person" /&gt;
+    /// &lt;/CrestBreadCrumb&gt;
+    /// </code>
+    /// </example>
+    public partial class CrestBreadCrumb : CrestComponentWithChildren
+    {
+        /// <summary>
+        /// Gets or sets a custom template for rendering breadcrumb items.
+        /// When set, this template is used instead of the default rendering for each item, allowing complete control over item appearance.
+        /// The template receives a CrestBreadCrumbItem as context.
+        /// </summary>
+        /// <value>The custom item template render fragment.</value>
+        [Parameter]
+        public RenderFragment<CrestBreadCrumbItem>? Template { get; set; }
+
+        /// <summary>
+        /// Gets or sets the accessible label for the breadcrumb navigation landmark.
+        /// Rendered as the <c>aria-label</c> attribute on the root <c>&lt;nav&gt;</c> element so assistive technology can distinguish this landmark from other navigation regions.
+        /// </summary>
+        /// <value>The navigation landmark label. Defaults to <c>"breadcrumb"</c>.</value>
+        [Parameter]
+        public string AriaLabel { get => ariaLabel ?? Localize(nameof(CrestStrings.BreadCrumb_AriaLabel)); set => ariaLabel = value; }
+
+        private string? ariaLabel;
+
+        /// <inheritdoc/>
+        protected override string GetComponentCssClass()
+        {
+            return "rz-breadcrumb";
+        }
+
+        readonly List<CrestBreadCrumbItem> items = new List<CrestBreadCrumbItem>();
+
+        internal void AddItem(CrestBreadCrumbItem item)
+        {
+            if (!items.Contains(item))
+            {
+                var previousLast = items.Count > 0 ? items[items.Count - 1] : null;
+
+                items.Add(item);
+
+                previousLast?.Refresh();
+            }
+        }
+
+        internal void RemoveItem(CrestBreadCrumbItem item)
+        {
+            if (items.Remove(item) && !disposed && items.Count > 0)
+            {
+                try
+                {
+                    items[items.Count - 1].Refresh();
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        internal bool IsLastItem(CrestBreadCrumbItem item)
+        {
+            return items.Count > 0 && items[items.Count - 1] == item;
+        }
+    }
+
+}

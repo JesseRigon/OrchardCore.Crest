@@ -1,0 +1,69 @@
+@using Crest
+@using Microsoft.JSInterop
+@inherits CrestComponent
+@namespace Crest.Components.Primitives
+<CascadingValue Value=@this>
+    @ChildContent
+</CascadingValue>
+@if (Visible)
+{
+<div @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">
+    <div class="rz-fileupload-buttonbar">
+        <span class="@ChooseClassList" tabindex="@(Disabled ? -1 : TabIndex)" role="button" aria-label="@ChooseText"
+              aria-disabled="@(Disabled ? "true" : "false")" aria-controls="@(Name ?? GetId())"
+              >
+            @RenderInput()
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+            <i class="notranslate rzi" aria-hidden="true" style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)">@Icon</i>
+            }
+            <span class="rz-button-text">@ChooseText</span>
+        </span>
+    </div>
+    @if (files.Any())
+    {
+    <div class="rz-fileupload-content">
+        <div class="rz-fileupload-files">
+            <div>
+                @foreach (var file in files)
+                {
+                <div class="rz-fileupload-row" style="margin-bottom: 10px">
+                    @if (!string.IsNullOrEmpty(file.Url))
+                    {
+                    <div><img src="@file.Url" width="50px" alt="@ImageAlternateText"></div>
+                    }
+                    <div>@file.Name</div>
+                    <div>@(file.Size / 1024) KB</div>
+                    <div>
+                        <button title=@DeleteText tabindex="0" disabled="@Disabled" @onclick="@(args => OnRemove(file))"
+                                aria-label="@DeleteText" type="button" class="@ButtonClassList">
+                            <span class="rz-icon-trash" style="display:block"></span>
+                        </button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+    }
+</div>
+}
+@code {
+    RenderFragment RenderInput()
+    {
+        return __builder => {
+            <text>
+                @if(!string.IsNullOrEmpty(Url))
+                {
+                    <input id="@(Name ?? GetId())" @ref="@fileUpload" @attributes="InputAttributes" type="file" multiple="@Multiple" accept="@Accept" disabled="@Disabled"
+                        tabindex="-1"/>
+                }
+                else
+                {
+                    <Microsoft.AspNetCore.Components.Forms.InputFile id="@(Name ?? GetId())" @attributes="InputAttributes" multiple="@Multiple" accept="@Accept" disabled="@Disabled"
+                        tabindex="-1" OnChange="@OnInputChange" />
+                }
+            </text>
+            };
+    }
+ }

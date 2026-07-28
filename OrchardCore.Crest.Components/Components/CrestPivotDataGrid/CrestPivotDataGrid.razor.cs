@@ -1,0 +1,2734 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using Crest.Components.Primitives.Rendering;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// CrestPivotDataGrid component for creating pivot tables with cross-tabulation functionality.
+    /// </summary>
+    /// <typeparam name="TItem">The type of the PivotDataGrid data item.</typeparam>
+    /// <example>
+    /// <code>
+    /// &lt;CrestPivotDataGrid @data=@orders TItem="Order" AllowSorting="true" AllowPaging="true" AllowFiltering="true"&gt;
+    ///     &lt;Columns&gt;
+    ///         &lt;CrestPivotColumn TItem="Order" Property="Category" Title="Category" /&gt;
+    ///         &lt;CrestPivotColumn TItem="Order" Property="Region" Title="Region" /&gt;
+    ///     &lt;/Columns&gt;
+    ///     &lt;Rows&gt;
+    ///         &lt;CrestPivotRow TItem="Order" Property="Product" Title="Product" /&gt;
+    ///         &lt;CrestPivotRow TItem="Order" Property="Year" Title="Year" /&gt;
+    ///     &lt;/Rows&gt;
+    ///     &lt;Aggregates&gt;
+    ///         &lt;CrestPivotAggregate TItem="Order" Property="Amount" Title="Amount" Aggregate="AggregateFunction.Sum" /&gt;
+    ///         &lt;CrestPivotAggregate TItem="Order" Property="Quantity" Title="Quantity" Aggregate="AggregateFunction.Count" /&gt;
+    ///     &lt;/Aggregates&gt;
+    /// &lt;/CrestPivotDataGrid&gt;
+    /// </code>
+    /// </example>
+    [CascadingTypeParameter(nameof(TItem))]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2026, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2046, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2055, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2060, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2067, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2070, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2072, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2075, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2080, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2087, Justification = TrimMessages.DataTypePreserved)]
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2091, Justification = TrimMessages.DataTypePreserved)]
+    public partial class CrestPivotDataGrid<TItem> : PagedDataBoundComponent<TItem>
+    {
+        private class RowHeaderCell
+        {
+            public object? Value { get; set; }
+            public string? Title { get; set; }
+            public int RowSpan { get; set; } = 1;
+            public bool IsCollapsed { get; set; }
+            public string? PathKey { get; set; }
+            public bool HasChildren { get; set; }
+        }
+
+        /// <summary>
+        /// Gets or sets the columns collection for pivot columns.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? Columns { get; set; }
+
+        /// <summary>
+        /// Gets or sets the rows collection for pivot rows.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? Rows { get; set; }
+
+        /// <summary>
+        /// Gets or sets the aggregates collection for pivot aggregates/measures.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? Aggregates { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to show column totals.
+        /// </summary>
+        [Parameter]
+        public bool ShowColumnsTotals { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to show row totals.
+        /// </summary>
+        [Parameter]
+        public bool ShowRowsTotals { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance loading indicator is shown.
+        /// </summary>
+        /// <value><c>true</c> if this instance loading indicator is shown; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool IsLoading { get; set; }
+
+        private string? emptyText;
+
+        /// <summary>
+        /// Gets or sets the empty text shown when Data is empty collection.
+        /// </summary>
+        [Parameter]
+        public string EmptyText { get => emptyText ?? Localize(nameof(CrestStrings.PivotDataGrid_EmptyText)); set => emptyText = value; }
+
+        private string? othersText;
+
+        /// <summary>
+        /// Gets or sets the default label of the group that combines the remaining items when the <c>MaxGroups</c> limit of a pivot row or column is exceeded.
+        /// Used when <see cref="CrestPivotRow{TItem}.OthersLabel"/> or <see cref="CrestPivotColumn{TItem}.OthersLabel"/> is not set.
+        /// </summary>
+        [Parameter]
+        public string OthersText { get => othersText ?? Localize(nameof(CrestStrings.PivotDataGrid_OthersText)); set => othersText = value; }
+
+        /// <summary>
+        /// Gets or sets the empty template shown when Data is empty collection.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? EmptyTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the grid lines style.
+        /// </summary>
+        [Parameter]
+        public DataGridGridLines GridLines { get; set; } = DataGridGridLines.Default;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether picking of fields runtime is allowed. Set to <c>false</c> by default.
+        /// </summary>
+        /// <value><c>true</c> if picking of fields runtime is allowed; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool AllowFieldsPicking { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the fields picker header template.
+        /// </summary>
+        /// <value>The fields picker header template.</value>
+        [Parameter]
+        public RenderFragment? FieldsPickerHeaderTemplate { get; set; }
+
+        private string? fieldsPickerHeaderText;
+
+        /// <summary>
+        /// Gets or sets the fields picker header text.
+        /// </summary>
+        /// <value>The fields picker header text.</value>
+        [Parameter]
+        public string FieldsPickerHeaderText { get => fieldsPickerHeaderText ?? Localize(nameof(CrestStrings.PivotDataGrid_FieldsPickerHeaderText)); set => fieldsPickerHeaderText = value; }
+
+        /// <summary>
+        /// Gets or sets value indicating if the fields picker is expanded.
+        /// </summary>
+        /// <value>The fields picker expanded.</value>
+        [Parameter]
+        public bool FieldsPickerExpanded { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether CrestPivotDataGrid should use alternating row styles.
+        /// </summary>
+        [Parameter]
+        public bool AllowAlternatingRows { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether drill down functionality is enabled.
+        /// </summary>
+        [Parameter]
+        public bool AllowDrillDown { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether sorting is enabled.
+        /// </summary>
+        [Parameter]
+        public bool AllowSorting { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether filtering is enabled.
+        /// </summary>
+        [Parameter]
+        public bool AllowFiltering { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the filter case sensitivity.
+        /// </summary>
+        [Parameter]
+        public FilterCaseSensitivity FilterCaseSensitivity { get; set; } = FilterCaseSensitivity.Default;
+
+        /// <summary>
+        /// Gets or sets the logical filter operator.
+        /// </summary>
+        [Parameter]
+        public LogicalFilterOperator LogicalFilterOperator { get; set; } = LogicalFilterOperator.And;
+
+        private string? rowsText;
+
+        /// <summary>
+        /// Gets or sets the Rows text.
+        /// </summary>
+        [Parameter]
+        public string RowsText { get => rowsText ?? Localize(nameof(CrestStrings.PivotDataGrid_RowsText)); set => rowsText = value; }
+
+        private string? columnsText;
+
+        /// <summary>
+        /// Gets or sets the Columns text.
+        /// </summary>
+        [Parameter]
+        public string ColumnsText { get => columnsText ?? Localize(nameof(CrestStrings.PivotDataGrid_ColumnsText)); set => columnsText = value; }
+
+        private string? aggregatesText;
+
+        /// <summary>
+        /// Gets or sets the Aggregates text.
+        /// </summary>
+        [Parameter]
+        public string AggregatesText { get => aggregatesText ?? Localize(nameof(CrestStrings.PivotDataGrid_AggregatesText)); set => aggregatesText = value; }
+
+        private string? sortAriaLabelFormat;
+
+        /// <summary>
+        /// Gets or sets the sort aria label format.
+        /// </summary>
+        /// <value>The sort aria label format.</value>
+        [Parameter]
+        public string SortAriaLabelFormat { get => sortAriaLabelFormat ?? Localize(nameof(CrestStrings.PivotDataGrid_SortAriaLabelFormat)); set => sortAriaLabelFormat = value; }
+
+        /// <summary>
+        /// Gets or set the filter icon to use.
+        /// </summary>
+        [Parameter]
+        public string FilterIcon { get; set; } = "filter_alt";
+
+        private string? filterText;
+
+        /// <summary>
+        /// Gets or sets the filter text.
+        /// </summary>
+        [Parameter]
+        public string FilterText { get => filterText ?? Localize(nameof(CrestStrings.PivotDataGrid_FilterText)); set => filterText = value; }
+
+        private string? enumFilterSelectText;
+
+        /// <summary>
+        /// Gets or sets the enum filter select text.
+        /// </summary>
+        [Parameter]
+        public string EnumFilterSelectText { get => enumFilterSelectText ?? Localize(nameof(CrestStrings.PivotDataGrid_EnumFilterSelectText)); set => enumFilterSelectText = value; }
+
+        private string? applyText;
+
+        /// <summary>
+        /// Gets or sets the apply text.
+        /// </summary>
+        [Parameter]
+        public string ApplyText { get => applyText ?? Localize(nameof(CrestStrings.PivotDataGrid_ApplyText)); set => applyText = value; }
+
+        private string? clearText;
+
+        /// <summary>
+        /// Gets or sets the clear text.
+        /// </summary>
+        [Parameter]
+        public string ClearText { get => clearText ?? Localize(nameof(CrestStrings.PivotDataGrid_ClearText)); set => clearText = value; }
+
+        private string? filterOperatorAriaLabel;
+
+        /// <summary>
+        /// Gets or sets the filter operator aria label.
+        /// </summary>
+        [Parameter]
+        public string FilterOperatorAriaLabel { get => filterOperatorAriaLabel ?? Localize(nameof(CrestStrings.PivotDataGrid_FilterOperatorAriaLabel)); set => filterOperatorAriaLabel = value; }
+
+        private string? filterValueAriaLabel;
+
+        /// <summary>
+        /// Gets or sets the filter value aria label.
+        /// </summary>
+        [Parameter]
+        public string FilterValueAriaLabel { get => filterValueAriaLabel ?? Localize(nameof(CrestStrings.PivotDataGrid_FilterValueAriaLabel)); set => filterValueAriaLabel = value; }
+
+        private string? secondFilterOperatorAriaLabel;
+
+        /// <summary>
+        /// Gets or sets the second filter operator aria label.
+        /// </summary>
+        [Parameter]
+        public string SecondFilterOperatorAriaLabel { get => secondFilterOperatorAriaLabel ?? Localize(nameof(CrestStrings.PivotDataGrid_SecondFilterOperatorAriaLabel)); set => secondFilterOperatorAriaLabel = value; }
+
+        private string? secondFilterValueAriaLabel;
+
+        /// <summary>
+        /// Gets or sets the second filter value aria label.
+        /// </summary>
+        [Parameter]
+        public string SecondFilterValueAriaLabel { get => secondFilterValueAriaLabel ?? Localize(nameof(CrestStrings.PivotDataGrid_SecondFilterValueAriaLabel)); set => secondFilterValueAriaLabel = value; }
+
+        private string? logicalOperatorAriaLabel;
+
+        /// <summary>
+        /// Gets or sets the logical operator aria label.
+        /// </summary>
+        [Parameter]
+        public string LogicalOperatorAriaLabel { get => logicalOperatorAriaLabel ?? Localize(nameof(CrestStrings.PivotDataGrid_LogicalOperatorAriaLabel)); set => logicalOperatorAriaLabel = value; }
+
+        private string? andOperatorText;
+
+        /// <summary>
+        /// Gets or sets the and operator text.
+        /// </summary>
+        [Parameter]
+        public string AndOperatorText { get => andOperatorText ?? Localize(nameof(CrestStrings.PivotDataGrid_AndOperatorText)); set => andOperatorText = value; }
+
+        private string? orOperatorText;
+
+        /// <summary>
+        /// Gets or sets the or operator text.
+        /// </summary>
+        [Parameter]
+        public string OrOperatorText { get => orOperatorText ?? Localize(nameof(CrestStrings.PivotDataGrid_OrOperatorText)); set => orOperatorText = value; }
+
+        private string? equalsText;
+
+        /// <summary>
+        /// Gets or sets the equals text.
+        /// </summary>
+        /// <value>The equals text.</value>
+        [Parameter]
+        public string EqualsText { get => equalsText ?? Localize(nameof(CrestStrings.PivotDataGrid_EqualsText)); set => equalsText = value; }
+
+        private string? notEqualsText;
+
+        /// <summary>
+        /// Gets or sets the not equals text.
+        /// </summary>
+        /// <value>The not equals text.</value>
+        [Parameter]
+        public string NotEqualsText { get => notEqualsText ?? Localize(nameof(CrestStrings.PivotDataGrid_NotEqualsText)); set => notEqualsText = value; }
+
+        private string? lessThanText;
+
+        /// <summary>
+        /// Gets or sets the less than text.
+        /// </summary>
+        /// <value>The less than text.</value>
+        [Parameter]
+        public string LessThanText { get => lessThanText ?? Localize(nameof(CrestStrings.PivotDataGrid_LessThanText)); set => lessThanText = value; }
+
+        private string? lessThanOrEqualsText;
+
+        /// <summary>
+        /// Gets or sets the less than or equals text.
+        /// </summary>
+        /// <value>The less than or equals text.</value>
+        [Parameter]
+        public string LessThanOrEqualsText { get => lessThanOrEqualsText ?? Localize(nameof(CrestStrings.PivotDataGrid_LessThanOrEqualsText)); set => lessThanOrEqualsText = value; }
+
+        private string? greaterThanText;
+
+        /// <summary>
+        /// Gets or sets the greater than text.
+        /// </summary>
+        /// <value>The greater than text.</value>
+        [Parameter]
+        public string GreaterThanText { get => greaterThanText ?? Localize(nameof(CrestStrings.PivotDataGrid_GreaterThanText)); set => greaterThanText = value; }
+
+        private string? greaterThanOrEqualsText;
+
+        /// <summary>
+        /// Gets or sets the greater than or equals text.
+        /// </summary>
+        /// <value>The greater than or equals text.</value>
+        [Parameter]
+        public string GreaterThanOrEqualsText { get => greaterThanOrEqualsText ?? Localize(nameof(CrestStrings.PivotDataGrid_GreaterThanOrEqualsText)); set => greaterThanOrEqualsText = value; }
+
+        private string? endsWithText;
+
+        /// <summary>
+        /// Gets or sets the ends with text.
+        /// </summary>
+        /// <value>The ends with text.</value>
+        [Parameter]
+        public string EndsWithText { get => endsWithText ?? Localize(nameof(CrestStrings.PivotDataGrid_EndsWithText)); set => endsWithText = value; }
+
+        private string? containsText;
+
+        /// <summary>
+        /// Gets or sets the contains text.
+        /// </summary>
+        /// <value>The contains text.</value>
+        [Parameter]
+        public string ContainsText { get => containsText ?? Localize(nameof(CrestStrings.PivotDataGrid_ContainsText)); set => containsText = value; }
+
+        private string? doesNotContainText;
+
+        /// <summary>
+        /// Gets or sets the does not contain text.
+        /// </summary>
+        /// <value>The does not contain text.</value>
+        [Parameter]
+        public string DoesNotContainText { get => doesNotContainText ?? Localize(nameof(CrestStrings.PivotDataGrid_DoesNotContainText)); set => doesNotContainText = value; }
+
+        private string? inText;
+
+        /// <summary>
+        /// Gets or sets the in operator text.
+        /// </summary>
+        /// <value>The in operator text.</value>
+        [Parameter]
+        public string InText { get => inText ?? Localize(nameof(CrestStrings.PivotDataGrid_InText)); set => inText = value; }
+
+        private string? notInText;
+
+        /// <summary>
+        /// Gets or sets the not in operator text.
+        /// </summary>
+        /// <value>The not in operator text.</value>
+        [Parameter]
+        public string NotInText { get => notInText ?? Localize(nameof(CrestStrings.PivotDataGrid_NotInText)); set => notInText = value; }
+
+        private string? startsWithText;
+
+        /// <summary>
+        /// Gets or sets the starts with text.
+        /// </summary>
+        /// <value>The starts with text.</value>
+        [Parameter]
+        public string StartsWithText { get => startsWithText ?? Localize(nameof(CrestStrings.PivotDataGrid_StartsWithText)); set => startsWithText = value; }
+
+        private string? isNotNullText;
+
+        /// <summary>
+        /// Gets or sets the not null text.
+        /// </summary>
+        /// <value>The not null text.</value>
+        [Parameter]
+        public string IsNotNullText { get => isNotNullText ?? Localize(nameof(CrestStrings.PivotDataGrid_IsNotNullText)); set => isNotNullText = value; }
+
+        private string? isNullText;
+
+        /// <summary>
+        /// Gets or sets the is null text.
+        /// </summary>
+        /// <value>The null text.</value>
+        [Parameter]
+        public string IsNullText { get => isNullText ?? Localize(nameof(CrestStrings.PivotDataGrid_IsNullText)); set => isNullText = value; }
+
+        private string? isEmptyText;
+
+        /// <summary>
+        /// Gets or sets the is empty text.
+        /// </summary>
+        /// <value>The empty text.</value>
+        [Parameter]
+        public string IsEmptyText { get => isEmptyText ?? Localize(nameof(CrestStrings.PivotDataGrid_IsEmptyText)); set => isEmptyText = value; }
+
+        private string? isNotEmptyText;
+
+        /// <summary>
+        /// Gets or sets the is not empty text.
+        /// </summary>
+        /// <value>The not empty text.</value>
+        [Parameter]
+        public string IsNotEmptyText { get => isNotEmptyText ?? Localize(nameof(CrestStrings.PivotDataGrid_IsNotEmptyText)); set => isNotEmptyText = value; }
+
+        private string? customText;
+
+        /// <summary>
+        /// Gets or sets the custom filter operator text.
+        /// </summary>
+        /// <value>The custom filter operator text.</value>
+        [Parameter]
+        public string CustomText { get => customText ?? Localize(nameof(CrestStrings.PivotDataGrid_CustomText)); set => customText = value; }
+
+        /// <summary>
+        /// Gets or sets the enum filter translation function.
+        /// </summary>
+        [Parameter]
+        public Func<object, string>? EnumFilterTranslationFunc { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether to allow filter date input.
+        /// </summary>
+        [Parameter]
+        public bool AllowFilterDateInput { get; set; } = true;
+
+        List<CrestPivotField<TItem>> pivotFields = new List<CrestPivotField<TItem>>();
+        List<CrestPivotColumn<TItem>> allPivotColumns = new List<CrestPivotColumn<TItem>>();
+        List<CrestPivotColumn<TItem>> pivotColumns = new List<CrestPivotColumn<TItem>>();
+        List<CrestPivotRow<TItem>> allPivotRows = new List<CrestPivotRow<TItem>>();
+        List<CrestPivotRow<TItem>> pivotRows = new List<CrestPivotRow<TItem>>();
+        List<CrestPivotAggregate<TItem>> allPivotAggregates = new List<CrestPivotAggregate<TItem>>();
+        List<CrestPivotAggregate<TItem>> pivotAggregates = new List<CrestPivotAggregate<TItem>>();
+
+        // Drill down state management
+        private Dictionary<string, bool> _collapsedColumnGroups = new Dictionary<string, bool>();
+        private Dictionary<string, bool> _collapsedRowGroups = new Dictionary<string, bool>();
+
+        private List<List<ColumnHeaderCell>>? _columnHeaderRows;
+        private List<PivotBodyRow>? _cachedPivotRows;
+        private List<List<object>>? _cachedColumnLeaves;
+        private ColumnHeaderNode? _columnHeaderTree;
+        private Dictionary<string, List<TItem>>? _columnTotalBuckets;
+        private readonly Dictionary<string, (Type? Type, bool IsNumeric)> _aggregateTypeCache = new();
+
+        private void InvalidatePivotCache()
+        {
+            _columnHeaderRows = null;
+            _cachedPivotRows = null;
+            _cachedColumnLeaves = null;
+            _columnHeaderTree = null;
+            _columnTotalBuckets = null;
+            _aggregateTypeCache.Clear();
+        }
+
+        // Filter functionality
+        private CrestPivotField<TItem>? currentFilterField;
+        private RadzenPopup? filterPopup;
+
+        /// <summary>
+        /// Gets the columns collection.
+        /// </summary>
+        /// <value>The columns collection.</value>
+        public IList<CrestPivotColumn<TItem>> ColumnsCollection
+        {
+            get
+            {
+                return pivotColumns;
+            }
+        }
+
+        /// <summary>
+        /// Gets the rows collection.
+        /// </summary>
+        /// <value>The rows collection.</value>
+        public IList<CrestPivotRow<TItem>> RowsCollection
+        {
+            get
+            {
+                return pivotRows;
+            }
+        }
+
+        /// <summary>
+        /// Gets the aggregates collection.
+        /// </summary>
+        /// <value>The aggregates collection.</value>
+        public IList<CrestPivotAggregate<TItem>> AggregatesCollection
+        {
+            get
+            {
+                return pivotAggregates;
+            }
+        }
+
+        /// <summary>
+        /// Gets the cached column header rows.
+        /// </summary>
+        private List<List<ColumnHeaderCell>> ColumnHeaderRows
+        {
+            get
+            {
+                if (_columnHeaderRows == null)
+                {
+                    _columnHeaderRows = FlattenColumnHeaderTree(ColumnHeaderTreeRoot);
+                }
+                return _columnHeaderRows!;
+            }
+        }
+
+        /// <summary>
+        /// Gets the cached pivot rows.
+        /// </summary>
+        private List<PivotBodyRow> CachedPivotRows
+        {
+            get
+            {
+                if (_cachedPivotRows == null)
+                {
+                    _cachedPivotRows = GetPivotRowHierarchy();
+                }
+                return _cachedPivotRows!;
+            }
+        }
+
+        /// <summary>
+        /// Gets the cached column leaves.
+        /// </summary>
+        private List<List<object>> CachedColumnLeaves
+        {
+            get
+            {
+                if (_cachedColumnLeaves == null)
+                {
+                    _cachedColumnLeaves = GetColumnHeaderLeaves();
+                }
+                return _cachedColumnLeaves!;
+            }
+        }
+
+        /// <summary>
+        /// Gets the cached column header tree, shared by header rows and column leaves.
+        /// </summary>
+        private ColumnHeaderNode ColumnHeaderTreeRoot
+        {
+            get
+            {
+                if (_columnHeaderTree == null)
+                {
+                    _columnHeaderTree = BuildColumnHeaderTree();
+                }
+                return _columnHeaderTree!;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current page items bucketed by column leaf, used for column totals.
+        /// </summary>
+        private Dictionary<string, List<TItem>> ColumnTotalBuckets
+        {
+            get
+            {
+                if (_columnTotalBuckets == null)
+                {
+                    var items = PagedView as List<TItem> ?? PagedView.ToList();
+                    _columnTotalBuckets = GroupItemsByColumnLeaf(items, CachedColumnLeaves);
+                }
+                return _columnTotalBuckets!;
+            }
+        }
+
+        ColumnHeaderNode BuildColumnHeaderTree()
+        {
+            var root = new ColumnHeaderNode { Level = 0, Title = null };
+            if (pivotColumns.Count == 0 || Data == null)
+            {
+                return root;
+            }
+
+            BuildColumnHeaderTreeRecursive(root, PagedView, 0, new List<object>());
+
+            return root;
+        }
+
+        void BuildColumnHeaderTreeRecursive(ColumnHeaderNode node, IQueryable<TItem> items, int level, List<object> path)
+        {
+            if (level >= pivotColumns.Count)
+            {
+                return;
+            }
+
+            var col = pivotColumns[level];
+
+            var groups = items.GroupByMany(new string[] { col.Property! });
+
+            var sortedGroups = (col.GetSortOrder() == SortOrder.Ascending) ? groups.OrderBy(g => g.Key)
+               : (col.GetSortOrder() == SortOrder.Descending) ? groups.OrderByDescending(g => g.Key)
+               : groups;
+
+            var finalGroups = ApplyMaxGroups(sortedGroups, col.MaxGroups, out var othersItems);
+
+            foreach (var group in finalGroups)
+            {
+                var currentPath = new List<object>(path) { group.Key };
+                var pathKey = string.Join("|", currentPath);
+                var isCollapsed = AllowDrillDown && (!_collapsedColumnGroups.ContainsKey(pathKey) || _collapsedColumnGroups[pathKey]);
+
+                var child = new ColumnHeaderNode
+                {
+                    Value = group.Key,
+                    Title = $"{group.Key}",
+                    Level = level + 1,
+                    Width = col.Width,
+                    IsCollapsed = isCollapsed,
+                    PathKey = pathKey,
+                    HeaderTemplate = col.HeaderTemplate,
+                    Group = group
+                };
+
+                if (!isCollapsed)
+                {
+                    BuildColumnHeaderTreeRecursive(child, group.Items?.Cast<TItem>().AsQueryable() ?? Enumerable.Empty<TItem>().AsQueryable(), level + 1, currentPath);
+                }
+                node.Children.Add(child);
+            }
+
+            if (othersItems != null)
+            {
+                var currentPath = new List<object>(path) { OthersGroupKey };
+                var pathKey = string.Join("|", currentPath);
+                var isCollapsed = AllowDrillDown && (!_collapsedColumnGroups.ContainsKey(pathKey) || _collapsedColumnGroups[pathKey]);
+
+                var othersLabel = col.OthersLabel ?? OthersText;
+
+                var child = new ColumnHeaderNode
+                {
+                    Value = othersLabel,
+                    Title = othersLabel,
+                    Level = level + 1,
+                    Width = col.Width,
+                    IsCollapsed = isCollapsed,
+                    PathKey = pathKey,
+                    IsOthers = true
+                };
+
+                if (!isCollapsed)
+                {
+                    BuildColumnHeaderTreeRecursive(child, othersItems.AsQueryable(), level + 1, currentPath);
+                }
+                node.Children.Add(child);
+            }
+        }
+
+        private const string OthersGroupKey = "__rz_pivot_others__";
+
+        private static IEnumerable<TItem> GetGroupItems(GroupResult group)
+        {
+            return group.Items?.Cast<TItem>() ?? Enumerable.Empty<TItem>();
+        }
+
+        private static double? ToSortKey(object? value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            try { return Convert.ToDouble(value, System.Globalization.CultureInfo.InvariantCulture); } catch { return null; }
+        }
+
+        /// <summary>
+        /// Keeps the most significant groups when their number exceeds the configured limit and collects the items of the remaining groups.
+        /// Groups are ranked by the sorted aggregate or the first aggregate; the kept groups preserve their current order.
+        /// </summary>
+        private List<GroupResult> ApplyMaxGroups(IEnumerable<GroupResult> groups, int? maxGroups, out List<TItem>? othersItems)
+        {
+            othersItems = null;
+
+            var groupList = groups as List<GroupResult> ?? groups.ToList();
+
+            if (maxGroups == null || maxGroups.Value <= 0 || groupList.Count <= maxGroups.Value)
+            {
+                return groupList;
+            }
+
+            var rankingAggregate = pivotAggregates.FirstOrDefault(a => a.GetSortOrder() != null) ?? pivotAggregates.FirstOrDefault();
+
+            var keptGroups = rankingAggregate != null
+                ? groupList.OrderByDescending(g => ToSortKey(GetAggregateValue(GetGroupItems(g).AsQueryable(), rankingAggregate)) ?? double.MinValue).Take(maxGroups.Value).ToHashSet()
+                : groupList.Take(maxGroups.Value).ToHashSet();
+
+            var result = new List<GroupResult>(maxGroups.Value);
+            var remainingItems = new List<TItem>();
+
+            foreach (var group in groupList)
+            {
+                if (keptGroups.Contains(group))
+                {
+                    result.Add(group);
+                }
+                else
+                {
+                    remainingItems.AddRange(GetGroupItems(group));
+                }
+            }
+
+            othersItems = remainingItems;
+
+            return result;
+        }
+
+        List<List<ColumnHeaderCell>> FlattenColumnHeaderTree(ColumnHeaderNode root)
+        {
+            var rows = new List<List<ColumnHeaderCell>>();
+            int maxLevel = pivotColumns.Count;
+            for (int i = 0; i < maxLevel; i++)
+            {
+                rows.Add(new List<ColumnHeaderCell>());
+            }
+
+            FlattenColumnHeaderTreeRecursive(root, rows, 0, maxLevel);
+            return rows;
+        }
+
+        void FlattenColumnHeaderTreeRecursive(ColumnHeaderNode node, List<List<ColumnHeaderCell>> rows, int level, int maxLevel)
+        {
+            if (level > 0 && node.Title != null)
+            {
+                var cell = new ColumnHeaderCell
+                {
+                    Value = node.Value,
+                    Title = node.Title,
+                    Level = level - 1,
+                    Width = node.Width,
+                    IsCollapsed = node.IsCollapsed,
+                    PathKey = node.PathKey,
+                    HasChildren = level < maxLevel,
+                    HeaderTemplate = node.HeaderTemplate,
+                    Group = node.Group
+                };
+
+                if (node.Children.Count == 0)
+                {
+                    cell.RowSpan = maxLevel - (level - 1);
+                    cell.ColSpan = 1;
+                }
+                else
+                {
+                    cell.RowSpan = 1;
+                    cell.ColSpan = GetLeafCount(node);
+                }
+
+                rows[level - 1].Add(cell);
+            }
+
+            foreach (var child in node.Children)
+            {
+                FlattenColumnHeaderTreeRecursive(child, rows, level + 1, maxLevel);
+            }
+        }
+
+        int GetLeafCount(ColumnHeaderNode node)
+        {
+            if (node.Children.Count == 0)
+            {
+                return 1;
+            }
+
+            return node.Children.Sum(GetLeafCount);
+        }
+
+        List<int> GetColumnHeaderRows()
+        {
+            return Enumerable.Range(0, ColumnHeaderRows.Count).ToList();
+        }
+
+        List<ColumnHeaderCell> GetColumnHeaderCells(int row)
+        {
+            return ColumnHeaderRows[row];
+        }
+
+        /// <inheritdoc />
+        protected override void OnDataChanged()
+        {
+            InvalidatePivotCache();
+            base.OnDataChanged();
+        }
+
+        /// <inheritdoc />
+        public async override Task Reload()
+        {
+            InvalidatePivotCache();
+            _view = null;
+
+            if (Data != null && !LoadData.HasDelegate)
+            {
+                Count = View.Count();
+            }
+
+            await InvokeLoadData(skip, PageSize);
+
+            CalculatePager();
+
+            StateHasChanged();
+        }
+
+        bool? isOData;
+
+        internal bool IsOData()
+        {
+            if (isOData == null && Data != null)
+            {
+                isOData = typeof(ODataEnumerable<TItem>).IsAssignableFrom(Data.GetType());
+            }
+
+            return isOData != null ? isOData.Value : false;
+        }
+
+        internal async Task InvokeLoadData(int start, int top)
+        {
+            if (LoadData.HasDelegate)
+            {
+                var filters = GetFilters();
+                var sorts = GetOrderBy();
+
+                await LoadData.InvokeAsync(new Crest.Components.Primitives.LoadDataArgs()
+                {
+                    Skip = start,
+                    Top = top,
+                    OrderBy = sorts.Item1,
+                    GetFilter = () => IsOData() ? filters.ToODataFilterString<TItem>() : filters.ToFilterString<TItem>(),
+                    Filters = filters.Concat(filters.SelectManyRecursive(f => f.Filters ?? Enumerable.Empty<CompositeFilterDescriptor>()))
+                        .Where(f => f.FilterValue != null
+                            || f.FilterOperator == FilterOperator.IsNotNull || f.FilterOperator == FilterOperator.IsNull
+                            || f.FilterOperator == FilterOperator.IsEmpty | f.FilterOperator == FilterOperator.IsNotEmpty)
+                        .Select(f => new FilterDescriptor() 
+                        { 
+                            Property = f.Property,
+                            FilterProperty = f.FilterProperty,
+                            FilterOperator = f.FilterOperator ?? FilterOperator.Equals,
+                            FilterValue = f.FilterValue,
+                            LogicalFilterOperator = f.LogicalFilterOperator,
+                            Type = f.Type
+                        }),
+                    Sorts = sorts.Item2
+                });
+            }
+        }
+
+        /// <summary>
+        /// Adds a pivot field to the pivot grid if it does not already exist.
+        /// </summary>
+        /// <param name="field">The pivot field to add.</param>
+        public void AddPivotField(CrestPivotField<TItem> field)
+        {
+            if (!pivotFields.Any(f => f.Property == field.Property))
+            {
+                pivotFields.Add(field);
+                InvalidatePivotCache();
+
+                UpdateSelected();
+
+                StateHasChanged();
+            }
+        }
+
+        /// <summary>
+        /// Adds a pivot column to the pivot grid if it does not already exist.
+        /// </summary>
+        /// <param name="column">The pivot column to add.</param>
+        public void AddPivotColumn(CrestPivotColumn<TItem> column)
+        {
+            ArgumentNullException.ThrowIfNull(column);
+
+            if (!allPivotColumns.Contains(column))
+            {
+                allPivotColumns.Add(column);
+
+                if (column.Selected)
+                {
+                    pivotColumns.Add(column);
+                }
+
+                InvalidatePivotCache();
+
+                UpdateSelected();
+
+                StateHasChanged();
+            }
+        }
+
+        /// <summary>
+        /// Adds a pivot row to the pivot grid if it does not already exist.
+        /// </summary>
+        /// <param name="row">The pivot row to add.</param>
+        public void AddPivotRow(CrestPivotRow<TItem> row)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+
+            if (!allPivotRows.Contains(row))
+            {
+                allPivotRows.Add(row);
+
+                if (row.Selected)
+                {
+                    pivotRows.Add(row);
+                }
+
+                InvalidatePivotCache();
+
+                UpdateSelected();
+
+                StateHasChanged();
+            }
+        }
+        
+        /// <summary>
+        /// Adds a pivot aggregate to the pivot grid if it does not already exist.
+        /// </summary>
+        /// <param name="aggregate">The pivot aggregate to add.</param>
+        public void AddPivotAggregate(CrestPivotAggregate<TItem> aggregate)
+        {
+            ArgumentNullException.ThrowIfNull(aggregate);
+
+            if (!allPivotAggregates.Contains(aggregate))
+            {
+                allPivotAggregates.Add(aggregate);
+
+                if (aggregate.Selected)
+                {
+                    pivotAggregates.Add(aggregate);
+                }
+
+                InvalidatePivotCache();
+
+                UpdateSelected();
+
+                StateHasChanged();
+            }
+        }
+
+        internal void RemovePivotColumn(CrestPivotColumn<TItem> column)
+        {
+            if (allPivotColumns.Remove(column))
+            {
+                pivotColumns.Remove(column);
+                InvalidatePivotCache();
+                StateHasChanged();
+            }
+        }
+
+        internal void RemovePivotRow(CrestPivotRow<TItem> row)
+        {
+            if (allPivotRows.Remove(row))
+            {
+                pivotRows.Remove(row);
+                InvalidatePivotCache();
+                StateHasChanged();
+            }
+        }
+
+        internal void RemovePivotField(CrestPivotField<TItem> row)
+        {
+            if (pivotFields.Remove(row))
+            {
+                InvalidatePivotCache();
+                StateHasChanged();
+            }
+        }
+
+        internal void RemovePivotAggregate(CrestPivotAggregate<TItem> aggregate)
+        {
+            if (allPivotAggregates.Remove(aggregate))
+            {
+                pivotAggregates.Remove(aggregate);
+                InvalidatePivotCache();
+                StateHasChanged();
+            }
+        }
+
+        /// <summary>
+        /// Renders pivot rows with real data aggregation and grouping.
+        /// </summary>
+        protected virtual RenderFragment RenderPivotRows()
+        {
+            return new RenderFragment(builder =>
+            {
+                if (Data == null || pivotRows.Count == 0 || pivotAggregates.Count == 0)
+                {
+                    builder.OpenElement(0, "tr");
+                    builder.AddAttribute(1, "class", "rz-pivot-empty-row");
+                    builder.OpenElement(2, "td");
+                    var totalColumns = ShowRowsTotals ? pivotAggregates.Count : 0;
+                    builder.AddAttribute(3, "colspan", pivotRows.Count + (pivotAggregates.Count * CachedColumnLeaves.Count) + totalColumns);
+                    builder.AddContent(4, EmptyText);
+                    builder.CloseElement();
+                    builder.CloseElement();
+                    return;
+                }
+
+                var pivotRowData = CachedPivotRows;
+                PadRowHeaderCells(pivotRowData); // Ensure all rows have the same number of row header cells
+                var rowIndex = 0;
+                var activeRowSpans = new Dictionary<int, int>(); // Track active rowspans
+
+                foreach (var pivotRow in pivotRowData)
+                {
+                    builder.OpenElement(0, "tr");
+                    builder.AddAttribute(1, "class", $"rz-pivot-row {(rowIndex % 2 == 0 ? "rz-pivot-row-even" : "rz-pivot-row-odd")}");
+                    
+                    // Render row headers, accounting for active rowspans
+                    var colIndex = 0;
+                    foreach (var rowHeaderCell in pivotRow.RowHeaderCells)
+                    {
+                        // Check if this column position has an active rowspan from a previous row
+                        if (activeRowSpans.TryGetValue(colIndex, out var rowSpan))
+                        {
+                            activeRowSpans[colIndex] = rowSpan - 1;
+                            if (activeRowSpans[colIndex] <= 0)
+                            {
+                                activeRowSpans.Remove(colIndex);
+                            }
+                            colIndex++;
+                            continue; // Skip rendering this cell as it's covered by rowspan
+                        }
+
+                        builder.OpenElement(2, "td");
+                        builder.AddAttribute(3, "class", $"rz-pivot-row-header {GetFrozenRowHeaderClass(colIndex)}");
+                        builder.AddAttribute(4, "rowspan", rowHeaderCell.RowSpan);
+                        builder.AddAttribute(5, "style", $"inset-inline-start: {colIndex * 140}px");
+                        
+                        // Check if this is a drill down row header
+                        if (AllowDrillDown && !string.IsNullOrEmpty(rowHeaderCell.PathKey) && rowHeaderCell.HasChildren)
+                        {
+                            builder.OpenElement(6, "div");
+                            builder.AddAttribute(7, "class", "rz-pivot-drill-down-header");
+
+                            builder.OpenElement(8, "span");
+                            builder.AddAttribute(9, "class", $"notranslate rz-tree-toggler rzi rzi-caret-{(rowHeaderCell.IsCollapsed ? "right" : "down")}");
+                            builder.AddAttribute(10, "onclick", EventCallback.Factory.Create(this, () => ToggleRowDrillDown(rowHeaderCell.PathKey)));
+                            builder.AddAttribute(11, "style", "margin-inline-start:0");
+                            builder.AddAttribute(12, "role", "button");
+                            builder.AddAttribute(13, "tabindex", "0");
+                            builder.AddAttribute(14, "aria-expanded", (!rowHeaderCell.IsCollapsed).ToString().ToLowerInvariant());
+                            builder.AddAttribute(15, "onkeydown", EventCallback.Factory.Create<KeyboardEventArgs>(this, args => OnRowDrillDownKeyDown(args, rowHeaderCell.PathKey)));
+                            builder.CloseElement();
+
+                            builder.OpenElement(16, "span");
+                            builder.AddAttribute(17, "class", "rz-pivot-header-text");
+                            builder.AddContent(18, rowHeaderCell.Title);
+                            builder.CloseElement();
+
+                            builder.CloseElement();
+                        }
+                        else
+                        {
+                            builder.AddContent(6, rowHeaderCell.Title);
+                        }
+
+                        builder.CloseElement();
+
+                        // Track this rowspan for future rows
+                        if (rowHeaderCell.RowSpan > 1)
+                        {
+                            activeRowSpans[colIndex] = rowHeaderCell.RowSpan - 1;
+                        }
+                        
+                        colIndex++;
+                    }
+
+                    // Render value cells for each column combination
+                    var colLeaves = CachedColumnLeaves;
+                    var aggregateCount = pivotAggregates.Count;
+                    for (int colLeafIndex = 0; colLeafIndex < colLeaves.Count; colLeafIndex++)
+                    {
+                        for (int aggIndex = 0; aggIndex < aggregateCount; aggIndex++)
+                        {
+                            var aggregate = pivotAggregates[aggIndex];
+                            builder.OpenElement(8, "td");
+                            builder.AddAttribute(9, "class", "rz-pivot-value-cell");
+                            builder.AddAttribute(10, "style", $"text-align: {aggregate.TextAlign.ToString().ToLowerInvariant()}");
+
+                            var valueIndex = colLeafIndex * aggregateCount + aggIndex;
+                            if (valueIndex < pivotRow.ValueCells.Count)
+                            {
+                                var cellValue = pivotRow.ValueCells[valueIndex];
+
+                                if (aggregate.Template != null && cellValue != null)
+                                {
+                                    builder.AddContent(11, aggregate.Template(cellValue));
+                                }
+                                else
+                                {
+                                    builder.AddContent(11, aggregate.FormatValue(cellValue!));
+                                }
+                            }
+
+                            builder.CloseElement();
+                        }
+                    }
+
+                    // Render total cells for each aggregate (only if ShowRowsTotals is true)
+                    if (ShowRowsTotals)
+                    {
+                        var items = pivotRow.Items.AsQueryable();
+                        for (int aggIndex = 0; aggIndex < pivotAggregates.Count; aggIndex++)
+                        {
+                            var aggregate = pivotAggregates[aggIndex];
+                            builder.OpenElement(12, "td");
+                            builder.AddAttribute(13, "class", $"rz-pivot-total-cell {GetFrozenTotalCellClass()}");
+                            builder.AddAttribute(14, "style", $"inset-inline-end: {(pivotAggregates.Count - 1 - aggIndex) * 120}px");
+
+                            // Calculate row total for this specific aggregate
+                            var rowTotal = GetAggregateValue(items, aggregate);
+
+                            if (aggregate.RowTotalTemplate != null)
+                            {
+                                var context = new CrestPivotAggreateContext<TItem>()
+                                {
+                                    View = items,
+                                    Aggregate = aggregate,
+                                    Value = rowTotal,
+                                    Index = rowIndex
+                                };
+
+                                builder.AddContent(15, aggregate.RowTotalTemplate(context));
+                            }
+                            else
+                            {
+                                builder.AddContent(15, aggregate.FormatValue(rowTotal!));
+                            }
+                            
+                            builder.CloseElement();
+                        }
+                    }
+                    
+                    builder.CloseElement();
+                    rowIndex++;
+                }
+            });
+        }
+
+        /// <summary>
+        /// Renders footer with grand totals for each value column.
+        /// </summary>
+        protected RenderFragment RenderFooter()
+        {
+            return new RenderFragment(builder =>
+            {
+                builder.OpenElement(0, "tr");
+                builder.AddAttribute(1, "class", "rz-pivot-footer-row");
+
+                // Empty cells for row headers
+                int seq = 2;
+                var pivotRowData = CachedPivotRows;
+                PadRowHeaderCells(pivotRowData); // Ensure all rows have the same number of row header cells
+                var firstRow = pivotRowData.FirstOrDefault();
+                var count = firstRow != null ?
+                    firstRow.RowHeaderCells.Count : pivotRows.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    builder.OpenElement(seq++, "td");
+                    builder.AddAttribute(seq++, "class", $"rz-pivot-footer-header {GetFrozenRowHeaderClass(i)}");
+                    builder.AddAttribute(seq++, "style", $"inset-inline-start: {i * 140}px");
+                    builder.CloseElement();
+                }
+
+                var colLeaves = CachedColumnLeaves;
+                var totalBuckets = ColumnTotalBuckets;
+                foreach (var colPath in colLeaves)
+                {
+                    totalBuckets.TryGetValue(ColumnPathKey(colPath), out var bucket);
+                    var bucketView = bucket != null && bucket.Count > 0 ? bucket.AsQueryable() : null;
+
+                    foreach (var aggregate in pivotAggregates)
+                    {
+                        builder.OpenElement(seq++, "td");
+                        builder.AddAttribute(seq++, "class", "rz-pivot-footer-value");
+                        builder.AddAttribute(seq++, "style", $"text-align: {aggregate.TextAlign.ToString().ToLowerInvariant()}");
+
+                        var total = bucketView != null ? GetAggregateValue(bucketView, aggregate) : null;
+
+                        if (aggregate.ColumnTotalTemplate != null && total != null)
+                        {
+                            builder.AddContent(seq++, aggregate.ColumnTotalTemplate(total));
+                        }
+                        else if (total != null)
+                        {
+                            builder.AddContent(seq++, aggregate.FormatValue(total));
+                        }
+                        
+                        builder.CloseElement();
+                    }
+                }
+
+                if(ShowRowsTotals)
+                {
+                    foreach (var aggregate in pivotAggregates)
+                    {
+                        builder.OpenElement(seq++, "td");
+                        builder.AddAttribute(seq++, "class", $"rz-pivot-footer-total {GetFrozenTotalCellClass()}");
+                        builder.AddAttribute(seq++, "style", $"inset-inline-end: {(pivotAggregates.Count - 1 - pivotAggregates.IndexOf(aggregate)) * 120}px");
+
+                        var total = GetAggregateValue(View, aggregate);
+
+                        if (aggregate.RowTotalTemplate != null)
+                        {
+                            var context = new CrestPivotAggreateContext<TItem>() 
+                            { 
+                                View = View,
+                                Aggregate = aggregate, 
+                                Value= total
+                            };
+
+                            builder.AddContent(seq++, aggregate.RowTotalTemplate(context));
+                        }
+                        else
+                        {
+                            builder.AddContent(seq++, aggregate.FormatValue(total!));
+                        }
+                        
+                        builder.CloseElement();
+                    }
+                }
+
+                builder.CloseElement();
+            });
+        }
+
+        /// <summary>
+        /// Gets the items for a specific row.
+        /// </summary>
+        /// <param name="pivotRow">The pivot row data.</param>
+        /// <returns>The items for this row.</returns>
+        private IQueryable<TItem> GetRowItems(PivotBodyRow pivotRow)
+        {
+            if (Data == null || pivotRows.Count == 0)
+            {
+                return Enumerable.Empty<TItem>().AsQueryable();
+            }
+
+            var items = PagedView;
+
+            // Filter items based on row header values. Ignore padded row header cells (they have null PathKey).
+            for (int i = 0; i < pivotRow.RowHeaderCells.Count && i < pivotRows.Count; i++)
+            {
+                var cell = pivotRow.RowHeaderCells[i];
+                if (cell.PathKey == null)
+                {
+                    continue; // Skip padding cells added to align depths
+                }
+
+                var pr = pivotRows[i];
+                if (pr?.Property != null)
+                {
+                    var property = pr.Property;
+                    var value = ExpressionSerializer.FormatValue(cell.Value ?? "") ?? "";
+                    items = property.Contains("it[", StringComparison.Ordinal) ?
+                           items.Where($@"it => {property} == {value}") : items.Where($@"i => i.{property} == {value}");
+                }
+            }
+
+            return items;
+        }
+
+        /// <summary>
+        /// Toggles the drill down state for a column group.
+        /// </summary>
+        /// <param name="pathKey">The path key identifying the column group.</param>
+        public async Task ToggleColumnDrillDown(string pathKey)
+        {
+            if (!AllowDrillDown)
+            {
+                return;
+            }
+
+            if (_collapsedColumnGroups.TryGetValue(pathKey, out var isCollapsed))
+            {
+                _collapsedColumnGroups[pathKey] = !isCollapsed;
+            }
+            else
+            {
+                _collapsedColumnGroups[pathKey] = false;
+            }
+
+            InvalidatePivotCache();
+            StateHasChanged();
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Toggles the drill down state for a row group.
+        /// </summary>
+        /// <param name="pathKey">The path key identifying the row group.</param>
+        public async Task ToggleRowDrillDown(string pathKey)
+        {
+            if (!AllowDrillDown)
+            {
+                return;
+            }
+
+            if (_collapsedRowGroups.TryGetValue(pathKey, out var isRowCollapsed))
+            {
+                _collapsedRowGroups[pathKey] = !isRowCollapsed;
+            }
+            else
+            {
+                _collapsedRowGroups[pathKey] = false;
+            }
+
+            InvalidatePivotCache();
+            StateHasChanged();
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Gets the aggregate value for a group, considering collapsed state.
+        /// </summary>
+        /// <param name="items">The items to aggregate.</param>
+        /// <param name="aggregate">The aggregate configuration.</param>
+        /// <param name="isCollapsed">Whether the group is collapsed.</param>
+        /// <returns>The aggregated value.</returns>
+        private object? GetAggregateValue(IQueryable<TItem> items, CrestPivotAggregate<TItem> aggregate, bool isCollapsed = false)
+        {
+            ArgumentNullException.ThrowIfNull(aggregate);
+
+            if (items == null || !items.Any())
+            {
+                return null;
+            }
+
+            if (isCollapsed)
+            {
+                // For collapsed groups, aggregate all items in the group
+                // This means we need to get all items that match the current path
+                return GetAggregateValue(items, aggregate);
+            }
+
+            return GetAggregateValue(items, aggregate);
+        }
+
+        // Resolves and caches the aggregate property's type and whether it is numeric,
+        // avoiding repeated reflection for every aggregated cell.
+        private (Type? Type, bool IsNumeric) GetAggregatePropertyInfo(CrestPivotAggregate<TItem> aggregate)
+        {
+            var key = aggregate.Property ?? string.Empty;
+            if (!_aggregateTypeCache.TryGetValue(key, out var info))
+            {
+                var propertyType = aggregate.Property != null ? PropertyAccess.GetPropertyType(typeof(TItem), aggregate.Property) : typeof(object);
+
+                // For dynamic data (e.g. IDictionary<string, object>) the property is a dynamic LINQ
+                // expression, so reflection cannot resolve its type. Fall back to the explicitly
+                // configured Type, mirroring CrestPivotField.FilterPropertyType.
+                if ((propertyType == null || propertyType == typeof(object)) && aggregate.Type != null)
+                {
+                    propertyType = aggregate.Type;
+                }
+
+                info = (propertyType, propertyType != null && PropertyAccess.IsNumeric(propertyType));
+                _aggregateTypeCache[key] = info;
+            }
+            return info;
+        }
+
+        /// <summary>
+        /// Gets the aggregate value for items.
+        /// </summary>
+        /// <param name="items">The items to aggregate.</param>
+        /// <param name="aggregate">The aggregate configuration.</param>
+        /// <returns>The aggregated value.</returns>
+        public object? GetAggregateValue(IQueryable<TItem> items, CrestPivotAggregate<TItem> aggregate)
+        {
+            ArgumentNullException.ThrowIfNull(aggregate);
+
+            if (items == null || !items.Any())
+            {
+                return null;
+            }
+
+            try
+            {
+                var info = GetAggregatePropertyInfo(aggregate);
+                var propertyType = info.Type;
+                var isNumeric = info.IsNumeric;
+
+                IQueryable values;
+
+                if (propertyType == typeof(short))
+                {
+                    values = aggregate.Property != null ? ((IQueryable<short>)items.Select(aggregate.Property)).Select(i => (int)i) : Enumerable.Empty<int>().AsQueryable();
+                    propertyType = typeof(int);
+                }
+                else if (propertyType == typeof(short?))
+                {
+                    values = aggregate.Property != null ? ((IQueryable<short?>)items.Select(aggregate.Property)).Select(i => (int?)i) : Enumerable.Empty<int?>().AsQueryable();
+                    propertyType = typeof(int?);
+                }
+                else
+                {
+                    values = propertyType != null && aggregate.Property != null ? items.Select(aggregate.Property).Cast(propertyType) : (aggregate.Property != null ? items.Select(aggregate.Property) : Enumerable.Empty<object>().AsQueryable());
+                }
+
+                switch (aggregate.Aggregate)
+                {
+                    case AggregateFunction.Sum:
+                        return isNumeric && propertyType != null ? values.Sum(propertyType) : items.Count();
+                    case AggregateFunction.Average:
+                        return isNumeric && propertyType != null ? values.Average(propertyType) : items.Count();
+                    case AggregateFunction.Count:
+                        return items.Count();
+                    case AggregateFunction.Min:
+                        return isNumeric && propertyType != null ? values.Min(propertyType) : items.FirstOrDefault();
+                    case AggregateFunction.Max:
+                        return isNumeric && propertyType != null ? values.Max(propertyType) : items.LastOrDefault();
+                    case AggregateFunction.First:
+                        return values.FirstOrDefault();
+                    case AggregateFunction.Last:
+                        return values.LastOrDefault();
+                    default:
+                        return isNumeric && propertyType != null ? values.Sum(propertyType) : items.Count();
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the table CSS class.
+        /// </summary>
+        protected virtual string GetTableCssClass()
+        {
+            return ClassList.Create("rz-grid-table rz-grid-table-fixed")
+                .Add("rz-grid-table-striped", AllowAlternatingRows)
+                .Add($"rz-grid-gridlines-{Enum.GetName<DataGridGridLines>(GridLines)?.ToLowerInvariant() ?? "default"}", GridLines != DataGridGridLines.Default)
+                .ToString();
+        }
+
+        /// <inheritdoc />
+        protected override string GetComponentCssClass()
+        {
+            return ClassList.Create("rz-has-pager rz-pivot-datatable rz-pivot-datatable-scrollable")
+                .Add("rz-has-height", CurrentStyle.ContainsKey("height"))
+                .ToString();
+        }
+
+        // Build the row header tree from the data
+        private RowHeaderNode BuildRowHeaderTree()
+        {
+            var root = new RowHeaderNode { Level = 0, Title = null };
+            if (pivotRows.Count == 0 || Data == null)
+            {
+                return root;
+            }
+
+            BuildRowHeaderTreeRecursive(root, PagedView, 0, new List<object>());
+
+            return root;
+        }
+        private void BuildRowHeaderTreeRecursive(RowHeaderNode node, IQueryable<TItem> items, int level, List<object> path)
+        {
+            if (level >= pivotRows.Count)
+            {
+                node.Items = items;
+                return;
+            }
+
+            var row = pivotRows[level];
+
+            var groups = items.GroupByMany(new string[]{ row.Property! });
+
+            var sortedAggregate = pivotAggregates.FirstOrDefault(a => a.GetSortOrder() != null);
+
+            IEnumerable<GroupResult> sortedGroups;
+            if (sortedAggregate != null)
+            {
+                var groupsWithValues = groups.AsEnumerable().Select(g => new
+                {
+                    Group = g,
+                    AggValue = ToSortKey(GetAggregateValue(g.Items == null ? Enumerable.Empty<TItem>().AsQueryable() : g.Items.Cast<TItem>().AsQueryable(), sortedAggregate))
+                }).ToList();
+
+                sortedGroups = (sortedAggregate.GetSortOrder() == SortOrder.Ascending)
+                    ? groupsWithValues.OrderBy(x => x.AggValue).Select(x => x.Group)
+                    : groupsWithValues.OrderByDescending(x => x.AggValue).Select(x => x.Group);
+            }
+            else
+            {
+                sortedGroups = (row.GetSortOrder() == SortOrder.Ascending) ? groups.OrderBy(g => g.Key)
+                    : (row.GetSortOrder() == SortOrder.Descending) ? groups.OrderByDescending(g => g.Key)
+                    : groups;
+            }
+
+            var finalGroups = ApplyMaxGroups(sortedGroups, row.MaxGroups, out var othersItems);
+
+            foreach (var group in finalGroups)
+            {
+                var currentPath = new List<object>(path) { group.Key };
+                var pathKey = string.Join("|", currentPath);
+                var isCollapsed = AllowDrillDown && (!_collapsedRowGroups.ContainsKey(pathKey) || _collapsedRowGroups[pathKey]);
+
+                var child = new RowHeaderNode
+                {
+                    Value = group.Key,
+                    Title = $"{group.Key}",
+                    Level = level + 1,
+                    IsCollapsed = isCollapsed,
+                    PathKey = pathKey
+                };
+
+                if (!isCollapsed)
+                {
+                    BuildRowHeaderTreeRecursive(child, group.Items?.Cast<TItem>().AsQueryable() ?? Enumerable.Empty<TItem>().AsQueryable(), level + 1, currentPath);
+                }
+                else
+                {
+                    child.Items = group.Items?.Cast<TItem>().AsQueryable() ?? Enumerable.Empty<TItem>().AsQueryable();
+                }
+                node.Children.Add(child);
+            }
+
+            if (othersItems != null)
+            {
+                var currentPath = new List<object>(path) { OthersGroupKey };
+                var pathKey = string.Join("|", currentPath);
+                var isCollapsed = AllowDrillDown && (!_collapsedRowGroups.ContainsKey(pathKey) || _collapsedRowGroups[pathKey]);
+
+                var othersLabel = row.OthersLabel ?? OthersText;
+
+                var child = new RowHeaderNode
+                {
+                    Value = othersLabel,
+                    Title = othersLabel,
+                    Level = level + 1,
+                    IsCollapsed = isCollapsed,
+                    PathKey = pathKey
+                };
+
+                if (!isCollapsed)
+                {
+                    BuildRowHeaderTreeRecursive(child, othersItems.AsQueryable(), level + 1, currentPath);
+                }
+                else
+                {
+                    child.Items = othersItems.AsQueryable();
+                }
+                node.Children.Add(child);
+            }
+        }
+        // Flatten the row header tree into a list of rows for rendering
+        private List<PivotBodyRow> GetPivotRowHierarchy()
+        {
+            var result = new List<PivotBodyRow>();
+            var tree = BuildRowHeaderTree();
+            FlattenRowHeaderTree(tree, new List<RowHeaderCell>(), result);
+
+            return result;
+        }
+        private void FlattenRowHeaderTree(RowHeaderNode node, List<RowHeaderCell> prefix, List<PivotBodyRow> result)
+        {
+            if (node.Level == pivotRows.Count)
+            {
+                // Leaf: render a row
+                var rowItems = node.Items as List<TItem> ?? node.Items.ToList();
+                var row = new PivotBodyRow
+                {
+                    RowHeaderCells = new List<RowHeaderCell>(prefix),
+                    Items = rowItems
+                };
+                PopulateValueCells(row, rowItems);
+                result.Add(row);
+            }
+            else
+            {
+                foreach (var child in node.Children)
+                {
+                    var cell = new RowHeaderCell {
+                        Value = child.Value,
+                        Title = child.Title,
+                        RowSpan = GetLeafCount(child),
+                        IsCollapsed = child.IsCollapsed,
+                        PathKey = child.PathKey,
+                        HasChildren = child.Level < pivotRows.Count
+                    };
+                    var newPrefix = new List<RowHeaderCell>(prefix) { cell };
+                    
+                    if (child.IsCollapsed)
+                    {
+                        // For collapsed groups, create a single row with values aggregated across all descendants.
+                        var rowItems = child.Items as List<TItem> ?? child.Items.ToList();
+                        var collapsedRow = new PivotBodyRow
+                        {
+                            RowHeaderCells = new List<RowHeaderCell>(newPrefix),
+                            Items = rowItems
+                        };
+                        PopulateValueCells(collapsedRow, rowItems);
+                        result.Add(collapsedRow);
+                    }
+                    else
+                    {
+                        FlattenRowHeaderTree(child, newPrefix, result);
+                    }
+                }
+            }
+        }
+
+        // Computes the value cells for a row by bucketing its items by column leaf in a single pass,
+        // then aggregating each bucket - instead of re-filtering the items per cell.
+        private void PopulateValueCells(PivotBodyRow row, IList<TItem> rowItems)
+        {
+            var colLeaves = CachedColumnLeaves;
+            if (colLeaves.Count == 0)
+            {
+                return;
+            }
+
+            var buckets = GroupItemsByColumnLeaf(rowItems, colLeaves);
+
+            foreach (var colPath in colLeaves)
+            {
+                buckets.TryGetValue(ColumnPathKey(colPath), out var bucket);
+                var bucketView = bucket != null && bucket.Count > 0 ? bucket.AsQueryable() : null;
+
+                foreach (var aggregate in pivotAggregates)
+                {
+                    row.ValueCells.Add(bucketView != null ? GetAggregateValue(bucketView, aggregate) : null!);
+                }
+
+                row.VisibleColumnLeaves.Add(colPath);
+            }
+        }
+
+        // Buckets items by the column leaf they belong to. Each item is assigned to the shortest
+        // column-value prefix that is an actual leaf, which handles collapsed (shorter) column paths.
+        private Dictionary<string, List<TItem>> GroupItemsByColumnLeaf(IList<TItem> items, List<List<object>> colLeaves)
+        {
+            var buckets = new Dictionary<string, List<TItem>>();
+
+            if (items.Count == 0 || pivotColumns.Count == 0 || colLeaves.Count == 0)
+            {
+                return buckets;
+            }
+
+            var leafKeys = new HashSet<string>();
+            foreach (var leaf in colLeaves)
+            {
+                leafKeys.Add(ColumnPathKey(leaf));
+            }
+
+            // Extract each column's values once, aligned with the items order.
+            var query = items.AsQueryable();
+            var columnValues = new List<List<object?>>(pivotColumns.Count);
+            foreach (var col in pivotColumns)
+            {
+                var values = new List<object?>(items.Count);
+                foreach (var value in (System.Collections.IEnumerable)query.Select(col.Property!))
+                {
+                    values.Add(value);
+                }
+                columnValues.Add(values);
+            }
+
+            var hasOthersGroups = pivotColumns.Any(c => c.MaxGroups > 0);
+
+            var path = new List<object?>(pivotColumns.Count);
+            for (int i = 0; i < items.Count; i++)
+            {
+                string? matchKey = null;
+
+                if (hasOthersGroups)
+                {
+                    matchKey = FindColumnLeafKey(i, columnValues);
+                }
+                else
+                {
+                    path.Clear();
+                    for (int level = 0; level < pivotColumns.Count; level++)
+                    {
+                        path.Add(columnValues[level][i]);
+                        var key = ColumnPathKey(path);
+                        if (leafKeys.Contains(key))
+                        {
+                            matchKey = key;
+                            break;
+                        }
+                    }
+                }
+
+                if (matchKey == null)
+                {
+                    continue;
+                }
+
+                if (!buckets.TryGetValue(matchKey, out var bucket))
+                {
+                    bucket = new List<TItem>();
+                    buckets[matchKey] = bucket;
+                }
+                bucket.Add(items[i]);
+            }
+
+            return buckets;
+        }
+
+        /// <summary>
+        /// Resolves the column leaf an item belongs to by walking the column header tree. Items whose value does not match
+        /// a kept group at some level fall into the synthetic Others group produced by <see cref="CrestPivotColumn{TItem}.MaxGroups"/>.
+        /// </summary>
+        private string? FindColumnLeafKey(int itemIndex, List<List<object?>> columnValues)
+        {
+            var node = ColumnHeaderTreeRoot;
+            var path = new List<object?>(pivotColumns.Count);
+            var level = 0;
+
+            while (node.Children.Count > 0 && level < pivotColumns.Count)
+            {
+                var valueKey = columnValues[level][itemIndex]?.ToString() ?? string.Empty;
+                ColumnHeaderNode? match = null;
+                ColumnHeaderNode? others = null;
+
+                foreach (var child in node.Children)
+                {
+                    if (child.IsOthers)
+                    {
+                        others = child;
+                    }
+                    else if ((child.Value?.ToString() ?? string.Empty) == valueKey)
+                    {
+                        match = child;
+                        break;
+                    }
+                }
+
+                var next = match ?? others;
+                if (next == null)
+                {
+                    return null;
+                }
+
+                path.Add(next.Value);
+                node = next;
+                level++;
+            }
+
+            return node.Children.Count == 0 && path.Count > 0 ? ColumnPathKey(path) : null;
+        }
+
+        private static string ColumnPathKey(System.Collections.IEnumerable path)
+        {
+            var builder = new System.Text.StringBuilder();
+            var first = true;
+            foreach (var value in path)
+            {
+                if (!first)
+                {
+                    builder.Append('|');
+                }
+                builder.Append(value?.ToString() ?? string.Empty);
+                first = false;
+            }
+            return builder.ToString();
+        }
+
+        // Get all column header leaf paths (for value cell mapping)
+        private List<List<object>> GetColumnHeaderLeaves()
+        {
+            var tree = ColumnHeaderTreeRoot;
+            var leaves = new List<List<object>>();
+            GetColumnHeaderLeavesRecursive(tree, new List<object>(), leaves);
+            return leaves;
+        }
+        private static void GetColumnHeaderLeavesRecursive(ColumnHeaderNode node, List<object> path, List<List<object>> leaves)
+        {
+            if (node.Children.Count == 0 && path.Count > 0)
+            {
+                leaves.Add(new List<object>(path));
+            }
+            foreach (var child in node.Children)
+            {
+                if (child.Value != null)
+                {
+                    path.Add(child.Value);
+                }
+                GetColumnHeaderLeavesRecursive(child, path, leaves);
+                path.RemoveAt(path.Count - 1);
+            }
+        }
+        // Helper for row header cell rowspan
+        private int GetLeafCount(RowHeaderNode node)
+        {
+            if (node.Children.Count == 0)
+            {
+                return 1;
+            }
+
+            return node.Children.Sum(GetLeafCount);
+        }
+
+        private string? GetWidthForColumnPath(List<object> colPath)
+        {
+            if (colPath.Count == 0 || pivotColumns.Count == 0)
+            {
+                return null;
+            }
+
+            // For now, return the width of the first column
+            // In a more complex implementation, you might want to calculate based on the path
+            return pivotColumns[0].Width;
+        }
+
+        /// <summary>
+        /// Gets the frozen cell class for row headers based on their position.
+        /// </summary>
+        /// <param name="columnIndex">The column index of the row header.</param>
+        /// <returns>The CSS class string for frozen row headers.</returns>
+        private static string GetFrozenRowHeaderClass(int columnIndex)
+        {
+            if (columnIndex == 0)
+            {
+                return "rz-frozen-cell rz-frozen-cell-left rz-frozen-cell-left-end";
+            }
+            else
+            {
+                return "rz-frozen-cell rz-frozen-cell-left";
+            }
+        }
+
+        /// <summary>
+        /// Gets the frozen cell class for total headers.
+        /// </summary>
+        /// <returns>The CSS class string for frozen total headers.</returns>
+        private static string GetFrozenTotalHeaderClass()
+        {
+            return "rz-frozen-cell rz-frozen-cell-right rz-frozen-cell-right-end";
+        }
+
+        /// <summary>
+        /// Gets the frozen cell class for total cells.
+        /// </summary>
+        /// <returns>The CSS class string for frozen total cells.</returns>
+        private static string GetFrozenTotalCellClass()
+        {
+            return "rz-frozen-cell rz-frozen-cell-right";
+        }
+
+        private class ColumnHeaderCell
+        {
+            public object? Value { get; set; }
+            public string? Title { get; set; }
+            public int ColSpan { get; set; } = 1;
+            public int RowSpan { get; set; } = 1;
+            public int Level { get; set; }
+            public string? Width { get; set; }
+            public bool IsCollapsed { get; set; }
+            public string? PathKey { get; set; }
+            public bool HasChildren { get; set; }
+            public RenderFragment<GroupResult>? HeaderTemplate { get; set; }
+            public GroupResult? Group { get; set; }
+        }
+
+        private class ColumnHeaderNode
+        {
+            public object? Value { get; set; }
+            public string? Title { get; set; }
+            public List<ColumnHeaderNode> Children { get; set; } = new List<ColumnHeaderNode>();
+            public int Level { get; set; }
+            public int ColSpan { get; set; } = 1;
+            public int RowSpan { get; set; } = 1;
+            public string? Width { get; set; }
+            public bool IsCollapsed { get; set; }
+            public string? PathKey { get; set; }
+            public bool HasChildren { get; set; }
+            public bool IsOthers { get; set; }
+            public RenderFragment<GroupResult>? HeaderTemplate { get; set; }
+            public GroupResult? Group { get; set; }
+        }
+
+        private class RowHeaderNode
+        {
+            public object? Value { get; set; }
+            public string? Title { get; set; }
+            public List<RowHeaderNode> Children { get; set; } = new List<RowHeaderNode>();
+            public IQueryable<TItem> Items { get; set; } = Enumerable.Empty<TItem>().AsQueryable();
+            public int Level { get; set; }
+            public bool IsCollapsed { get; set; }
+            public string? PathKey { get; set; }
+            public bool HasChildren { get; set; }
+        }
+
+        private class PivotBodyRow
+        {
+            public List<RowHeaderCell> RowHeaderCells { get; set; } = new List<RowHeaderCell>();
+            public List<object?> ValueCells { get; set; } = new List<object?>();
+            public List<List<object>> VisibleColumnLeaves { get; set; } = new List<List<object>>();
+            public List<TItem> Items { get; set; } = new List<TItem>();
+        }
+
+        // Returns the union of all visible column leaves for the current view
+        private static List<List<object>> GetVisibleColumnLeaves(List<PivotBodyRow> rows)
+        {
+            var set = new HashSet<string>();
+            var result = new List<List<object>>();
+            foreach (var row in rows)
+            {
+                foreach (var colPath in row.VisibleColumnLeaves)
+                {
+                    var key = string.Join("|", colPath.Select(x => x?.ToString() ?? ""));
+                    if (set.Add(key))
+                    {
+                        result.Add(colPath);
+                    }
+                }
+            }
+            return result;
+        }
+
+        // Pads all PivotBodyRow.RowHeaderCells to the maximum depth among all rows
+        private static void PadRowHeaderCells(List<PivotBodyRow> rows)
+        {
+            int maxDepth = rows.Count > 0 ? rows.Max(r => r.RowHeaderCells.Count) : 0;
+            foreach (var row in rows)
+            {
+                while (row.RowHeaderCells.Count < maxDepth)
+                {
+                    row.RowHeaderCells.Add(new RowHeaderCell
+                    {
+                        Value = null,
+                        Title = string.Empty,
+                        RowSpan = 1,
+                        IsCollapsed = false,
+                        PathKey = null
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles aggregate click for sorting.
+        /// </summary>
+        internal async Task OnAggregateSort(EventArgs args, CrestPivotAggregate<TItem> aggregate)
+        {
+            await HandleFieldSort(pivotAggregates, aggregate);
+        }
+
+        /// <summary>
+        /// Handles column header click for sorting.
+        /// </summary>
+        internal async Task OnColumnSort(EventArgs args, CrestPivotColumn<TItem> column)
+        {
+            await HandleFieldSort(pivotColumns, column);
+        }
+
+        /// <summary>
+        /// Handles row header click for sorting.
+        /// </summary>
+        internal async Task OnRowSort(EventArgs args, CrestPivotRow<TItem> row)
+        {
+            await HandleFieldSort(pivotRows, row);
+        }
+
+        async Task OnDrillDownKeyDown(KeyboardEventArgs args, string pathKey)
+        {
+            var key = args.Code != null ? args.Code : args.Key;
+            if (key == "Enter" || key == "Space")
+            {
+                await ToggleColumnDrillDown(pathKey);
+            }
+        }
+
+        async Task OnRowDrillDownKeyDown(KeyboardEventArgs args, string pathKey)
+        {
+            var key = args.Code != null ? args.Code : args.Key;
+            if (key == "Enter" || key == "Space")
+            {
+                await ToggleRowDrillDown(pathKey);
+            }
+        }
+
+        private async Task HandleFieldSort<T>(List<T> allFields, T sortedField)
+            where T : CrestPivotField<TItem>
+        {
+            if (AllowSorting && sortedField.Sortable)
+            {
+                // Toggle sort order
+                var sequence = sortedField.SortOrderSequence;
+
+                var pos = Array.IndexOf(sequence, sortedField.GetSortOrder());
+
+                var nextSortOrder = pos == -1 || pos + 1 >= sequence.Length
+                    ? sequence.FirstOrDefault()
+                    : sequence[pos + 1];
+
+                sortedField.SetSortOrderInternal(nextSortOrder);
+
+                await Reload();
+            }
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Gets the column for a header cell.
+        /// </summary>
+        private CrestPivotColumn<TItem>? GetColumnForHeaderCell(ColumnHeaderCell cell)
+        {
+            if (cell.Level < pivotColumns.Count)
+            {
+                return pivotColumns[cell.Level];
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Handles keyboard events for sorting.
+        /// </summary>
+        private static Task OnSortKeyPressed(KeyboardEventArgs args)
+        {
+            var key = args.Code ?? args.Key;
+            if (key == "Enter" || key == " ")
+            {
+                // The actual sorting will be handled by the onclick event
+                // This is just for keyboard accessibility
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Gets the filter icon CSS class for a field.
+        /// </summary>
+        private static string GetFilterIconCss(CrestPivotField<TItem> field)
+        {
+            var additionalStyle = field?.HasActiveFilter() == true ? "rz-grid-filter-active" : "";
+            return $"notranslate rzi rz-grid-filter-icon {additionalStyle}";
+        }
+
+        /// <summary>
+        /// Gets or sets the current filter icon reference.
+        /// </summary>
+        private Dictionary<string, ElementReference> FilterIconRef = new();
+
+        /// <summary>
+        /// Toggles the filter popup for a field.
+        /// </summary>
+        private async Task ToggleFilter(CrestPivotField<TItem> field, string filterIconRefKey)
+        {
+            if (field == null || !AllowFiltering || !field.Filterable)
+            {
+                return;
+            }
+
+            currentFilterField = field;
+            StateHasChanged();
+
+            await Task.Yield();
+
+            if (filterPopup != null)
+            {
+                await filterPopup.ToggleAsync(FilterIconRef[filterIconRefKey]);
+            }
+        }
+
+        /// <summary>
+        /// Gets the filter property type for a field.
+        /// </summary>
+        private static Type GetFilterPropertyType(CrestPivotField<TItem> field)
+        {
+            if (field == null || string.IsNullOrEmpty(field.Property))
+            {
+                return typeof(string);
+            }
+
+            return PropertyAccess.GetPropertyType(typeof(TItem), field.Property) ?? typeof(string);
+        }
+
+        /// <summary>
+        /// Gets the filter operators for a field.
+        /// </summary>
+        private static List<FilterOperator> GetFilterOperators(CrestPivotField<TItem> field)
+        {
+            var propertyType = GetFilterPropertyType(field);
+            var operators = new List<FilterOperator>();
+
+            if (PropertyAccess.IsNumeric(propertyType))
+            {
+                operators.AddRange(new[] { FilterOperator.Equals, FilterOperator.NotEquals, FilterOperator.LessThan, FilterOperator.LessThanOrEquals, FilterOperator.GreaterThan, FilterOperator.GreaterThanOrEquals, FilterOperator.IsNull, FilterOperator.IsNotNull });
+            }
+            else if (PropertyAccess.IsDate(propertyType))
+            {
+                operators.AddRange(new[] { FilterOperator.Equals, FilterOperator.NotEquals, FilterOperator.LessThan, FilterOperator.LessThanOrEquals, FilterOperator.GreaterThan, FilterOperator.GreaterThanOrEquals, FilterOperator.IsNull, FilterOperator.IsNotNull });
+            }
+            else if (propertyType == typeof(bool) || propertyType == typeof(bool?))
+            {
+                operators.AddRange(new[] { FilterOperator.Equals, FilterOperator.NotEquals, FilterOperator.IsNull, FilterOperator.IsNotNull });
+            }
+            else if (PropertyAccess.IsNullableEnum(propertyType) || PropertyAccess.IsEnum(propertyType))
+            {
+                operators.AddRange(new[] { FilterOperator.Equals, FilterOperator.NotEquals, FilterOperator.In, FilterOperator.NotIn, FilterOperator.IsNull, FilterOperator.IsNotNull });
+            }
+            else
+            {
+                operators.AddRange(new[] { FilterOperator.Contains, FilterOperator.DoesNotContain, FilterOperator.StartsWith, FilterOperator.EndsWith, FilterOperator.Equals, FilterOperator.NotEquals, FilterOperator.In, FilterOperator.NotIn, FilterOperator.IsNull, FilterOperator.IsNotNull });
+            }
+
+            return operators;
+        }
+
+        /// <summary>
+        /// Gets the filter operator text.
+        /// </summary>
+        public string GetFilterOperatorText(FilterOperator? filterOperator)
+        {
+            switch (filterOperator)
+            {
+                case FilterOperator.Custom:
+                    return CustomText;
+                case FilterOperator.Contains:
+                    return ContainsText;
+                case FilterOperator.DoesNotContain:
+                    return DoesNotContainText;
+                case FilterOperator.EndsWith:
+                    return EndsWithText;
+                case FilterOperator.Equals:
+                    return EqualsText;
+                case FilterOperator.GreaterThan:
+                    return GreaterThanText;
+                case FilterOperator.GreaterThanOrEquals:
+                    return GreaterThanOrEqualsText;
+                case FilterOperator.LessThan:
+                    return LessThanText;
+                case FilterOperator.LessThanOrEquals:
+                    return LessThanOrEqualsText;
+                case FilterOperator.StartsWith:
+                    return StartsWithText;
+                case FilterOperator.NotEquals:
+                    return NotEqualsText;
+                case FilterOperator.IsNull:
+                    return IsNullText;
+                case FilterOperator.IsEmpty:
+                    return IsEmptyText;
+                case FilterOperator.IsNotNull:
+                    return IsNotNullText;
+                case FilterOperator.IsNotEmpty:
+                    return IsNotEmptyText;
+                default:
+                    return $"{filterOperator}";
+            }
+        }
+
+        /// <summary>
+        /// Checks if a field can set filter value.
+        /// </summary>
+        private static bool CanSetFilterValue(CrestPivotField<TItem> field, bool isFirst = true)
+        {
+            if (field == null)
+            {
+                return false;
+            }
+
+            var filterOperator = isFirst ? field.GetFilterOperator() : field.GetSecondFilterOperator();
+            return filterOperator != FilterOperator.IsNull && filterOperator != FilterOperator.IsNotNull;
+        }
+
+        /// <summary>
+        /// Sets the filter operator for a field.
+        /// </summary>
+        private void SetFilterOperator(CrestPivotField<TItem> field, FilterOperator filterOperator)
+        {
+            if (field != null)
+            {
+                field.SetFilterOperatorInternal(filterOperator);
+                StateHasChanged();
+            }
+        }
+
+        /// <summary>
+        /// Sets the second filter operator for a field.
+        /// </summary>
+        private void SetSecondFilterOperator(CrestPivotField<TItem> field, FilterOperator filterOperator)
+        {
+            if (field != null)
+            {
+                field.SetSecondFilterOperatorInternal(filterOperator);
+                StateHasChanged();
+            }
+        }
+
+        /// <summary>
+        /// Sets the logical filter operator for a field.
+        /// </summary>
+        private void SetLogicalFilterOperator(CrestPivotField<TItem> field, LogicalFilterOperator logicalOperator)
+        {
+            if (field != null)
+            {
+                field.SetLogicalFilterOperatorInternal(logicalOperator);
+                StateHasChanged();
+            }
+        }
+
+        /// <summary>
+        /// Sets the filter value for a field.
+        /// </summary>
+        private void SetFilterValue(CrestPivotField<TItem> field, object? value, bool isFirst = true)
+        {
+            if (field != null)
+            {
+                if ((field.FilterPropertyType == typeof(DateOnly) || field.FilterPropertyType == typeof(DateOnly?)) && value != null && value is DateTime?)
+                {
+                    var v = PropertyAccess.DateOnlyFromDateTime((DateTime)value);
+                    value = v;
+                }
+
+                if (isFirst)
+                {
+                    field.SetFilterValueInternal(value);
+                }
+                else
+                {
+                    field.SetSecondFilterValueInternal(value);
+                }
+                InvokeAsync(OnFilterChanged);
+            }
+        }
+
+        /// <summary>
+        /// Applies the current filter.
+        /// </summary>
+        private async Task ApplyFilter(string filterIconRefKey)
+        {
+            if (currentFilterField != null)
+            {
+                // Trigger filter change event
+                await OnFilterChanged();
+                
+                if (filterPopup != null)
+                {
+                    await filterPopup.CloseAsync(FilterIconRef[filterIconRefKey]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears the current filter.
+        /// </summary>
+        private async Task ClearFilter(string filterIconRefKey)
+        {
+            if (currentFilterField != null)
+            {
+                currentFilterField.ClearFilterValues();
+                StateHasChanged();
+                
+                // Trigger filter change event
+                await OnFilterChanged();
+                
+                if (filterPopup != null)
+                {
+                    await filterPopup.CloseAsync(FilterIconRef[filterIconRefKey]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles filter popup key pressed events.
+        /// </summary>
+        private async Task OnFilterPopupKeyPressed(KeyboardEventArgs args, string filterIconRefKey)
+        {
+            var key = args.Code ?? args.Key;
+            if (key == "Escape")
+            {
+                if (filterPopup != null && currentFilterField != null)
+                {
+                    await filterPopup.CloseAsync(FilterIconRef[filterIconRefKey]);
+                }
+            }
+        }
+        
+        async Task OnFilterChanged()
+        {
+            await InvokeAsync(Reload);
+        }
+
+        async Task SetFilterValueAndReload(CrestPivotField<TItem> field, object value, bool isFirst = true)
+        {
+            SetFilterValue(field, value, isFirst);
+            await InvokeAsync(Reload);
+        }
+
+        /// <summary>
+        /// Draws numeric filter UI.
+        /// </summary>
+        private RenderFragment DrawNumericFilter(CrestPivotField<TItem> field, bool force = true, bool isFirst = true)
+        {
+            return builder =>
+            {
+                var propertyType = field.FilterPropertyType ?? GetFilterPropertyType(field);
+
+                var type = Nullable.GetUnderlyingType(propertyType) != null ?
+                   propertyType : typeof(Nullable<>).MakeGenericType(propertyType);
+
+                var numericType = typeof(CrestNumeric<>).MakeGenericType(type);
+
+                builder.OpenComponent(0, numericType);
+
+                builder.AddAttribute(1, "Value", isFirst ? field.GetFilterValue() : field.GetSecondFilterValue());
+                builder.AddAttribute(2, "ShowUpDown", field.ShowUpDownForNumericFilter());
+                builder.AddAttribute(3, "Style", "width:100%");
+                builder.AddAttribute(4, "InputAttributes", new Dictionary<string, object>() { { "aria-label", field.Title + $"{(!isFirst ? " second " : " ")}filter value " + (isFirst ? field.GetFilterValue() : field.GetSecondFilterValue()) } });
+                builder.AddAttribute(5, "id", getFilterInputId(field) + (isFirst ? "f" : "s"));
+
+                Action<object> action;
+                if (force)
+                {
+                    action = args => InvokeAsync(() => SetFilterValueAndReload(field, args, isFirst));
+                }
+                else
+                {
+                    action = args => { SetFilterValue(field, args, isFirst); };
+                }
+
+                var createMethod = typeof(NumericFilterEventCallback).GetMethod("Create");
+                var actionMethod = typeof(NumericFilterEventCallback).GetMethod("Action");
+                if (createMethod != null && actionMethod != null)
+                {
+                    var eventCallbackGenericCreate = createMethod.MakeGenericMethod(type);
+                    var eventCallbackGenericAction = actionMethod.MakeGenericMethod(type);
+
+                    builder.AddAttribute(3, "Change", eventCallbackGenericCreate.Invoke(this,
+                    new object[] { this, eventCallbackGenericAction.Invoke(this, new object[] { action })! })!);
+                }
+
+                builder.AddAttribute(4, "Disabled", !field.CanSetFilterValue());
+
+                builder.CloseComponent();
+            };
+        }
+
+        internal string getFilterInputId(CrestPivotField<TItem> field)
+        {
+            return string.Join("", $"{UniqueID}".Split('.')) + field.GetFilterProperty();
+        }
+
+        internal class NumericFilterEventCallback
+        {
+            public static EventCallback<T> Create<T>(object receiver, Action<T> action)
+            {
+                return EventCallback.Factory.Create<T>(receiver, action);
+            }
+
+            public static Action<T> Action<T>(Action<object?> action)
+            {
+                return args => action(args);
+            }
+        }
+
+        /// <summary>
+        /// Checks if field should show time for datetime filter.
+        /// </summary>
+        private bool ShowTimeForDateTimeFilter(CrestPivotField<TItem> field)
+        {
+            var propertyType = GetFilterPropertyType(field);
+            return PropertyAccess.IsDate(propertyType) && !PropertyAccess.IsDateOnly(propertyType);
+        }
+
+        /// <summary>
+        /// Gets the filter date format for a field.
+        /// </summary>
+        private string GetFilterDateFormat(CrestPivotField<TItem> field)
+        {
+            var propertyType = GetFilterPropertyType(field);
+            if (PropertyAccess.IsDateOnly(propertyType))
+            {
+                return "yyyy-MM-dd";
+            }
+            else if (PropertyAccess.IsDate(propertyType))
+            {
+                return "yyyy-MM-dd HH:mm";
+            }
+            else
+            {
+                return "yyyy-MM-dd";
+            }
+        }
+
+        /// <summary>
+        /// Gets the order by string for sorting.
+        /// </summary>
+        internal Tuple<string, IEnumerable<SortDescriptor>> GetOrderBy()
+        {
+            var sortExpressions = new List<string>();
+            var sortDescriptors = new List<SortDescriptor>();
+
+            // Add column sorts
+            foreach (var column in pivotColumns.Cast<CrestPivotField<TItem>>().Concat(pivotAggregates).Where(c => c.GetSortOrder() != null))
+            {
+                var property = column.Property;
+                if (!string.IsNullOrEmpty(property))
+                {
+                    var sortOrder = column.GetSortOrder() == SortOrder.Ascending ? "asc" : "desc";
+                    sortExpressions.Add($"{property} {sortOrder}");
+                    sortDescriptors.Add(new SortDescriptor { Property = property, SortOrder = column.GetSortOrder() });
+                }
+            }
+
+            // Add row sorts
+            foreach (var row in pivotRows.Where(r => r.GetSortOrder() != null))
+            {
+                var property = row.Property;
+                if (!string.IsNullOrEmpty(property))
+                {
+                    var sortOrder = row.GetSortOrder() == SortOrder.Ascending ? "asc" : "desc";
+                    sortExpressions.Add($"{property} {sortOrder}");
+                    sortDescriptors.Add(new SortDescriptor { Property = property, SortOrder = row.GetSortOrder() });
+                }
+            }
+
+            return new Tuple<string, IEnumerable<SortDescriptor>>(string.Join(",", sortExpressions), sortDescriptors);
+        }
+
+        /// <summary>
+        /// Gets the filter string for filtering.
+        /// </summary>
+        internal List<CompositeFilterDescriptor> GetFilters()
+        {
+            var filterExpressions = new List<CompositeFilterDescriptor>();
+
+            // Add column filters
+            foreach (var column in pivotColumns.Cast<CrestPivotField<TItem>>().Concat(pivotAggregates).Where(c => c.HasActiveFilter()))
+            {
+                var property = column.GetFilterProperty();
+                if (!string.IsNullOrEmpty(property))
+                {
+                    var filterValue = column.GetFilterValue();
+                    var secondFilterValue = column.GetSecondFilterValue();
+                    var filterOperator = column.GetFilterOperator();
+                    var secondFilterOperator = column.GetSecondFilterOperator();
+                    var logicalOperator = column.GetLogicalFilterOperator();
+
+                    var innerFilterExpressions = new List<CompositeFilterDescriptor>();
+
+                    var filterExpression = BuildFilterExpression(property, filterValue, filterOperator, column.Type ?? typeof(object));
+                    innerFilterExpressions.Add(filterExpression);
+
+                    if (secondFilterValue != null)
+                    {
+                        var secondFilterExpression = BuildFilterExpression(property, secondFilterValue, secondFilterOperator, column.Type);
+                        innerFilterExpressions.Add(secondFilterExpression);
+                    }
+
+                    filterExpressions.Add(new CompositeFilterDescriptor() 
+                    { 
+                        Property = property,
+                        Filters = innerFilterExpressions,  
+                        LogicalFilterOperator = logicalOperator
+                    });
+                }
+            }
+
+            // Add row filters
+            foreach (var row in pivotRows.Where(r => r.HasActiveFilter()))
+            {
+                var property = row.GetFilterProperty();
+                if (!string.IsNullOrEmpty(property))
+                {
+                    var filterValue = row.GetFilterValue();
+                    var secondFilterValue = row.GetSecondFilterValue();
+                    var filterOperator = row.GetFilterOperator();
+                    var secondFilterOperator = row.GetSecondFilterOperator();
+                    var logicalOperator = row.GetLogicalFilterOperator();
+
+                    var innerFilterExpressions = new List<CompositeFilterDescriptor>();
+
+                    var filterExpression = BuildFilterExpression(property, filterValue, filterOperator, row.Type);
+                    innerFilterExpressions.Add(filterExpression);
+
+                    if (secondFilterValue != null)
+                    {
+                        var secondFilterExpression = BuildFilterExpression(property, secondFilterValue, secondFilterOperator, row.Type);
+                        innerFilterExpressions.Add(secondFilterExpression);
+                    }
+
+                    filterExpressions.Add(new CompositeFilterDescriptor()
+                    {
+                        Property = property,
+                        Filters = innerFilterExpressions,
+                        LogicalFilterOperator = logicalOperator
+                    });
+                }
+            }
+
+            return filterExpressions;
+        }
+
+        /// <summary>
+        /// Builds a filter expression for a property and value.
+        /// </summary>
+        private CompositeFilterDescriptor BuildFilterExpression(string property, object? value, FilterOperator filterOperator, Type? type)
+        {
+            if (string.IsNullOrEmpty(property))
+            {
+                return new CompositeFilterDescriptor();
+            }
+
+            return new CompositeFilterDescriptor
+            {
+                Property = property,
+                FilterValue = value,
+                FilterOperator = filterOperator,
+                Type = type ?? typeof(object)
+            };
+        }
+
+        /// <summary>
+        /// Override the View property to apply sorting and filtering.
+        /// </summary>
+        public override IQueryable<TItem> View
+        {
+            get
+            {
+                var baseView = base.View;
+
+                var filters = GetFilters();
+                var orderBy = GetOrderBy();
+                
+                if (filters.Count > 0)
+                {
+                    baseView = baseView.Where(filters, LogicalFilterOperator, FilterCaseSensitivity);
+                }
+
+                if (!string.IsNullOrEmpty(orderBy.Item1))
+                {
+                    baseView = baseView.OrderBy(orderBy.Item1);
+                }
+
+                return baseView;
+            }
+        }
+
+        List<string> selectedRows = new();
+        List<string> selectedColumns = new();
+        List<CrestPivotAggregate<TItem>> selectedAggregates = new();
+
+        private static readonly List<AggregateFunction> AllAggregates =
+            Enum.GetValues<AggregateFunction>().ToList();
+
+        private static readonly AggregateFunction[] NumericAggregates = new[]
+        {
+            AggregateFunction.Sum,
+            AggregateFunction.Average,
+            AggregateFunction.Min,
+            AggregateFunction.Max
+        };
+
+        IEnumerable<AggregateFunction> GetAggregates(string propertyName)
+        {
+            var propertyType = propertyName != null ? PropertyAccess.GetPropertyType(typeof(TItem), propertyName) : null;
+            return propertyType != null && PropertyAccess.IsNumeric(propertyType) ?
+                AllAggregates : AllAggregates.Except(NumericAggregates);
+        }
+
+        async Task UpdateAggregates(object value)
+        {
+            selectedAggregates = ((IEnumerable<string>)value).Select(property =>
+            {
+                return selectedAggregates.FirstOrDefault(a => a.Property == property) ??
+                    new CrestPivotAggregate<TItem>
+                    {
+                        Property = property,
+                        Title = pivotAggregates.FirstOrDefault(a => a.Property == property)?.Title,
+                        Aggregate = AggregateFunction.Count
+                    };
+            }).ToList();
+
+            await UpdateFieldsFromSelected();
+        }
+
+        async Task UpdateAggregate(string property, object? value)
+        {
+            var newFunction = (AggregateFunction?)value ?? default(AggregateFunction);
+
+            // Replace the entry with a new plain object so Blazor re-rendering the component
+            // instances in allPivotAggregates cannot reset this value via SetParametersAsync.
+            var index = selectedAggregates.FindIndex(a => a.Property == property);
+            if (index >= 0)
+            {
+                var existing = selectedAggregates[index];
+                selectedAggregates[index] = new CrestPivotAggregate<TItem>
+                {
+                    Property = existing.Property,
+                    Title = existing.Title,
+                    Aggregate = newFunction
+                };
+            }
+
+            var aggregate = pivotAggregates.FirstOrDefault(a => a.Property == property);
+            if (aggregate != null)
+            {
+                aggregate.Aggregate = newFunction;
+            }
+
+            await Reload();
+        }
+
+        void UpdateSelected()
+        {
+            selectedRows = pivotRows.Select(r => r.Property).Where(p => p != null).Cast<string>().ToList();
+            selectedColumns = pivotColumns.Select(c => c.Property).Where(p => p != null).Cast<string>().ToList();
+            selectedAggregates = pivotAggregates.Select(a =>
+            {
+                // For aggregates from allPivotAggregates, preserve the original instance
+                var existing = allPivotAggregates.FirstOrDefault(x => x.Property == a.Property);
+                return existing ?? a;
+            }).ToList();
+        }
+
+        async Task UpdateFieldsFromSelected()
+        {
+            pivotRows = selectedRows.Select(sr =>
+            {
+                var row = allPivotRows.FirstOrDefault(r => r.Property == sr);
+                if (row != null)
+                {
+                    return row;
+                }
+
+                var field = pivotFields.FirstOrDefault(r => r.Property == sr);
+                return new CrestPivotRow<TItem>
+                {
+                    Property = field?.Property ?? sr,
+                    Title = field?.Title ?? sr
+                };
+            }).ToList();
+
+            pivotColumns = selectedColumns.Select(sc =>
+            {
+                var column = allPivotColumns.FirstOrDefault(c => c.Property == sc);
+                if (column != null)
+                {
+                    return column;
+                }
+                var field = pivotFields.FirstOrDefault(c => c.Property == sc);
+                return new CrestPivotColumn<TItem>
+                {
+                    Property = field?.Property ?? sc,
+                    Title = field?.Title ?? sc
+                };
+            }).ToList();
+
+            pivotAggregates = selectedAggregates.Select(sa =>
+            {
+                var aggregate = allPivotAggregates.FirstOrDefault(a => a.Property == sa.Property);
+                if (aggregate != null)
+                {
+                    return aggregate;
+                }
+
+                var field = pivotFields.FirstOrDefault(c => c.Property == sa.Property);
+                return new CrestPivotAggregate<TItem>
+                {
+                    Property = field?.Property,
+                    Title = field?.Title,
+                    Aggregate = field?.Property != null ? GetAggregates(field.Property).FirstOrDefault() : default(AggregateFunction)
+                };
+            }).ToList();
+
+            await Reload();
+        }
+    }
+}

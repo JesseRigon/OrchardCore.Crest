@@ -1,5 +1,5 @@
 @namespace Crest.Admin.Components.Shared
-@using Radzen.Blazor
+@using Crest.Components.Primitives
 
 <div class="settings-switch">
     <RadzenCheckBox TValue="bool" Value="@Value" Change="@OnChanged" />
@@ -21,27 +21,3 @@
     private Task OnChanged(bool value) => ValueChanged.InvokeAsync(value);
     private Task ToggleAsync() => ValueChanged.InvokeAsync(!Value);
 }
-
-<style>
-    .settings-switch {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        padding: 0.45rem 0;
-    }
-
-    .settings-switch__content {
-        display: grid;
-        gap: 0.2rem;
-    }
-
-    .settings-switch__label {
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .settings-switch__hint {
-        color: var(--rz-text-secondary-color);
-        font-size: 0.875rem;
-    }
-</style>

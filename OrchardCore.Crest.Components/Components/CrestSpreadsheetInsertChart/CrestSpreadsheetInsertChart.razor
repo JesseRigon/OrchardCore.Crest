@@ -1,0 +1,46 @@
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inherits CrestSpreadsheetToolBase
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_InsertChart))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_InsertChart))) Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
+    Disabled=@IsDisabled Click=@OnClick
+    Icon="bar_chart" Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_ChartText)) ?? "Chart")
+    title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_InsertChart)) ?? "Insert Chart")>
+    <ChildContent>
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_ColumnChartText)) ?? "Column Chart") Value="column" Icon="bar_chart" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_BarChartText)) ?? "Bar Chart") Value="bar" Icon="align_horizontal_left" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_LineChartText)) ?? "Line Chart") Value="line" Icon="show_chart" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_AreaChartText)) ?? "Area Chart") Value="area" Icon="area_chart" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_PieChartText)) ?? "Pie Chart") Value="pie" Icon="pie_chart" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DonutChartText)) ?? "Donut Chart") Value="donut" Icon="donut_large" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_ScatterChartText)) ?? "Scatter Chart") Value="scatter" Icon="scatter_plot" />
+    </ChildContent>
+</CrestSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.Charts;
+
+    private async Task OnClick(CrestSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        var chartType = item?.Value switch
+        {
+            "bar" => SpreadsheetChartType.Bar,
+            "line" => SpreadsheetChartType.Line,
+            "area" => SpreadsheetChartType.Area,
+            "pie" => SpreadsheetChartType.Pie,
+            "donut" => SpreadsheetChartType.Donut,
+            "scatter" => SpreadsheetChartType.Scatter,
+            _ => SpreadsheetChartType.Column
+        };
+
+        var selection = Worksheet.Selection.Range;
+        var chart = ChartFactory.CreateFromSelection(Worksheet, selection, chartType);
+        await Spreadsheet.ExecuteAsync(new InsertChartCommand(Worksheet, chart));
+    }
+}

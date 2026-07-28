@@ -1,0 +1,20 @@
+@using Crest
+@using Crest.Components.Primitives.Rendering
+@using Microsoft.AspNetCore.Components.Forms
+@typeparam TValue
+@inherits FormComponent<TValue>
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <div @ref="@Element" @attributes="Attributes" class="@GetCssClass()" @onkeypress=@OnKeyPress @onkeypress:preventDefault @onclick=@Toggle @onclick:preventDefault style="@Style"
+         role="checkbox" aria-checked="@CheckBoxAriaChecked" aria-label="@AriaLabel" aria-disabled="@(Disabled || ReadOnly ? "true" : "false")"
+         tabindex="@(Disabled || ReadOnly ? "-1" : $"{TabIndex}")" id="@GetId()">
+        <div class="rz-helper-hidden-accessible">
+            <input type="checkbox" @onchange=@Toggle value=@CheckBoxValue name=@Name id=@Name checked=@CheckBoxChecked aria-hidden="true" @attributes="InputAttributes"
+                tabindex="-1" readonly="@ReadOnly">
+        </div>
+        <div class=@BoxClass>
+            <span class=@IconClass></span>
+        </div>
+    </div>
+}

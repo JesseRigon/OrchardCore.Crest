@@ -18,7 +18,7 @@ public sealed class AdminMenusController(
     IAdminMenuService adminMenuService,
     INavigationManager navigationManager,
     CrestAdminMenuLayoutService layoutService,
-    CrestAdminSidebarSettingsStore sidebarSettingsStore,
+    CrestPrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
     CrestAdminSettingsNormalizer adminSettingsNormalizer,
     CrestIconController iconController) : ControllerBase
 {
@@ -83,7 +83,7 @@ public sealed class AdminMenusController(
 
         if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
         {
-            return BadRequest("The Sidebar Layout menu cannot be renamed.");
+            return BadRequest("The Primary Navigation menu cannot be renamed.");
         }
 
         var name = model.Name?.Trim();
@@ -119,7 +119,7 @@ public sealed class AdminMenusController(
 
         if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
         {
-            return BadRequest("The Sidebar menu cannot be hidden.");
+            return BadRequest("The primary navigation menu cannot be hidden.");
         }
 
         var list = await adminMenuService.LoadAdminMenuListAsync();
@@ -205,7 +205,7 @@ public sealed class AdminMenusController(
         {
             if (!IsPlaceholderNodeType(model.Type))
             {
-                return BadRequest("Sidebar Layout only supports custom placeholder nodes.");
+                return BadRequest("Primary Navigation only supports custom placeholder nodes.");
             }
 
             var baseMenu = await BuildDefaultNavigationMenuAsync();
@@ -260,7 +260,7 @@ public sealed class AdminMenusController(
 
         if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
         {
-            return BadRequest("Separators are currently supported by the Sidebar Layout menu only.");
+            return BadRequest("Separators are currently supported by the Primary Navigation menu only.");
         }
 
         var baseMenu = await BuildDefaultNavigationMenuAsync();
@@ -273,8 +273,8 @@ public sealed class AdminMenusController(
         return Ok(await GetDefaultMenuSummaryAsync());
     }
 
-    [HttpPost("{menuId}/sidebar-settings")]
-    public async Task<ActionResult<AdminMenuSummary>> UpdateSidebarSettingsAsync(string menuId, [FromBody] CrestAdminSidebarSettings settings)
+    [HttpPost("{menuId}/primary-nav-menu-settings")]
+    public async Task<ActionResult<AdminMenuSummary>> UpdatePrimaryNavMenuSettingsAsync(string menuId, [FromBody] CrestPrimaryNavMenuSettings settings)
     {
         if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
@@ -283,11 +283,11 @@ public sealed class AdminMenusController(
 
         if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
         {
-            return BadRequest("Sidebar settings are supported by the Sidebar Layout menu only.");
+            return BadRequest("Primary navigation settings are supported by the Primary Navigation menu only.");
         }
 
-        var normalized = await sidebarSettingsStore.SaveAsync(settings, HttpContext.RequestAborted);
-        return Ok((await GetDefaultMenuSummaryAsync()) with { SidebarSettings = normalized });
+        var normalized = await primaryNavMenuSettingsStore.SaveAsync(settings, HttpContext.RequestAborted);
+        return Ok((await GetDefaultMenuSummaryAsync()) with { PrimaryNavMenuSettings = normalized });
     }
 
     [HttpDelete("{menuId}/separators/{separatorId}")]
@@ -300,7 +300,7 @@ public sealed class AdminMenusController(
 
         if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
         {
-            return BadRequest("Separators are currently supported by the Sidebar Layout menu only.");
+            return BadRequest("Separators are currently supported by the Primary Navigation menu only.");
         }
 
         await layoutService.DeleteSeparatorAsync(await BuildDefaultNavigationMenuAsync(), separatorId);
@@ -317,7 +317,7 @@ public sealed class AdminMenusController(
 
         if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
         {
-            return BadRequest("Separators are currently supported by the Sidebar Layout menu only.");
+            return BadRequest("Separators are currently supported by the Primary Navigation menu only.");
         }
 
         var baseMenu = await BuildDefaultNavigationMenuAsync();
@@ -406,7 +406,7 @@ public sealed class AdminMenusController(
 
         if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
         {
-            return BadRequest("Sidebar renames are only supported on the generated Sidebar menu.");
+            return BadRequest("Primary navigation renames are only supported on the generated Primary Navigation menu.");
         }
 
         var baseMenu = await BuildDefaultNavigationMenuAsync();
@@ -505,7 +505,7 @@ public sealed class AdminMenusController(
 
             if (!await layoutService.IsCustomAsync(nodeId))
             {
-                return BadRequest("Only custom Sidebar nodes can be deleted.");
+                return BadRequest("Only custom primary navigation nodes can be deleted.");
             }
 
             await layoutService.DeleteCustomAsync(baseMenu, nodeId);
@@ -536,7 +536,7 @@ public sealed class AdminMenusController(
     private async Task<AdminMenuSummary> GetDefaultMenuSummaryAsync()
     {
         var layout = await layoutService.GetAsync();
-        var sidebarSettings = await sidebarSettingsStore.GetAsync(HttpContext.RequestAborted);
+        var primaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted);
         var baseMenu = await BuildDefaultNavigationMenuAsync();
         var managedMenu = await iconController.ResolveMenuIconsAsync(baseMenu with
         {
@@ -557,7 +557,7 @@ public sealed class AdminMenusController(
             true,
             true,
             separators,
-            sidebarSettings,
+            primaryNavMenuSettings,
             managedMenu.Icons,
             items.Select((item, index) => AdminMenuNodeSummary.From(item, layout, layoutService, null, 0, index)).ToArray());
     }
@@ -774,7 +774,7 @@ public sealed record AdminMenuSummary(
     bool Enabled,
     bool IsDefault,
     AdminMenuSeparatorSummary[] Separators,
-    CrestAdminSidebarSettings SidebarSettings,
+    CrestPrimaryNavMenuSettings PrimaryNavMenuSettings,
     IconPack? Icons,
     AdminMenuNodeSummary[] Nodes)
 {
@@ -784,7 +784,7 @@ public sealed record AdminMenuSummary(
         menu.Enabled,
         false,
         [],
-        CrestAdminSidebarSettings.Default,
+        CrestPrimaryNavMenuSettings.Default,
         null,
         menu.MenuItems.OfType<AdminNode>().Select((node, index) => AdminMenuNodeSummary.From(node, null, 0, index)).ToArray());
 }

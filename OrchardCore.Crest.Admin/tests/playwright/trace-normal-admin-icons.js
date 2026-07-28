@@ -25,12 +25,12 @@ async function main() {
 
   const trace = await page.evaluate(() => {
     const selectors = [
-      '#ta-left-sidebar a',
-      '#ta-left-sidebar li',
-      '#ta-left-sidebar .item-label',
-      '.ta-left-sidebar a',
+      '#ta-left-primaryNavMenu a',
+      '#ta-left-primaryNavMenu li',
+      '#ta-left-primaryNavMenu .item-label',
+      '.ta-left-primaryNavMenu a',
       '.admin-menu a',
-      '.admin-menu-sidebar__item-content',
+      '.primary-nav-menu__item-content',
       '.rz-panel-menu a',
       'nav a',
       'a'

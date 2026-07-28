@@ -1,0 +1,54 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestStack Gap="1rem">
+    <CrestStack Orientation="Orientation.Vertical" Gap="0.25rem">
+        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_URL)) Component="url" class="rz-text-subtitle2" Style="align-self: start" />
+        <CrestTextBox @bind-Value=@Url Name="url" Style="width: 100%" />
+    </CrestStack>
+    <CrestStack Orientation="Orientation.Vertical" Gap="0.25rem">
+        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_DisplayText)) Component="displayText" class="rz-text-subtitle2" Style="align-self: start" />
+        <CrestTextBox @bind-Value=@Text Name="displayText" Style="width: 100%" />
+    </CrestStack>
+    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-spreadsheet-dialog-actions">
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" />
+    </CrestStack>
+</CrestStack>
+
+@code {
+#nullable enable
+
+    [Parameter]
+    public string Url { get; set; } = "";
+
+    [Parameter]
+    public string Text { get; set; } = "";
+
+    [Inject]
+    public DialogService DialogService { get; set; } = default!;
+
+    [Inject]
+    Localizer Localizer { get; set; } = default!;
+
+    string L(string key) => Localizer.Get(key, System.Globalization.CultureInfo.CurrentUICulture);
+
+    private void OnOk()
+    {
+        if (!string.IsNullOrWhiteSpace(Url))
+        {
+            DialogService.Close(new Hyperlink
+            {
+                Url = Url,
+                Text = string.IsNullOrWhiteSpace(Text) ? null : Text
+            });
+        }
+    }
+
+    private void OnCancel()
+    {
+        DialogService.Close(null);
+    }
+}

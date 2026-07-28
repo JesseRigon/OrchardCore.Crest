@@ -1,0 +1,50 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inherits CrestSpreadsheetToolBase
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_CellBorders))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_CellBorders))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_CellBorders))) Click=@OnClick Icon="border_all" Disabled=@IsDisabled Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small">
+    <ChildContent>
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_AllBorders)) ?? "All Borders") Value="all" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_OutsideBorders)) ?? "Outside Borders") Value="outside" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_TopBorder)) ?? "Top Border") Value="top" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_BottomBorder)) ?? "Bottom Border") Value="bottom" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_LeftBorder)) ?? "Left Border") Value="left" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_RightBorder)) ?? "Right Border") Value="right" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_NoBorder)) ?? "No Border") Value="none" />
+    </ChildContent>
+</CrestSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.CellFormatting;
+
+    private async Task OnClick(CrestSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        var value = item?.Value;
+        var range = Worksheet.Selection.Range;
+        var border = new BorderStyle();
+
+        ICommand? command = value switch
+        {
+            "all" or null => new AllBordersCommand(Worksheet, range, border),
+            "outside" => new BorderCommand(Worksheet, range, border, border, border, border),
+            "top" => new BorderCommand(Worksheet, range, top: border, right: null, bottom: null, left: null),
+            "bottom" => new BorderCommand(Worksheet, range, top: null, right: null, bottom: border, left: null),
+            "left" => new BorderCommand(Worksheet, range, top: null, right: null, bottom: null, left: border),
+            "right" => new BorderCommand(Worksheet, range, top: null, right: border, bottom: null, left: null),
+            "none" => new NoBordersCommand(Worksheet, range),
+            _ => null,
+        };
+
+        if (command is not null)
+        {
+            await Spreadsheet.ExecuteAsync(command);
+        }
+    }
+}

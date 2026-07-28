@@ -1,0 +1,10 @@
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+
+@namespace Crest.Components.Primitives.Spreadsheet
+@if (visible && !string.IsNullOrEmpty(message))
+{
+    <div class=@className style=@style>
+        <div class="rz-spreadsheet-validation-error-message">@message</div>
+    </div>
+}

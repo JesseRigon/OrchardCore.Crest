@@ -1,0 +1,6 @@
+@using Crest.Components.Primitives.Rendering
+
+@namespace Crest.Components.Primitives
+<div class="rz-colorpicker-item @(isSelected ? "selected" : "")" style="background-color: @Background" @onmousedown:preventDefault @onclick=@OnClick
+     role="button" aria-label="@Value" aria-disabled="@(ColorPicker?.Disabled == true ? "true" : "false")"
+     tabindex="@(ColorPicker?.Disabled == true ? -1 : 0)" @onkeydown="@OnKeyDown" @onkeydown:preventDefault=preventKeyPress @onkeydown:stopPropagation="stopKeypressPropagation"></div>

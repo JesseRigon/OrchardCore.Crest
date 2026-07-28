@@ -9,7 +9,7 @@ public sealed class CrestAdminMenuLayoutService(
     ICrestAdminMenuLayoutInvalidator invalidator)
 {
     public const string DefaultMenuId = "__crest_default_admin_menu";
-    public const string DefaultMenuName = "Sidebar Layout";
+    public const string DefaultMenuName = "Primary Navigation";
     public const string LockedNewItemKey = "new";
 
     public async Task<CrestAdminMenuLayoutDocument> GetAsync() => await documents.GetOrCreateImmutableAsync();
@@ -547,7 +547,7 @@ public sealed class CrestAdminMenuLayoutFile
     public List<CrestAdminMenuSeparator> Separators { get; set; } = [];
 }
 
-public sealed class CrestAdminSidebarSettings
+public sealed class CrestPrimaryNavMenuSettings
 {
     public bool Collapsible { get; set; } = true;
     public int ExpansionDurationMilliseconds { get; set; } = 500;
@@ -557,12 +557,12 @@ public sealed class CrestAdminSidebarSettings
     public List<string> TierBaseSizes { get; set; } = ["1rem", "0.95rem", "0.9rem"];
     public List<double> TierBaseRems { get; set; } = [1.0, 0.95, 0.9];
 
-    public static CrestAdminSidebarSettings Default => new();
+    public static CrestPrimaryNavMenuSettings Default => new();
 
-    public static CrestAdminSidebarSettings Normalize(CrestAdminSidebarSettings? settings)
+    public static CrestPrimaryNavMenuSettings Normalize(CrestPrimaryNavMenuSettings? settings)
     {
         var source = settings ?? Default;
-        var normalized = new CrestAdminSidebarSettings
+        var normalized = new CrestPrimaryNavMenuSettings
         {
             Collapsible = source.Collapsible,
             ExpansionDurationMilliseconds = source.ExpansionDurationMilliseconds,

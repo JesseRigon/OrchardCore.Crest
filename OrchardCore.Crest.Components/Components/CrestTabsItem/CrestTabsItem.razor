@@ -1,0 +1,31 @@
+@using Crest.Components.Primitives.Rendering
+@implements IDisposable
+@namespace Crest.Components.Primitives
+@if ((Tabs?.RenderMode == TabRenderMode.Server ? Visible : true))
+{
+    <li role="presentation" style=@getStyle() class=@Class
+        draggable="@(Tabs?.AllowReorder == true ? "true" : null)"
+        @ondragstart="OnDragStart" @ondragover="OnDragOver" @ondragover:preventDefault
+        @ondrop="OnDrop" @ondragend="OnDragEnd" @ondragleave="OnDragLeave">
+    <button type="button" role="tab" @attributes=@Attributes @onclick=@OnClick
+       id="@($"{Tabs?.Id ?? ""}-tabpanel-{Index}-label")"
+       aria-selected="@(IsSelected ? "true" : "false")"
+       aria-controls="@($"{Tabs?.Id ?? ""}-tabpanel-{Index}")"
+       aria-disabled="@(Disabled ? "true" : "false")"
+       tabindex="-1"
+       @onkeydown:stopPropagation>
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="notranslate rzi rz-tabview-icon" aria-hidden="true" style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)">@Icon</span>
+        }
+        @if (Template != null)
+        {
+            @Template(this)
+        }
+        else
+        {
+            <span class="rz-tabview-title">@Text</span>
+        }
+        </button>
+    </li>
+}

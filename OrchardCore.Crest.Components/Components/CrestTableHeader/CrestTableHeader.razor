@@ -1,0 +1,6 @@
+@inherits CrestComponentWithChildren
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <thead @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">@ChildContent</thead>
+}

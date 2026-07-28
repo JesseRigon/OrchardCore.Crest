@@ -1,0 +1,74 @@
+@using System.Text
+@using Crest.Components.Primitives.Rendering
+@using Microsoft.JSInterop
+@inherits CrestHtmlEditorButtonBase
+@inject DialogService DialogService
+
+@namespace Crest.Components.Primitives
+<EditorButton Click=@OnClick Icon="insert_photo" Title=@Title />
+
+@code {
+    protected override async Task OnClick()
+    {
+        if (Editor == null) return;
+        
+        await Editor.SaveSelectionAsync();
+        
+        var uploadHeaders = Editor.UploadHeaders ?? new Dictionary<string, string>();
+
+        Attributes = await Editor.GetSelectionAttributes<ImageAttributes>("img", new[] {"src", "alt", "width", "height"});
+
+        var result = await DialogService.OpenAsync(Title, ds => @<div class="rz-html-editor-dialog">
+            <CrestTemplateForm TItem="ImageAttributes" Data="@Attributes" Submit="OnSubmit">
+                <div class="rz-html-editor-dialog-item">
+                    <label>@SelectText</label>
+                @if (Editor.UploadUrl != null)
+                {
+                    <CrestUpload ChooseText=@UploadChooseText @ref=@FileUpload Url=@Editor.UploadUrl Auto="false" Accept="image/*"
+                        style="width: 100%" Complete="OnUploadComplete" Error="OnUploadError">
+                        @foreach (var header in uploadHeaders)
+                        {
+                            <CrestUploadHeader Name=@header.Key Value=@header.Value />
+                        }
+                    </CrestUpload>
+                } else {
+                    <CrestFileInput Accept="image/*" ChooseText=@UploadChooseText @bind-Value=@Attributes.Src style="width: 100%" />
+                }
+                    </div>
+                    @if (ShowWidth)
+                    {
+                        <div class="rz-html-editor-dialog-item">
+                            <label>@WidthText</label>
+                            <CrestTextBox @bind-Value=@Attributes.Width style="width: 100%" />
+                        </div>
+                    }
+                    @if (ShowHeight)
+                    {
+                        <div class="rz-html-editor-dialog-item">
+                            <label>@HeightText</label>
+                            <CrestTextBox @bind-Value=@Attributes.Height style="width: 100%" />
+                        </div>
+                    }
+                    @if (ShowSrc)
+                    {
+                        <div class="rz-html-editor-dialog-item">
+                            <label>@UrlText</label>
+                            <CrestTextBox @bind-Value=@Attributes.Src style="width: 100%" />
+                        </div>
+                    }
+                    @if (ShowAlt)
+                    {
+                        <div class="rz-html-editor-dialog-item">
+                            <label>@AltText</label>
+                            <CrestTextBox @bind-Value=@Attributes.Alt style="width: 100%" />
+                        </div>
+                    }
+                    <div class="rz-html-editor-dialog-buttons">
+                        <CrestButton Text=@CancelText Click="()=> ds.Close(false)" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+                        <CrestButton Text=@OkText ButtonType="ButtonType.Submit" Variant="Variant.Flat" />
+                    </div>
+                </CrestTemplateForm>
+            </div>
+        );
+    }
+}

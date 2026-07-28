@@ -1,0 +1,12 @@
+@typeparam TItem
+@inherits ComponentBase
+
+@namespace Crest.Components.Primitives
+@if (Columns != null)
+{
+    <CascadingValue Value=this.Grid>
+        <CascadingValue Value=this>
+            @Columns
+        </CascadingValue>
+    </CascadingValue>
+}

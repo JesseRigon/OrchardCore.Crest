@@ -1,0 +1,213 @@
+@namespace Crest.Components.Model
+@typeparam TItem
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+
+<CrestCard class="@CssClass" Style="@ComputedStyle">
+    <CrestStack Gap="0.75rem">
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem">
+            <CrestText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@Title</CrestText>
+            @if (ShowCreate)
+            {
+                <CrestButton Icon="add" Text="@CreateText" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="Create" Disabled="@IsBusy" />
+            }
+        </CrestStack>
+
+        @if (ShowSearch)
+        {
+            <CrestTextBox @bind-Value="SearchText" @oninput="UpdateSearch" Placeholder="@SearchPlaceholder" Style="width: 100%;" />
+        }
+
+        @if (IsBusy)
+        {
+            <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (FilteredItems.Length == 0)
+        {
+            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@EmptyText</CrestText>
+        }
+        else
+        {
+            <CrestStack Gap="0.35rem" class="crest-model-list__items">
+                @foreach (var item in FilteredItems)
+                {
+                    var key = GetKey(item);
+                    <div class="crest-model-list__item @(IsSelected(item) ? "crest-model-list__item--selected" : null)">
+                        <button type="button"
+                                class="crest-model-list__item-select"
+                                @onclick="@(() => Select.InvokeAsync(item))">
+                            <span class="crest-model-list__item-text">
+                                <span class="crest-model-list__item-title">@GetText(item)</span>
+                                @if (!string.IsNullOrWhiteSpace(GetDescription(item)))
+                                {
+                                    <span class="crest-model-list__item-description">@GetDescription(item)</span>
+                                }
+                            </span>
+                        </button>
+                        <span class="crest-model-list__item-actions">
+                            @foreach (var action in Actions)
+                            {
+                                <CrestButton Icon="@action.Icon"
+                                              ButtonStyle="@action.ButtonStyle"
+                                              Variant="Variant.Text"
+                                              Size="ButtonSize.Small"
+                                              Click="@(async _ => await InvokeActionAsync(action, item))"
+                                              Disabled="@(IsBusy || action.Disabled?.Invoke(item) == true)"
+                                              title="@action.Title" />
+                            }
+                        </span>
+                    </div>
+                }
+            </CrestStack>
+        }
+    </CrestStack>
+</CrestCard>
+
+@code {
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string? MinWidth { get; set; }
+
+    [Parameter]
+    public string? MaxWidth { get; set; }
+
+    [Parameter]
+    public string? ItemBorderRadius { get; set; }
+
+    [Parameter]
+    public string? ItemColor { get; set; }
+
+    [Parameter]
+    public string? ItemHoverBackground { get; set; }
+
+    [Parameter]
+    public string? ItemHoverBorderColor { get; set; }
+
+    [Parameter]
+    public string? DescriptionColor { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Items";
+
+    [Parameter]
+    public IReadOnlyList<TItem> Items { get; set; } = [];
+
+    [Parameter]
+    public string? SelectedKey { get; set; }
+
+    [Parameter]
+    public Func<TItem, string?> KeySelector { get; set; } = item => item?.ToString();
+
+    [Parameter]
+    public Func<TItem, string?> TextSelector { get; set; } = item => item?.ToString();
+
+    [Parameter]
+    public Func<TItem, string?>? DescriptionSelector { get; set; }
+
+    [Parameter]
+    public Func<TItem, string, bool>? SearchPredicate { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem> Select { get; set; }
+
+    [Parameter]
+    public EventCallback Create { get; set; }
+
+    [Parameter]
+    public string CreateText { get; set; } = "New";
+
+    [Parameter]
+    public bool ShowCreate { get; set; } = true;
+
+    [Parameter]
+    public bool ShowSearch { get; set; } = true;
+
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "Search...";
+
+    [Parameter]
+    public string EmptyText { get; set; } = "No items found.";
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<CrestModelListAction<TItem>> Actions { get; set; } = [];
+
+    private string? SearchText { get; set; }
+
+    private string CssClass => string.Join(' ', new[] { "crest-model-list", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string? ComputedStyle
+    {
+        get
+        {
+            var styles = new List<string>();
+            AddStyle(styles, "--crest-model-list-min-width", MinWidth);
+            AddStyle(styles, "--crest-model-list-max-width", MaxWidth);
+            AddStyle(styles, "--crest-model-list-item-border-radius", ItemBorderRadius);
+            AddStyle(styles, "--crest-model-list-item-color", ItemColor);
+            AddStyle(styles, "--crest-model-list-item-hover-background", ItemHoverBackground);
+            AddStyle(styles, "--crest-model-list-item-hover-border-color", ItemHoverBorderColor);
+            AddStyle(styles, "--crest-model-list-description-color", DescriptionColor);
+
+            if (!string.IsNullOrWhiteSpace(Style))
+            {
+                styles.Add(Style);
+            }
+
+            return styles.Count == 0 ? null : string.Join(' ', styles);
+        }
+    }
+
+    private TItem[] FilteredItems => Items
+        .Where(item => Matches(item, SearchText))
+        .ToArray();
+
+    private string GetKey(TItem item) => KeySelector(item) ?? string.Empty;
+
+    private string GetText(TItem item) => TextSelector(item) ?? string.Empty;
+
+    private string? GetDescription(TItem item) => DescriptionSelector?.Invoke(item);
+
+    private bool IsSelected(TItem item) => string.Equals(GetKey(item), SelectedKey, StringComparison.OrdinalIgnoreCase);
+
+    private static Task InvokeActionAsync(CrestModelListAction<TItem> action, TItem item)
+    {
+        return action.InvokeAsync(item);
+    }
+
+    private bool Matches(TItem item, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return true;
+        }
+
+        if (SearchPredicate is not null)
+        {
+            return SearchPredicate(item, search);
+        }
+
+        return GetText(item).Contains(search, StringComparison.OrdinalIgnoreCase)
+            || GetDescription(item)?.Contains(search, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private void UpdateSearch(ChangeEventArgs args)
+    {
+        SearchText = args.Value?.ToString();
+    }
+
+    private static void AddStyle(List<string> styles, string property, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            styles.Add($"{property}: {value};");
+        }
+    }
+}

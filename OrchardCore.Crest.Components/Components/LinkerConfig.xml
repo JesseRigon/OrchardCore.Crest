@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+  <assembly fullname="System.Core">
+    <type fullname="System.Linq.Queryable" preserve="all" />
+  </assembly>
+  <assembly fullname="System.Linq.Expressions">
+    <type fullname="System.Linq.Expressions.Expression" preserve="all" />
+    <type fullname="System.Linq.Expressions.ExpressionVisitor" preserve="all" />
+  </assembly>
+  <assembly fullname="Microsoft.CSharp" preserve="all" />
+  <assembly fullname="Crest.Components.Primitives">
+    <!-- Preserve DropDownItem used in filter dropdowns via reflection -->
+    <type fullname="Crest.DropDownItem`1" preserve="all" />
+    <!-- Preserve OData service result types for JSON deserialization -->
+    <type fullname="Crest.ODataServiceResult`1" preserve="all" />
+    <!-- Preserve Google Map marker types serialized to JS interop -->
+    <type fullname="Crest.Components.Primitives.GoogleMapMarkerData" preserve="all" />
+    <type fullname="Crest.GoogleMapPosition" preserve="all" />
+    <!-- Preserve AI chat request types serialized to the chat API -->
+    <type fullname="Crest.ChatCompletionRequest" preserve="all" />
+    <type fullname="Crest.ChatCompletionMessage" preserve="all" />
+    <!-- Preserve all types with [JSInvokable] methods (called from JS, invisible to trimmer) -->
+    <type fullname="Crest.DialogService" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestChart" preserve="methods" />
+    <type fullname="Crest.CrestComponent" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestContextMenu" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestDataGrid`1" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestDatePicker`1" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestDropDown`1" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestDropDownDataGrid`1" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestFabMenu" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestFileInput`1" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestGoogleMap" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestHeatmap" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestHtmlEditor" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestMediaQuery" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestRangeNavigator" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestSankeyDiagram`1" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestScheduler`1" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestSecurityCode" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestSlider`1" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestSpeechToTextButton" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestSpiderChart" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestSplitter" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestToc" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestTreemap" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.CrestUpload" preserve="methods" />
+    <type fullname="Crest.Components.Primitives.GaugeBase" preserve="methods" />
+    <!-- Preserve GroupResult for dynamic Key access -->
+    <type fullname="Crest.GroupResult" preserve="all" />
+  </assembly>
+</linker>

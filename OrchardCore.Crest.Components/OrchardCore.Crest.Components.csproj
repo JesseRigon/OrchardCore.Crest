@@ -15,10 +15,34 @@
     <None Remove="Themes\**" />
     <RazorGenerate Remove="Themes\**" />
     <RazorComponent Remove="Themes\**" />
+    <RazorComponent Remove="RadzenSource\_Imports.razor" />
+  </ItemGroup>
+
+  <!-- Full MIT-licensed component source now owned and compiled by Crest. -->
+  <ItemGroup>
+    <!-- Runtime assets are exposed from this project's canonical wwwroot. -->
+    <EmbeddedResource Include="Components\Resources\Spreadsheet\theme1.xml" />
+    <EmbeddedResource Update="Components\CrestStrings.resx">
+      <ManifestResourceName>Crest.Components.Primitives.CrestStrings</ManifestResourceName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Components\CrestStrings.de.resx">
+      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.de</ManifestResourceName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Components\CrestStrings.es.resx">
+      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.es</ManifestResourceName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Components\CrestStrings.fr.resx">
+      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.fr</ManifestResourceName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Components\CrestStrings.it.resx">
+      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.it</ManifestResourceName>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Components\CrestStrings.ja.resx">
+      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.ja</ManifestResourceName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
-    <PackageReference Include="Radzen.Blazor" />
   </ItemGroup>
 </Project>

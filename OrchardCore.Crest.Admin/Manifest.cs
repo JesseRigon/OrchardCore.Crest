@@ -7,6 +7,6 @@ using OrchardCore.DisplayManagement.Manifest;
     Author = "Orchard Crest UI Framework",
     Website = "https://github.com/OrchardCore.Crest/Orchard-Crest",
     Version = "3.0.0.0.0",
-    Description = "A Blazor WebAssembly admin theme for Orchard Core using Radzen components.",
+    Description = "A Blazor WebAssembly admin theme for Orchard Core using Crest components.",
     Tags = ["admin", "blazor", "radzen"]
 )]

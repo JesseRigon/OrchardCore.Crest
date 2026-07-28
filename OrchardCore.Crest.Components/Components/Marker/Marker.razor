@@ -1,0 +1,43 @@
+@using Crest.Components.Primitives
+
+@namespace Crest.Components.Primitives.Rendering
+<g class="rz-marker">
+@switch(Type)
+{
+    case MarkerType.Circle:
+        <circle cx="@X.ToInvariantString()" cy="@Y.ToInvariantString()" r="@Size.ToInvariantString()" fill="@Fill" stroke="@Stroke" stroke-width="@StrokeWidth.ToInvariantString()" @onclick="@Click"></circle>
+    break;
+
+    case MarkerType.Square:
+    case MarkerType.Triangle:
+    case MarkerType.Diamond:
+        <path d="@MarkerPath.For(Type, X, Y, Size)" stroke="@Stroke" fill="@Fill" stroke-width="@StrokeWidth.ToInvariantString()" @onclick="@Click"></path>
+    break;
+}
+</g>
+
+@code {
+    [Parameter]
+    public double X { get; set; }
+
+    [Parameter]
+    public MarkerType Type { get; set; }
+
+    [Parameter]
+    public double Y { get; set; }
+
+    [Parameter]
+    public string Stroke { get; set; } = string.Empty;
+
+    [Parameter]
+    public double StrokeWidth { get; set; }
+
+    [Parameter]
+    public string Fill { get; set; } = string.Empty;
+
+    [Parameter]
+    public double Size { get; set; }
+
+    [Parameter]
+    public EventCallback Click { get; set; }
+}

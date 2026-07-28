@@ -1,7 +1,7 @@
 @page "/Admin/indexing"
 @using Crest.Admin.Api
-@using Radzen
-@using Radzen.Blazor
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
 @inject IApi Api
 <RadzenStack Gap="1rem" data-testid="indexes-page"><RadzenText TextStyle="TextStyle.H4" Text="Indexes"/>@if(Model is null){<RadzenProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<RadzenDataGrid Data="Model" TItem="CrestIndex"><Columns><RadzenDataGridColumn TItem="CrestIndex" Property="Name" Title="Name"/><RadzenDataGridColumn TItem="CrestIndex" Property="Provider" Title="Provider"/><RadzenDataGridColumn TItem="CrestIndex" Property="Type" Title="Source"/><RadzenDataGridColumn TItem="CrestIndex" Property="CreatedUtc" Title="Created"/><RadzenDataGridColumn TItem="CrestIndex" Title="Actions"><Template Context="index"><RadzenButton Text="Rebuild" Icon="refresh" Click="@(()=>Rebuild(index))"/></Template></RadzenDataGridColumn></Columns></RadzenDataGrid>}</RadzenStack>
 @code { CrestIndex[]? Model; protected override async Task OnInitializedAsync()=>Model=await Api.Crest.Rest.Indexes.ListAsync(); async Task Rebuild(CrestIndex index){await Api.Crest.Rest.Indexes.RebuildAsync(index.Id);Model=await Api.Crest.Rest.Indexes.ListAsync();} }

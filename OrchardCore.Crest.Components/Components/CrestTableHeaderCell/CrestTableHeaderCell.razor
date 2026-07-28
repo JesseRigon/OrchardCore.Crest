@@ -1,0 +1,6 @@
+@inherits CrestComponentWithChildren
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <th @ref="@Element" style="padding: var(--rz-grid-cell-padding);@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">@ChildContent</th>
+}

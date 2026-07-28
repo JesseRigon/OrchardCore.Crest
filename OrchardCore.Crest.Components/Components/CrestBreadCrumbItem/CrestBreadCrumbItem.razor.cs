@@ -1,0 +1,85 @@
+﻿using Microsoft.AspNetCore.Components;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// Bread Crumb Item Component
+    /// </summary>
+    public partial class CrestBreadCrumbItem : CrestComponent
+    {
+        /// <summary>
+        /// Cascaded Template Parameter from <see cref="CrestBreadCrumb"/> Component
+        /// </summary>
+        [CascadingParameter]
+        public RenderFragment<CrestBreadCrumbItem>? Template { get; set; }
+
+        /// <summary>
+        /// The <see cref="CrestBreadCrumb"/> component this item belongs to. Set via cascading value.
+        /// </summary>
+        [CascadingParameter]
+        public CrestBreadCrumb? BreadCrumb { get; set; }
+
+        /// <summary>
+        /// The Displayed Text
+        /// </summary>
+        [Parameter]
+        public string? Text { get; set; }
+
+        /// <summary>
+        /// An optional Link to be rendendered
+        /// </summary>
+        [Parameter]
+        public string? Path { get; set; }
+
+        /// <summary>
+        /// An optional Icon to be rendered
+        /// </summary>
+        [Parameter]
+        public string? Icon { get; set; }
+
+        /// <summary>
+        /// Gets or sets the icon color.
+        /// </summary>
+        /// <value>The icon color.</value>
+        [Parameter]
+        public string? IconColor { get; set; }
+
+        /// <summary>
+        /// Template Parameter used only for this Item
+        /// Note: this overrides the <see cref="Template"/> Cascading Parameter
+        /// </summary>
+        [Parameter]
+        public RenderFragment? ChildContent { get; set; }
+
+        /// <inheritdoc/>
+        protected override string GetComponentCssClass()
+        {
+            return "rz-breadcrumb-item";
+        }
+
+        string? ItemAriaCurrent => ChildContent == null && Template == null && string.IsNullOrWhiteSpace(Path)
+            ? null
+            : BreadCrumb?.IsLastItem(this) == true ? "page" : null;
+
+        internal void Refresh()
+        {
+            StateHasChanged();
+        }
+
+        /// <inheritdoc/>
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            BreadCrumb?.AddItem(this);
+        }
+
+        /// <inheritdoc/>
+        public override void Dispose()
+        {
+            BreadCrumb?.RemoveItem(this);
+
+            base.Dispose();
+        }
+    }
+}

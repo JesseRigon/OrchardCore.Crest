@@ -1,0 +1,840 @@
+@using Crest.Admin.DisplayManagement
+@using Crest.Admin.Components.Shared
+@using Crest.Components.Navigation
+@using Crest.Components.Overlay
+@using Crest.Icons.Components
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="@PrimaryNavMenuClass"
+     style="@PrimaryNavMenuStyle"
+     data-testid="primary-nav-menu"
+     @onmouseenter="BeginHoverOpenAsync"
+     @onmouseleave="EndHoverOpen">
+    <Crest.Components.Layout.CrestPrimaryNavMenu Class="primary-nav-menu__surface">
+    <div class="primary-nav-menu__content">
+        @if (DisplayManager is null)
+        {
+            <RadzenText TextStyle="TextStyle.Body2" Text="Display manager is unavailable." />
+        }
+        else if (Menu is null)
+        {
+            <RadzenText TextStyle="TextStyle.Body2" Text="Loading admin menu..." />
+        }
+        else
+        {
+            @if (DisplayManager.Manifest?.AdminSettings.DisplayMenuFilter == true)
+            {
+                <div class="@FilterRowClass">
+                    @if (ShowSearchIcon)
+                    {
+                        <span class="crest-panel-menu__icon-rail primary-nav-menu__filter-search-icon" aria-hidden="true">
+                            @RenderMenuIcon(SearchIcon, 0)
+                        </span>
+                    }
+
+                    <span class="crest-panel-menu__text-rail primary-nav-menu__filter-input-rail">
+                        <RadzenTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="Search Menu" Style="width: 100%;" />
+                    </span>
+
+                    @if (HasQuickAddItems)
+                    {
+                        <button type="button" class="primary-nav-menu__quickadd-toggle" @onclick="OpenQuickAdd" title="@QuickAddTitle" aria-label="@QuickAddTitle">
+                            @RenderMenuIcon(QuickAddSource?.Icon, 0)
+                        </button>
+                    }
+                </div>
+            }
+            else if (HasQuickAddItems)
+            {
+                <button type="button" class="primary-nav-menu__quickadd-row" @onclick="OpenQuickAdd" title="@QuickAddTitle">
+                    <span class="crest-panel-menu__item-content">
+                        <span class="crest-panel-menu__icon-rail">
+                            @RenderMenuIcon(QuickAddSource?.Icon, 0)
+                        </span>
+                        <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
+                    </span>
+                    @RenderChromeIcon(QuickAddSource?.Icon, "primary-nav-menu__quickadd-add-icon", $"Open {QuickAddTitle}")
+                </button>
+            }
+
+            <CrestPanelMenu Items="VisiblePanelMenuItems"
+                            Class="primary-nav-menu__menu"
+                            AriaLabel="Admin navigation"
+                            ExpandedItemKeys="ExpandedItemKeys"
+                            ExpansionVersion="ExpansionVersion"
+                            ExpandedChanged="SetExpanded"
+                            FlyoutOpened="OpenFlyout"
+                            FlyoutCloseRequested="CloseFlyoutSoon"
+                            Collapsed="@IsMenuCollapsed"
+                            IconRailWidth="4rem"
+                            ActionRailWidth="2rem"
+                            ItemHeight="2.5rem"
+                            Style="@PanelMenuStyle"
+                            LevelIndents="PrimaryNavMenuSettings.TierIndents"
+                            LevelBackgrounds="PrimaryNavMenuSettings.TierBackgrounds"
+                            LevelBaseSizes="PrimaryNavMenuSettings.TierBaseSizes"
+                            TierSeparators="PrimaryNavMenuSettings.TierSeparators"
+                            ActionIcon="RenderPanelActionIcon"
+                            IndentTransitionDuration="@ExpansionDuration"
+                            CompactTransitionDuration="@ExpansionDuration" />
+
+            @if (VisibleMenuItems.Length == 0)
+            {
+                <RadzenText TextStyle="TextStyle.Body2" Text="No admin menu items returned." />
+            }
+
+        }
+    </div>
+    </Crest.Components.Layout.CrestPrimaryNavMenu>
+    @if (IsQuickAddVisible)
+    {
+        <div class="primary-nav-menu__quickadd-popover" role="dialog" aria-modal="true" aria-label="@QuickAddTitle">
+            <div class="primary-nav-menu__quickadd-header">
+                <span class="crest-panel-menu__item-content">
+                    <span class="crest-panel-menu__icon-rail">
+                        @RenderMenuIcon(QuickAddSource?.Icon, 0)
+                    </span>
+                    <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
+                </span>
+                <button type="button" class="primary-nav-menu__quickadd-button primary-nav-menu__quickadd-close-button" @onclick="CloseQuickAdd" title="@($"Close {QuickAddTitle}")" aria-label="@($"Close {QuickAddTitle}")">
+                    @RenderChromeIcon(CloseIcon, "primary-nav-menu__quickadd-close-icon", $"Close {QuickAddTitle}")
+                </button>
+            </div>
+            <CrestPanelMenu Items="QuickAddPanelMenuItems"
+                            Class="primary-nav-menu__menu primary-nav-menu__quickadd-menu"
+                            AriaLabel="Quick Add"
+                            ExpandedItemKeys="ExpandedItemKeys"
+                            ExpansionVersion="ExpansionVersion"
+                            ExpandedChanged="SetExpanded"
+                            FlyoutOpened="OpenFlyout"
+                            FlyoutCloseRequested="CloseFlyoutSoon"
+                            Collapsed="false"
+                            IconRailWidth="4rem"
+                            ActionRailWidth="2rem"
+                            ItemHeight="2.5rem"
+                            Style="@PanelMenuStyle"
+                            LevelIndents="PrimaryNavMenuSettings.TierIndents"
+                            LevelBackgrounds="PrimaryNavMenuSettings.TierBackgrounds"
+                            LevelBaseSizes="PrimaryNavMenuSettings.TierBaseSizes"
+                            TierSeparators="PrimaryNavMenuSettings.TierSeparators"
+                            ActionIcon="RenderPanelActionIcon"
+                            IndentTransitionDuration="@ExpansionDuration"
+                            CompactTransitionDuration="@ExpansionDuration" />
+        </div>
+    }
+    @if (IsPrimaryNavMenuCollapsible)
+    {
+        <button type="button"
+                class="primary-nav-menu__mode-toggle"
+                aria-label="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                aria-pressed="@IsPinnedExpanded"
+                title="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                @onclick="TogglePinnedExpanded">
+            @RenderChromeIcon(ChevronRightIcon, $"primary-nav-menu__mode-toggle-icon{(IsPinnedExpanded ? " primary-nav-menu__mode-toggle-icon--collapse" : null)}", IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")
+        </button>
+    }
+    <CrestPopup IsOpen="@(ActiveFlyoutItem is not null)"
+            AnchorMode="CrestPopupAnchorMode.Element"
+            AnchorSelector="@FlyoutAnchorSelector"
+            AnchorPoint="CrestPopupAnchorPoint.TopRight"
+            FlipAboveAnchorPoint="CrestPopupAnchorPoint.BottomRight"
+            OffsetX="12"
+            OffsetY="0"
+            ZIndex="1200"
+            WindowAware="true"
+            Class="primary-nav-menu__flyout primary-nav-menu__flyout--detached"
+            Role="menu"
+            OnMouseEnter="@(_ => KeepFlyoutOpen())"
+            OnMouseLeave="@(_ => CloseFlyout())">
+    @if (ActiveFlyoutItem is not null)
+    {
+        <PrimaryNavMenuFlyoutItems Items="ActiveFlyoutItem.Items" />
+    }
+    </CrestPopup>
+</div>
+
+@code {
+    [CascadingParameter]
+    public DisplayManager? DisplayManager { get; set; }
+
+    [Parameter]
+    public bool IsMobileOpen { get; set; }
+
+    private readonly HashSet<string> ExpandedItemKeys = [];
+    private DisplayMenu? LastMenu;
+    private string? MenuFilter { get; set; }
+    private bool IsQuickAddOpen { get; set; }
+    private DisplayMenuItem? ActiveFlyoutItem { get; set; }
+    private string? FlyoutAnchorSelector { get; set; }
+    private CancellationTokenSource? FlyoutCloseDelay { get; set; }
+    private CancellationTokenSource? HoverOpenDelay { get; set; }
+    private string? BrowserPathAndQuery { get; set; }
+    private bool IsPinnedExpanded { get; set; } = true;
+    private bool IsHoverReady { get; set; }
+    private int ExpansionVersion { get; set; }
+    private MenuRenderModel? CachedMenuModel { get; set; }
+
+    private DisplayMenu? Menu => DisplayManager?.AdminMenu;
+    private DisplayMenuItem? QuickAddSource => CurrentMenuModel?.QuickAddSource;
+    private DisplayMenuItem[] QuickAddItems => CurrentMenuModel?.QuickAddItems ?? [];
+    private bool HasQuickAddItems => QuickAddItems.Length > 0;
+    private string QuickAddTitle => string.IsNullOrWhiteSpace(QuickAddSource?.Text) ? "Quick Add" : QuickAddSource.Text;
+    private DisplayMenuItem[] PrimaryNavMenuMenuItems => CurrentMenuModel?.PrimaryNavMenuItems ?? [];
+    private DisplayMenuItem[] VisibleMenuItems => CurrentMenuModel?.VisibleMenuItems ?? [];
+    private CrestPanelMenuItem[] VisiblePanelMenuItems => CurrentMenuModel?.VisiblePanelMenuItems ?? [];
+    private CrestPanelMenuItem[] QuickAddPanelMenuItems => CurrentMenuModel?.QuickAddPanelMenuItems ?? [];
+    private string? ActiveItemKey => CurrentMenuModel?.ActiveItemKey;
+    private string? ActiveItemLink => CurrentMenuModel?.ActiveItemLink;
+    private DisplayPrimaryNavMenuSettings PrimaryNavMenuSettings => Menu?.PrimaryNavMenuSettings ?? DisplayPrimaryNavMenuSettings.Default;
+    private bool IsPrimaryNavMenuCollapsible => PrimaryNavMenuSettings.Collapsible;
+    private bool IsEffectivelyPinnedExpanded => !IsPrimaryNavMenuCollapsible || IsPinnedExpanded;
+    private bool IsPrimaryNavMenuExpanded => IsEffectivelyPinnedExpanded || IsHoverReady;
+    private bool IsQuickAddVisible => IsQuickAddOpen && IsPrimaryNavMenuExpanded;
+    private string ExpansionDuration => $"{PrimaryNavMenuSettings.ExpansionDurationMilliseconds}ms";
+    private string PrimaryNavMenuStyle => string.Join(' ', new[] { $"--primary-nav-menu-expansion-duration: {ExpansionDuration};" }
+        .Concat(PrimaryNavMenuSettings.TierIndents.Select((value, index) => $"--crest-panel-menu-tier-{index + 1}-indent: {value};")));
+    private bool ShowSearchIcon => !HasQuickAddItems;
+    private string FilterRowClass => string.Join(' ', new[]
+    {
+        "primary-nav-menu__filter-row",
+        "crest-panel-menu__item-link",
+        HasQuickAddItems ? "primary-nav-menu__filter-row--quickadd" : "primary-nav-menu__filter-row--search",
+    });
+    private string PanelMenuStyle => string.Join(' ', PrimaryNavMenuSettings.TierBackgrounds.Select((value, index) => $"--crest-panel-menu-tier-{index + 1}-background: {value};")
+        .Concat(PrimaryNavMenuSettings.TierBaseSizes.Select((value, index) => $"--crest-panel-menu-tier-{index + 1}-base-size: {value};"))
+        .Append($"--crest-panel-menu-tier-4-base-size: {GetTierFourBaseSize()};"));
+    private static DisplayIcon SearchIcon { get; } = CreateIcon("magnify");
+    private static DisplayIcon ChevronRightIcon { get; } = CreateIcon("chevron-right");
+    private static DisplayIcon CloseIcon { get; } = CreateIcon("close");
+
+    private static DisplayIcon CreateIcon(string name) => new($"iconify.mdi/current/default/{name}", "iconify.mdi", "current", "default", name, null);
+
+    private string GetTierFourBaseSize() => PrimaryNavMenuSettings.TierBaseSizes.Length >= 3
+        ? PrimaryNavMenuSettings.TierBaseSizes[2]
+        : PrimaryNavMenuSettings.TierBaseSizes.LastOrDefault() ?? DisplayPrimaryNavMenuSettings.Default.TierBaseSizes[2];
+    private string PrimaryNavMenuClass => (IsEffectivelyPinnedExpanded
+        ? "primary-nav-menu primary-nav-menu--pinned primary-nav-menu--expanded"
+        : IsHoverReady
+            ? "primary-nav-menu primary-nav-menu--compact primary-nav-menu--expanded primary-nav-menu--hover-ready"
+            : "primary-nav-menu primary-nav-menu--compact")
+        + (IsMobileOpen ? " primary-nav-menu--mobile-open" : string.Empty);
+    private bool IsMenuCollapsed => IsPrimaryNavMenuCollapsible && !IsPinnedExpanded && !IsHoverReady;
+
+    private MenuRenderModel? CurrentMenuModel
+    {
+        get
+        {
+            var menu = Menu;
+            if (menu is null)
+            {
+                CachedMenuModel = null;
+                return null;
+            }
+
+            var route = GetCurrentRoute();
+            if (CachedMenuModel is not null
+                && ReferenceEquals(CachedMenuModel.Menu, menu)
+                && string.Equals(CachedMenuModel.Filter, MenuFilter, StringComparison.Ordinal)
+                && string.Equals(CachedMenuModel.Route, route, StringComparison.Ordinal))
+            {
+                return CachedMenuModel;
+            }
+
+            var quickAddSource = FindQuickAddSource(menu.Items);
+            var quickAddItems = quickAddSource?.Items ?? [];
+            var primaryNavMenuItems = RemoveQuickAddSource(menu.Items);
+            var visibleMenuItems = string.IsNullOrWhiteSpace(MenuFilter)
+                ? primaryNavMenuItems
+                : FilterItems(primaryNavMenuItems, MenuFilter);
+            var activeItem = FindBestActiveItem(menu.Items, route).Item;
+            var activeItemKey = activeItem?.StableKey;
+            var activeItemLink = activeItem?.Link;
+
+            CachedMenuModel = new MenuRenderModel(
+                menu,
+                MenuFilter,
+                route,
+                quickAddSource,
+                quickAddItems,
+                primaryNavMenuItems,
+                visibleMenuItems,
+                MapMenuItems(menu, visibleMenuItems, null, activeItemKey, activeItemLink),
+                MapMenuItems(menu, quickAddItems, quickAddSource?.StableKey, activeItemKey, activeItemLink),
+                activeItemKey,
+                activeItemLink);
+
+            return CachedMenuModel;
+        }
+    }
+
+    private string GetCurrentRoute() => !string.IsNullOrWhiteSpace(BrowserPathAndQuery)
+        ? NormalizePathOnly(BrowserPathAndQuery)
+        : Uri.TryCreate(Navigation.Uri, UriKind.Absolute, out var uri)
+            ? NormalizePathOnly(uri.PathAndQuery)
+            : NormalizePathOnly(Navigation.Uri);
+
+    private void InvalidateMenuModel() => CachedMenuModel = null;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                BrowserPathAndQuery = await JS.InvokeAsync<string>("crestAdminMenus.getPathAndQuery");
+                var savedPinnedState = await JS.InvokeAsync<bool?>("crestAdminMenus.getPrimaryNavMenuPinnedState");
+                if (IsPrimaryNavMenuCollapsible && savedPinnedState.HasValue)
+                {
+                    IsPinnedExpanded = savedPinnedState.Value;
+                }
+
+                StateHasChanged();
+            }
+
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(Menu, LastMenu))
+        {
+            LastMenu = Menu;
+            InvalidateMenuModel();
+            SyncExpandedItemsWithMenu();
+        }
+
+        if (!HasQuickAddItems)
+        {
+            IsQuickAddOpen = false;
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        BrowserPathAndQuery = Uri.TryCreate(args.Location, UriKind.Absolute, out var uri) ? uri.PathAndQuery : args.Location;
+        InvalidateMenuModel();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        FlyoutCloseDelay?.Cancel();
+        FlyoutCloseDelay?.Dispose();
+        HoverOpenDelay?.Cancel();
+        HoverOpenDelay?.Dispose();
+    }
+
+    private void OpenFlyout(CrestPanelMenuFlyoutEventArgs args)
+    {
+        if (args.Item.Source is not DisplayMenuItem item)
+        {
+            return;
+        }
+
+        KeepFlyoutOpen();
+        ActiveFlyoutItem = item;
+        FlyoutAnchorSelector = $"[data-crest-panel-menu-flyout-anchor=\"{EscapeCssAttributeValue(args.Item.Key)}\"]";
+        StateHasChanged();
+    }
+
+    private void KeepFlyoutOpen()
+    {
+        FlyoutCloseDelay?.Cancel();
+        if (IsPrimaryNavMenuCollapsible && !IsPinnedExpanded)
+        {
+            IsHoverReady = true;
+        }
+    }
+
+    private static string EscapeCssAttributeValue(string value) => value
+        .Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace("\"", "\\\"", StringComparison.Ordinal);
+
+    private void CloseFlyout()
+    {
+        FlyoutCloseDelay?.Cancel();
+        ActiveFlyoutItem = null;
+        FlyoutAnchorSelector = null;
+        if (IsPrimaryNavMenuCollapsible && !IsPinnedExpanded)
+        {
+            IsHoverReady = false;
+            IsQuickAddOpen = false;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task CloseFlyoutSoon()
+    {
+        FlyoutCloseDelay?.Cancel();
+        var delay = new CancellationTokenSource();
+        FlyoutCloseDelay = delay;
+
+        try
+        {
+            await Task.Delay(250, delay.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (!delay.IsCancellationRequested)
+        {
+            ActiveFlyoutItem = null;
+            FlyoutAnchorSelector = null;
+            if (IsPrimaryNavMenuCollapsible && !IsPinnedExpanded)
+            {
+                IsHoverReady = false;
+                IsQuickAddOpen = false;
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void SetExpanded(CrestPanelMenuExpansionChangedEventArgs args) => SetExpanded(args.Item.Key, args.Expanded);
+
+    private void SetExpanded(string key, bool expanded)
+    {
+        var changed = expanded
+            ? ExpandedItemKeys.Add(key)
+            : ExpandedItemKeys.Remove(key);
+
+        if (changed)
+        {
+            ExpansionVersion++;
+            StateHasChanged();
+        }
+    }
+
+    private void OpenQuickAdd()
+    {
+        if (!HasQuickAddItems)
+        {
+            return;
+        }
+
+        // Quick Add is an expanded-only mode. Selecting its compact-rail icon
+        // opens the same overlay-expanded primaryNavMenu state used on hover.
+        if (IsPrimaryNavMenuCollapsible && !IsPinnedExpanded)
+        {
+            IsHoverReady = true;
+        }
+
+        IsQuickAddOpen = true;
+        var changed = false;
+        foreach (var item in Flatten(QuickAddItems).Where(item => item.HasChildren))
+        {
+            changed |= ExpandedItemKeys.Add(item.StableKey);
+        }
+
+        if (changed)
+        {
+            ExpansionVersion++;
+        }
+    }
+
+    private void CloseQuickAdd()
+    {
+        IsQuickAddOpen = false;
+    }
+
+    private async Task TogglePinnedExpanded()
+    {
+        if (!IsPrimaryNavMenuCollapsible)
+        {
+            return;
+        }
+
+        IsPinnedExpanded = !IsPinnedExpanded;
+        IsHoverReady = false;
+        IsQuickAddOpen = false;
+        CloseFlyout();
+
+        try
+        {
+            await JS.InvokeVoidAsync("crestAdminMenus.setPrimaryNavMenuPinnedState", IsPinnedExpanded);
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    private async Task BeginHoverOpenAsync()
+    {
+        if (!IsPrimaryNavMenuCollapsible || IsPinnedExpanded)
+        {
+            return;
+        }
+
+        HoverOpenDelay?.Cancel();
+        HoverOpenDelay?.Dispose();
+        var delay = new CancellationTokenSource();
+        HoverOpenDelay = delay;
+
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1), delay.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (!delay.IsCancellationRequested && !IsPinnedExpanded)
+        {
+            IsHoverReady = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void EndHoverOpen()
+    {
+        HoverOpenDelay?.Cancel();
+        if (ActiveFlyoutItem is not null)
+        {
+            return;
+        }
+
+        IsHoverReady = false;
+        IsQuickAddOpen = false;
+    }
+
+    private void SyncExpandedItemsWithMenu()
+    {
+        if (Menu is null)
+        {
+            if (ExpandedItemKeys.Count > 0)
+            {
+                ExpandedItemKeys.Clear();
+                ExpansionVersion++;
+            }
+            return;
+        }
+
+        var visibleKeys = Flatten([.. PrimaryNavMenuMenuItems, .. QuickAddItems]).Select(item => item.StableKey).ToHashSet(StringComparer.Ordinal);
+        var changed = ExpandedItemKeys.RemoveWhere(key => !visibleKeys.Contains(key)) > 0;
+        changed |= ExpandActiveAncestors(PrimaryNavMenuMenuItems).Changed;
+        if (changed)
+        {
+            ExpansionVersion++;
+        }
+    }
+
+    private void UpdateMenuFilter(ChangeEventArgs args)
+    {
+        MenuFilter = args.Value?.ToString();
+        InvalidateMenuModel();
+        if (!string.IsNullOrWhiteSpace(MenuFilter))
+        {
+            var changed = false;
+            foreach (var item in Flatten(VisibleMenuItems).Where(item => item.HasChildren))
+            {
+                changed |= ExpandedItemKeys.Add(item.StableKey);
+            }
+
+            if (changed)
+            {
+                ExpansionVersion++;
+            }
+        }
+    }
+
+    private static DisplayMenuItem[] FilterItems(DisplayMenuItem[] items, string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return items;
+        }
+
+        return items
+            .Select(item => FilterItem(item, query))
+            .Where(item => item is not null)
+            .Cast<DisplayMenuItem>()
+            .ToArray();
+    }
+
+    private static DisplayMenuItem? FilterItem(DisplayMenuItem item, string query)
+    {
+        var children = FilterItems(item.Items, query);
+        var isMatch = item.Text.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || (item.Link?.Contains(query, StringComparison.OrdinalIgnoreCase) == true);
+
+        return isMatch || children.Length > 0
+            ? item with { Items = children }
+            : null;
+    }
+
+    private (bool HasActiveItem, bool Changed) ExpandActiveAncestors(IEnumerable<DisplayMenuItem> items)
+    {
+        var hasActiveItem = false;
+        var changed = false;
+
+        foreach (var item in items)
+        {
+            var child = ExpandActiveAncestors(item.Items);
+            var childIsActive = child.HasActiveItem;
+            var itemIsActive = IsActive(item);
+            changed |= child.Changed;
+
+            if (childIsActive || itemIsActive)
+            {
+                hasActiveItem = true;
+                if (item.HasChildren)
+                {
+                    changed |= ExpandedItemKeys.Add(item.StableKey);
+                }
+            }
+        }
+
+        return (hasActiveItem, changed);
+    }
+
+    private bool IsActive(DisplayMenuItem item) => ActiveItemKey == item.StableKey;
+
+    private DisplayMenuItem? FindBestActiveItem(IEnumerable<DisplayMenuItem> items)
+    {
+        var current = !string.IsNullOrWhiteSpace(BrowserPathAndQuery)
+            ? NormalizePathOnly(BrowserPathAndQuery)
+            : Uri.TryCreate(Navigation.Uri, UriKind.Absolute, out var uri)
+                ? NormalizePathOnly(uri.PathAndQuery)
+                : NormalizePathOnly(Navigation.Uri);
+        return FindBestActiveItem(items, current).Item;
+    }
+
+    private static (DisplayMenuItem? Item, int Score) FindBestActiveItem(IEnumerable<DisplayMenuItem> items, string current)
+    {
+        DisplayMenuItem? bestItem = null;
+        var bestScore = -1;
+
+        foreach (var item in items)
+        {
+            var itemScore = GetActiveScore(item, current);
+            if (itemScore > bestScore)
+            {
+                bestItem = item;
+                bestScore = itemScore;
+            }
+
+            var childBest = FindBestActiveItem(item.Items, current);
+            if (childBest.Score > bestScore)
+            {
+                bestItem = childBest.Item;
+                bestScore = childBest.Score;
+            }
+        }
+
+        return (bestItem, bestScore);
+    }
+
+    private static int GetActiveScore(DisplayMenuItem item, string current)
+    {
+        if (!item.HasLink || item.Link == "#")
+        {
+            return -1;
+        }
+
+        var link = NormalizePathOnly(item.Link!);
+        if (PathMatches(current, link))
+        {
+            return link.Length;
+        }
+
+        var currentWithoutAdmin = StripAdminPrefix(current);
+        var linkWithoutAdmin = StripAdminPrefix(link);
+        return PathMatches(currentWithoutAdmin, linkWithoutAdmin)
+            ? linkWithoutAdmin.Length
+            : -1;
+    }
+
+    private static bool PathMatches(string current, string link) =>
+        current.Equals(link, StringComparison.OrdinalIgnoreCase) || current.StartsWith(link.TrimEnd('/') + '/', StringComparison.OrdinalIgnoreCase);
+
+    private static string StripAdminPrefix(string path) =>
+        path.StartsWith("/Admin/", StringComparison.OrdinalIgnoreCase)
+            ? path[6..]
+            : string.Equals(path, "/Admin", StringComparison.OrdinalIgnoreCase) ? "/" : path;
+
+    private static string NormalizePathOnly(string value)
+    {
+        var path = value.Split('?', 2)[0].Split('#', 2)[0].Trim();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return "/";
+        }
+
+        path = path.StartsWith('/') ? path : '/' + path;
+        return path.TrimEnd('/');
+    }
+
+    private static DisplayMenuItem? FindQuickAddSource(IEnumerable<DisplayMenuItem> items)
+    {
+        foreach (var item in items)
+        {
+            if (IsQuickAddSource(item))
+            {
+                return item;
+            }
+
+            var child = FindQuickAddSource(item.Items);
+            if (child is not null)
+            {
+                return child;
+            }
+        }
+
+        return null;
+    }
+
+    private static DisplayMenuItem[] RemoveQuickAddSource(IEnumerable<DisplayMenuItem> items) => items
+        .Where(item => !IsQuickAddSource(item))
+        .Select(item => item with { Items = RemoveQuickAddSource(item.Items) })
+        .ToArray();
+
+    private static bool IsQuickAddSource(DisplayMenuItem item) =>
+        string.Equals(item.Key, "new", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(item.Id, "new", StringComparison.OrdinalIgnoreCase) ||
+        (item.Classes.Any(className => string.Equals(className, "new", StringComparison.OrdinalIgnoreCase)) &&
+            string.Equals(item.Text, "New", StringComparison.OrdinalIgnoreCase));
+
+    private static IEnumerable<DisplayMenuItem> Flatten(IEnumerable<DisplayMenuItem> items)
+    {
+        foreach (var item in items)
+        {
+            yield return item;
+            foreach (var child in Flatten(item.Items))
+            {
+                yield return child;
+            }
+        }
+    }
+
+    private CrestPanelMenuItem[] MapMenuItems(
+        DisplayMenu menu,
+        IEnumerable<DisplayMenuItem> items,
+        string? parentKey,
+        string? activeItemKey,
+        string? activeItemLink,
+        int level = 0)
+    {
+        var itemArray = items.ToArray();
+        var entries = new List<(int Order, int Kind, CrestPanelMenuItem Item)>();
+
+        for (var index = 0; index < itemArray.Length; index++)
+        {
+            var item = itemArray[index];
+            entries.Add((index, 1, new CrestPanelMenuItem
+            {
+                Key = item.StableKey,
+                Text = item.Text,
+                Href = item.HasChildren || !item.HasLink || item.Link == "#" ? null : item.Link,
+                Target = item.Target,
+                Icon = RenderMenuIcon(item.Icon, level),
+                Items = MapMenuItems(menu, item.Items, item.StableKey, activeItemKey, activeItemLink, level + 1),
+                IsActive = IsPanelItemActive(item, activeItemKey, activeItemLink),
+                CssClass = GetPanelMenuItemCssClass(item, level),
+                Source = item,
+            }));
+        }
+
+        entries.AddRange(menu.Separators
+            .Where(separator => string.Equals(separator.ParentKey, parentKey, StringComparison.Ordinal))
+            .Select(separator => (separator.Order, 0, new CrestPanelMenuItem
+            {
+                Key = separator.Key,
+                IsSeparator = true,
+                CssClass = $"primary-nav-menu__separator primary-nav-menu__separator--level-{level}",
+                Source = separator,
+            })));
+
+        return entries
+            .OrderBy(entry => entry.Order)
+            .ThenBy(entry => entry.Kind)
+            .Select(entry => entry.Item)
+            .ToArray();
+    }
+
+    private RenderFragment RenderMenuIcon(DisplayIcon? icon, int level) => builder =>
+    {
+        builder.OpenComponent(0, level == 0 ? typeof(AdminMenuIcon) : typeof(AdminMenuSubIcon));
+        builder.AddAttribute(1, "Icon", icon);
+        builder.CloseComponent();
+    };
+
+    private RenderFragment RenderPanelActionIcon(CrestPanelMenuActionIconContext context) => builder =>
+    {
+        builder.OpenComponent<OrchardIcon>(0);
+        builder.AddAttribute(1, "IconKey", context.IconKey);
+        builder.AddAttribute(2, "Name", GetIconNameFromKey(context.IconKey));
+        builder.AddAttribute(3, "Library", "iconify.mdi");
+        builder.AddAttribute(4, "Version", "current");
+        builder.AddAttribute(5, "Alt", context.Title);
+        builder.AddAttribute(6, "Class", context.CssClass);
+        builder.CloseComponent();
+    };
+
+    private RenderFragment RenderChromeIcon(DisplayIcon? icon, string cssClass, string title) => builder =>
+    {
+        builder.OpenComponent<OrchardIcon>(0);
+        builder.AddAttribute(1, "IconKey", icon?.Key);
+        builder.AddAttribute(2, "Name", icon?.Name);
+        builder.AddAttribute(3, "Library", icon?.Library);
+        builder.AddAttribute(4, "Version", icon?.Version);
+        builder.AddAttribute(5, "SvgMarkup", icon?.SvgMarkup);
+        builder.AddAttribute(6, "Alt", title);
+        builder.AddAttribute(7, "Class", cssClass);
+        builder.CloseComponent();
+    };
+
+    private static string GetIconNameFromKey(string iconKey)
+    {
+        var index = iconKey.LastIndexOf('/');
+        return index >= 0 && index < iconKey.Length - 1 ? iconKey[(index + 1)..] : iconKey;
+    }
+
+    private static string GetPanelMenuItemCssClass(DisplayMenuItem item, int level)
+    {
+        var itemClass = $"primary-nav-menu__item primary-nav-menu__item--level-{level}";
+        return level >= 2 && item.HasChildren ? itemClass + " primary-nav-menu__item--has-flyout" : itemClass;
+    }
+
+    private static bool IsPanelItemActive(DisplayMenuItem item, string? activeItemKey, string? activeItemLink)
+    {
+        if (!item.HasLink || string.IsNullOrWhiteSpace(activeItemLink))
+        {
+            return false;
+        }
+
+        return item.StableKey == activeItemKey || string.Equals(NormalizePathOnly(item.Link!), NormalizePathOnly(activeItemLink), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed record MenuRenderModel(
+        DisplayMenu Menu,
+        string? Filter,
+        string Route,
+        DisplayMenuItem? QuickAddSource,
+        DisplayMenuItem[] QuickAddItems,
+        DisplayMenuItem[] PrimaryNavMenuItems,
+        DisplayMenuItem[] VisibleMenuItems,
+        CrestPanelMenuItem[] VisiblePanelMenuItems,
+        CrestPanelMenuItem[] QuickAddPanelMenuItems,
+        string? ActiveItemKey,
+        string? ActiveItemLink);
+}

@@ -1,0 +1,76 @@
+@using Crest
+@using Crest.Components.Primitives.Rendering
+@using System.Collections
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+
+@inherits DataBoundFormComponent<string>
+
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <div @ref="@Element" style="@($"{Style};display:inline-block;")" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">
+        @if (Multiline)
+        {
+            <textarea @ref="@search" @attributes="InputAttributes" @onkeydown="@OnFilterKeyPress" @bind:get="@Value" @bind:set="@SetValue" @bind:event="onchange" disabled="@Disabled"
+                tabindex="@(Disabled ? "-1" : $"{TabIndex}")"
+                aria-autocomplete="list" aria-haspopup="listbox" aria-controls="@ListId" aria-expanded="@(IsPopupOpen ? "true" : "false")" aria-activedescendant="@ActiveDescendantId" autocomplete="off" role="combobox"
+                class=@InputClass
+                id="@Name" placeholder="@CurrentPlaceholder" maxlength="@MaxLength" />
+        }
+        else
+        {
+            <input @ref="@search" @attributes="InputAttributes" @onkeydown="@OnFilterKeyPress" @bind:get="@Value" @bind:set="@SetValue" @bind:event="onchange" disabled="@Disabled"
+                tabindex="@(Disabled ? "-1" : $"{TabIndex}")"
+                aria-autocomplete="list" aria-haspopup="listbox" aria-controls="@ListId" aria-expanded="@(IsPopupOpen ? "true" : "false")" aria-activedescendant="@ActiveDescendantId" autocomplete="off" role="combobox"
+                class=@InputClass
+                type="@InputType" id="@Name" placeholder="@CurrentPlaceholder" maxlength="@MaxLength" />
+        }
+        <div id="@PopupID" class="@PopupCssClass" style="@PopupStyle">
+            <ul id="@ListId" @ref="@list" class="rz-autocomplete-items rz-autocomplete-list" role="listbox">
+                @if (OpenOnFocus || (!string.IsNullOrEmpty(searchText) || !string.IsNullOrEmpty(customSearchText)))
+                {
+                    if (IsLoading && LoadingTemplate != null)
+                    {
+                        <li class="rz-autocomplete-list-item" tabindex="-1" role="presentation">
+                            @LoadingTemplate
+                        </li>
+                    }
+                    else
+                    {
+                        var items = (LoadData.HasDelegate ? Data : View) ?? Enumerable.Empty<object>();
+                        var hasItems = false;
+                        var itemIndex = -1;
+
+                        foreach (var item in items)
+                        {
+                            hasItems = true;
+                            itemIndex++;
+                            <li role="option" id="@ItemId(itemIndex)" class="rz-autocomplete-list-item" tabindex="-1"
+                                aria-selected="@(selectedIndex >= 0 ? (itemIndex == selectedIndex ? "true" : "false") : (object.Equals(item, SelectedItem) ? "true" : "false"))"
+                                @onclick="@(() => OnSelectItem(item))" onmousedown="Crest.Components.Primitives.activeElement = null">
+                                <span>
+                                    @if (Template != null)
+                                    {
+                                        @Template(item)
+                                    }
+                                    else
+                                    {
+                                        @PropertyAccess.GetItemOrValueFromProperty(item, TextProperty)
+                                    }
+                                </span>
+                            </li>
+                        }
+
+                        if (!hasItems && !IsLoading && EmptyTemplate != null)
+                        {
+                            <li class="rz-autocomplete-list-item" tabindex="-1" role="presentation">
+                                @EmptyTemplate
+                            </li>
+                        }
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+}

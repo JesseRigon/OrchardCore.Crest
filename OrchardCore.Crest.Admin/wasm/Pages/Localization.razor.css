@@ -1,0 +1,7 @@
+.localization-page { max-width: 62rem; }
+.localization-page__supported-list { display: grid; gap: 0.35rem; }
+.localization-page__culture-card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.25rem; padding: 0.5rem 0.75rem; border: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb); border-radius: var(--crest-radius-sm, 0.375rem); background: var(--crest-color-surface-1, #fff); }
+.localization-page__culture-name { color: var(--crest-color-text-1, #1f2937); font-weight: 600; }
+.localization-page__culture-code { color: var(--crest-color-text-muted, #64748b); font-size: 0.85rem; }
+.localization-page__add-picker { min-width: min(100%, 22rem); flex: 1 1 18rem; }
+::deep .localization-page__culture-dropdown { width: 100%; }

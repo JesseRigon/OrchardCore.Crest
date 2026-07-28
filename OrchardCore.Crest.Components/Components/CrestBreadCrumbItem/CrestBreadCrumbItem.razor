@@ -1,0 +1,37 @@
+@inherits CrestComponent
+
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <li class="@GetCssClass()" id="@GetId()" style="@Style" @attributes="@Attributes" aria-current="@ItemAriaCurrent">
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+        else if (Template != null)
+        {
+            @Template(this)
+        }
+        else
+        {
+            @if (!string.IsNullOrWhiteSpace(Path))
+            {
+                <a href="@Path" class="rz-link">
+                    @if (!string.IsNullOrWhiteSpace(Icon))
+                    {
+                        <i class="notranslate rzi" style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)" aria-hidden="true">@Icon</i>
+                    }
+                    <span class="rz-link-text">@Text</span>
+                </a>
+            }
+            else
+            {
+                @if (!string.IsNullOrWhiteSpace(Icon))
+                {
+                    <RadzenIcon Icon="@Icon" IconColor="@IconColor" />
+                }
+                <span class="rz-label" aria-current="page">@Text</span>
+            }
+        }
+    </li>
+}

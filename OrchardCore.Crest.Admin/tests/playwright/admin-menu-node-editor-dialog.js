@@ -62,7 +62,7 @@ async function main() {
     throw new Error('Expected inline Add admin menu node editor title.');
   }
   if (dialogCountAfterAdd !== 0) {
-    throw new Error('Expected editor to be inline, not a Radzen dialog.');
+    throw new Error('Expected editor to be inline, not a Crest dialog.');
   }
   if (!/Edit admin menu node: Content/.test(editText)) {
     throw new Error('Expected inline Edit admin menu node title with node name.');

@@ -1,0 +1,51 @@
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@inherits CrestComponentWithChildren
+
+@namespace Crest.Components.Primitives
+@if (Item?.Parent?.ClickToOpen == true)
+{
+    <li style=@Style @attributes="@Attributes" @onclick="@Item.OnClick" @onclick:stopPropagation role="menuitem"
+        tabindex="@TabIndex" aria-disabled="@(Item?.Disabled == true ? "true" : "false")"
+        aria-haspopup="@(Item?.ChildContent != null ? "menu" : null)"
+        aria-controls="@Item?.SubmenuId"
+        aria-expanded="@ExpandedAttribute">
+        @ChildContent
+    </li>
+}
+else
+{
+    if (Item?.ChildContent != null)
+    {
+        <li style=@Style @attributes="@Attributes"
+            role="menuitem" tabindex="@TabIndex" aria-disabled="@(Item?.Disabled == true ? "true" : "false")"
+            aria-haspopup="menu" aria-controls="@Item?.SubmenuId" aria-expanded="@ExpandedAttribute">
+            @ChildContent
+        </li>
+    }
+    else
+    {
+        <li style=@Style @attributes="@Attributes" @onclick="@(Item!.OnClick)" @onclick:stopPropagation role="menuitem"
+            tabindex="@TabIndex" aria-disabled="@(Item?.Disabled == true ? "true" : "false")"
+            aria-haspopup="@(Item?.ChildContent != null ? "menu" : null)"
+            aria-controls="@Item?.SubmenuId"
+            aria-expanded="@ExpandedAttribute">
+            @ChildContent
+        </li>
+    }
+}
+
+@code {
+
+    /// <summary>
+    /// Gets or sets the menu item.
+    /// </summary>
+    /// <value>The menu item.</value>
+    [Parameter]
+    public CrestMenuItem? Item { get; set; }
+
+    int TabIndex => -1;
+
+    string? ExpandedAttribute => Item?.ChildContent != null ? (Item.Expanded ? "true" : "false") : null;
+}

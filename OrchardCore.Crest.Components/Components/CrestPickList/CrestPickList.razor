@@ -1,0 +1,63 @@
+@inherits CrestComponent
+@using System.Collections
+@using Microsoft.AspNetCore.Components.Forms
+@typeparam TItem
+
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <div @ref="@Element" @attributes="Attributes" class="@GetCssClass()" style="@GetStyle()" id="@GetId()">
+        <CrestStack class="rz-picklist-wrapper" Orientation="@Orientation">
+            <CrestStack class="rz-picklist-source-wrapper">
+                @if (ShowHeader && SourceHeader != null)
+                {
+                    <div id="@(GetId() + "-source-header")">
+                        @SourceHeader
+                    </div>
+                }
+                <CascadingValue Value="@((EditContext?)null)" IsFixed=true>
+                    <CrestListBox @ref=sourceListBox Value=@selectedSourceItems ValueChanged="@(EventCallback.Factory.Create<object>(this, OnSelectedSourceItemsChanged))" Data="@source" Multiple="@Multiple" @bind-SearchText=@sourceSearchText
+                        FilterAsYouType=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive
+                        TextProperty="@TextProperty" ValueProperty="@ValueProperty" DisabledProperty="@DisabledProperty" AllowFiltering=@AllowFiltering ItemRender="@OnSourceItemRender"
+                        Template=@SourceListBoxTemplate Placeholder="@(SourcePlaceholder ?? Placeholder)" SelectAllText="@SelectAllText"  AllowSelectAll="@AllowSelectAll"
+                        Disabled=@(Disabled || Source == null || (Source != null && !Source.Any()))
+                        EmptyText="@(SourceEmptyText ?? EmptyText)" EmptyTemplate="@(SourceEmptyTemplate ?? EmptyTemplate)"
+                        AllowVirtualization="@AllowVirtualization"
+                        aria-label="@(ShowHeader && SourceHeader != null ? null : SourceAriaLabel)"
+                        aria-labelledby="@(ShowHeader && SourceHeader != null ? GetId() + "-source-header" : null)"
+                    />
+                </CascadingValue>
+            </CrestStack>
+            <CrestStack Orientation="@(Orientation == Orientation.Vertical ? Orientation.Horizontal : Orientation.Vertical)" JustifyContent="@ButtonJustifyContent" Gap="@ButtonGap" class="rz-picklist-buttons">
+                <CrestButton Icon="@SelectedSourceToTargetIcon" title="@SelectedSourceToTargetTitle" aria-label="@SelectedSourceToTargetTitle" Click="@SelectedSourceToTarget" Disabled=@(Disabled || selectedSourceItems == null || (Multiple && (selectedSourceItems as IEnumerable)?.Cast<object>().Any() != true))
+                        ButtonStyle="@ButtonStyle" Size="@ButtonSize" Variant="@ButtonVariant" Shade="@ButtonShade" />
+                <CrestButton Icon="@SelectedTargetToSourceIcon" title="@SelectedTargetToSourceTitle" aria-label="@SelectedTargetToSourceTitle" Click="@SelectedTargetToSource" Disabled=@(Disabled || selectedTargetItems == null || (Multiple && (selectedTargetItems as IEnumerable)?.Cast<object>().Any() != true))
+                        ButtonStyle="@ButtonStyle" Size="@ButtonSize" Variant="@ButtonVariant" Shade="@ButtonShade"/>
+                <CrestButton Icon="@SourceToTargetIcon" title="@SourceToTargetTitle" aria-label="@SourceToTargetTitle" Click="@SourceToTarget" Disabled=@(Disabled || source == null || (source != null && !source.Any()))
+                        ButtonStyle="@ButtonStyle" Size="@ButtonSize" Variant="@ButtonVariant" Shade="@ButtonShade" Visible=@(AllowMoveAll && AllowMoveAllSourceToTarget) />
+                <CrestButton Icon="@TargetToSourceIcon" title="@TargetToSourceTitle" aria-label="@TargetToSourceTitle" Click="@TargetToSource" Disabled=@(Disabled || target == null|| (target != null && !target.Any()))
+                        ButtonStyle="@ButtonStyle" Size="@ButtonSize" Variant="@ButtonVariant" Shade="@ButtonShade" Visible=@(AllowMoveAll && AllowMoveAllTargetToSource)/>
+            </CrestStack>
+            <CrestStack class="rz-picklist-target-wrapper">
+                @if (ShowHeader && TargetHeader != null)
+                {
+                    <div id="@(GetId() + "-target-header")">
+                        @TargetHeader
+                    </div>
+                }
+                <CascadingValue Value="@((EditContext?)null)" IsFixed=true>
+                    <CrestListBox @ref=targetListBox Value=@selectedTargetItems ValueChanged="@(EventCallback.Factory.Create<object>(this, OnSelectedTargetItemsChanged))" Data="@target" Multiple="@Multiple" @bind-SearchText=@targetSearchText
+                        FilterAsYouType=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive
+                        TextProperty="@TextProperty" ValueProperty="@ValueProperty" DisabledProperty="@DisabledProperty" AllowFiltering=@AllowFiltering ItemRender="@OnTargetItemRender"
+                        Template=@TargetListBoxTemplate Placeholder="@(TargetPlaceholder ?? Placeholder)" SelectAllText="@SelectAllText" AllowSelectAll="@AllowSelectAll"
+                        Disabled=@(Disabled || Target == null|| (Target != null && !Target.Any()))
+                        EmptyText="@(TargetEmptyText ?? EmptyText)" EmptyTemplate="@(TargetEmptyTemplate ?? EmptyTemplate)"
+                        AllowVirtualization="@AllowVirtualization"
+                        aria-label="@(ShowHeader && TargetHeader != null ? null : TargetAriaLabel)"
+                        aria-labelledby="@(ShowHeader && TargetHeader != null ? GetId() + "-target-header" : null)"
+                    />
+                </CascadingValue>
+            </CrestStack>
+        </CrestStack>
+    </div>
+}

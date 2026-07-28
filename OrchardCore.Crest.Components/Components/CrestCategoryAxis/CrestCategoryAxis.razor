@@ -1,0 +1,59 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Rendering
+@inherits AxisBase
+@namespace Crest.Components.Primitives
+<CascadingValue Value="@this">
+  @ChildContent
+</CascadingValue>
+@code {
+  internal double Measure(CrestChart chart)
+      {
+          if (Visible == false)
+          {
+              return 0;
+          }
+
+          if (chart.ShouldInvertAxes())
+          {
+              return AxisMeasurer.XAxis(chart.ValueScale, chart.ValueAxis, chart.ValueAxis.Title);
+          }
+          else
+          {
+              return AxisMeasurer.XAxis(chart.CategoryScale, this, Title);
+          }
+      }
+
+      [Parameter]
+      public double Padding { get; set; }
+
+      /// <summary>
+      /// Specifies whether categories are placed between ticks (reserving half a band at each end) or
+      /// on the ticks (flush to the plot edges). The default is <see cref="TickPlacement.Between" />.
+      /// </summary>
+      [Parameter]
+      public TickPlacement TickPlacement { get; set; } = TickPlacement.Between;
+
+      /// <inheritdoc />
+      protected override bool ShouldRefreshChart(ParameterView parameters)
+      {
+          return base.ShouldRefreshChart(parameters)
+              || DidParameterChange(parameters, nameof(Padding), Padding)
+              || DidParameterChange(parameters, nameof(TickPlacement), TickPlacement);
+      }
+
+      internal override double Size
+      {
+          get
+          {
+              return Chart != null ? Measure(Chart) : 0;
+          }
+      }
+
+      protected override void Initialize()
+      {
+          if (Chart != null)
+          {
+              Chart.CategoryAxis = this;
+          }
+      }
+}

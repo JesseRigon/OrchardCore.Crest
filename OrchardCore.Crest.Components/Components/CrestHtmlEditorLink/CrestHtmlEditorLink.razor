@@ -1,0 +1,69 @@
+@using System.Text
+@using Crest.Components.Primitives.Rendering
+@using Microsoft.JSInterop
+@inherits CrestHtmlEditorButtonBase
+@inject DialogService DialogService
+
+@namespace Crest.Components.Primitives
+<EditorButton Title=@Title Click=@OnClick Icon="insert_link" />
+
+@code {
+    protected override async Task OnClick()
+    {
+        if (Editor == null) return;
+        
+        await Editor.SaveSelectionAsync();
+
+        bool blank = false;
+
+        var attributes = await Editor.GetSelectionAttributes<LinkAttributes>("a", new[] {"innerText", "href", "target" });
+
+        if (attributes.Target == "_blank")
+        {
+            blank = true;
+        }
+
+        var result = await DialogService.OpenAsync(Title, ds => @<div class="rz-html-editor-dialog">
+            <CrestTemplateForm TItem="LinkAttributes" Data="@attributes" Submit="() => ds.Close(true)">
+                <div class="rz-html-editor-dialog-item">
+                    <label>@UrlText</label>
+                    <CrestTextBox @bind-Value=@attributes.Href style="width: 100%" />
+                </div>
+                @if (string.IsNullOrWhiteSpace(attributes.InnerHtml) || attributes.InnerHtml == "<br>")
+                {
+                <div class="rz-html-editor-dialog-item">
+                    <label>@LinkText</label>
+                    <CrestTextBox @bind-Value=@attributes.InnerText style="width: 100%" />
+                </div>
+                }
+                <div class="rz-html-editor-dialog-item">
+                    <CrestCheckBox @bind-Value=@blank />
+                    <label>@OpenInNewWindowText</label>
+                </div>
+                <div class="rz-html-editor-dialog-buttons">
+                    <CrestButton Text=@CancelText Click="()=> ds.Close(false)" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+                    <CrestButton Text=@OkText ButtonType="ButtonType.Submit" Variant="Variant.Flat" />
+                </div>
+            </CrestTemplateForm>
+        </div>);
+
+        await Editor.RestoreSelectionAsync();
+
+        if (result == true && !String.IsNullOrEmpty(attributes.Href) && Editor != null)
+        {
+            var html = new StringBuilder();
+            html.AppendFormat("<a href=\"{0}\"", attributes.Href);
+            if (blank)
+            {
+                html.Append(" target=\"_blank\"");
+            }
+
+            html.AppendFormat(">{0}</a>", string.IsNullOrEmpty(attributes.InnerText) ? attributes.InnerHtml : attributes.InnerText);
+
+            if (Editor != null)
+            {
+                await Editor.ExecuteCommandAsync("insertHTML", html.ToString());
+            }
+        }
+    }
+}

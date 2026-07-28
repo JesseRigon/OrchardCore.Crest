@@ -16,7 +16,7 @@ This module depends on `OrchardCore.Crest.Iconify` for Iconify-specific provider
 Icon-specific component CSS should live here, preferably under:
 
 ```text
-wwwroot/icons.css
+wwwroot/CrestIcons.css
 wwwroot/icons.js
 ```
 

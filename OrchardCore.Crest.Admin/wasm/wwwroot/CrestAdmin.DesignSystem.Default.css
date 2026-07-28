@@ -1,0 +1,63 @@
+/*
+    Default Orchard Crest design token contract.
+
+    This file is the packaged fallback/reference design system. Runtime tenant
+    and user design systems should set the same --crest-* primitive variables
+    from Orchard content, not edit component implementation CSS.
+*/
+
+:root,
+.admin-shell {
+    /* Color primitives */
+    --crest-color-accent-1: var(--rz-primary, #2f6f4e);
+    --crest-color-accent-2: var(--rz-secondary, #64748b);
+    --crest-color-accent-3: var(--rz-info, #2563eb);
+    --crest-color-on-accent-1: var(--rz-on-primary, #fff);
+    --crest-color-surface-1: var(--rz-base-background-color, #fff);
+    --crest-color-surface-2: var(--rz-body-background-color, #f7f8f6);
+    --crest-color-surface-3: var(--rz-sidebar-background-color, var(--rz-base-background-color, #fff));
+    --crest-color-text-1: var(--rz-text-color, #1f2937);
+    --crest-color-text-2: var(--rz-text-title-color, var(--rz-text-color, #1f2937));
+    --crest-color-text-muted: var(--rz-text-secondary-color, #64748b);
+    --crest-color-border-1: var(--rz-border-color, #e5e7eb);
+    --crest-color-shadow-1: rgba(15, 23, 42, 0.18);
+
+    /* Interaction primitives */
+    --crest-color-hover-surface-1: var(--rz-menu-item-hover-background-color, color-mix(in srgb, var(--crest-color-accent-1) 8%, transparent));
+    --crest-color-hover-text-1: var(--rz-menu-item-hover-color, var(--crest-color-accent-1));
+    --crest-color-active-surface-1: color-mix(in srgb, var(--crest-color-accent-1) 25%, transparent);
+    --crest-color-button-hover-surface-1: var(--rz-button-light-hover-background-color, color-mix(in srgb, var(--crest-color-accent-1) 10%, transparent));
+
+    /* Border primitives */
+    --crest-border-size-xs: 1px;
+    --crest-border-size-sm: 2px;
+    --crest-border-size-md: 3px;
+
+    /* Radius primitives */
+    --crest-radius-xs: 0.25rem;
+    --crest-radius-sm: var(--rz-border-radius, 4px);
+    --crest-radius-md: 0.5rem;
+    --crest-radius-lg: 0.75rem;
+    --crest-radius-pill: 999px;
+
+    /* Spacing primitives */
+    --crest-space-2xs: 0.125rem;
+    --crest-space-xs: 0.25rem;
+    --crest-space-sm: 0.5rem;
+    --crest-space-md: 0.75rem;
+    --crest-space-lg: 1rem;
+    --crest-space-xl: 1.5rem;
+    --crest-space-2xl: 2rem;
+
+    /* Type primitives */
+    --crest-font-size-xs: 0.75rem;
+    --crest-font-size-sm: 0.8125rem;
+    --crest-font-size-md: 0.875rem;
+    --crest-font-size-lg: 1.05rem;
+    --crest-font-size-xl: 1.25rem;
+
+    /* Shadow primitives */
+    --crest-shadow-sm: 0 0.35rem 0.8rem color-mix(in srgb, var(--crest-color-shadow-1) 70%, transparent);
+    --crest-shadow-md: 0 1rem 2rem var(--crest-color-shadow-1);
+    --crest-shadow-lg: var(--rz-shadow-4, 0 12px 30px var(--crest-color-shadow-1));
+}

@@ -1,0 +1,78 @@
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@implements IDisposable
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestSelectBar Value=@CurrentTextAlign ValueChanged=@OnTextAlignChangedAsync TValue="Crest.Components.Primitives.TextAlign" Disabled=@IsDisabled Size="ButtonSize.Small">
+    <Items>
+        <CrestSelectBarItem Value=@Crest.Components.Primitives.TextAlign.Left Icon="format_align_left" AriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_AlignLeft))) />
+        <CrestSelectBarItem Value=@Crest.Components.Primitives.TextAlign.Center Icon="format_align_center" AriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_AlignCenter))) />
+        <CrestSelectBarItem Value=@Crest.Components.Primitives.TextAlign.Right Icon="format_align_right" AriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_AlignRight))) />
+    </Items>
+</CrestSelectBar>
+
+@code {
+#nullable enable
+
+    [CascadingParameter]
+    public Worksheet? Worksheet { get; set; }
+
+    [CascadingParameter]
+    public ISpreadsheet? Spreadsheet { get; set; }
+
+    private Crest.Components.Primitives.TextAlign CurrentTextAlign
+    {
+        get
+        {
+            if (Worksheet?.Cells.TryGet(Worksheet.Selection.Cell.Row, Worksheet.Selection.Cell.Column, out var cell) == true)
+            {
+                return cell.Format.TextAlign ?? Crest.Components.Primitives.TextAlign.Left;
+            }
+            return Crest.Components.Primitives.TextAlign.Left;
+        }
+    }
+
+    private async Task OnTextAlignChangedAsync(Crest.Components.Primitives.TextAlign value)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        if (!Worksheet.Cells.TryGet(Worksheet.Selection.Cell.Row, Worksheet.Selection.Cell.Column, out var cell))
+        {
+            return;
+        }
+
+        var command = new FormatCommand(Worksheet, Worksheet.Selection.Range, cell.Format.WithTextAlign(value));
+        await Spreadsheet.ExecuteAsync(command);
+    }
+
+    private bool IsDisabled
+        => Worksheet?.Selection.Cell == CellRef.Invalid
+        || Spreadsheet?.IsFeatureAllowed(SpreadsheetFeature.CellFormatting) == false;
+
+    private readonly EventBinding<Selection> selectionBinding;
+
+    public CrestSpreadsheetTextAlign()
+    {
+        selectionBinding = new EventBinding<Selection>(
+            s => s.Changed += OnSelectionChanged,
+            s => s.Changed -= OnSelectionChanged);
+    }
+
+    protected override void OnParametersSet()
+    {
+        selectionBinding.Bind(Worksheet?.Selection);
+    }
+
+    private void OnSelectionChanged()
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        selectionBinding.Dispose();
+    }
+}

@@ -1,0 +1,17 @@
+@inherits CrestHtmlEditorButtonBase
+
+@namespace Crest.Components.Primitives
+<CrestHtmlEditorTable />
+<CrestHtmlEditorTableCommandButton TableCommand="addRowBefore" Icon="north" Title="@Strings.InsertRowAbove" />
+<CrestHtmlEditorTableCommandButton TableCommand="addRowAfter" Icon="south" Title="@Strings.InsertRowBelow" />
+<CrestHtmlEditorTableCommandButton TableCommand="addColumnBefore" Icon="west" Title="@Strings.InsertColumnLeft" />
+<CrestHtmlEditorTableCommandButton TableCommand="addColumnAfter" Icon="east" Title="@Strings.InsertColumnRight" />
+<CrestHtmlEditorTableCommandButton TableCommand="deleteRow" Icon="horizontal_rule" Title="@Strings.DeleteRow" />
+<CrestHtmlEditorTableCommandButton TableCommand="deleteColumn" Icon="vertical_align_center" Title="@Strings.DeleteColumn" />
+<CrestHtmlEditorTableCommandButton TableCommand="mergeCellRight" Icon="merge_type" Title="@Strings.MergeRight" />
+<CrestHtmlEditorTableCommandButton TableCommand="mergeCellDown" Icon="merge" Title="@Strings.MergeDown" />
+<CrestHtmlEditorTableCommandButton TableCommand="splitCell" Icon="call_split" Title="@Strings.SplitCell" />
+
+@code {
+    HtmlEditorTableStrings Strings => TableStrings ?? Editor?.TableStrings ?? new HtmlEditorTableStrings();
+}

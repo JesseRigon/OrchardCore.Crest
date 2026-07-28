@@ -1,0 +1,35 @@
+.crest-main-content-tabs ::deep .rz-tabview-nav {
+    gap: var(--crest-space-xs, 0.25rem);
+    border-bottom: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.crest-main-content-tabs ::deep .rz-tabview-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.crest-main-content-tabs ::deep .rz-tabview-nav li {
+    margin: 0;
+}
+
+.crest-main-content-tabs ::deep .rz-tabview-nav button {
+    border: 0;
+    border-bottom: var(--crest-border-size-md, 3px) solid transparent;
+    border-radius: 0;
+    color: var(--crest-color-text-muted, #64748b);
+    font: inherit;
+    font-weight: 500;
+    padding: var(--crest-space-md, 0.75rem) var(--crest-space-lg, 1rem);
+    white-space: nowrap;
+}
+
+.crest-main-content-tabs ::deep .rz-tabview-nav .rz-tabview-selected button {
+    border-bottom-color: var(--crest-color-accent-1, #2f6f4e);
+    color: var(--crest-color-accent-1, #2f6f4e);
+    font-weight: 600;
+}
+
+.crest-main-content-tabs ::deep .rz-tabview-panels {
+    padding: var(--crest-space-lg, 1rem) 0 0;
+}

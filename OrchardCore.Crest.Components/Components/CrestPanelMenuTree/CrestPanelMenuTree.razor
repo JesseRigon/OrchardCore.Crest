@@ -1,0 +1,79 @@
+@namespace Crest.Components.Navigation
+
+<ul class="crest-panel-menu__list">
+    <CrestPanelMenuItems Items="Items"
+                         ExpandedItemKeys="ExpandedItemKeys"
+                         ExpansionVersion="ExpansionVersion"
+                         ExpandedChanged="ExpandedChanged"
+                         FlyoutOpened="FlyoutOpened"
+                         FlyoutCloseRequested="FlyoutCloseRequested"
+                         FlyoutDepth="FlyoutDepth"
+                         IndentItems="IndentItems"
+                         IndentWhenCollapsed="IndentWhenCollapsed"
+                         LevelIndents="LevelIndents"
+                         LevelBackgrounds="LevelBackgrounds"
+                         LevelBaseSizes="LevelBaseSizes"
+                         TierSeparators="TierSeparators"
+                         ActionIcon="ActionIcon" />
+</ul>
+
+@code {
+    private object? _renderedItems;
+    private object? _renderedExpandedKeys;
+    private object? _renderedLevelIndents;
+    private object? _renderedLevelBackgrounds;
+    private object? _renderedLevelBaseSizes;
+    private object? _renderedTierSeparators;
+    private int _renderedExpansionVersion = int.MinValue;
+    private int _renderedFlyoutDepth;
+    private bool _renderedIndentItems;
+    private bool _renderedIndentWhenCollapsed;
+    private RenderFragment<CrestPanelMenuActionIconContext>? _renderedActionIcon;
+
+    [Parameter] public IReadOnlyList<CrestPanelMenuItem> Items { get; set; } = [];
+    [Parameter] public ISet<string> ExpandedItemKeys { get; set; } = new HashSet<string>();
+    [Parameter] public int ExpansionVersion { get; set; }
+    [Parameter] public EventCallback<CrestPanelMenuExpansionChangedEventArgs> ExpandedChanged { get; set; }
+    [Parameter] public EventCallback<CrestPanelMenuFlyoutEventArgs> FlyoutOpened { get; set; }
+    [Parameter] public EventCallback FlyoutCloseRequested { get; set; }
+    [Parameter] public int FlyoutDepth { get; set; } = 2;
+    [Parameter] public bool IndentItems { get; set; } = true;
+    [Parameter] public bool IndentWhenCollapsed { get; set; }
+    [Parameter] public IReadOnlyList<string> LevelIndents { get; set; } = [];
+    [Parameter] public IReadOnlyList<string> LevelBackgrounds { get; set; } = [];
+    [Parameter] public IReadOnlyList<string> LevelBaseSizes { get; set; } = [];
+    [Parameter] public IReadOnlyList<bool> TierSeparators { get; set; } = [];
+    [Parameter] public RenderFragment<CrestPanelMenuActionIconContext>? ActionIcon { get; set; }
+
+    protected override bool ShouldRender()
+    {
+        var shouldRender = !ReferenceEquals(_renderedItems, Items)
+            || !ReferenceEquals(_renderedExpandedKeys, ExpandedItemKeys)
+            || _renderedExpansionVersion != ExpansionVersion
+            || _renderedFlyoutDepth != FlyoutDepth
+            || _renderedIndentItems != IndentItems
+            || _renderedIndentWhenCollapsed != IndentWhenCollapsed
+            || !ReferenceEquals(_renderedLevelIndents, LevelIndents)
+            || !ReferenceEquals(_renderedLevelBackgrounds, LevelBackgrounds)
+            || !ReferenceEquals(_renderedLevelBaseSizes, LevelBaseSizes)
+            || !ReferenceEquals(_renderedTierSeparators, TierSeparators)
+            || _renderedActionIcon != ActionIcon;
+
+        if (shouldRender)
+        {
+            _renderedItems = Items;
+            _renderedExpandedKeys = ExpandedItemKeys;
+            _renderedExpansionVersion = ExpansionVersion;
+            _renderedFlyoutDepth = FlyoutDepth;
+            _renderedIndentItems = IndentItems;
+            _renderedIndentWhenCollapsed = IndentWhenCollapsed;
+            _renderedLevelIndents = LevelIndents;
+            _renderedLevelBackgrounds = LevelBackgrounds;
+            _renderedLevelBaseSizes = LevelBaseSizes;
+            _renderedTierSeparators = TierSeparators;
+            _renderedActionIcon = ActionIcon;
+        }
+
+        return shouldRender;
+    }
+}

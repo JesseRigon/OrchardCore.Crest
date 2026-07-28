@@ -1,0 +1,54 @@
+@namespace Crest.Components.Display
+@using Crest.Icons
+@inject ClientIconRegistry ClientIcons
+
+@if (!string.IsNullOrWhiteSpace(_svgMarkup))
+{
+    <span class="@CssClass"
+          style="@CssStyle"
+          role="@Role"
+          aria-label="@AriaLabel"
+          aria-hidden="@AriaHidden"
+          data-crest-icon="@IconKey"
+          @attributes="AdditionalAttributes">
+        @((MarkupString)_svgMarkup)
+    </span>
+}
+
+@code {
+    [Parameter] public string? IconKey { get; set; }
+    [Parameter] public string? Size { get; set; }
+    [Parameter] public string? Color { get; set; }
+    [Parameter] public string? Alt { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? Style { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string? _svgMarkup;
+    private string? _resolvedKey;
+    private long _registryVersion = -1;
+
+    protected override void OnParametersSet()
+    {
+        if (string.Equals(_resolvedKey, IconKey, StringComparison.Ordinal) && _registryVersion == ClientIcons.Version)
+        {
+            return;
+        }
+
+        _resolvedKey = IconKey;
+        _registryVersion = ClientIcons.Version;
+        _svgMarkup = ClientIcons.TryResolve(IconKey, out var resolved) ? resolved.SvgMarkup : null;
+    }
+
+    private string CssClass => string.Join(' ', new[] { "crest-icon", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));
+    private string CssStyle => string.Join("; ", new[]
+    {
+        string.IsNullOrWhiteSpace(Size) ? null : $"--crest-icon-size: {Size}",
+        string.IsNullOrWhiteSpace(Color) ? null : $"--crest-icon-color: {Color}",
+        Style?.Trim().TrimEnd(';'),
+    }.Where(value => !string.IsNullOrWhiteSpace(value))!);
+    private bool HasAlt => !string.IsNullOrWhiteSpace(Alt);
+    private string? Role => HasAlt ? "img" : null;
+    private string? AriaLabel => HasAlt ? Alt : null;
+    private string? AriaHidden => HasAlt ? null : "true";
+}

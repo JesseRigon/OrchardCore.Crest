@@ -1,0 +1,28 @@
+@using System.Text
+@using Crest.Components.Primitives.Rendering
+@using Microsoft.JSInterop
+@inherits CrestHtmlEditorButtonBase
+@inject DialogService DialogService
+@inject IJSRuntime JSRuntime
+
+@namespace Crest.Components.Primitives
+<EditorButton Title=@Title Click=@OnClick Icon="code" PreventBlur=false Selected=@(Editor?.GetMode() == HtmlEditorMode.Source) EnabledModes="HtmlEditorMode.Design | HtmlEditorMode.Source" />
+@code {
+
+    protected override async Task OnClick()
+    {
+        if (Editor != null)
+        {
+            if (Editor.GetMode() == HtmlEditorMode.Design)
+            {
+                Editor.SetMode(HtmlEditorMode.Source);
+            }
+            else
+            {
+                Editor.SetMode(HtmlEditorMode.Design);
+            }
+        }
+
+        await Task.CompletedTask;
+    }
+}

@@ -59,7 +59,7 @@ async function main() {
     console.log(JSON.stringify(state, null, 2));
 
     if (!state.found) {
-      throw new Error('Expected the New menu node to exist in the Sidebar Layout editor.');
+      throw new Error('Expected the New menu node to exist in the Primary Navigation editor.');
     }
     if (!state.locked || !state.greyed || !state.lockedBadge || state.draggable !== 'false') {
       throw new Error(`Expected New node to render locked and greyed out, got ${JSON.stringify(state)}.`);

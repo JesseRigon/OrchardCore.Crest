@@ -11,13 +11,18 @@ Boundary rule: shared Radzen-backed UI primitives belong here; backend integrati
 ```text
 OrchardCore.Crest.Components/
   Components/                    # reusable Blazor components
-    Forms/
-    Inputs/
-    Navigation/
-    Model/
+    <Component>/                 # each component with its .razor and companions
+    Utilities/                   # shared cross-component implementation
   Models/                        # client-safe DTOs and request models
   Shapes/                        # early client-side shape/model experiments
+  RadzenSource/                  # complete MIT Radzen source baseline; not compiled
 ```
+
+`RadzenSource/` retains only the five intentionally isolated duplicate/reference
+components. The owned Crest component source lives under `Components/`, with shared
+cross-component implementation in `Components/Utilities/`. Crest no longer
+uses the `Radzen.Blazor` NuGet package. Its initial intended behavioral divergence
+is replacing the Radzen Material icon font with Crest/Iconify icon references.
 
 ## Theme boundary
 

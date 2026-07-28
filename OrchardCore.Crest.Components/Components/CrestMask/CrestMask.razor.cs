@@ -1,0 +1,201 @@
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using System;
+using System.Threading.Tasks;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// A masked text input component that enforces a specific format pattern as users type (e.g., phone numbers, dates, credit cards).
+    /// CrestMask guides users to enter data in the correct format by automatically formatting input according to a mask pattern.
+    /// Uses a pattern string where asterisks (*) represent user-input positions and other characters are literals. As users type, the input is automatically formatted to match the mask.
+    /// Features mask pattern definition using * for input positions (e.g., "(***) ***-****" for phone numbers), character filtering via Pattern (regex) to remove invalid characters and CharacterPattern (regex) to specify valid characters,
+    /// automatic insertion of literal characters (parentheses, dashes, spaces, etc.), and placeholder showing the expected format to guide users.
+    /// Common uses include phone numbers, dates, credit cards, SSN, postal codes, or any fixed-format data entry. The mask helps prevent input errors and improves data consistency.
+    /// </summary>
+    /// <example>
+    /// Phone number mask:
+    /// <code>
+    /// &lt;CrestMask Mask="(***) ***-****" Pattern="[^0-9]" Placeholder="(000) 000-0000" @bind-Value=@phoneNumber /&gt;
+    /// </code>
+    /// Date mask:
+    /// <code>
+    /// &lt;CrestMask Mask="**/**/****" CharacterPattern="[0-9]" Placeholder="MM/DD/YYYY" @bind-Value=@dateString /&gt;
+    /// </code>
+    /// Credit card mask:
+    /// <code>
+    /// &lt;CrestMask Mask="**** **** **** ****" Pattern="[^0-9]" Placeholder="0000 0000 0000 0000" @bind-Value=@cardNumber /&gt;
+    /// </code>
+    /// </example>
+    public partial class CrestMask : FormComponentWithAutoComplete<string>
+    {
+        /// <summary>
+        /// Gets or sets whether the component should update the bound value immediately as the user types (oninput event),
+        /// rather than waiting for the input to lose focus (onchange event).
+        /// This enables real-time value updates but may trigger more frequent change events.
+        /// </summary>
+        /// <value><c>true</c> for immediate updates; <c>false</c> for deferred updates. Default is <c>false</c>.</value>
+        [Parameter]
+        public bool Immediate { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the masked input is read-only and cannot be edited.
+        /// When true, displays the formatted value but prevents user input.
+        /// </summary>
+        /// <value><c>true</c> if the input is read-only; otherwise, <c>false</c>. Default is <c>false</c>.</value>
+        [Parameter]
+        public bool ReadOnly { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of characters that can be entered.
+        /// Typically matches the mask length, but can be set for additional constraints.
+        /// </summary>
+        /// <value>The maximum character length, or null for no limit beyond the mask. Default is null.</value>
+        [Parameter]
+        public long? MaxLength { get; set; }
+
+        /// <summary>
+        /// Gets or sets the mask pattern that defines the input format.
+        /// Use asterisks (*) for user input positions and literal characters for formatting.
+        /// Example: "(***) ***-****" creates a phone number format like "(555) 123-4567".
+        /// </summary>
+        /// <value>The mask pattern string where * represents input positions.</value>
+        [Parameter]
+        public string? Mask { get; set; }
+
+        /// <summary>
+        /// Gets or sets a regular expression pattern for removing invalid characters from user input.
+        /// Characters matching this pattern are stripped out as the user types.
+        /// Example: "[^0-9]" removes all non-digit characters for numeric-only input.
+        /// </summary>
+        /// <value>The regex pattern for invalid characters to remove.</value>
+        [Parameter]
+        public string? Pattern { get; set; }
+
+        /// <summary>
+        /// Gets or sets a regular expression pattern specifying which characters are valid for user input.
+        /// Only characters matching this pattern are accepted as the user types.
+        /// If both <see cref="Pattern"/> and CharacterPattern are set, CharacterPattern takes precedence.
+        /// Example: "[0-9]" allows only digit characters.
+        /// </summary>
+        /// <value>The regex pattern for valid input characters.</value>
+        [Parameter]
+        public string? CharacterPattern { get; set; }
+
+        /// <summary>
+        /// Handles the change-event bind:set binding of the underlying input element.
+        /// Reads the JS-formatted masked value when applicable and notifies listeners.
+        /// </summary>
+        /// <param name="value">The raw value reported by the change event.</param>
+        protected async System.Threading.Tasks.Task SetValue(string? value)
+        {
+            string? newValue;
+            if (!Immediate && JSRuntime != null && !string.IsNullOrEmpty(Mask))
+            {
+                newValue = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", Element);
+            }
+            else
+            {
+                newValue = value;
+            }
+
+            Value = newValue;
+
+            await ValueChanged.InvokeAsync(newValue);
+            NotifyFieldChanged(newValue);
+            await Change.InvokeAsync(newValue);
+        }
+
+        /// <summary>
+        /// Handles the oninput event when Immediate="true".
+        /// </summary>
+        /// <param name="args">The <see cref="ChangeEventArgs"/> instance containing the event data.</param>
+        protected async System.Threading.Tasks.Task OnInput(ChangeEventArgs args)
+        {
+            if (JSRuntime == null)
+            {
+                return;
+            }
+
+            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.mask", GetId(), Mask, Pattern, CharacterPattern);
+
+            Value = await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.getInputValue", Element);
+
+            await ValueChanged.InvokeAsync(Value);
+            if (FieldIdentifier.FieldName != null) { EditContext?.NotifyFieldChanged(FieldIdentifier); }
+            await Change.InvokeAsync(Value);
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the component.
+        /// </summary>
+        [Parameter]
+        public InputSize InputSize { get; set; } = InputSize.Medium;
+
+        /// <inheritdoc />
+        protected override string GetComponentCssClass()
+        {
+            return GetClassList("rz-textbox").AddInputSize(InputSize).ToString();
+        }
+
+        /// <inheritdoc />
+        protected override string? GetId()
+        {
+            return Name ?? base.GetId();
+        }
+
+        IJSObjectReference? _jsRef;
+        bool _jsParamsChanged;
+
+        /// <inheritdoc />
+        public override async Task SetParametersAsync(ParameterView parameters)
+        {
+            if (parameters.DidParameterChange(nameof(Mask), Mask) ||
+                parameters.DidParameterChange(nameof(Pattern), Pattern) ||
+                parameters.DidParameterChange(nameof(CharacterPattern), CharacterPattern) ||
+                parameters.DidParameterChange(nameof(Visible), Visible))
+            {
+                _jsParamsChanged = true;
+            }
+
+            await base.SetParametersAsync(parameters);
+        }
+
+        /// <inheritdoc />
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+
+            if ((firstRender || _jsParamsChanged) && JSRuntime != null)
+            {
+                _jsParamsChanged = false;
+
+                if (_jsRef != null)
+                {
+                    await _jsRef.InvokeVoidAsync("dispose");
+                    await _jsRef.DisposeAsync();
+                    _jsRef = null;
+                }
+
+                if (Visible)
+                {
+                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.mask", GetId(), Mask, Pattern, CharacterPattern);
+                    if (!Immediate)
+                    {
+                        _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                            "Crest.Components.Primitives.createMask", Element, GetId(), Mask, Pattern, CharacterPattern);
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public override void Dispose()
+        {
+            base.Dispose();
+            _jsRef?.InvokeVoidAsync("dispose");
+            _jsRef?.DisposeAsync();
+            GC.SuppressFinalize(this);
+        }
+    }
+}

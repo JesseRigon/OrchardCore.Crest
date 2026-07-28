@@ -1,0 +1,39 @@
+@using System.Linq.Expressions
+@typeparam TItem
+@inherits CrestComponent
+
+@namespace Crest.Components.Primitives
+@if (Properties != null)
+{
+    <CascadingValue Value=this>
+        @Properties
+    </CascadingValue>
+}
+
+@if (Visible)
+{
+    <div @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">
+        <CrestSelectBar @bind-Value=LogicalFilterOperator Change="@((LogicalFilterOperator args) => { InvokeAsync(ChangeState); if(Auto) { InvokeAsync(Filter); } })" Size="ButtonSize.Small" class="rz-datafilter-operator-bar">
+            <Items>
+                <CrestSelectBarItem Text="@AndOperatorText" Value="LogicalFilterOperator.And" title="@AndOperatorText" />
+                <CrestSelectBarItem Text="@OrOperatorText" Value="LogicalFilterOperator.Or" title="@OrOperatorText" />
+            </Items>
+        </CrestSelectBar>
+        <CrestButton title="@ClearFilterText" class="rz-datafilter-item-clear rz-datafilter-all-items-clear" Icon="clear" Click="@(args => ClearFilters())" Visible=@(Filters.Any()) Variant="Variant.Text" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Base" />
+
+        <ul class="rz-datafilter-group">
+            @foreach(var filter in Filters)
+            {
+                <li class="rz-datafilter-item @(filter.Filters != null ? "rz-datafilter-group-item" : "")">
+                <CrestDataFilterItem @key=@filter.GetHashCode() DataFilter="@this" Filter="@filter" />
+              </li>
+            }
+            <li class="rz-datafilter-item rz-datafilter-bar">
+                <CrestSplitButton Icon="add" Click="@(args => AddFilter(args?.Value == "group"))" Size="ButtonSize.Small" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Base">
+                    <CrestSplitButtonItem Icon="add" Text="@AddFilterText" />
+                    <CrestSplitButtonItem Icon="playlist_add" Value="group" Text="@AddFilterGroupText" />
+                </CrestSplitButton>
+            </li>
+        </ul>
+    </div>
+}

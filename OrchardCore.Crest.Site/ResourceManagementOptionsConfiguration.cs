@@ -50,8 +50,8 @@ public sealed class ResourceManagementOptionsConfiguration : IConfigureOptions<R
                 .SetVersion("4.5.0");
 
         _manifest
-                .DefineStyle("OrchardCore.Crest.Site-bootstrap-oc")
-                .SetUrl("~/OrchardCore.Crest.Site/css/bootstrap-oc.min.css", "~/OrchardCore.Crest.Site/css/bootstrap-oc.css")
+                .DefineStyle("OrchardCore.Crest.Site-CrestSite.BootstrapOc")
+                .SetUrl("~/OrchardCore.Crest.Site/css/CrestSite.BootstrapOc.min.css", "~/OrchardCore.Crest.Site/css/CrestSite.BootstrapOc.css")
                 .SetVersion("1.0.0");
 
         _manifest

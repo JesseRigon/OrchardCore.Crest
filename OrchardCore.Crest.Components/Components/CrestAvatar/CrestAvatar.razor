@@ -1,0 +1,62 @@
+@namespace Crest.Components.Display
+
+<span class="@CssClass" style="@CssStyle" role="img" aria-label="@AriaLabel">
+    @if (!string.IsNullOrWhiteSpace(ImageUrl) && !_imageFailed)
+    {
+        <img class="crest-avatar__image" src="@ImageUrl" alt="" @onerror="HandleImageError" />
+    }
+    else if (FallbackContent is not null)
+    {
+        @FallbackContent
+    }
+    else if (!string.IsNullOrWhiteSpace(FallbackText))
+    {
+        <span class="crest-avatar__fallback" aria-hidden="true">@FallbackText</span>
+    }
+</span>
+
+@code {
+    private string? _lastImageUrl;
+    private bool _imageFailed;
+
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public string? FallbackText { get; set; }
+    [Parameter] public RenderFragment? FallbackContent { get; set; }
+    [Parameter] public string AriaLabel { get; set; } = "Avatar";
+    [Parameter] public string Size { get; set; } = "2.25rem";
+    [Parameter] public string BackgroundColor { get; set; } = "var(--crest-color-accent-1, #2f6f4e)";
+    [Parameter] public string ForegroundColor { get; set; } = "var(--crest-color-on-accent-1, #fff)";
+    [Parameter] public CrestAvatarShape Shape { get; set; } = CrestAvatarShape.Circle;
+    [Parameter] public string? ClipPath { get; set; }
+    [Parameter] public string? BorderRadius { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? Style { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.Equals(_lastImageUrl, ImageUrl, StringComparison.Ordinal))
+        {
+            _lastImageUrl = ImageUrl;
+            _imageFailed = false;
+        }
+    }
+
+    private void HandleImageError() => _imageFailed = true;
+
+    private string CssClass => string.Join(' ', new[]
+    {
+        "crest-avatar",
+        $"crest-avatar--{Shape.ToString().ToLowerInvariant()}",
+        Class,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string CssStyle => string.Join("; ", new[]
+    {
+        $"--crest-avatar-size: {Size}",
+        $"--crest-avatar-background: {BackgroundColor}",
+        $"--crest-avatar-color: {ForegroundColor}",
+        !string.IsNullOrWhiteSpace(ClipPath) ? $"--crest-avatar-clip-path: {ClipPath}" : null,
+        !string.IsNullOrWhiteSpace(BorderRadius) ? $"--crest-avatar-border-radius: {BorderRadius}" : null,
+        Style?.Trim().TrimEnd(';'),
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+}

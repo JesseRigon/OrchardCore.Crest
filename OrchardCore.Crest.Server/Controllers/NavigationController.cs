@@ -28,7 +28,7 @@ public sealed class NavigationController(
 
         var navigationManager = access.GetRequiredService<INavigationManager>();
         var layoutService = access.GetRequiredService<CrestAdminMenuLayoutService>();
-        var sidebarSettingsStore = access.GetRequiredService<CrestAdminSidebarSettingsStore>();
+        var primaryNavMenuSettingsStore = access.GetRequiredService<CrestPrimaryNavMenuSettingsStore>();
         var adminSettingsNormalizer = access.GetRequiredService<CrestAdminSettingsNormalizer>();
         var iconController = access.GetRequiredService<CrestIconController>();
 
@@ -50,7 +50,7 @@ public sealed class NavigationController(
         if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
         {
             menu = await layoutService.ApplyAsync(menu);
-            menu = menu with { SidebarSettings = await sidebarSettingsStore.GetAsync(HttpContext.RequestAborted) };
+            menu = menu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
         }
 
         return Ok(await iconController.ResolveMenuIconsAsync(
@@ -60,7 +60,7 @@ public sealed class NavigationController(
     }
 }
 
-public sealed record NavigationMenu(string Name, NavigationItem[] Items, IconPack? Icons = null, NavigationSeparator[]? Separators = null, CrestAdminSidebarSettings? SidebarSettings = null);
+public sealed record NavigationMenu(string Name, NavigationItem[] Items, IconPack? Icons = null, NavigationSeparator[]? Separators = null, CrestPrimaryNavMenuSettings? PrimaryNavMenuSettings = null);
 
 public sealed record NavigationSeparator(string Key, string? ParentKey, int Order);
 

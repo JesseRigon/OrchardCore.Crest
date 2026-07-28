@@ -1,0 +1,775 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reflection.Emit;
+using System.Threading.Tasks;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// A hierarchical tree view component for displaying nested data structures with expand/collapse functionality.
+    /// CrestTree supports both inline item definition and data-binding for displaying file systems, organization charts, category hierarchies, or any tree-structured data.
+    /// Organizes data in a parent-child hierarchy where items can be expanded to reveal children.
+    /// Supports static definition declaring tree structure using nested CrestTreeItem components, data binding to hierarchical data using CrestTreeLevel components,
+    /// single or multiple item selection with checkboxes, individual item or programmatic expand/collapse control, custom icons per item or data-bound icon properties,
+    /// custom rendering templates for tree items, keyboard navigation (Arrow keys, Space/Enter, Home/End) for accessibility, and Change/Expand/selection events.
+    /// For data binding, use CrestTreeLevel to define how to render each hierarchy level from your data model. For checkbox selection, use AllowCheckBoxes and bind to CheckedValues.
+    /// </summary>
+    /// <example>
+    /// Static tree with inline items:
+    /// <code>
+    /// &lt;CrestTree&gt;
+    ///     &lt;CrestTreeItem Text="Documents" Icon="folder"&gt;
+    ///         &lt;CrestTreeItem Text="Work" Icon="folder"&gt;
+    ///             &lt;CrestTreeItem Text="report.pdf" Icon="description" /&gt;
+    ///         &lt;/CrestTreeItem&gt;
+    ///         &lt;CrestTreeItem Text="Personal" Icon="folder"&gt;
+    ///             &lt;CrestTreeItem Text="photo.jpg" Icon="image" /&gt;
+    ///         &lt;/CrestTreeItem&gt;
+    ///     &lt;/CrestTreeItem&gt;
+    /// &lt;/CrestTree&gt;
+    /// </code>
+    /// Data-bound tree with selection:
+    /// <code>
+    /// &lt;CrestTree Data=@categories AllowCheckBoxes="true" @bind-CheckedValues=@selectedCategories Change=@OnChange&gt;
+    ///     &lt;CrestTreeLevel TextProperty="Name" ChildrenProperty="Children" /&gt;
+    /// &lt;/CrestTree&gt;
+    /// @code {
+    ///     IEnumerable&lt;object&gt; selectedCategories;
+    ///     void OnChange(TreeEventArgs args) => Console.WriteLine($"Selected: {args.Text}");
+    /// }
+    /// </code>
+    /// </example>
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2026, Justification = TrimMessages.DataTypePreserved)]
+    public partial class CrestTree : CrestComponent
+    {
+        /// <summary>
+        /// Gets or sets the open button aria-label attribute.
+        /// </summary>
+        [Parameter]
+        public string? SelectItemAriaLabel { get => selectItemAriaLabel ?? Localize(nameof(CrestStrings.Tree_SelectItemAriaLabel)); set => selectItemAriaLabel = value; }
+
+        private string? selectItemAriaLabel;
+
+        /// <summary>
+        /// Gets or sets the accessible name of the tree, exposed via the <c>aria-label</c> attribute on the <c>role="tree"</c> container.
+        /// </summary>
+        [Parameter]
+        public string? AriaLabel { get; set; }
+
+        /// <summary>
+        /// Gets or sets the id of the element that labels the tree, exposed via the <c>aria-labelledby</c> attribute on the <c>role="tree"</c> container.
+        /// </summary>
+        [Parameter]
+        public string? AriaLabelledBy { get; set; }
+
+        /// <inheritdoc />
+        protected override string GetComponentCssClass()
+        {
+            return "rz-tree";
+        }
+
+        internal CrestTreeItem? SelectedItem { get; private set; }
+
+        IList<CrestTreeLevel>? Levels { get; set; } = new List<CrestTreeLevel>();
+
+        /// <summary>
+        /// A callback that will be invoked when the user selects an item.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// &lt;CrestTree Change=@OnChange&gt;
+        ///     &lt;CrestTreeItem Text="BMW"&gt;
+        ///         &lt;CrestTreeItem Text="M3" /&gt;
+        ///         &lt;CrestTreeItem Text="M5" /&gt;
+        ///     &lt;/CrestTreeItem&gt;
+        ///     &lt;CrestTreeItem Text="Audi"&gt;
+        ///         &lt;CrestTreeItem Text="RS4" /&gt;
+        ///         &lt;CrestTreeItem Text="RS6" /&gt;
+        ///     &lt;/CrestTreeItem&gt;
+        ///     &lt;CrestTreeItem Text="Mercedes"&gt;
+        ///         &lt;CrestTreeItem Text="C63 AMG" /&gt;
+        ///         &lt;CrestTreeItem Text="S63 AMG" /&gt;
+        ///     &lt;/CrestTreeItem&gt;
+        /// &lt;/CrestTree&gt;
+        /// @code {
+        ///   void OnChange(TreeEventArgs args) 
+        ///   {
+        /// 
+        ///   }
+        /// }
+        /// </code>
+        /// </example>
+        [Parameter]
+        public EventCallback<TreeEventArgs> Change { get; set; }
+
+        /// <summary>
+        /// A callback that will be invoked when the user expands an item.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// &lt;CrestTree Expand=@OnExpand&gt;
+        ///     &lt;CrestTreeItem Text="BMW"&gt;
+        ///         &lt;CrestTreeItem Text="M3" /&gt;
+        ///         &lt;CrestTreeItem Text="M5" /&gt;
+        ///     &lt;/CrestTreeItem&gt;
+        ///     &lt;CrestTreeItem Text="Audi"&gt;
+        ///         &lt;CrestTreeItem Text="RS4" /&gt;
+        ///         &lt;CrestTreeItem Text="RS6" /&gt;
+        ///     &lt;/CrestTreeItem&gt;
+        ///     &lt;CrestTreeItem Text="Mercedes"&gt;
+        ///         &lt;CrestTreeItem Text="C63 AMG" /&gt;
+        ///         &lt;CrestTreeItem Text="S63 AMG" /&gt;
+        ///     &lt;/CrestTreeItem&gt;
+        /// &lt;/CrestTree&gt;
+        /// @code {
+        ///   void OnExpand(TreeExpandEventArgs args) 
+        ///   {
+        /// 
+        ///   }
+        /// }
+        /// </code>
+        /// </example>
+        [Parameter]
+        public EventCallback<TreeExpandEventArgs> Expand { get; set; }
+
+        /// <summary>
+        /// A callback that will be invoked when the user collapse an item.
+        /// </summary>
+        [Parameter]
+        public EventCallback<TreeEventArgs> Collapse { get; set; }
+
+        /// <summary>
+        /// A callback that will be invoked when item is rendered.
+        /// </summary>
+        [Parameter]
+        public Action<TreeItemRenderEventArgs>? ItemRender { get; set; }
+
+        /// <summary>
+        /// Gets or sets the context menu callback.
+        /// </summary>
+        /// <value>The context menu callback.</value>
+        [Parameter]
+        public EventCallback<TreeItemContextMenuEventArgs> ItemContextMenu { get; set; }
+
+        internal Tuple<Crest.Components.Primitives.TreeItemRenderEventArgs, IReadOnlyDictionary<string, object>> ItemAttributes(CrestTreeItem item)
+        {
+            var args = new TreeItemRenderEventArgs() { Data = item.GetAllChildValues(), Value = item.Value };
+
+            if (ItemRender != null)
+            {
+                ItemRender(args);
+            }
+
+            return new Tuple<TreeItemRenderEventArgs, IReadOnlyDictionary<string, object>>(args, new System.Collections.ObjectModel.ReadOnlyDictionary<string, object>(args.Attributes));
+        }
+
+        /// <summary>
+        /// Gets or sets the child content.
+        /// </summary>
+        /// <value>The child content.</value>
+        [Parameter]
+        public RenderFragment? ChildContent { get; set; }
+
+        /// <summary>
+        /// Specifies the collection of data items which CrestTree will create its items from.
+        /// </summary>
+        [Parameter]
+        public IEnumerable? Data { get; set; }
+
+        /// <summary>
+        /// Specifies the selected value. Use with <c>@bind-Value</c> to sync it with a property.
+        /// </summary>
+        [Parameter]
+        public object? Value { get; set; }
+
+        /// <summary>
+        /// A callback which will be invoked when <see cref="Value" /> changes.
+        /// </summary>
+        [Parameter]
+        public EventCallback<object> ValueChanged { get; set; }
+
+        /// <summary>
+        /// Specifies whether CrestTree displays check boxes. Set to <c>false</c> by default.
+        /// </summary>
+        /// <value><c>true</c> if check boxes are displayed; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool AllowCheckBoxes { get; set; }
+
+        /// <summary>
+        /// Specifies what happens when a parent item is checked. If set to <c>true</c> checking parent items also checks all of its children.
+        /// </summary>
+        [Parameter]
+        public bool AllowCheckChildren { get; set; } = true;
+
+        /// <summary>
+        /// Specifies what happens with a parent item when one of its children is checked. If set to <c>true</c> checking a child item will affect the checked state of its parents.
+        /// </summary>
+        [Parameter]
+        public bool AllowCheckParents { get; set; } = true;
+
+        /// <summary>
+        /// Specifies whether siblings items are collapsed. Set to <c>false</c> by default.
+        /// </summary>
+        [Parameter]
+        public bool SingleExpand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the checked values. Use with <c>@bind-CheckedValues</c> to sync it with a property.
+        /// </summary>
+        [Parameter]
+        public IEnumerable<object>? CheckedValues { get; set; } = Enumerable.Empty<object>();
+
+        /// <summary>
+        /// Gets or sets the CSS classes added to the item content.
+        /// </summary>
+        [Parameter]
+        public string? ItemContentCssClass { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CSS classes added to the item icon.
+        /// </summary>
+        [Parameter]
+        public string? ItemIconCssClass { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CSS classes added to the item label.
+        /// </summary>
+        [Parameter]
+
+        public string? ItemLabelCssClass { get; set; }
+
+        internal List<CrestTreeItem> items = new List<CrestTreeItem>();
+
+        internal void AddItem(CrestTreeItem item)
+        {
+            if (items.IndexOf(item) == -1)
+            {
+                var wasEmpty = items.Count == 0;
+
+                items.Add(item);
+
+                if (wasEmpty)
+                {
+                    InvokeAsync(StateHasChanged);
+                }
+            }
+        }
+
+        internal void RemoveItem(CrestTreeItem item)
+        {
+            if (items.IndexOf(item) != -1)
+            {
+                items.Remove(item);
+            }
+        }
+
+        internal async Task SetCheckedValues(IEnumerable<object?>? values)
+        {
+            CheckedValues = values != null ? (IEnumerable<object>)values.ToList() : null;
+            await CheckedValuesChanged.InvokeAsync(CheckedValues);
+        }
+
+        internal IEnumerable<object?>? UncheckedValues { get; set; } = Enumerable.Empty<object?>();
+
+        internal void SetUncheckedValues(IEnumerable<object?> values)
+        {
+            UncheckedValues = values.ToList();
+        }
+
+        /// <summary>
+        /// A callback which will be invoked when <see cref="CheckedValues" /> changes.
+        /// </summary>
+        [Parameter]
+        public EventCallback<IEnumerable<object>> CheckedValuesChanged { get; set; }
+
+        void RenderTreeItem(RenderTreeBuilder builder, object data, RenderFragment<CrestTreeItem>? template, Func<object, string> text, Func<object, bool> checkable,
+            Func<object, bool> hasChildren, Func<object, bool> expanded, Func<object, bool> selected, IEnumerable? children = null)
+        {
+            builder.OpenComponent<CrestTreeItem>(0);
+            builder.AddAttribute(1, nameof(CrestTreeItem.Text), text(data));
+            builder.AddAttribute(2, nameof(CrestTreeItem.Checkable), checkable(data));
+            builder.AddAttribute(3, nameof(CrestTreeItem.Value), data);
+            builder.AddAttribute(4, nameof(CrestTreeItem.HasChildren), hasChildren(data));
+            builder.AddAttribute(5, nameof(CrestTreeItem.Template), template);
+            builder.AddAttribute(6, nameof(CrestTreeItem.Expanded), expanded(data));
+            builder.AddAttribute(7, nameof(CrestTreeItem.Selected), Value == data || selected(data));
+            builder.SetKey(data);
+        }
+
+        RenderFragment RenderChildren(IEnumerable children, int depth)
+        {
+            if (Levels == null)
+            {
+                return _ => { };
+            }
+
+            var level = depth < Levels.Count ? Levels.ElementAt(depth) : (Levels.Count > 0 ? Levels.LastOrDefault() : null);
+            if (level == null)
+            {
+                return _ => { };
+            }
+
+            return builder =>
+            {
+                Func<object, string>? text = null;
+                Func<object, bool>? checkable = null;
+
+                foreach (var data in children)
+                {
+                    text ??= level.Text
+                        ?? (!string.IsNullOrEmpty(level.TextProperty) ? Getter<string>(data, level.TextProperty) : null)
+                        ?? (_ => "");
+
+                    checkable ??= level.Checkable
+                        ?? (!string.IsNullOrEmpty(level.CheckableProperty) ? Getter<bool>(data, level.CheckableProperty) : null)
+                        ?? (_ => true);
+
+                    RenderTreeItem(builder, data, level.Template, text, checkable, level.HasChildren ?? (_ => false), level.Expanded ?? (_ => false), level.Selected ?? (_ => false));
+
+                    var hasChildren = level.HasChildren != null && level.HasChildren(data);
+
+                    if (!string.IsNullOrEmpty(level.ChildrenProperty))
+                    {
+                        var grandChildren = PropertyAccess.GetValue(data, level.ChildrenProperty) as IEnumerable;
+
+                        if (grandChildren != null && hasChildren)
+                        {
+                            builder.AddAttribute(7, "ChildContent", RenderChildren(grandChildren, depth + 1));
+                            builder.AddAttribute(8, nameof(CrestTreeItem.Data), grandChildren);
+                        }
+                        else
+                        {
+                            builder.AddAttribute(7, "ChildContent", (RenderFragment?)null);
+                        }
+                    }
+
+                    builder.CloseComponent();
+                }
+            };
+        }
+
+        internal async Task SelectItem(CrestTreeItem item)
+        {
+            var selectedItem = SelectedItem;
+
+            if (selectedItem != item)
+            {
+                SelectedItem = item;
+
+                selectedItem?.Unselect();
+
+                if (Value != item.Value)
+                {
+                    await ValueChanged.InvokeAsync(item.Value);
+                }
+
+                await Change.InvokeAsync(new TreeEventArgs()
+                {
+                    Text = item?.Text,
+                    Value = item?.Value
+                });
+            }
+        }
+        /// <summary>
+        /// Clear the current selection to allow re-selection by mouse click
+        /// </summary>
+        public void ClearSelection()
+        {
+            SelectedItem?.Unselect();
+            SelectedItem = null;
+        }
+
+        /// <summary>
+        /// Forces the specified <paramref name="item"/> or, if
+        /// <paramref name="item"/> is <c>null</c>, all items in the tree to be
+        /// re-evaluated such that items lazily created via <see cref="Expand"/>
+        /// are realised if the underlying data model has been changed from
+        /// somewhere else.
+        /// </summary>
+        /// <param name="item">The item to be reloaded or <c>null</c> to refresh
+        /// the root nodes of the tree.</param>
+        /// <returns>A task to wait for the operation to complete.</returns>
+        public async Task Reload(CrestTreeItem? item = null) {
+            // Implementation node: I am absolute not sure whether "ExpandItem"
+            // is the "right" way to to this, but it does exactly what I need.
+            // The rationale behind the public "Reload" method is that (i) just
+            // making "ExpandItem" public would create an API that is not
+            // intuitively named and (ii) if "ExpandItem" gets changed in the
+            // future such that it cannot be used for this hack anymore, the
+            // implementation could be swapped with a different one without
+            // breaking the public API.
+            if (item == null) {
+                foreach (var i in this.items.ToList()) {
+                    await this.ExpandItem(i);
+                }
+            } else {
+                await this.ExpandItem(item);
+            }
+        }
+
+        internal async Task ExpandItem(CrestTreeItem item)
+        {
+            var args = new TreeExpandEventArgs()
+            {
+                Text = item?.Text,
+                Value = item?.Value,
+                Children = new TreeItemSettings()
+            };
+
+            await Expand.InvokeAsync(args);
+
+            if (args.Children.Data != null)
+            {
+                var childContent = new RenderFragment(builder =>
+                {
+                    Func<object, string>? text = null;
+                    Func<object, bool>? checkable = null;
+                    var children = args.Children;
+
+                    foreach (var data in children.Data)
+                    {
+                        if (text == null)
+                        {
+                            text = children.Text
+                                ?? (!string.IsNullOrEmpty(children.TextProperty) ? Getter<string>(data, children.TextProperty) : null)
+                                ?? (_ => string.Empty);
+                        }
+
+                        if (checkable == null)
+                        {
+                            checkable = children.Checkable ??
+                                (!string.IsNullOrEmpty(children.CheckableProperty) ? Getter<bool>(data, children.CheckableProperty) : null) ??
+                                    (o => true);
+                        }
+
+                        RenderTreeItem(builder, data, children.Template, text, checkable, children.HasChildren, children.Expanded, children.Selected);
+                        builder.CloseComponent();
+                    }
+                });
+
+                if (item != null)
+                {
+                    item.RenderChildContent(childContent);
+                }
+
+                if (AllowCheckBoxes && AllowCheckChildren && args?.Children?.Data != null)
+                {
+                    if (CheckedValues != null && UncheckedValues != null && args?.Children?.Data != null)
+                    {
+                        if (item?.Value != null && CheckedValues.Contains(item.Value))
+                        {
+                            await SetCheckedValues(CheckedValues.Union(args.Children.Data.Cast<object>().Except(UncheckedValues)));
+                        }
+                        else
+                        {
+                            await SetCheckedValues(CheckedValues.Except(args.Children.Data.Cast<object>()));
+                        }
+                    }
+                }
+            }
+            else if (item?.Data != null)
+            {
+                if (AllowCheckBoxes && AllowCheckChildren)
+                {
+                    if (CheckedValues != null && CheckedValues.Contains(item.Value))
+                    {
+                        await SetCheckedValues(CheckedValues.Union(item.Data.Cast<object>().Except(UncheckedValues ?? Enumerable.Empty<object?>())));
+                    }
+                    else
+                    {
+                        await SetCheckedValues(CheckedValues);
+                    }
+                }
+            }
+        }
+
+        Func<object, T> Getter<T>(object data, string property)
+        {
+            if (string.IsNullOrEmpty(property))
+            {
+                return (value) => (T)value;
+            }
+
+            return PropertyAccess.Getter<T>(data, property);
+        }
+
+        /// <inheritdoc />
+        public override async Task SetParametersAsync(ParameterView parameters)
+        {
+            if (parameters.DidParameterChange(nameof(Value), Value))
+            {
+                var value = parameters.GetValueOrDefault<object>(nameof(Value));
+
+                if (value == null)
+                {
+                    SelectedItem = null;
+                }
+            }
+
+            await base.SetParametersAsync(parameters);
+        }
+
+        internal void AddLevel(CrestTreeLevel level)
+        {
+            if (level != null && Levels != null && !Levels.Contains(level))
+            {
+                Levels.Add(level);
+                StateHasChanged();
+            }
+        }
+
+        internal int focusedIndex = -1;
+
+        bool preventKeyPress = true;
+        bool stopKeydownPropagation;
+        async Task OnKeyPress(KeyboardEventArgs args)
+        {
+            var key = args.Code != null ? args.Code : args.Key;
+
+            if (key == "ArrowUp" || key == "ArrowDown")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                focusedIndex = Math.Clamp(focusedIndex + (key == "ArrowUp" ? -1 : 1), 0, CurrentItems.Count - 1);
+            }
+            else if (key == "ArrowRight")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                if (focusedIndex >= 0 && focusedIndex < CurrentItems.Count)
+                {
+                    var item = CurrentItems[focusedIndex];
+
+                    if (item.IsExpandable)
+                    {
+                        if (!item.IsExpanded)
+                        {
+                            await item.ExpandCollapse(true);
+                        }
+                        else if (item.items.Count > 0)
+                        {
+                            var childIndex = CurrentItems.IndexOf(item.items[0]);
+
+                            if (childIndex >= 0)
+                            {
+                                focusedIndex = childIndex;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (key == "ArrowLeft")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                if (focusedIndex >= 0 && focusedIndex < CurrentItems.Count)
+                {
+                    var item = CurrentItems[focusedIndex];
+
+                    if (item.IsExpandable && item.IsExpanded)
+                    {
+                        await item.ExpandCollapse(false);
+                    }
+                    else if (item.ParentItem != null)
+                    {
+                        var parentIndex = CurrentItems.IndexOf(item.ParentItem);
+
+                        if (parentIndex >= 0)
+                        {
+                            focusedIndex = parentIndex;
+                        }
+                    }
+                }
+            }
+            else if (key == "Home" || key == "End")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                focusedIndex = key == "Home" ? 0 : CurrentItems.Count - 1;
+            }
+            else if (key == "Enter")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                if (focusedIndex >= 0 && focusedIndex < CurrentItems.Count)
+                {
+                    var item = CurrentItems[focusedIndex];
+
+                    await SelectItem(item);
+
+                    if (item.IsExpandable)
+                    {
+                        await item.ExpandCollapse(!item.IsExpanded);
+                    }
+                }
+            }
+            else if (key == "Space")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                if (focusedIndex >= 0 && focusedIndex < CurrentItems.Count)
+                {
+                    await SelectItem(CurrentItems[focusedIndex]);
+
+                    if (AllowCheckBoxes)
+                    {
+                        await CurrentItems[focusedIndex].CheckedChange(!CurrentItems[focusedIndex].IsChecked());
+                    }
+                }
+            }
+            else if (args.Key != null && args.Key.Length == 1 && !char.IsControl(args.Key[0]) && !args.CtrlKey && !args.AltKey && !args.MetaKey)
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                TypeAhead(args.Key);
+            }
+            else
+            {
+                preventKeyPress = false;
+                stopKeydownPropagation = false;
+            }
+
+            if (preventKeyPress && JSRuntime != null && focusedIndex >= 0 && focusedIndex < CurrentItems.Count)
+            {
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.scrollIntoViewIfNeededById", CurrentItems[focusedIndex].ElementId);
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        string typeAheadBuffer = string.Empty;
+        DateTime lastTypeAhead = DateTime.MinValue;
+
+        void TypeAhead(string character)
+        {
+            var now = DateTime.UtcNow;
+
+            if ((now - lastTypeAhead).TotalMilliseconds > 500)
+            {
+                typeAheadBuffer = string.Empty;
+            }
+
+            lastTypeAhead = now;
+            typeAheadBuffer += character;
+
+            if (CurrentItems.Count == 0)
+            {
+                return;
+            }
+
+            var start = focusedIndex >= 0 ? focusedIndex : 0;
+
+            var search = typeAheadBuffer;
+
+            if (typeAheadBuffer.Length > 1 && typeAheadBuffer.All(c => c == typeAheadBuffer[0]))
+            {
+                search = typeAheadBuffer[0].ToString();
+            }
+
+            for (var offset = 1; offset <= CurrentItems.Count; offset++)
+            {
+                var index = (start + offset) % CurrentItems.Count;
+                var text = CurrentItems[index].Text;
+
+                if (!string.IsNullOrEmpty(text) && text.StartsWith(search, StringComparison.OrdinalIgnoreCase))
+                {
+                    focusedIndex = index;
+                    break;
+                }
+            }
+        }
+
+        internal bool IsFocused(CrestTreeItem item)
+        {
+            return CurrentItems.IndexOf(item) == focusedIndex && focusedIndex != -1;
+        }
+
+        internal string? ActiveDescendantId
+        {
+            get
+            {
+                if (focusedIndex >= 0 && focusedIndex < CurrentItems.Count)
+                {
+                    return CurrentItems[focusedIndex].ElementId;
+                }
+
+                return null;
+            }
+        }
+
+        internal void InsertInCurrentItems(int index, CrestTreeItem item)
+        {
+            if (index <= CurrentItems.Count)
+            {
+                CurrentItems.Insert(index, item);
+            }
+        }
+
+        internal void RemoveFromCurrentItems(int index, int count)
+        {
+            if (index >= 0)
+            {
+                CurrentItems.RemoveRange(index, count);
+            }
+
+            if (focusedIndex > index)
+            {
+                focusedIndex = index;
+            }
+        }
+
+        List<CrestTreeItem>? _currentItems;
+        internal List<CrestTreeItem> CurrentItems
+        {
+            get
+            {
+                if (_currentItems == null)
+                {
+                    _currentItems = items;
+                }
+
+                return _currentItems;
+            }
+        }
+        internal async Task ChangeState()
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+
+        /// <inheritdoc />
+        protected override void OnInitialized()
+        {
+            if (focusedIndex == -1)
+            {
+                var selectedIndex = SelectedItem != null ? CurrentItems.IndexOf(SelectedItem) : -1;
+
+                if (selectedIndex < 0 && Value != null)
+                {
+                    selectedIndex = CurrentItems.FindIndex(i => object.Equals(i.Value, Value));
+                }
+
+                focusedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+            }
+
+            base.OnInitialized();
+        }
+    }
+}

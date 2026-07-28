@@ -1,5 +1,5 @@
-@using Radzen
-@using Radzen.Blazor
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
 @inject NavigationManager Navigation
 
 <CrestAppContainer>
@@ -17,21 +17,6 @@
         </RadzenStack>
     </div>
 </CrestAppContainer>
-
-<style>
-    .legacy-admin-frame-page {
-        min-height: 100vh;
-    }
-
-    .legacy-admin-frame {
-        width: 100%;
-        min-height: calc(100vh - 8rem);
-        flex: 1 1 auto;
-        border: 1px solid var(--rz-border-color);
-        border-radius: var(--rz-border-radius);
-        background: var(--rz-base-background-color);
-    }
-</style>
 
 @code {
     private string FrameUrl => EnsureLegacyFrame(Navigation.Uri);

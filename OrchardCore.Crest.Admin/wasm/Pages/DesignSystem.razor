@@ -2,19 +2,19 @@
 @using Crest.Admin.Api
 @using Crest.Admin.Components.Admin
 @using Crest.Admin.DisplayManagement
-@using Radzen
-@using Radzen.Blazor
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
 @inject DisplayManager DisplayManager
 @inject NotificationService Notifications
 
     <RadzenStack Gap="1rem">
         <RadzenStack Gap="0.25rem">
             <RadzenText TextStyle="TextStyle.H4" Text="Design System" />
-            <RadzenText TextStyle="TextStyle.Body2" Text="Edit Orchard Crest UI Framework design tokens for the active tenant without switching or creating Orchard themes." />
+            <RadzenText TextStyle="TextStyle.Body2" Text="Edit Orchard Crest UI Framework primitive design tokens for the active tenant without switching or creating Orchard themes." />
         </RadzenStack>
 
         <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-            These settings are tenant site settings. They override Radzen CSS variables at runtime while the selected Orchard theme remains the same.
+            These settings are tenant site settings for now. They override Crest primitive design tokens at runtime while the selected Orchard theme remains the same.
         </RadzenAlert>
 
         <RadzenCard>
@@ -22,7 +22,7 @@
                 <RadzenStack Gap="1rem">
                     <RadzenRow Gap="1rem">
                         <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenLabel Text="Radzen base theme" />
+                            <RadzenLabel Text="Crest base theme" />
                             <RadzenDropDown TValue="string" Data="@RadzenThemes" @bind-Value="Model.RadzenTheme" Style="width: 100%;" />
                         </RadzenColumn>
                         <RadzenColumn Size="12" SizeMD="6">
@@ -33,19 +33,19 @@
 
                     <RadzenRow Gap="1rem">
                         <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenLabel Text="Primary" />
+                            <RadzenLabel Text="Accent 1" />
                             <RadzenColorPicker @bind-Value="Model.Primary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
                         </RadzenColumn>
                         <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenLabel Text="Secondary" />
+                            <RadzenLabel Text="Accent 2" />
                             <RadzenColorPicker @bind-Value="Model.Secondary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
                         </RadzenColumn>
                         <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenLabel Text="Surface" />
+                            <RadzenLabel Text="Surface 1" />
                             <RadzenColorPicker @bind-Value="Model.Surface" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
                         </RadzenColumn>
                         <RadzenColumn Size="12" SizeMD="3">
-                            <RadzenLabel Text="Background" />
+                            <RadzenLabel Text="Surface 2" />
                             <RadzenColorPicker @bind-Value="Model.Background" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
                         </RadzenColumn>
                     </RadzenRow>
@@ -67,16 +67,6 @@
             </RadzenTemplateForm>
         </RadzenCard>
     </RadzenStack>
-
-
-<style>
-    .design-system-preview {
-        border: 1px solid var(--rz-border-color);
-        border-radius: var(--rz-border-radius);
-        padding: 1rem;
-        background: var(--rz-base-background-color);
-    }
-</style>
 
 @code {
     private static readonly string[] RadzenThemes =

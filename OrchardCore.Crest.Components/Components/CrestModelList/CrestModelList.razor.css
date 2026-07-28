@@ -1,0 +1,74 @@
+.crest-model-list {
+    min-width: var(--crest-model-list-min-width, 20rem);
+    max-width: var(--crest-model-list-max-width, 26rem);
+    height: 100%;
+}
+
+.crest-model-list__items {
+    min-height: 0;
+}
+
+.crest-model-list__item {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.35rem;
+    border: 1px solid transparent;
+    border-radius: var(--crest-model-list-item-border-radius, var(--crest-radius-sm, 4px));
+    color: var(--crest-model-list-item-color, var(--crest-color-text-1, inherit));
+    background: transparent;
+    text-align: left;
+}
+
+.crest-model-list__item:hover,
+.crest-model-list__item--selected {
+    border-color: var(--crest-model-list-item-hover-border-color, var(--crest-color-border-1, currentColor));
+    background: var(--crest-model-list-item-hover-background, var(--crest-color-hover-surface-1, transparent));
+}
+
+.crest-model-list__item-select {
+    appearance: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.1rem 0.3rem;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.crest-model-list__item-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.crest-model-list__item-title,
+.crest-model-list__item-description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.crest-model-list__item-description {
+    color: var(--crest-model-list-description-color, var(--crest-color-text-muted, currentColor));
+    font-size: 0.8rem;
+}
+
+.crest-model-list__item-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    opacity: 0;
+    transition: opacity 120ms ease-in-out;
+}
+
+.crest-model-list__item:hover .crest-model-list__item-actions,
+.crest-model-list__item:focus-within .crest-model-list__item-actions,
+.crest-model-list__item--selected .crest-model-list__item-actions {
+    opacity: 1;
+}

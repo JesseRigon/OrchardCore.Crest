@@ -8,47 +8,61 @@ public sealed partial class CrestThemeEngine(IJSRuntime js)
 {
     private static readonly IReadOnlyDictionary<string, string> SemanticTokens = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
-        ["primary"] = "--rz-primary",
-        ["primaryLight"] = "--rz-primary-light",
-        ["primaryLighter"] = "--rz-primary-lighter",
-        ["primaryDark"] = "--rz-primary-dark",
-        ["primaryDarker"] = "--rz-primary-darker",
-        ["secondary"] = "--rz-secondary",
-        ["secondaryLight"] = "--rz-secondary-light",
-        ["secondaryLighter"] = "--rz-secondary-lighter",
-        ["secondaryDark"] = "--rz-secondary-dark",
-        ["secondaryDarker"] = "--rz-secondary-darker",
-        ["surface"] = "--rz-base-background-color",
-        ["background"] = "--rz-body-background-color",
-        ["text"] = "--rz-text-color",
-        ["titleText"] = "--rz-text-title-color",
-        ["radius"] = "--rz-border-radius",
+        ["primary"] = "--crest-color-accent-1",
+        ["secondary"] = "--crest-color-accent-2",
+        ["info"] = "--crest-color-accent-3",
+        ["onPrimary"] = "--crest-color-on-accent-1",
+        ["surface"] = "--crest-color-surface-1",
+        ["background"] = "--crest-color-surface-2",
+        ["primaryNavMenuSurface"] = "--crest-color-surface-3",
+        ["text"] = "--crest-color-text-1",
+        ["titleText"] = "--crest-color-text-2",
+        ["mutedText"] = "--crest-color-text-muted",
+        ["border"] = "--crest-color-border-1",
+        ["radius"] = "--crest-radius-sm",
     };
 
-    private static readonly HashSet<string> AllowedRadzenVariables = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> AllowedCrestVariables = new(StringComparer.OrdinalIgnoreCase)
     {
-        "--rz-primary",
-        "--rz-primary-light",
-        "--rz-primary-lighter",
-        "--rz-primary-dark",
-        "--rz-primary-darker",
-        "--rz-on-primary",
-        "--rz-secondary",
-        "--rz-secondary-light",
-        "--rz-secondary-lighter",
-        "--rz-secondary-dark",
-        "--rz-secondary-darker",
-        "--rz-on-secondary",
-        "--rz-base-background-color",
-        "--rz-body-background-color",
-        "--rz-text-color",
-        "--rz-text-title-color",
-        "--rz-text-secondary-color",
-        "--rz-border-radius",
-        "--rz-border-radius-1",
-        "--rz-border-radius-2",
-        "--rz-border-radius-3",
-        "--rz-border-radius-4",
+        "--crest-color-accent-1",
+        "--crest-color-accent-2",
+        "--crest-color-accent-3",
+        "--crest-color-on-accent-1",
+        "--crest-color-surface-1",
+        "--crest-color-surface-2",
+        "--crest-color-surface-3",
+        "--crest-color-text-1",
+        "--crest-color-text-2",
+        "--crest-color-text-muted",
+        "--crest-color-border-1",
+        "--crest-color-shadow-1",
+        "--crest-color-hover-surface-1",
+        "--crest-color-hover-text-1",
+        "--crest-color-active-surface-1",
+        "--crest-color-button-hover-surface-1",
+        "--crest-border-size-xs",
+        "--crest-border-size-sm",
+        "--crest-border-size-md",
+        "--crest-radius-xs",
+        "--crest-radius-sm",
+        "--crest-radius-md",
+        "--crest-radius-lg",
+        "--crest-radius-pill",
+        "--crest-space-2xs",
+        "--crest-space-xs",
+        "--crest-space-sm",
+        "--crest-space-md",
+        "--crest-space-lg",
+        "--crest-space-xl",
+        "--crest-space-2xl",
+        "--crest-font-size-xs",
+        "--crest-font-size-sm",
+        "--crest-font-size-md",
+        "--crest-font-size-lg",
+        "--crest-font-size-xl",
+        "--crest-shadow-sm",
+        "--crest-shadow-md",
+        "--crest-shadow-lg",
     };
 
     public async Task ApplyAsync(CrestThemeSettings settings)
@@ -67,7 +81,7 @@ public sealed partial class CrestThemeEngine(IJSRuntime js)
                 ? semanticVariable
                 : key;
 
-            if (!AllowedRadzenVariables.Contains(variable) || !IsSafeCssValue(value))
+            if (!AllowedCrestVariables.Contains(variable) || !IsSafeCssValue(value))
             {
                 continue;
             }

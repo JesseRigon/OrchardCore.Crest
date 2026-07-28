@@ -1,0 +1,102 @@
+@inherits CrestComponent
+
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <div @ref="@Element" @attributes="Attributes" class="@GetCssClass()" style="@Style" id="@GetId()">
+        @if (FormFieldVariant != null)
+        {
+            <CrestStack>
+                <CrestFormField Text="@UserText" Variant="@FormFieldVariant.Value">
+                    <ChildContent>
+                        <CrestTextBox AutoComplete=@AutoComplete AutoCompleteType=@UserNameAutoCompleteType id=@Id("username") Name="Username" @bind-Value=@username />
+                    </ChildContent>
+                    <Helper>
+                        <CrestRequiredValidator Component="Username" Text=@UserRequired />
+                    </Helper>
+                </CrestFormField>
+                <CrestFormField Text="@PasswordText" Variant="@FormFieldVariant.Value">
+                    <ChildContent>
+                        <CrestPassword id=@Id("password") AutoComplete=@AutoComplete AutoCompleteType=@PasswordAutoCompleteType Name="Password" @bind-Value=@password />
+                    </ChildContent>
+                    <Helper>
+                        <CrestRequiredValidator Component="Password" Text=@PasswordRequired />
+                    </Helper>
+                </CrestFormField>
+                @if (AllowRememberMe)
+                {
+                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <CrestSwitch @bind-Value="@rememberMe" id=@Id("rememberMe") Name="RememberMe" />
+                        <label class="rz-label" for="RememberMe">@RememberMeText</label>
+                    </CrestStack>
+                }
+            </CrestStack>
+            <CrestStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                @if(ShowLoginButton)
+                {
+                <CrestButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text=@LoginText Click=@OnLogin />
+                }
+                @if (AllowResetPassword)
+                {
+                <CrestButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Text" Text=@ResetPasswordText Click=@OnReset />
+                }
+            </CrestStack>
+            @if (AllowRegister)
+            {
+                <div class="rz-register">
+                    @RegisterMessageText
+                    <CrestButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Shade="Shade.Lighter" Text=@RegisterText Click=@OnRegister />
+                </div>
+            }
+        }
+        else
+        {
+        <div class="rz-form">
+            <div class="rz-form-row">
+                <label class="rz-label" for=@Id("username")>@UserText</label>
+                <div class="rz-form-input-wrapper">
+                    <CrestTextBox AutoComplete=@AutoComplete AutoCompleteType=@UserNameAutoCompleteType id=@Id("username") Name="Username" @bind-Value=@username />
+                    <CrestRequiredValidator Component="Username" Text=@UserRequired />
+                </div>
+            </div>
+            <div class="rz-form-row">
+                <label class="rz-label" for=@Id("password")>@PasswordText</label>
+                <div class="rz-form-input-wrapper">
+                    <CrestPassword id=@Id("password") AutoComplete=@AutoComplete AutoCompleteType=@PasswordAutoCompleteType Name="Password" @bind-Value=@password />
+                    <CrestRequiredValidator Component="Password" Text=@PasswordRequired />
+                </div>
+            </div>
+@if (AllowRememberMe)
+{
+            <div class="rz-form-row">
+                <label class="rz-label"></label>
+                <div class="rz-form-input-wrapper">
+                    <CrestSwitch @bind-Value="@rememberMe" id=@Id("rememberMe") Name="RememberMe" />
+                    <label class="rz-label" for="RememberMe">@RememberMeText</label>
+                </div>
+            </div>
+}
+            <div class="rz-form-row">
+                <label class="rz-label"></label>
+                <div class="rz-form-input-wrapper rz-login-buttons">
+                    @if (ShowLoginButton)
+                    {
+                    <CrestButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text=@LoginText Click=@OnLogin />
+                    }
+                    @if (AllowResetPassword)
+                    {
+                    <CrestButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Text" Text=@ResetPasswordText Click=@OnReset />
+                    }
+                </div>
+            </div>
+        </div>
+        @if (AllowRegister)
+        {
+            <div class="rz-register">
+                @RegisterMessageText
+                <CrestButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Shade="Shade.Lighter" Text=@RegisterText Click=@OnRegister />
+            </div>
+        }
+        }
+    </div>
+}

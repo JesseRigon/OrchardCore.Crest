@@ -1,0 +1,15 @@
+.crest-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--crest-icon-size, 1em);
+    block-size: var(--crest-icon-size, 1em);
+    color: var(--crest-icon-color, currentColor);
+    line-height: 1;
+}
+
+.crest-icon ::deep svg {
+    inline-size: 100%;
+    block-size: 100%;
+    fill: currentColor;
+}

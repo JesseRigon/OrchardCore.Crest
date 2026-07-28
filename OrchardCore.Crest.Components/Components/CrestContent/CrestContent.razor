@@ -1,0 +1,7 @@
+@inherits CrestComponentWithChildren
+
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <div @ref="@Element" style="@Style" Container="@Container" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">@ChildContent</div>
+}

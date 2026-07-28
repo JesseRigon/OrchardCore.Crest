@@ -1,0 +1,64 @@
+@using Microsoft.AspNetCore.Components
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inherits SpreadsheetDialogBase
+
+@namespace Crest.Components.Primitives.Spreadsheet
+<CrestStack Orientation="Orientation.Horizontal" Gap="1rem">
+    <CrestListBox @bind-Value=@selectedCategory Data=@categories TValue="NumberFormatCategory"
+        InputSize="InputSize.Small" Style="width: 140px" Change=@OnCategoryChanged />
+
+    <CrestStack Orientation="Orientation.Vertical" Gap="0.5rem" Style="flex: 1">
+        <CrestStack Orientation="Orientation.Vertical" Gap="0.25rem">
+            <CrestLabel class="rz-text-subtitle2" Text=@L(nameof(CrestStrings.Spreadsheet_Sample)) Component="sample" Style="align-self: start" />
+            <CrestTextBox Value=@preview ReadOnly="true" Name="sample" InputSize="InputSize.Small" Style="font-weight: bold" />
+        </CrestStack>
+
+        @if (ShowDecimalPlaces)
+        {
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <CrestLabel class="rz-text-subtitle2" Text=@L(nameof(CrestStrings.Spreadsheet_DecimalPlaces)) Component="decimalPlaces" Style="width: 8rem; text-align: end" />
+                <CrestNumeric @bind-Value=@decimalPlaces Min="0" Max="30" Name="decimalPlaces" InputSize="InputSize.Small" Style="width: 80px"
+                    Change=@OnOptionChanged TValue="int" />
+            </CrestStack>
+        }
+
+        @if (ShowThousandsSeparator)
+        {
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Style="padding-inline-start: 8.5rem">
+                <CrestCheckBox @bind-Value=@useThousandsSeparator TValue="bool" Name="useThousandsSeparator"
+                    Change=@OnOptionChanged />
+                <CrestLabel class="rz-text-subtitle2" Text=@L(nameof(CrestStrings.Spreadsheet_UseThousandsSeparator)) Component="useThousandsSeparator" />
+            </CrestStack>
+        }
+
+        @if (ShowCurrencySymbol)
+        {
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <CrestLabel class="rz-text-subtitle2" Text=@L(nameof(CrestStrings.Spreadsheet_Symbol)) Component="currencySymbol" Style="width: 8rem; text-align: end" />
+                <RadzenDropDown @bind-Value=@currencySymbol Data=@FormatCodeBuilder.CurrencySymbols Name="currencySymbol"
+                    InputSize="InputSize.Small" Style="width: 80px" Change=@OnOptionChanged TValue="string" />
+            </CrestStack>
+        }
+
+        @if (ShowPresetList)
+        {
+            <CrestStack Orientation="Orientation.Vertical" Gap="0.25rem">
+                <CrestLabel class="rz-text-subtitle2" Text=@L(nameof(CrestStrings.Spreadsheet_Type)) Component="presetType" Style="align-self: start" />
+                <CrestListBox @bind-Value=@selectedPreset Data=@presets TextProperty="Item1" ValueProperty="Item2" Name="presetType"
+                    InputSize="InputSize.Small" Style="height: 130px" TValue="string" Change=@OnPresetChanged />
+            </CrestStack>
+        }
+
+        <CrestStack Orientation="Orientation.Vertical" Gap="0.25rem">
+            <CrestLabel class="rz-text-subtitle2" Text=@L(nameof(CrestStrings.Spreadsheet_FormatCode)) Component="formatCode" Style="align-self: start" />
+            <CrestTextBox @bind-Value=@customFormatCode Name="formatCode" InputSize="InputSize.Small" Style="width: 100%" Change=@OnFormatCodeChanged />
+        </CrestStack>
+    </CrestStack>
+</CrestStack>
+
+<CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-spreadsheet-dialog-actions">
+    <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+    <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" />
+</CrestStack>

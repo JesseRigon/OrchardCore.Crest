@@ -1,0 +1,51 @@
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@implements IDisposable
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestButton aria-label=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Undo))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Undo))) Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" Click=@OnUndoAsync Icon="undo" ButtonType="ButtonType.Button" Disabled=@IsDisabled />
+
+@code {
+#nullable enable
+
+    [CascadingParameter]
+    public UndoRedoStack? Commands { get; set; }
+
+    [CascadingParameter]
+    public ISpreadsheet? Spreadsheet { get; set; }
+
+    private bool IsDisabled
+        => Commands is null
+        || !Commands.CanUndo
+        || Spreadsheet?.CanUndo == false;
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        if (Commands is not null)
+        {
+            Commands.Changed -= OnCommandsChanged;
+        }
+
+        await base.SetParametersAsync(parameters);
+
+        if (Commands is not null)
+        {
+            Commands.Changed += OnCommandsChanged;
+        }
+    }
+
+    private void OnCommandsChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void OnUndoAsync() => Spreadsheet?.Undo();
+
+    public void Dispose()
+    {
+        if (Commands is not null)
+        {
+            Commands.Changed -= OnCommandsChanged;
+        }
+    }
+}

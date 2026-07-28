@@ -23,6 +23,7 @@ public interface IRestApi
     IAppApi App { get; }
     ISiteApi Site { get; }
     IAdminSettingsApi AdminSettings { get; }
+    ITitleBarSettingsApi TitleBarSettings { get; }
     INavigationApi Navigation { get; }
     IContentApi Content { get; }
     IFeaturesApi Features { get; }
@@ -61,6 +62,12 @@ public interface IAdminSettingsApi
 {
     Task<AdminSettingsDto> GetAsync();
     Task<AdminSettingsDto?> UpdateAsync(AdminSettingsUpdate update);
+}
+
+public interface ITitleBarSettingsApi
+{
+    Task<CrestTitleBarSettingsDto> GetAsync();
+    Task<CrestTitleBarSettingsDto?> UpdateAsync(CrestTitleBarSettingsUpdate update);
 }
 
 public interface INavigationApi
@@ -197,7 +204,7 @@ public interface IAdminMenusApi
     Task<AdminMenuSummary?> CreateSeparatorAsync(string menuId, AdminMenuSeparatorEditModel model);
     Task<AdminMenuSummary?> MoveSeparatorAsync(string menuId, string separatorId, AdminMenuSeparatorEditModel model);
     Task<AdminMenuSummary?> DeleteSeparatorAsync(string menuId, string separatorId);
-    Task<AdminMenuSummary?> UpdateSidebarSettingsAsync(string menuId, AdminSidebarSettings settings);
+    Task<AdminMenuSummary?> UpdatePrimaryNavMenuSettingsAsync(string menuId, AdminPrimaryNavMenuSettings settings);
     Task<AdminMenuLayoutExportResult?> ExportLayoutAsync(string? fileName = null);
 }
 
@@ -217,6 +224,7 @@ public sealed class RestApi(HttpClient http, ICrestAntiforgeryTokenStore antifor
     public IAppApi App { get; } = new AppApi(http);
     public ISiteApi Site { get; } = new SiteApi(http);
     public IAdminSettingsApi AdminSettings { get; } = new AdminSettingsApi(http);
+    public ITitleBarSettingsApi TitleBarSettings { get; } = new TitleBarSettingsApi(http);
     public INavigationApi Navigation { get; } = new NavigationApi(http);
     public IContentApi Content { get; } = new ContentApi(http);
     public IFeaturesApi Features { get; } = new FeaturesApi(http);
@@ -354,6 +362,29 @@ public sealed class AdminSettingsApi(HttpClient http) : IAdminSettingsApi
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<AdminSettingsDto>()
             : null;
+    }
+
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
+    {
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return request;
+    }
+}
+
+public sealed class TitleBarSettingsApi(HttpClient http) : ITitleBarSettingsApi
+{
+    public async Task<CrestTitleBarSettingsDto> GetAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/crest/title-bar-settings")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<CrestTitleBarSettingsDto>() ?? CrestTitleBarSettingsDto.Default
+            : CrestTitleBarSettingsDto.Default;
+    }
+
+    public async Task<CrestTitleBarSettingsDto?> UpdateAsync(CrestTitleBarSettingsUpdate update)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Put, "api/crest/title-bar-settings") { Content = JsonContent.Create(update) }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<CrestTitleBarSettingsDto>() : null;
     }
 
     private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
@@ -980,9 +1011,9 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
     }
 
-    public async Task<AdminMenuSummary?> UpdateSidebarSettingsAsync(string menuId, AdminSidebarSettings settings)
+    public async Task<AdminMenuSummary?> UpdatePrimaryNavMenuSettingsAsync(string menuId, AdminPrimaryNavMenuSettings settings)
     {
-        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/sidebar-settings")
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/primary-nav-menu-settings")
         {
             Content = JsonContent.Create(settings),
         }));
@@ -1020,12 +1051,14 @@ public sealed record AppManifest(
     Tenant[] Tenants,
     SiteSettings Site,
     AdminSettingsDto AdminSettings,
+    CrestTitleBarSettingsDto TitleBarSettings,
     AdminDescriptor Admin,
     int FeatureSerialNumber,
     string FeatureHash,
     Feature[] Features,
     NavigationMenu AdminMenu,
-    CrestRouteAccess[] AuthorizedRoutes);
+    CrestRouteAccess[] AuthorizedRoutes,
+    CultureSelector CultureSelector);
 
 public sealed record CrestRouteAccess(string Template);
 
@@ -1039,6 +1072,14 @@ public sealed record Tenant(
 
 public sealed record AdminDescriptor(string BasePath);
 
+public sealed record CultureSelector(
+    string CurrentCulture,
+    CultureOption[] Cultures,
+    string CookieName,
+    string CookiePath);
+
+public sealed record CultureOption(string Value, string Label, string Icon);
+
 public sealed record AdminSettingsDto(
     bool DisplayThemeToggler,
     bool DisplayMenuFilter,
@@ -1047,6 +1088,23 @@ public sealed record AdminSettingsDto(
 {
     public static AdminSettingsDto Default { get; } = new(true, false, false, false);
 }
+
+public sealed record CrestTitleBarSettingsDto(
+    bool DisplayCultureLabel,
+    string? TenantAvatarImageUrl,
+    string TenantAvatarShape,
+    string? TenantAvatarClipPath,
+    string? TenantAvatarBorderRadius)
+{
+    public static CrestTitleBarSettingsDto Default { get; } = new(false, null, "Circle", null, null);
+}
+
+public sealed record CrestTitleBarSettingsUpdate(
+    bool DisplayCultureLabel,
+    string? TenantAvatarImageUrl,
+    string TenantAvatarShape,
+    string? TenantAvatarClipPath,
+    string? TenantAvatarBorderRadius);
 
 public sealed record AdminSettingsUpdate(
     bool DisplayThemeToggler,
@@ -1100,7 +1158,7 @@ public sealed record SiteSettingsUpdate(
     string ResourceDebugMode,
     string CacheMode);
 
-public sealed record NavigationMenu(string Name, NavigationItem[] Items, Crest.Icons.IconPack? Icons = null, NavigationSeparator[]? Separators = null, AdminSidebarSettings? SidebarSettings = null)
+public sealed record NavigationMenu(string Name, NavigationItem[] Items, Crest.Icons.IconPack? Icons = null, NavigationSeparator[]? Separators = null, AdminPrimaryNavMenuSettings? PrimaryNavMenuSettings = null)
 {
     public static NavigationMenu Empty(string name) => new(name, []);
 }
@@ -1220,7 +1278,15 @@ public sealed class CrestUserWrite
 public sealed record CrestUserEnabled(bool Enabled);
 public sealed record CrestRecipe(string Name,string? DisplayName,string? Description,string? FileName,string? BasePath,string[]? Tags);
 public sealed record CrestRecipeKey(string? BasePath,string? FileName);
-public sealed class CrestLocalization { public string DefaultCulture {get;set;}=""; public string[]? SupportedCultures {get;set;}=[]; public bool FallBackToParentCulture {get;set;} }
+public sealed class CrestLocalization
+{
+    public string DefaultCulture { get; set; } = "";
+    public string[] SupportedCultures { get; set; } = [];
+    public bool FallBackToParentCulture { get; set; }
+    public CrestCulture[] AvailableCultures { get; set; } = [];
+}
+
+public sealed record CrestCulture(string Value, string Label, string NativeLabel);
 public sealed record CrestIndex(string Id,string? Name,string? Provider,string? IndexName,string? Type,string? CreatedUtc);
 public sealed record CrestQueryCatalog(CrestQuery[] Queries, string[] Sources)
 {
@@ -1366,15 +1432,15 @@ public sealed record AdminMenusState(AdminMenuSummary[] Menus)
     public static AdminMenusState Empty { get; } = new([]);
 }
 
-public sealed record AdminMenuSummary(string Id, string Name, bool Enabled, bool IsDefault, AdminMenuSeparatorSummary[] Separators, AdminSidebarSettings SidebarSettings, Crest.Icons.IconPack? Icons, AdminMenuNodeSummary[] Nodes);
+public sealed record AdminMenuSummary(string Id, string Name, bool Enabled, bool IsDefault, AdminMenuSeparatorSummary[] Separators, AdminPrimaryNavMenuSettings PrimaryNavMenuSettings, Crest.Icons.IconPack? Icons, AdminMenuNodeSummary[] Nodes);
 
-public sealed class AdminSidebarSettings
+public sealed class AdminPrimaryNavMenuSettings
 {
     public bool Collapsible { get; set; } = true;
     public int ExpansionDurationMilliseconds { get; set; } = 500;
     public List<bool> TierSeparators { get; set; } = [true, false, false];
     public List<string> TierIndents { get; set; } = ["0rem", "0.75rem", "1.25rem", "1.75rem"];
-    public List<string> TierBackgrounds { get; set; } = ["transparent", "transparent", "var(--rz-base-100, color-mix(in srgb, var(--rz-base-background-color) 88%, var(--rz-text-color) 12%))", "transparent"];
+    public List<string> TierBackgrounds { get; set; } = ["transparent", "transparent", "color-mix(in srgb, var(--crest-color-surface-1) 88%, var(--crest-color-text-1) 12%)", "transparent"];
     public List<string> TierBaseSizes { get; set; } = ["1rem", "0.95rem", "0.9rem"];
     public List<double> TierBaseRems { get; set; } = [1.0, 0.95, 0.9];
 }

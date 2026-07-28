@@ -1,0 +1,340 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// Barcode type.
+    /// </summary>
+    public enum CrestBarcodeType
+    {
+        /// <summary>
+        /// Code 128 (subset B). Encodes ASCII text and is widely supported.
+        /// </summary>
+        Code128,
+
+        /// <summary>
+        /// Code 39. Supports uppercase letters, digits, and a limited set of symbols.
+        /// </summary>
+        Code39,
+
+        /// <summary>EAN-13 (GTIN-13).</summary>
+        Ean13,
+
+        /// <summary>EAN-8 (GTIN-8).</summary>
+        Ean8,
+
+        /// <summary>UPC-A.</summary>
+        UpcA,
+
+        /// <summary>ITF (Interleaved 2 of 5).</summary>
+        Itf,
+
+        /// <summary>POSTNET (USPS). 4/5-state style using short/long bars.</summary>
+        Postnet,
+
+        /// <summary>RM4SCC (Royal Mail 4-state customer code).</summary>
+        Rm4scc,
+
+        /// <summary>Codabar.</summary>
+        Codabar,
+
+        /// <summary>Pharmacode (one-track).</summary>
+        Pharmacode,
+
+        /// <summary>ISBN (encodes as EAN-13 with 978/979 prefix).</summary>
+        Isbn,
+
+        /// <summary>ISSN (encodes as EAN-13 with 977 prefix).</summary>
+        Issn,
+
+        /// <summary>
+        /// MSI (Modified Plessey). Numeric-only barcode, commonly used for inventory.
+        /// </summary>
+        Msi,
+
+        /// <summary>Telepen.</summary>
+        Telepen
+    }
+
+    /// <summary>
+    /// A 1D barcode generator component that renders barcodes as SVG graphics.
+    /// Generates barcodes entirely client-side (no external dependencies).
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// &lt;CrestBarcode Value="RADZEN-12345" Type="CrestBarcodeType.Code128" Height="80px" /&gt;
+    /// </code>
+    /// </example>
+    public partial class CrestBarcode : CrestComponent
+    {
+        /// <summary>
+        /// Gets whether the specified barcode <paramref name="type"/> produces a checksum value that can be displayed
+        /// when <see cref="ShowChecksum"/> is enabled.
+        /// </summary>
+        /// <param name="type">The barcode type.</param>
+        /// <returns><c>true</c> if the type has a checksum value; otherwise, <c>false</c>.</returns>
+        public static bool HasChecksum(CrestBarcodeType type) => type switch
+        {
+            CrestBarcodeType.Code128 => true,
+            CrestBarcodeType.Ean13 => true,
+            CrestBarcodeType.Ean8 => true,
+            CrestBarcodeType.UpcA => true,
+            CrestBarcodeType.Postnet => true,
+            CrestBarcodeType.Rm4scc => true,
+            CrestBarcodeType.Isbn => true,
+            CrestBarcodeType.Issn => true,
+            CrestBarcodeType.Msi => true,
+            CrestBarcodeType.Telepen => true,
+            _ => false
+        };
+
+        /// <summary>
+        /// Gets or sets the barcode value to encode.
+        /// </summary>
+        [Parameter] public string Value { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the barcode type.
+        /// </summary>
+        [Parameter] public CrestBarcodeType Type { get; set; } = CrestBarcodeType.Code128;
+
+        /// <summary>
+        /// Gets or sets the rendered width of the SVG. Accepts CSS units (e.g. "300px", "100%").
+        /// </summary>
+        [Parameter] public string Width { get; set; } = "100%";
+
+        /// <summary>
+        /// Gets or sets the rendered height of the SVG. Accepts CSS units (e.g. "80px").
+        /// If <see cref="ShowValue"/> is true, the text is drawn inside this height.
+        /// </summary>
+        [Parameter] public string Height { get; set; } = "80px";
+
+        /// <summary>
+        /// Gets or sets the barcode bars color.
+        /// </summary>
+        [Parameter] public string Foreground { get; set; } = "#000";
+
+        /// <summary>
+        /// Gets or sets the barcode background color.
+        /// </summary>
+        [Parameter] public string Background { get; set; } = "#FFF";
+
+        /// <summary>
+        /// Gets or sets the quiet zone in modules (left and right padding).
+        /// </summary>
+        [Parameter] public int QuietZoneModules { get; set; } = 10;
+
+        /// <summary>
+        /// Gets or sets the height of the bars in SVG units (viewBox units). Default is 50.
+        /// </summary>
+        [Parameter] public double BarHeight { get; set; } = 50;
+
+        /// <summary>
+        /// Gets or sets whether to show the value as text under the bars.
+        /// </summary>
+        [Parameter] public bool ShowValue { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether to show the checksum (if applicable for the selected <see cref="Type"/>) under the bars.
+        /// </summary>
+        [Parameter] public bool ShowChecksum { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the font size for layout calculations of the value text (in SVG viewBox units).
+        /// This is not automatically applied as an SVG attribute; use <see cref="ValueStyle"/> to style the text.
+        /// </summary>
+        [Parameter] public double FontSize { get; set; } = 12;
+
+        /// <summary>
+        /// Gets or sets the value inline CSS style.
+        /// </summary>
+        /// <value>The value style.</value>
+        [Parameter]
+        public virtual string? ValueStyle { get; set; }
+
+        /// <summary>
+        /// Gets or sets the gap between bars and text in SVG units (viewBox units).
+        /// </summary>
+        [Parameter] public double TextMarginTop { get; set; } = 6;
+
+        /// <summary>
+        /// Gets the component CSS class.
+        /// </summary>
+        protected override string GetComponentCssClass() => "rz-barcode";
+
+        private static string F(double v) => v.ToString(CultureInfo.InvariantCulture);
+
+        (IReadOnlyList<BarcodeRect> bars, double vbWidth, string? checksumText, string? error) GetBarcode()
+        {
+            if (string.IsNullOrEmpty(Value))
+            {
+                return (Array.Empty<BarcodeRect>(), 1, null, null);
+            }
+
+            try
+            {
+                return Type switch
+                {
+                    CrestBarcodeType.Code128 => CreateFromWidths(CrestBarcodeEncoder.EncodeCode128B(Value, out var c128), c128.ToString(CultureInfo.InvariantCulture)),
+                    CrestBarcodeType.Code39 => CreateFromWidths(CrestBarcodeEncoder.EncodeCode39(Value), null),
+                    CrestBarcodeType.Codabar => CreateFromWidths(CrestBarcodeEncoder.EncodeCodabar(Value), null),
+                    CrestBarcodeType.Itf => CreateFromWidths(CrestBarcodeEncoder.EncodeItf(Value), null),
+                    CrestBarcodeType.Ean13 => CreateFromBits(CrestBarcodeEncoder.EncodeEan13(Value, out var ean13Check), ean13Check),
+                    CrestBarcodeType.Ean8 => CreateFromBits(CrestBarcodeEncoder.EncodeEan8(Value, out var ean8Check), ean8Check),
+                    CrestBarcodeType.UpcA => CreateFromBits(CrestBarcodeEncoder.EncodeUpcA(Value, out var upcCheck), upcCheck),
+                    CrestBarcodeType.Isbn => CreateFromBits(CrestBarcodeEncoder.EncodeIsbnAsEan13(Value, out var isbnCheck), isbnCheck),
+                    CrestBarcodeType.Issn => CreateFromBits(CrestBarcodeEncoder.EncodeIssnAsEan13(Value, out var issnCheck), issnCheck),
+                    CrestBarcodeType.Pharmacode => CreateFromRects(CrestBarcodeEncoder.EncodePharmacode(Value, BarHeight, QuietZoneModules), null),
+                    CrestBarcodeType.Postnet => CreateFromRects(CrestBarcodeEncoder.EncodePostnet(Value, BarHeight, QuietZoneModules, out var postnetCheck), postnetCheck),
+                    CrestBarcodeType.Rm4scc => CreateFromRects(CrestBarcodeEncoder.EncodeRm4scc(Value, BarHeight, QuietZoneModules, out var rmCheck), rmCheck),
+                    CrestBarcodeType.Msi => CreateFromBits(CrestBarcodeEncoder.EncodeMsiPlessey(Value, out var msiCheck), msiCheck),
+                    CrestBarcodeType.Telepen => CreateFromWidths(CrestBarcodeEncoder.EncodeTelepen(Value, out var telepenCheck), telepenCheck),
+                    _ => (Array.Empty<BarcodeRect>(), 1, null, null)
+                };
+            }
+            catch (Exception ex)
+            {
+                // Avoid breaking the whole page. Optionally, users can inspect via dev tools if needed.
+                return (Array.Empty<BarcodeRect>(), 1, null, ex.Message);
+            }
+        }
+
+        (IReadOnlyList<BarcodeRect> bars, double vbWidth, string? checksumText, string? error) CreateFromWidths(IReadOnlyList<int> widths, string? checksumText)
+        {
+            var rects = new List<BarcodeRect>();
+            double x = Math.Max(0, QuietZoneModules);
+            bool isBar = true;
+            for (int i = 0; i < widths.Count; i++)
+            {
+                var w = widths[i];
+                if (isBar && w > 0)
+                {
+                    rects.Add(new BarcodeRect(x, 0, w, BarHeight));
+                }
+                x += w;
+                isBar = !isBar;
+            }
+
+            var vbWidth = x + Math.Max(0, QuietZoneModules);
+            if (vbWidth <= 0)
+            {
+                vbWidth = 1;
+            }
+
+            return (rects, vbWidth, checksumText, null);
+        }
+
+        (IReadOnlyList<BarcodeRect> bars, double vbWidth, string? checksumText, string? error) CreateFromBits(string bits, string? checksumText)
+        {
+            if (string.IsNullOrEmpty(bits))
+            {
+                return (Array.Empty<BarcodeRect>(), 1, checksumText, null);
+            }
+
+            var rects = new List<BarcodeRect>();
+            var quiet = Math.Max(0, QuietZoneModules);
+            for (int i = 0; i < bits.Length;)
+            {
+                if (bits[i] != '1')
+                {
+                    i++;
+                    continue;
+                }
+
+                int j = i + 1;
+                while (j < bits.Length && bits[j] == '1')
+                {
+                    j++;
+                }
+
+                rects.Add(new BarcodeRect(quiet + i, 0, j - i, BarHeight));
+                i = j;
+            }
+
+            var vbWidth = quiet + bits.Length + quiet;
+            if (vbWidth <= 0)
+            {
+                vbWidth = 1;
+            }
+
+            return (rects, vbWidth, checksumText, null);
+        }
+
+        (IReadOnlyList<BarcodeRect> bars, double vbWidth, string? checksumText, string? error) CreateFromRects((IReadOnlyList<BarcodeRect> bars, double vbWidth) geometry, string? checksumText)
+        {
+            var vbWidth = geometry.vbWidth;
+            if (vbWidth <= 0)
+            {
+                vbWidth = 1;
+            }
+
+            return (geometry.bars, vbWidth, checksumText, null);
+        }
+
+        /// <summary>
+        /// Returns the SVG markup of the rendered barcode as a string.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="Task{String}"/> representing the asynchronous operation. The task result contains the SVG markup of the barcode.
+        /// </returns>
+        public async Task<string> ToSvg()
+        {
+            if (JSRuntime != null)
+            {
+                return await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.outerHTML", Element);
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Renders the barcode as a PNG image and downloads it in the browser.
+        /// </summary>
+        /// <param name="fileName">The download file name. Default is <c>barcode.png</c>.</param>
+        /// <param name="width">The PNG width in pixels. When omitted the rendered size scaled by the device pixel ratio is used.</param>
+        /// <param name="height">The PNG height in pixels. When omitted it is derived from <paramref name="width"/> preserving the aspect ratio.</param>
+        public async Task ToPng(string fileName = "barcode.png", int? width = null, int? height = null)
+        {
+            if (JSRuntime != null)
+            {
+                var svg = await ToSvg();
+                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.downloadSvgAsPng", svg, fileName, width, height);
+            }
+        }
+
+        /// <summary>
+        /// Renders the barcode as a PNG image and returns the image data.
+        /// Use this to store the barcode in a database, embed it in documents, or send it to an API instead of downloading it.
+        /// </summary>
+        /// <param name="width">The PNG width in pixels. When <c>null</c> the rendered size scaled by the device pixel ratio is used.</param>
+        /// <param name="height">The PNG height in pixels. When <c>null</c> it is derived from <paramref name="width"/> preserving the aspect ratio.</param>
+        /// <returns>
+        /// A <see cref="Task{TResult}"/> representing the asynchronous operation. The task result contains the PNG image data.
+        /// </returns>
+        public async Task<byte[]> ToPng(int? width, int? height = null)
+        {
+            if (JSRuntime != null)
+            {
+                var svg = await ToSvg();
+
+                if (!string.IsNullOrEmpty(svg))
+                {
+                    await using var png = await JSRuntime.InvokeAsync<IJSStreamReference>("Crest.Components.Primitives.svgToPng", svg, width, height);
+                    using var stream = await png.OpenReadStreamAsync(maxAllowedSize: 32 * 1024 * 1024);
+                    using var memoryStream = new MemoryStream();
+                    await stream.CopyToAsync(memoryStream);
+                    return memoryStream.ToArray();
+                }
+            }
+
+            return Array.Empty<byte>();
+        }
+    }
+}

@@ -1,0 +1,62 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Rendering
+@using Microsoft.JSInterop
+@inherits FormComponent<string>
+
+@namespace Crest.Components.Primitives
+@if(Visible)
+{
+    <div @ref=Element style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
+        @if (ShowToolbar)
+        {
+        <div class="rz-toolbar rz-html-editor-toolbar">
+            <CascadingValue Value=@this>
+            @if (ChildContent != null)
+            {
+                @ChildContent
+            }
+            else
+            {
+                <CrestHtmlEditorUndo />
+                <CrestHtmlEditorRedo />
+                <CrestHtmlEditorSeparator />
+                <CrestHtmlEditorBold />
+                <CrestHtmlEditorItalic />
+                <CrestHtmlEditorUnderline />
+                <CrestHtmlEditorStrikeThrough />
+                <CrestHtmlEditorSeparator />
+                <CrestHtmlEditorAlignLeft />
+                <CrestHtmlEditorAlignCenter />
+                <CrestHtmlEditorAlignRight />
+                <CrestHtmlEditorJustify />
+                <CrestHtmlEditorSeparator />
+                <CrestHtmlEditorIndent />
+                <CrestHtmlEditorOutdent />
+                <CrestHtmlEditorUnorderedList />
+                <CrestHtmlEditorOrderedList />
+                <CrestHtmlEditorSeparator />
+                <CrestHtmlEditorColor />
+                <CrestHtmlEditorBackground />
+                <CrestHtmlEditorRemoveFormat />
+                <CrestHtmlEditorSeparator />
+                <CrestHtmlEditorSubscript />
+                <CrestHtmlEditorSuperscript />
+                <CrestHtmlEditorSeparator />
+                <CrestHtmlEditorLink />
+                <CrestHtmlEditorUnlink />
+                <CrestHtmlEditorImage />
+                <CrestHtmlEditorTableTools />
+                <CrestHtmlEditorFontName />
+                <CrestHtmlEditorFontSize />
+                <CrestHtmlEditorFormatBlock />
+                <CrestHtmlEditorSeparator />
+                <CrestHtmlEditorSource />
+            }
+            </CascadingValue>
+        </div>
+        }
+        <CrestTextArea @ref=@TextArea spellcheck="false" Visible=@(mode == HtmlEditorMode.Source) class="rz-html-editor-source" Value=@Html Change=@SourceChanged Immediate=@Immediate />
+        <div hidden="@(mode != HtmlEditorMode.Design)" @ref=@ContentEditable class="rz-html-editor-content" contenteditable=@(!Disabled) @onfocus=@OnFocus @onblur=@OnBlur></div>
+    </div>
+}

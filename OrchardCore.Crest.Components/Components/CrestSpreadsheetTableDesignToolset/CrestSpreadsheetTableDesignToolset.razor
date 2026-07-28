@@ -1,0 +1,76 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@implements IDisposable
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestTabsItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_TableDesignTab)) ?? "Table Design") Visible=@IsActive>
+    <TableDesignPanel Worksheet=@Worksheet />
+</CrestTabsItem>
+
+@code {
+#nullable enable
+
+    [CascadingParameter]
+    public Worksheet? Worksheet { get; set; }
+
+    [CascadingParameter]
+    public ISpreadsheet? Spreadsheet { get; set; }
+
+    private readonly EventBinding<Worksheet> worksheetBinding;
+
+    public CrestSpreadsheetTableDesignToolset()
+    {
+        worksheetBinding = new EventBinding<Worksheet>(
+            w =>
+            {
+                w.Selection.Changed += OnSelectionChanged;
+                w.ChromeChanged += OnSelectionChanged;
+            },
+            w =>
+            {
+                w.Selection.Changed -= OnSelectionChanged;
+                w.ChromeChanged -= OnSelectionChanged;
+            });
+    }
+
+    private bool IsActive
+    {
+        get
+        {
+            if (Worksheet is null)
+            {
+                return false;
+            }
+
+            var sel = Worksheet.Selection.Cell;
+            if (sel == CellRef.Invalid)
+            {
+                return false;
+            }
+
+            foreach (var t in Worksheet.Tables)
+            {
+                if (t.Range.Contains(sel.Row, sel.Column))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        worksheetBinding.Bind(Worksheet);
+    }
+
+    // CrestTabsItem.Visible is captured at parameter-set time, so we need an explicit
+    // StateHasChanged() each time selection moves into or out of a table.
+    private void OnSelectionChanged() => StateHasChanged();
+
+    public void Dispose()
+    {
+        worksheetBinding.Dispose();
+    }
+}

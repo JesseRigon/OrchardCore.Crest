@@ -1,0 +1,286 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.JSInterop;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// A list box component that displays a scrollable list of items with single or multiple selection support.
+    /// CrestListBox provides an always-visible alternative to dropdowns, ideal for showing multiple options without requiring a popup.
+    /// Displays all items in a scrollable container, making all options visible at once (unlike dropdowns which hide options in a popup).
+    /// Supports single selection (default) or multiple selection via Multiple property, built-in search/filter with configurable operators and case sensitivity,
+    /// binding to any IEnumerable data source with TextProperty and ValueProperty, custom item templates for rich list item content,
+    /// efficient rendering of large lists via IQueryable support, optional "Select All" checkbox for multiple selection mode, and keyboard navigation (Arrow keys, Page Up/Down, Home/End) for accessibility.
+    /// Use when you want to show all available options without requiring clicks to open a dropdown, or when multiple selection is needed and checkboxes would take too much space.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the selected value. Can be a single value or IEnumerable for multiple selection.</typeparam>
+    /// <example>
+    /// Basic list box:
+    /// <code>
+    /// &lt;CrestListBox @bind-Value=@selectedId TValue="int" Data=@countries TextProperty="Name" ValueProperty="Id" Style="height: 300px;" /&gt;
+    /// </code>
+    /// Multiple selection with Select All:
+    /// <code>
+    /// &lt;CrestListBox @bind-Value=@selectedIds TValue="IEnumerable&lt;int&gt;" Multiple="true" SelectAllText="Select All"
+    ///                 Data=@items TextProperty="Name" ValueProperty="Id" Style="height: 400px;" /&gt;
+    /// </code>
+    /// </example>
+    public partial class CrestListBox<TValue> : DropDownBase<TValue>
+    {
+        bool stopKeydownPropagation;
+        async Task OnFilterKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
+        {
+            stopKeydownPropagation = true;
+            await OnFilterKeyPress(args);
+            var key = args.Code ?? args.Key;
+            if (key == "Escape" || key == "Tab")
+            {
+                stopKeydownPropagation = false;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the select all text.
+        /// </summary>
+        /// <value>The select all text.</value>
+        [Parameter]
+        public string? SelectAllText { get; set; }
+
+        /// <summary>
+        /// Specifies additional custom attributes that will be rendered by the input.
+        /// </summary>
+        /// <value>The attributes.</value>
+        [Parameter]
+        public IReadOnlyDictionary<string, object>? InputAttributes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the row render callback. Use it to set row attributes.
+        /// </summary>
+        /// <value>The row render callback.</value>
+        [Parameter]
+        public Action<ListBoxItemRenderEventArgs<TValue>>? ItemRender { get; set; }
+
+        internal ListBoxItemRenderEventArgs<TValue> ItemAttributes(CrestListBoxItem<TValue> item)
+        {
+            var disabled = !string.IsNullOrEmpty(DisabledProperty) && item.Item != null ? GetItemOrValueFromProperty(item.Item, DisabledProperty) : false;
+
+            var args = new ListBoxItemRenderEventArgs<TValue>()
+            {
+                ListBox = this,
+                Item = item.Item,
+                Disabled = disabled is bool ? (bool)disabled : false,
+            };
+
+            if (ItemRender != null)
+            {
+                ItemRender(args);
+            }
+
+            return args;
+        }
+
+        private int itemIndex;
+
+        internal override RenderFragment RenderItems()
+        {
+            itemIndex = -1;
+            return base.RenderItems();
+        }
+
+        internal override void RenderItem(RenderTreeBuilder builder, object item)
+        {
+            itemIndex++;
+
+            builder.OpenComponent(0, typeof(CrestListBoxItem<TValue>));
+            builder.AddAttribute(1, "ListBox", this);
+            builder.AddAttribute(2, "Item", item);
+            builder.AddAttribute(4, "Index", AllowVirtualization ? VirtualStartIndex + itemIndex : itemIndex);
+
+            if (DisabledProperty != null)
+            {
+                builder.AddAttribute(3, "Disabled", GetItemOrValueFromProperty(item, DisabledProperty));
+            }
+
+            builder.SetKey(GetKey(item));
+            builder.CloseComponent();
+        }
+
+        /// <summary>
+        /// Gets the identifier of the listbox option at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the option.</param>
+        /// <returns>A stable element identifier for the option.</returns>
+        internal string GetItemId(int index)
+        {
+            return $"{ListId}-{index}";
+        }
+
+        /// <summary>
+        /// Gets the identifier of the currently active (keyboard focused) option, or null when none is active.
+        /// </summary>
+        /// <returns>The active option identifier or null.</returns>
+        internal string? ActiveDescendantId => selectedIndex >= 0 ? GetItemId(selectedIndex) : null;
+
+        /// <summary>
+        /// Gets the accessible name applied to the listbox. Uses the consumer supplied aria-label attribute when present,
+        /// falls back to the empty selection label unless the consumer supplies an aria-labelledby attribute.
+        /// </summary>
+        /// <returns>The accessible name or null when aria-labelledby is supplied via attributes.</returns>
+        internal string? ListboxAriaLabel
+        {
+            get
+            {
+                if (Attributes != null && Attributes.TryGetValue("aria-label", out var ariaLabel))
+                {
+                    return Convert.ToString(ariaLabel, Culture);
+                }
+
+                if (Attributes != null && Attributes.ContainsKey("aria-labelledby"))
+                {
+                    return null;
+                }
+
+                return EmptyAriaLabel;
+            }
+        }
+
+        /// <summary>
+        /// Gets the consumer supplied aria-labelledby attribute value applied to the listbox, or null when not supplied.
+        /// </summary>
+        /// <returns>The labelling element identifier or null.</returns>
+        internal string? ListboxAriaLabelledBy => Attributes != null && Attributes.TryGetValue("aria-labelledby", out var ariaLabelledBy) ? Convert.ToString(ariaLabelledBy, Culture) : null;
+
+        /// <summary>
+        /// Handles the key down event.
+        /// </summary>
+        /// <param name="args">The <see cref="Microsoft.AspNetCore.Components.Web.KeyboardEventArgs"/> instance containing the event data.</param>
+        protected async System.Threading.Tasks.Task OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
+        {
+            ArgumentNullException.ThrowIfNull(args);
+            if (Disabled)
+            {
+                return;
+            }
+
+            var key = $"{args.Key}".Trim();
+
+            if (AllowFiltering && key.Length == 1 && JSRuntime != null)
+            {
+                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", SearchID);
+                if (JSRuntime is not IJSInProcessRuntime)
+                {
+                    await JSRuntime.InvokeAsync<string>("Crest.Components.Primitives.setInputValue", search, key);
+                }
+            }
+
+            await OnKeyPress(args, false);
+        }
+
+
+        private bool visibleChanged;
+        private bool disabledChanged;
+        private bool firstRender = true;
+
+        /// <inheritdoc />
+        public override async Task SetParametersAsync(ParameterView parameters)
+        {
+            visibleChanged = parameters.DidParameterChange(nameof(Visible), Visible);
+            disabledChanged = parameters.DidParameterChange(nameof(Disabled), Disabled);
+
+            await base.SetParametersAsync(parameters);
+
+            if ((visibleChanged || disabledChanged) && !firstRender)
+            {
+                if (Visible == false || Disabled == true)
+                {
+                    Dispose();
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+
+            this.firstRender = firstRender;
+
+            if (firstRender || visibleChanged || disabledChanged)
+            {
+                visibleChanged = false;
+                disabledChanged = false;
+
+                if (Visible)
+                {
+                    bool reload = false;
+                    if (LoadData.HasDelegate && Data == null)
+                    {
+                        await LoadData.InvokeAsync(await GetLoadDataArgs());
+                        reload = true;
+                    }
+
+                    if (!Disabled && JSRuntime != null)
+                    {
+                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.preventArrows", Element);
+                        reload = true;
+                    }
+
+                    if (reload)
+                    {
+                        StateHasChanged();
+                    }
+                }
+            }
+        }
+
+        private string? emptyText;
+
+        /// <summary>
+        /// Gets or sets the empty text shown when Data is empty.
+        /// </summary>
+        /// <value>The empty text.</value>
+        [Parameter]
+        public string EmptyText { get => emptyText ?? Localize(nameof(CrestStrings.ListBox_EmptyText)); set => emptyText = value; }
+
+        /// <summary>
+        /// Gets or sets the empty template shown when Data is empty.
+        /// </summary>
+        /// <value>The empty template.</value>
+        [Parameter]
+        public RenderFragment? EmptyTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether is read only.
+        /// </summary>
+        /// <value><c>true</c> if is read only; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool ReadOnly { get; set; }
+
+        /// <summary>
+        /// Gets or sets the input size.
+        /// </summary>
+        /// <value>The input size.</value>
+        [Parameter]
+        public InputSize InputSize { get; set; } = InputSize.Medium;
+
+        /// <inheritdoc />
+        protected override string GetComponentCssClass()
+        {
+            return GetClassList("rz-listbox rz-inputtext").AddInputSize(InputSize).ToString();
+        }
+
+        /// <inheritdoc />
+        protected override Task SelectAll()
+        {
+            if (ReadOnly)
+            {
+                return Task.CompletedTask;
+            }
+
+            return base.SelectAll();
+        }
+    }
+}

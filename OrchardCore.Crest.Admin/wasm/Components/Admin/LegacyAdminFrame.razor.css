@@ -1,0 +1,12 @@
+.legacy-admin-frame-page {
+    min-height: 100vh;
+}
+
+.legacy-admin-frame {
+    width: 100%;
+    min-height: calc(100vh - 8rem);
+    flex: 1 1 auto;
+    border: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb);
+    border-radius: var(--crest-radius-sm, 4px);
+    background: var(--crest-color-surface-1, #fff);
+}

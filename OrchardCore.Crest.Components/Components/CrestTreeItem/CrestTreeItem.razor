@@ -1,0 +1,42 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Rendering
+@implements IDisposable
+@namespace Crest.Components.Primitives
+@{var itemArgs = Tree?.ItemAttributes(this); }
+<li class="rz-treenode" role="presentation" @attributes="@(itemArgs?.Item1.Attributes.Any() == true ? itemArgs.Item1.Attributes : Attributes)"
+    @oncontextmenu="OnContextMenu" @oncontextmenu:preventDefault="@(Tree?.ItemContextMenu.HasDelegate ?? false)" @oncontextmenu:stopPropagation>
+    <div id="@ElementId" class=@ContentClass role="treeitem" tabindex="-1"
+         aria-level="@Level"
+         aria-setsize="@SetSize"
+         aria-posinset="@PosInSet"
+         aria-selected="@(Tree?.AllowCheckBoxes == true ? null : selected.ToString().ToLowerInvariant())"
+         aria-checked="@(Tree?.AllowCheckBoxes == true ? IsChecked() switch { null => "mixed", true => "true", _ => "false" } : null)"
+         aria-expanded="@(ChildContent != null || HasChildren ? clientExpanded.ToString().ToLowerInvariant() : null)"
+         @onclick="@Select">
+        @if (ChildContent != null || HasChildren)
+        {
+            <span class=@IconClass aria-hidden="true" @onclick="@Toggle" @onclick:stopPropagation></span>
+        }
+        @if(Tree != null && Tree.AllowCheckBoxes)
+        {
+            <CrestCheckBox TabIndex=-1 Name="@($"{GetHashCode()}")" TValue="bool?" Disabled="@(!Checkable)" Value="@(itemArgs?.Item1.CheckedSet() == true ? itemArgs.Item1.Checked : IsChecked())" Change="@OnCheckBoxChange" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Tree?.SelectItemAriaLabel ?? "" }})" />
+        }
+        @if (Template != null)
+        {
+            <div class=@LabelClass @onkeydown:stopPropagation>@Template(this)</div>
+        } else
+        {
+            <label for="@(GetHashCode())" class=@LabelClass>@Text</label>
+        }
+    </div>
+    @if (ChildContent != null && expanded)
+    {
+    <CascadingValue Value=this>
+    <Expander Expanded=@clientExpanded Role="presentation">
+    <ul class="rz-treenode-children" role="group" @onkeydown:stopPropagation>
+        @ChildContent
+    </ul>
+    </Expander>
+    </CascadingValue>
+    }
+</li>

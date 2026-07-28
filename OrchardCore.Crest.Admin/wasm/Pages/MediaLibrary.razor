@@ -1,8 +1,8 @@
 @page "/Admin/Media"
 @using Crest.Admin.Api
 @using Microsoft.AspNetCore.Components.Forms
-@using Radzen
-@using Radzen.Blazor
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
 
@@ -13,7 +13,7 @@
             <RadzenText TextStyle="TextStyle.Body2" Text="Manage the current tenant's Orchard media files and folders." />
         </RadzenStack>
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-            <label class="rz-button rz-button-md rz-button-primary"><span class="rzi rzi-upload"></span> Upload<input type="file" hidden @onchange="UploadAsync" disabled="@IsBusy" /></label>
+            <label class="rz-button rz-button-md rz-button-primary"><span class="rzi rzi-upload"></span> Upload<InputFile hidden OnChange="UploadAsync" disabled="@IsBusy" /></label>
             <RadzenButton Text="New folder" Icon="create_new_folder" Click="OpenFolderDialog" Disabled="@IsBusy" />
             <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
         </RadzenStack>

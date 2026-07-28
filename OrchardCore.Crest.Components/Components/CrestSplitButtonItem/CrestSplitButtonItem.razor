@@ -1,0 +1,18 @@
+@inherits CrestComponent
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <li id="@(SplitButton?.ItemId(this))" class=@ItemClass role="menuitem" tabindex="-1" aria-disabled="@(Disabled ? "true" : "false")"
+        @onclick="@OnClick" @attributes="Attributes" style="@Style">
+        <span id="@(SplitButton?.SplitButtonId() + GetHashCode())" class="rz-menuitem-link">
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <span class="rz-menuitem-icon" style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)">@Icon</span>
+            }
+            @if (!string.IsNullOrEmpty(Text))
+            {
+                <span class="rz-menuitem-text">@Text</span>
+            }
+        </span>
+    </li>
+}

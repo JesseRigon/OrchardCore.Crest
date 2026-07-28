@@ -1,0 +1,26 @@
+@using Crest.Components.Primitives.Rendering
+@namespace Crest.Components.Primitives
+<GaugeScale
+    Radius=@CurrentRadius
+    StrokeWidth=@StrokeWidth
+    Stroke=@Stroke
+    Center=@CurrentCenter
+    StartAngle=@StartAngle
+    EndAngle=@EndAngle
+    TickPosition=@TickPosition
+    ShowFirstTick=@ShowFirstTick
+    ShowLastTick=@ShowLastTick
+    ShowTickLabels=@ShowTickLabels
+    TickLength=@TickLength
+    TickLabelOffset=@TickLabelOffset
+    Min=@Min
+    Max=@Max
+    Step=@Step
+    MinorStep=@MinorStep
+    FormatString=@FormatString
+    Formatter=@Formatter
+    MinorTickLength=@MinorTickLength
+/>
+<CascadingValue Value=@this>
+    @ChildContent
+</CascadingValue>

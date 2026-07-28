@@ -1,0 +1,82 @@
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@using Microsoft.JSInterop
+@using System.IO
+@inject IJSRuntime JSRuntime
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Save))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Save))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Save))) Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Icon="download" ButtonType="ButtonType.Button" Size="ButtonSize.Small"
+    Disabled=@(Workbook is null) Click=@OnClickAsync>
+    <ChildContent>
+        <CrestSplitButtonItem Text="Excel (.xlsx)" Icon="table_view" Value="xlsx" />
+        <CrestSplitButtonItem Text="CSV (.csv)" Icon="description" Value="csv" />
+    </ChildContent>
+</CrestSplitButton>
+
+@code {
+#nullable enable
+
+    [CascadingParameter]
+    public Worksheet? Worksheet { get; set; }
+
+    [CascadingParameter]
+    public ISpreadsheet? Spreadsheet { get; set; }
+
+    private Workbook? Workbook => Worksheet?.Workbook;
+
+    [Parameter]
+    public string FileName { get; set; } = "sheet.xlsx";
+
+    [Parameter]
+    public CsvExportOptions? CsvExportOptions { get; set; }
+
+    private async Task OnClickAsync(CrestSplitButtonItem? item)
+    {
+        if (Workbook is null) return;
+
+        // Primary button (item is null) defaults to Excel.
+        if (item is null || item.Value == "xlsx")
+        {
+            await DownloadXlsxAsync();
+        }
+        else if (item.Value == "csv")
+        {
+            await DownloadCsvAsync();
+        }
+    }
+
+    private async Task DownloadXlsxAsync()
+    {
+        var stream = new MemoryStream();
+        Workbook!.SaveToStream(stream);
+        stream.Position = 0;
+
+        using var streamRef = new DotNetStreamReference(stream);
+        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.downloadFile", FileName, streamRef);
+    }
+
+    private async Task DownloadCsvAsync()
+    {
+        var options = CsvExportOptions is null
+            ? new CsvExportOptions { Sheet = Worksheet }
+            : new CsvExportOptions
+            {
+                Separator = CsvExportOptions.Separator,
+                QuoteChar = CsvExportOptions.QuoteChar,
+                Quoting = CsvExportOptions.Quoting,
+                Encoding = CsvExportOptions.Encoding,
+                LineEnding = CsvExportOptions.LineEnding,
+                Sheet = CsvExportOptions.Sheet ?? Worksheet,
+            };
+
+        var stream = new MemoryStream();
+        Workbook!.SaveAsCsv(stream, options);
+        stream.Position = 0;
+
+        using var streamRef = new DotNetStreamReference(stream);
+        var csvName = string.IsNullOrEmpty(FileName)
+            ? "sheet.csv"
+            : Path.ChangeExtension(FileName, ".csv");
+
+        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.downloadFile", csvName, streamRef);
+    }
+}

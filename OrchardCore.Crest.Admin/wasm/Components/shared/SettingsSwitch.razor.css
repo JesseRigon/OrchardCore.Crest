@@ -1,0 +1,21 @@
+.settings-switch {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--crest-space-md, 0.75rem);
+    padding: 0.45rem 0;
+}
+
+.settings-switch__content {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.settings-switch__label {
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.settings-switch__hint {
+    color: var(--crest-color-text-muted, #64748b);
+    font-size: var(--crest-font-size-md, 0.875rem);
+}

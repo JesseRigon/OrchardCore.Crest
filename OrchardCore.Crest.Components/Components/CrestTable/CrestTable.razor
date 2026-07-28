@@ -1,0 +1,10 @@
+@inherits CrestComponentWithChildren
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <div @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">
+        <div class="rz-data-grid-data">
+            <table class="@GetTableCssClass()">@ChildContent</table>
+        </div>
+    </div>
+}

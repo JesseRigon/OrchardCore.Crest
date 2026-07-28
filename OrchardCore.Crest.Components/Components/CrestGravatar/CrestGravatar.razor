@@ -1,0 +1,6 @@
+@inherits CrestComponent
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <img @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" src="@Url" id="@GetId()" alt="@GetAlternateText()" />
+}

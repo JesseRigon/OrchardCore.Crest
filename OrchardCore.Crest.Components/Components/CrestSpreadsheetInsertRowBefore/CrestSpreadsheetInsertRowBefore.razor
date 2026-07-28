@@ -1,0 +1,19 @@
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inherits CrestSpreadsheetToolBase
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestButton aria-label=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_InsertRowAbove))) Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" Click=@OnInsertRowBeforeClick Icon="add_row_above" ButtonType="ButtonType.Button" Disabled=@IsDisabled
+    title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_InsertRowAbove)) ?? "Insert Row Above") />
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.Editing;
+
+    private async Task OnInsertRowBeforeClick()
+    {
+        if (Worksheet is null || Spreadsheet is null)
+        {
+            return;
+        }
+
+        await Spreadsheet.ExecuteAsync(new InsertRowCommand(Worksheet, Worksheet.Selection.Range.Start.Row));
+    }
+}

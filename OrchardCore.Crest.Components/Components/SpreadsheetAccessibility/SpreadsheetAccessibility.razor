@@ -1,0 +1,8 @@
+@using Crest.Components.Primitives
+
+@namespace Crest.Components.Primitives.Spreadsheet
+@* Three live regions, present (empty) from first render. nav = cell navigation, action = transient
+   action results, alert = assertive validation/error messages. *@
+<CrestLiveRegion Text=@navText />
+<CrestLiveRegion Text=@actionText />
+<CrestLiveRegion Text=@alertText Assertive="true" />

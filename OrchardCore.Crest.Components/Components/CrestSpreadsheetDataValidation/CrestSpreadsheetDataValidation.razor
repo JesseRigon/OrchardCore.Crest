@@ -1,0 +1,45 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Spreadsheet.Tools
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inject DialogService DialogService
+@inherits CrestSpreadsheetToolBase
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DataValidationTool))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DataValidationTool))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DataValidationTool))) Click=@OnClickAsync Icon="rule" Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Validation)) ?? "Validation") Disabled=@IsDisabled Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small">
+    <ChildContent>
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DataValidationMenu)) ?? "Data Validation...") Value="validate" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_ClearValidation)) ?? "Clear Validation") Value="clear" />
+    </ChildContent>
+</CrestSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.DataValidation;
+
+    private async Task OnClickAsync(CrestSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        var action = item?.Value ?? "validate";
+
+        if (action == "clear")
+        {
+            await Spreadsheet.ExecuteAsync(new ClearValidationCommand(Worksheet, Worksheet.Selection.Range));
+            return;
+        }
+
+        var result = await DialogService.OpenAsync<DataValidationDialog>(Spreadsheet.Localize(nameof(CrestStrings.Spreadsheet_DataValidationTitle)),
+            new Dictionary<string, object?>
+            {
+                { "Culture", Worksheet.Culture }
+            }, new DialogOptions { Width = "520px" });
+
+        if (result is DataValidationRule rule)
+        {
+            await Spreadsheet.ExecuteAsync(new DataValidationCommand(Worksheet, Worksheet.Selection.Range, rule));
+        }
+    }
+}

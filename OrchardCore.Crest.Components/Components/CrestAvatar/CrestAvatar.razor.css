@@ -1,0 +1,29 @@
+.crest-avatar {
+    display: inline-grid;
+    width: var(--crest-avatar-size, 2.25rem);
+    height: var(--crest-avatar-size, 2.25rem);
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    color: var(--crest-avatar-color, var(--crest-color-on-accent-1, #fff));
+    background: var(--crest-avatar-background, var(--crest-color-accent-1, #2f6f4e));
+    clip-path: var(--crest-avatar-clip-path, none);
+}
+
+.crest-avatar--circle { border-radius: 50%; }
+.crest-avatar--roundedsquare { border-radius: var(--crest-avatar-border-radius, 0.625rem); }
+.crest-avatar--square { border-radius: 0; }
+.crest-avatar--custom { border-radius: var(--crest-avatar-border-radius, 0); }
+
+.crest-avatar__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.crest-avatar__fallback {
+    font-size: calc(var(--crest-avatar-size, 2.25rem) * 0.36);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}

@@ -1,19 +1,19 @@
 window.crestAdminMenus = (() => {
     const instances = new WeakMap();
-    const sidebarPinnedStateKey = 'crest.admin-menu-sidebar.pinned';
+    const primaryNavMenuPinnedStateKey = 'crest.primary-nav-menu.pinned';
 
-    function getSidebarPinnedState() {
+    function getPrimaryNavMenuPinnedState() {
         try {
-            const value = window.sessionStorage.getItem(sidebarPinnedStateKey);
+            const value = window.sessionStorage.getItem(primaryNavMenuPinnedStateKey);
             return value === null ? null : value === 'true';
         } catch {
             return null;
         }
     }
 
-    function setSidebarPinnedState(isPinned) {
+    function setPrimaryNavMenuPinnedState(isPinned) {
         try {
-            window.sessionStorage.setItem(sidebarPinnedStateKey, String(Boolean(isPinned)));
+            window.sessionStorage.setItem(primaryNavMenuPinnedStateKey, String(Boolean(isPinned)));
         } catch {
             // Storage can be unavailable in a privacy-restricted browser context.
         }
@@ -283,28 +283,5 @@ window.crestAdminMenus = (() => {
         return `${window.location.pathname}${window.location.search}`;
     }
 
-    function syncSidebarActiveState(rootSelector = '.admin-menu-sidebar') {
-        const root = document.querySelector(rootSelector);
-        if (!(root instanceof Element)) {
-            return;
-        }
-
-        root.querySelectorAll('.admin-menu-sidebar__item-content--not-active').forEach(content => {
-            const wrapper = content.closest('.rz-navigation-item-wrapper');
-            const link = content.closest('.rz-navigation-item-link');
-            wrapper?.classList.remove('rz-navigation-item-wrapper-active');
-            link?.classList.remove('rz-navigation-item-link-active', 'active');
-            link?.removeAttribute('aria-current');
-        });
-
-        root.querySelectorAll('.admin-menu-sidebar__item-content--active').forEach(content => {
-            const wrapper = content.closest('.rz-navigation-item-wrapper');
-            const link = content.closest('.rz-navigation-item-link');
-            wrapper?.classList.add('rz-navigation-item-wrapper-active');
-            link?.classList.add('rz-navigation-item-link-active', 'active');
-            link?.setAttribute('aria-current', 'page');
-        });
-    }
-
-    return { init, dispose, getPathAndQuery, syncSidebarActiveState, getSidebarPinnedState, setSidebarPinnedState };
+    return { init, dispose, getPathAndQuery, getPrimaryNavMenuPinnedState, setPrimaryNavMenuPinnedState };
 })();

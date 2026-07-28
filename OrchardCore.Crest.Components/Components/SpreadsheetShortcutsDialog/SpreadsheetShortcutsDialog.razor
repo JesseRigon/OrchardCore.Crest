@@ -1,0 +1,94 @@
+@using System
+@using System.Linq
+@using Crest.Components.Primitives
+
+@namespace Crest.Components.Primitives.Spreadsheet
+@* A read-only, filterable reference of keyboard shortcuts, opened from the grid via Alt+/. The rows
+   are built and localized by the host (CrestSpreadsheet) and passed in, so this needs no cascade. *@
+<CrestStack Gap="0.75rem" class="rz-spreadsheet-shortcuts">
+    <CrestTextBox @ref=@filterBox Immediate="true" @bind-Value=@filter Placeholder=@FilterPlaceholder
+                   aria-label=@FilterPlaceholder class="rz-w-100" />
+
+    @{
+        var rows = Filtered();
+    }
+    @if (rows.Count == 0)
+    {
+        <CrestText role="status" TextStyle="TextStyle.Body2" class="rz-color-base-500">@NoResultsText</CrestText>
+    }
+    else
+    {
+        <CrestTable class="rz-spreadsheet-shortcuts-table">
+            <CrestTableHeader>
+                <CrestTableHeaderRow>
+                    <CrestTableHeaderCell>@ShortcutColumn</CrestTableHeaderCell>
+                    <CrestTableHeaderCell>@ActionColumn</CrestTableHeaderCell>
+                </CrestTableHeaderRow>
+            </CrestTableHeader>
+            <CrestTableBody>
+                @foreach (var shortcut in rows)
+                {
+                    <CrestTableRow>
+                        <CrestTableCell>
+                            @foreach (var chord in shortcut.Keys.Split(" / "))
+                            {
+                                <span class="rz-badge rz-badge-primary rz-variant-filled rz-shade-default">@chord</span>
+                            }
+                        </CrestTableCell>
+                        <CrestTableCell>@shortcut.Description</CrestTableCell>
+                    </CrestTableRow>
+                }
+            </CrestTableBody>
+        </CrestTable>
+    }
+</CrestStack>
+
+@code {
+    /// <summary>Represents one keyboard shortcut row: the key combination and what it does.</summary>
+    public sealed record Shortcut(string Keys, string Description);
+
+    /// <summary>The localized shortcut rows to display, supplied by the host.</summary>
+    [Parameter]
+    public IReadOnlyList<Shortcut> Shortcuts { get; set; } = [];
+
+    /// <summary>Localized "Shortcut" column header.</summary>
+    [Parameter]
+    public string? ShortcutColumn { get; set; }
+
+    /// <summary>Localized "Action" column header.</summary>
+    [Parameter]
+    public string? ActionColumn { get; set; }
+
+    /// <summary>Localized placeholder for the filter box.</summary>
+    [Parameter]
+    public string? FilterPlaceholder { get; set; }
+
+    /// <summary>Localized message shown when the filter matches nothing.</summary>
+    [Parameter]
+    public string? NoResultsText { get; set; }
+
+    private string filter = string.Empty;
+    private CrestTextBox? filterBox;
+
+    private List<Shortcut> Filtered()
+    {
+        if (string.IsNullOrWhiteSpace(filter))
+        {
+            return Shortcuts.ToList();
+        }
+
+        return Shortcuts
+            .Where(s => s.Keys.Contains(filter, StringComparison.OrdinalIgnoreCase)
+                     || s.Description.Contains(filter, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && filterBox is not null)
+        {
+            await filterBox.FocusAsync();
+        }
+    }
+}

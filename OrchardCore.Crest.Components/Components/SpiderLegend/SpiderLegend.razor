@@ -1,0 +1,28 @@
+@using Crest.Components.Primitives
+
+@namespace Crest.Components.Primitives.Rendering
+@if (Chart?.Legend?.Visible == true)
+{
+    <div class="@Class">
+        <div class="rz-legend-items">
+        @if (Chart?.Series != null)
+        {
+            @foreach (var series in Chart.Series)
+            {
+                @series.RenderLegendItem()
+            }
+        }
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    public CrestSpiderChart? Chart { get; set; }
+
+    string Class => ClassList.Create("rz-spider-legend")
+        .Add($"rz-spider-legend-{Chart?.Legend?.Position}".ToLowerInvariant())
+        .ToString();
+}
+
+

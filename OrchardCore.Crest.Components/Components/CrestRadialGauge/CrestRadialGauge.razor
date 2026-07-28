@@ -1,0 +1,64 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Rendering
+@inherits GaugeBase
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    <div @ref="Element" style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
+    @if (Width.HasValue && Height.HasValue)
+    {
+        <svg style="width: 100%; height: 100%">
+            <CascadingValue Value=@this>
+                @ChildContent
+            </CascadingValue>
+        </svg>
+        @if (Pointers.Any())
+        {
+            @foreach (var pointer in Pointers)
+            {
+                <div class="rz-gauge-value" style=@PointerStyle(pointer)>
+                    @if (pointer.ShowValue)
+                    {
+                        @if (pointer.Template != null)
+                        {
+                            @pointer.Template(pointer)
+                        }
+                        else if (!string.IsNullOrEmpty(pointer.FormatString))
+                        {
+                            @string.Format(pointer.FormatString, pointer.Value)
+                        }
+                        else
+                        {
+                            @pointer.Value
+                        }
+                    }
+                </div>
+            }
+        }
+    }
+    </div>
+}
+
+@code {
+    IList<CrestRadialGaugeScalePointer> Pointers { get; set; } = new List<CrestRadialGaugeScalePointer>();
+
+    string PointerStyle(CrestRadialGaugeScalePointer pointer)
+    {
+        return $"left: {pointer.Scale?.CurrentCenter?.X.ToInvariantString() ?? "0"}px; top: {pointer.Scale?.CurrentCenter?.Y.ToInvariantString() ?? "0"}px";
+    }
+
+    internal void AddPointer(CrestRadialGaugeScalePointer pointer)
+    {
+        if (!Pointers.Contains(pointer))
+        {
+            Pointers.Add(pointer);
+
+            StateHasChanged();
+        }
+    }
+
+    protected override string GetComponentCssClass()
+    {
+        return $"rz-gauge";
+    }
+}

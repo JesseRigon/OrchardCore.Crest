@@ -1,5 +1,6 @@
 using Crest.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -13,6 +14,10 @@ using OrchardCore.Environment.Shell.Scope;
 using OrchardCore.Navigation;
 using OrchardCore.Settings;
 using OrchardCore.Users.Services;
+using OrchardCore.Localization;
+using OrchardCore.Localization.Services;
+using Microsoft.AspNetCore.Localization;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -31,10 +36,12 @@ public sealed class AppController(
     IOptions<AdminOptions> adminOptions,
     IAuthorizationService authorization,
     CrestAdminMenuLayoutService layoutService,
-    CrestAdminSidebarSettingsStore sidebarSettingsStore,
+    CrestPrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
     CrestAdminSettingsNormalizer adminSettingsNormalizer,
+    CrestTitleBarSettingsStore titleBarSettingsStore,
     CrestIconController iconController,
-    CrestRouteAuthorizationService routeAuthorization) : ControllerBase
+    CrestRouteAuthorizationService routeAuthorization,
+    IServiceProvider serviceProvider) : ControllerBase
 {
     [HttpGet("manifest")]
     public async Task<ActionResult<AppManifest>> GetManifest()
@@ -43,17 +50,25 @@ public sealed class AppController(
         var descriptor = await shellDescriptorManager.GetShellDescriptorAsync();
         var site = await siteService.GetSiteSettingsAsync();
         var adminSettings = await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
+        var titleBarSettings = await titleBarSettingsStore.GetAsync(HttpContext.RequestAborted);
         var featureIds = descriptor.Features.Select(feature => feature.Id).Order(StringComparer.Ordinal).ToArray();
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
         var tenants = await GetAvailableTenantsAsync();
         var adminItems = await navigationManager.BuildMenuAsync("admin", ControllerContext);
+        var cultureSelector = await CultureSelector.FromAsync(HttpContext, shellSettings, serviceProvider.GetService<ILocalizationService>());
         var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
             .ToArray()));
-        adminMenu = adminMenu with { SidebarSettings = await sidebarSettingsStore.GetAsync(HttpContext.RequestAborted) };
+        adminMenu = adminMenu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
         adminMenu = await iconController.ResolveMenuIconsAsync(
             adminMenu,
-            CrestIconController.AdminMenuChromeIconKeys,
+            CrestIconController.AdminMenuChromeIconKeys
+                .Concat(cultureSelector.Cultures.Select(culture => culture.Icon))
+                .Concat([
+                    "iconify.mdi/current/default/check",
+                    "iconify.mdi/current/default/weather-night",
+                    "iconify.mdi/current/default/weather-sunny",
+                ]),
             HttpContext.RequestAborted);
 
         return Ok(new AppManifest(
@@ -61,12 +76,14 @@ public sealed class AppController(
             tenants,
             SiteSettings.From(site),
             AdminSettingsDto.From(adminSettings),
+            CrestTitleBarSettingsDto.From(titleBarSettings),
             new AdminDescriptor(NormalizeAdminPath(adminOptions.Value.AdminUrlPrefix)),
             descriptor.SerialNumber,
             ComputeFeatureHash(descriptor.SerialNumber, featureIds),
             featureIds.Select(id => Feature.From(id, featureInfos.GetValueOrDefault(id))).ToArray(),
             adminMenu,
-            await routeAuthorization.GetAuthorizedRoutesAsync(User)));
+            await routeAuthorization.GetAuthorizedRoutesAsync(User),
+            cultureSelector));
     }
 
     private async Task<Tenant[]> GetAvailableTenantsAsync()
@@ -126,12 +143,59 @@ public sealed record AppManifest(
     Tenant[] Tenants,
     SiteSettings Site,
     AdminSettingsDto AdminSettings,
+    CrestTitleBarSettingsDto TitleBarSettings,
     AdminDescriptor Admin,
     int FeatureSerialNumber,
     string FeatureHash,
     Feature[] Features,
     NavigationMenu AdminMenu,
-    CrestRouteAccess[] AuthorizedRoutes);
+    CrestRouteAccess[] AuthorizedRoutes,
+    CultureSelector CultureSelector);
+
+public sealed record CultureSelector(
+    string CurrentCulture,
+    CultureOption[] Cultures,
+    string CookieName,
+    string CookiePath)
+{
+    public static async Task<CultureSelector> FromAsync(
+        HttpContext httpContext,
+        ShellSettings shellSettings,
+        ILocalizationService? localizationService)
+    {
+        var current = httpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.UICulture
+            ?? CultureInfo.CurrentUICulture;
+        var supportedCultures = localizationService is null
+            ? [current.Name]
+            : await localizationService.GetSupportedCulturesAsync();
+
+        return new CultureSelector(
+            current.Name,
+            supportedCultures
+                .Select(CultureInfo.GetCultureInfo)
+                .Select(culture => new CultureOption(culture.Name, culture.NativeName, GetIcon(culture)))
+                .ToArray(),
+            AdminCookieCultureProvider.MakeCookieName(shellSettings),
+            AdminCookieCultureProvider.MakeCookiePath(httpContext));
+    }
+
+    private static string GetIcon(CultureInfo culture)
+    {
+        var region = culture.Name.Split('-', StringSplitOptions.RemoveEmptyEntries).LastOrDefault(part => part.Length == 2);
+        region ??= culture.TwoLetterISOLanguageName switch
+        {
+            "en" => "us", "pt" => "pt", "zh" => "cn", "ar" => "sa", _ => null,
+        };
+
+        // Country flags are normal Iconify references, so they go through the
+        // same server-resolved pack as every other Crest icon.
+        return region is null
+            ? "iconify.mdi/current/default/translate"
+            : $"iconify.circle-flags/current/default/{region.ToLowerInvariant()}";
+    }
+}
+
+public sealed record CultureOption(string Value, string Label, string Icon);
 
 public sealed record Tenant(
     string Name,
@@ -163,4 +227,19 @@ public sealed record AdminSettingsDto(
         settings.DisplayMenuFilter,
         settings.DisplayNewMenu,
         settings.DisplayTitlesInTopbar);
+}
+
+public sealed record CrestTitleBarSettingsDto(
+    bool DisplayCultureLabel,
+    string? TenantAvatarImageUrl,
+    string TenantAvatarShape,
+    string? TenantAvatarClipPath,
+    string? TenantAvatarBorderRadius)
+{
+    public static CrestTitleBarSettingsDto From(CrestTitleBarSettings settings) => new(
+        settings.DisplayCultureLabel,
+        settings.TenantAvatarImageUrl,
+        settings.TenantAvatarShape,
+        settings.TenantAvatarClipPath,
+        settings.TenantAvatarBorderRadius);
 }

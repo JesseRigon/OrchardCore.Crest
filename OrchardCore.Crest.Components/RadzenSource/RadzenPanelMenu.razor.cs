@@ -1,0 +1,338 @@
+using Crest.Components.Primitives;
+using Crest.Components.Primitives.Rendering;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using Crest.Components.Primitives.Rendering;
+
+namespace Crest.Components.RadzenSource
+{
+    /// <summary>
+    /// RadzenPanelMenu component.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// &lt;RadzenPanelMenu&gt;
+    ///     &lt;CrestPanelMenuItem Text="Data"&gt;
+    ///         &lt;CrestPanelMenuItem Text="Orders" Path="orders" /&gt;
+    ///         &lt;CrestPanelMenuItem Text="Employees" Path="employees" /&gt;
+    ///     &lt;/RadzenPanelMenuItemItem&gt;
+    /// &lt;/RadzenPanelMenu&gt;
+    /// </code>
+    /// </example>
+    public partial class RadzenPanelMenu : CrestComponentWithChildren
+    {
+        /// <summary>
+        /// Gets or sets a value indicating whether multiple items can be expanded.
+        /// </summary>
+        /// <value><c>true</c> if multiple items can be expanded; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool Multiple { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the click callback.
+        /// </summary>
+        /// <value>The click callback.</value>
+        [Parameter]
+        public EventCallback<MenuItemEventArgs> Click { get; set; }
+
+        private string? ariaLabel;
+
+        /// <summary>
+        /// Gets or sets the menu aria label text.
+        /// </summary>
+        /// <value>The menu aria label text.</value>
+        [Parameter]
+        public string AriaLabel { get => ariaLabel ?? Localize(nameof(CrestStrings.PanelMenu_AriaLabel)); set => ariaLabel = value; }
+
+        /// <summary>
+        /// Gets or sets a value representing the URL matching behavior.
+        /// </summary>
+        [Parameter]
+        public NavLinkMatch Match { get; set; }
+
+        /// <summary>
+        /// Gets or sets the display style.
+        /// </summary>
+        [Parameter]
+        public MenuItemDisplayStyle DisplayStyle { get; set; } = MenuItemDisplayStyle.IconAndText;
+
+        /// <summary>
+        /// Gets or sets the show arrow.
+        /// </summary>
+        [Parameter]
+        public bool ShowArrow { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets how child items of expandable items are rendered. Set to <see cref="PanelMenuRenderMode.Client" /> by default which renders the whole menu up front.
+        /// Use <see cref="PanelMenuRenderMode.Server" /> to render collapsed branches only when they are expanded, which keeps the DOM small for large menus.
+        /// </summary>
+        /// <value>The render mode. Default is <see cref="PanelMenuRenderMode.Client" />.</value>
+        [Parameter]
+        public PanelMenuRenderMode RenderMode { get; set; } = PanelMenuRenderMode.Client;
+
+        internal List<CrestPanelMenuItem> items = new List<CrestPanelMenuItem>();
+
+        /// <summary>
+        /// Adds the item.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        public void AddItem(CrestPanelMenuItem item)
+        {
+            if (!items.Contains(item))
+            {
+                items.Add(item);
+            }
+        }
+
+        internal async Task CollapseAllAsync(IEnumerable<CrestPanelMenuItem> itemsToSkip)
+        {
+            var itemsToCollapse = items.Concat(items.SelectManyRecursive(i => i.items)).Except(itemsToSkip);
+
+            foreach (var item in itemsToCollapse)
+            {
+                await item.CollapseAsync();
+            }
+
+            StateHasChanged();
+        }
+
+        /// <inheritdoc />
+        public override async Task SetParametersAsync(ParameterView parameters)
+        {
+            if (parameters.DidParameterChange(nameof(Multiple), Multiple))
+            {
+                await CollapseAllAsync([]);
+            }
+
+            await base.SetParametersAsync(parameters);
+        }
+
+        /// <inheritdoc />
+        protected override string GetComponentCssClass()
+        {
+            return ClassList.Create("rz-panel-menu")
+                .Add("rz-panel-menu-stacked", DisplayStyle == MenuItemDisplayStyle.IconAndTextStacked)
+                .ToString();
+        }
+
+        [Inject]
+        NavigationManager? NavigationManager { get; set; }
+
+        internal int focusedIndex = -1;
+        List<CrestPanelMenuItem>? currentItems;
+
+        bool preventKeyPress;
+        bool stopKeydownPropagation;
+
+        async Task OnKeyPress(KeyboardEventArgs args)
+        {
+            var key = args.Code ?? args.Key;
+
+            currentItems ??= [.. items.Where(i => i.Visible)];
+
+            var renderRequired = false;
+
+            if (key == "ArrowUp" || key == "ArrowDown")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                if (key == "ArrowUp" && focusedIndex == 0 && currentItems.Exists(i => i.ParentItem != null))
+                {
+                    var firstItem = currentItems.FirstOrDefault();
+                    var parentItem = firstItem?.ParentItem;
+                    if (parentItem != null)
+                    {
+                        currentItems = (parentItem.ParentItem != null ? parentItem.ParentItem.items : parentItem.Parent?.items ?? new List<CrestPanelMenuItem>()).ToList();
+                        focusedIndex = currentItems.IndexOf(parentItem);
+                    }
+                }
+                else if (key == "ArrowDown" && currentItems.ElementAtOrDefault(focusedIndex) != null &&
+                    currentItems.ElementAtOrDefault(focusedIndex)!.IsExpanded && currentItems.ElementAtOrDefault(focusedIndex)!.items.Count > 0)
+                {
+                    currentItems = currentItems.ElementAtOrDefault(focusedIndex)!.items.Where(i => i.Visible).ToList();
+                    focusedIndex = 0;
+                }
+                else if (key == "ArrowDown" && focusedIndex == currentItems.Count - 1)
+                {
+                    var firstItem = currentItems.FirstOrDefault();
+                    var parentItem = firstItem?.ParentItem;
+                    var targetItems = parentItem?.ParentItem != null ? parentItem.ParentItem.items :
+                        parentItem != null ? parentItem.Parent?.items : items;
+                    currentItems = (targetItems ?? Enumerable.Empty<CrestPanelMenuItem>()).Where(i => i.Visible).ToList();
+                    focusedIndex = parentItem != null ? currentItems.IndexOf(parentItem) + 1 : focusedIndex;
+                }
+                else if (key == "ArrowUp" && currentItems.ElementAtOrDefault(focusedIndex - 1) != null &&
+                    currentItems.ElementAtOrDefault(focusedIndex - 1)!.IsExpanded && currentItems.ElementAtOrDefault(focusedIndex - 1)!.items.Count > 0)
+                {
+                    currentItems = currentItems.ElementAtOrDefault(focusedIndex - 1)!.items.Where(i => i.Visible).ToList();
+                    focusedIndex = currentItems.Count - 1;
+                }
+                else
+                {
+                    focusedIndex = Math.Clamp(focusedIndex + (key == "ArrowUp" ? -1 : 1), 0, currentItems.Count - 1);
+                }
+            }
+            else if (key == "Home" || key == "End")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                focusedIndex = key == "Home" ? 0 : currentItems.Count - 1;
+            }
+            else if (key == "ArrowRight")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                var item = currentItems.ElementAtOrDefault(focusedIndex);
+
+                if (item != null && item.ChildContent != null)
+                {
+                    if (!item.IsExpanded)
+                    {
+                        await item.Toggle();
+                        renderRequired = true;
+                    }
+
+                    if (item.IsExpanded && item.items.Count > 0)
+                    {
+                        currentItems = item.items.Where(i => i.Visible).ToList();
+                        focusedIndex = 0;
+                    }
+                }
+            }
+            else if (key == "ArrowLeft" || key == "Escape")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                var firstItem = currentItems.FirstOrDefault();
+                var parentItem = firstItem?.ParentItem;
+
+                if (parentItem != null)
+                {
+                    await parentItem.CollapseAsync();
+                    renderRequired = true;
+
+                    var targetItems = parentItem.ParentItem != null ? parentItem.ParentItem.items : parentItem.Parent?.items ?? items;
+                    currentItems = targetItems.Where(i => i.Visible).ToList();
+                    focusedIndex = currentItems.IndexOf(parentItem);
+                }
+            }
+            else if (key == "Space" || key == "Enter")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                if (focusedIndex >= 0 && focusedIndex < currentItems.Count)
+                {
+                    var item = currentItems[focusedIndex];
+
+                    if (item.Disabled)
+                    {
+                        return;
+                    }
+
+                    if (item.ChildContent != null)
+                    {
+                        await item.Toggle();
+                        renderRequired = true;
+
+                        if (item.IsExpanded && item.items.Count > 0)
+                        {
+                            currentItems = item.items.Where(i => i.Visible).ToList();
+                            focusedIndex = 0;
+                        }
+                        else
+                        {
+                            var targetItems = item.ParentItem != null ? item.ParentItem.items : item.Parent?.items;
+                            currentItems = (targetItems ?? Enumerable.Empty<CrestPanelMenuItem>()).Where(i => i.Visible).ToList();
+                            focusedIndex = currentItems.IndexOf(item);
+                        }
+                    }
+                    else
+                    {
+                        if (item.Path != null)
+                        {
+                            NavigationManager?.NavigateTo(item.Path);
+                        }
+                        else
+                        {
+                            await item.OnClick(new MouseEventArgs());
+                        }
+                    }
+                }
+            }
+            else
+            {
+                preventKeyPress = false;
+                stopKeydownPropagation = false;
+            }
+
+            if (!preventKeyPress)
+            {
+                return;
+            }
+
+            if (renderRequired)
+            {
+                StateHasChanged();
+
+                if (JSRuntime != null && focusedIndex >= 0 && focusedIndex < currentItems.Count)
+                {
+                    try
+                    {
+                        await JSRuntime.InvokeVoidAsync("Radzen.scrollIntoViewIfNeeded", currentItems[focusedIndex].Element);
+                    }
+                    catch
+                    { }
+                }
+            }
+            else if (JSRuntime != null)
+            {
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("Radzen.focusPanelMenuItem", Element, ActiveDescendantId);
+                }
+                catch
+                { }
+            }
+        }
+
+        internal bool IsFocused(CrestPanelMenuItem item)
+        {
+            return currentItems != null && focusedIndex >= 0 && focusedIndex < currentItems.Count && currentItems[focusedIndex] == item;
+        }
+
+        string? ActiveDescendantId => focusedIndex >= 0 && currentItems != null && focusedIndex < currentItems.Count
+            ? currentItems[focusedIndex].GetItemId()
+            : null;
+
+        internal void RemoveItem(CrestPanelMenuItem item)
+        {
+            items.Remove(item);
+
+            focusedIndex = -1;
+            currentItems = null;
+        }
+
+        void OnFocus()
+        {
+            currentItems ??= [.. items.Where(i => i.Visible)];
+
+            if (focusedIndex == -1)
+            {
+                focusedIndex = 0;
+
+                StateHasChanged();
+            }
+        }
+    }
+}

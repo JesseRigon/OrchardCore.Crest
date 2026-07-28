@@ -1,10 +1,12 @@
 @page "/Admin/Settings/admin"
 @using Crest.Admin.Api
 @using Crest.Admin.Components.Shared
-@using Radzen
-@using Radzen.Blazor
+@using Crest.Admin.DisplayManagement
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
+@inject DisplayManager DisplayManager
 
 <RadzenStack Gap="1rem">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
@@ -37,6 +39,18 @@
                             <SettingsSwitch Label="Enable theme toggler" Hint="Whether or not to display a theme toggler." @bind-Value="Model.DisplayThemeToggler" />
                             <SettingsSwitch Label="Enable Admin Menu filter" Hint="Whether a quick search to filter the admin menu is displayed." @bind-Value="Model.DisplayMenuFilter" />
                             <SettingsSwitch Label="Display titles in top bar" Hint="Whether the titles are displayed in the top bar." @bind-Value="Model.DisplayTitlesInTopbar" />
+                            <RadzenFieldset Text="Title bar">
+                                <RadzenStack Gap="0.75rem">
+                                    <SettingsSwitch Label="Display culture label" Hint="Show the culture name beside its flag. The default is the flag icon only." @bind-Value="TitleBarModel.DisplayCultureLabel" />
+                                    <RadzenDropDown Data="@AvatarShapes" @bind-Value="TitleBarModel.TenantAvatarShape" TextProperty="Label" ValueProperty="Value" Placeholder="Tenant avatar shape" Style="width: 100%;" />
+                                    <RadzenTextBox @bind-Value="TitleBarModel.TenantAvatarImageUrl" Placeholder="Tenant avatar image URL (optional)" Style="width: 100%;" />
+                                    @if (string.Equals(TitleBarModel.TenantAvatarShape, "Custom", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <RadzenTextBox @bind-Value="TitleBarModel.TenantAvatarClipPath" Placeholder="CSS/SVG clip-path, for example polygon(...) or url(#clip)" Style="width: 100%;" />
+                                        <RadzenTextBox @bind-Value="TitleBarModel.TenantAvatarBorderRadius" Placeholder="Optional border radius" Style="width: 100%;" />
+                                    }
+                                </RadzenStack>
+                            </RadzenFieldset>
                             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
                                 <RadzenButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
                             </RadzenStack>
@@ -81,6 +95,9 @@
 @code {
     private int SelectedTabIndex { get; set; }
     private AdminSettingsModel Model { get; set; } = new();
+    private TitleBarSettingsModel TitleBarModel { get; set; } = new();
+    private static TitleBarShapeOption[] AvatarShapes { get; } =
+    [new("Circle", "Circle"), new("RoundedSquare", "Rounded square"), new("Square", "Square"), new("Custom", "Custom clip path")];
     private RouteNode[] RouteNodes { get; set; } = [];
     private bool IsLoading { get; set; }
     private bool IsSaving { get; set; }
@@ -96,6 +113,7 @@
         try
         {
             Model = AdminSettingsModel.From(await Api.Crest.Rest.AdminSettings.GetAsync());
+            TitleBarModel = TitleBarSettingsModel.From(await Api.Crest.Rest.TitleBarSettings.GetAsync());
             var manifest = await Api.Crest.Rest.App.GetManifestAsync();
             RouteNodes = manifest?.AdminMenu.Items.Select((item, index) => RouteNode.From(item, null, 0, index)).ToArray() ?? [];
         }
@@ -109,9 +127,12 @@
         try
         {
             var saved = await Api.Crest.Rest.AdminSettings.UpdateAsync(Model.ToUpdate());
-            if (saved is not null)
+            var titleBarSaved = await Api.Crest.Rest.TitleBarSettings.UpdateAsync(TitleBarModel.ToUpdate());
+            if (saved is not null && titleBarSaved is not null)
             {
                 Model = AdminSettingsModel.From(saved);
+                TitleBarModel = TitleBarSettingsModel.From(titleBarSaved);
+                await DisplayManager.RefreshAdminStateAsync();
                 Notifications.Notify(NotificationSeverity.Success, "Settings saved", "Admin settings were updated.");
             }
         }
@@ -169,6 +190,28 @@
 
         public AdminSettingsUpdate ToUpdate() => new(DisplayThemeToggler, DisplayMenuFilter, true, DisplayTitlesInTopbar);
     }
+
+    private sealed class TitleBarSettingsModel
+    {
+        public bool DisplayCultureLabel { get; set; }
+        public string? TenantAvatarImageUrl { get; set; }
+        public string TenantAvatarShape { get; set; } = "Circle";
+        public string? TenantAvatarClipPath { get; set; }
+        public string? TenantAvatarBorderRadius { get; set; }
+
+        public static TitleBarSettingsModel From(CrestTitleBarSettingsDto settings) => new()
+        {
+            DisplayCultureLabel = settings.DisplayCultureLabel,
+            TenantAvatarImageUrl = settings.TenantAvatarImageUrl,
+            TenantAvatarShape = settings.TenantAvatarShape,
+            TenantAvatarClipPath = settings.TenantAvatarClipPath,
+            TenantAvatarBorderRadius = settings.TenantAvatarBorderRadius,
+        };
+
+        public CrestTitleBarSettingsUpdate ToUpdate() => new(DisplayCultureLabel, TenantAvatarImageUrl, TenantAvatarShape, TenantAvatarClipPath, TenantAvatarBorderRadius);
+    }
+
+    private sealed record TitleBarShapeOption(string Value, string Label);
 
     private sealed record RouteNode(string Id, string Text, string Meta, RouteNode[] Items)
     {

@@ -11,8 +11,8 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
-@using Radzen
-@using Radzen.Blazor
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
 @implements IAsyncDisposable
 @inject IApi Api
 @inject IJSRuntime Js
@@ -127,10 +127,10 @@
                                                         @if (SelectedMenu.IsDefault)
                                                         {
                                                             <div class="admin-menu-actions">
-                                                                <RadzenButton Icon="settings" ButtonStyle="ButtonStyle.Light" Click="ToggleSidebarSettings" title="Sidebar settings" />
-                                                                @if (IsSidebarSettingsOpen)
+                                                                <RadzenButton Icon="settings" ButtonStyle="ButtonStyle.Light" Click="TogglePrimaryNavMenuSettings" title="Primary navigation settings" />
+                                                                @if (IsPrimaryNavMenuSettingsOpen)
                                                                 {
-                                                                    @SidebarSettingsFlyout()
+                                                                    @PrimaryNavMenuSettingsFlyout()
                                                                 }
                                                             </div>
                                                         }
@@ -141,7 +141,7 @@
                                                     @if (SelectedMenu.IsDefault)
                                                     {
                                                         <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                                                            Sidebar Layout is the generated Orchard admin sidebar plus Crest layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar layout. Add node creates lightweight placeholder groups only.
+                                                            Primary Navigation is the generated Orchard admin menu plus Crest layout overrides. Drag items anywhere; hide/show only affects this tenant's primary navigation. Add node creates lightweight placeholder groups only.
                                                         </RadzenAlert>
                                                     }
                                                     @if (EditingModel is not null && EditingNodeId is null)
@@ -174,267 +174,6 @@
         </RadzenStack>
     </CascadingValue>
 
-
-<style>
-    .admin-menu-list-item {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        border: 1px solid var(--rz-border-color);
-        border-radius: var(--rz-border-radius);
-        padding: 0.15rem;
-    }
-
-    .admin-menu-list-item--selected {
-        border-color: var(--rz-primary);
-        background: color-mix(in srgb, var(--rz-primary) 8%, transparent);
-    }
-
-    .admin-menu-list-item--disabled {
-        opacity: 0.55;
-    }
-
-    .admin-menu-list-item__rename-input {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .admin-menu-list-item .rz-button,
-    .admin-menu-list-item .rz-button-text {
-        color: var(--rz-text-color) !important;
-    }
-
-    .admin-menu-list-item--selected .rz-button,
-    .admin-menu-list-item--selected .rz-button-text {
-        color: var(--rz-primary) !important;
-        font-weight: 600;
-    }
-
-    .admin-menu-tree__list {
-        list-style: none;
-        margin: 0;
-        padding-left: 1.25rem;
-    }
-
-    .admin-menu-tree__list--root {
-        padding-left: 0;
-    }
-
-    .admin-menu-tree__item {
-        margin: 0.45rem 0;
-    }
-
-    .admin-menu-node {
-        position: relative;
-        border: 1px solid var(--rz-border-color);
-        border-radius: var(--rz-border-radius);
-        background: var(--rz-base-background-color);
-        padding: 0.65rem;
-        transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
-    }
-
-    .admin-menu-node--locked {
-        opacity: 0.55;
-        background: color-mix(in srgb, var(--rz-text-secondary-color, #6b7280) 8%, var(--rz-base-background-color));
-    }
-
-    .admin-menu-node--locked .admin-menu-node__handle {
-        cursor: not-allowed;
-    }
-
-    .admin-menu-node__handle {
-        cursor: grab;
-        color: var(--rz-text-secondary-color);
-        border: 1px dashed var(--rz-border-color);
-        border-radius: 999px;
-        padding: 0.15rem 0.35rem;
-        user-select: none;
-    }
-
-    .admin-menu-node__handle:active {
-        cursor: grabbing;
-    }
-
-    .admin-menu-node__spacer {
-        display: inline-block;
-        width: 2rem;
-    }
-
-    .admin-menu-node__icon-slot {
-        display: inline-grid;
-        place-items: center;
-        flex: 0 0 1.35rem;
-        width: 1.35rem;
-        height: 1.35rem;
-        color: var(--rz-text-secondary-color, #6b7280);
-    }
-
-    .admin-menu-node__icon-slot .orchard-icon {
-        width: 1.35rem;
-        height: 1.35rem;
-    }
-
-    .admin-menu-node__icon-missing {
-        width: 0.55rem;
-        height: 0.55rem;
-        border: 1.5px solid currentColor;
-        border-radius: 999px;
-        opacity: 0.45;
-    }
-
-    .admin-menu-separator {
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin: 0.35rem 0;
-        border: 1px solid var(--rz-border-color);
-        border-radius: var(--rz-border-radius);
-        padding: 0.65rem;
-        color: var(--rz-text-secondary-color);
-        background: var(--rz-base-background-color);
-        transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
-    }
-
-    .admin-menu-separator__line {
-        flex: 1 1 auto;
-        height: 1px;
-        border-radius: 999px;
-        background: var(--crest-panel-menu-separator-color, var(--rz-border-color, #e5e7eb));
-    }
-
-    .admin-menu-separator__content {
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
-        min-width: 0;
-        flex: 1 1 auto;
-    }
-
-    .admin-menu-node__collapse,
-    .admin-menu-node__collapse .rz-button-icon {
-        color: var(--rz-text-color) !important;
-    }
-
-    .admin-menu-node--drop-before > .admin-menu-node::before,
-    .admin-menu-node--drop-after > .admin-menu-node::after,
-    .admin-menu-node--drop-before > .admin-menu-separator::before,
-    .admin-menu-node--drop-after > .admin-menu-separator::after {
-        content: '';
-        position: absolute;
-        left: 0.65rem;
-        right: 0.65rem;
-        height: 3px;
-        background: var(--rz-primary);
-        border-radius: 999px;
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--rz-primary) 20%, transparent);
-    }
-
-    .admin-menu-node--drop-before > .admin-menu-node::before {
-        top: -3px;
-    }
-
-    .admin-menu-node--drop-before > .admin-menu-separator::before {
-        top: -3px;
-    }
-
-    .admin-menu-node--drop-after > .admin-menu-node::after,
-    .admin-menu-node--drop-after > .admin-menu-separator::after {
-        bottom: -3px;
-    }
-
-    .admin-menu-node--drop-inside > .admin-menu-node {
-        border-color: var(--rz-primary);
-        background: color-mix(in srgb, var(--rz-primary) 8%, var(--rz-base-background-color));
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--rz-primary) 18%, transparent);
-    }
-
-    .admin-menu-node__rename {
-        display: flex;
-        align-items: center;
-        gap: 0.45rem;
-        flex-wrap: wrap;
-    }
-
-    .admin-menu-node__rename-input {
-        width: min(24rem, 55vw);
-    }
-
-    .admin-menu-node__original-text {
-        color: var(--rz-text-secondary-color);
-        text-decoration: line-through;
-        opacity: 0.75;
-    }
-
-    .admin-menu-node-editor {
-        position: relative;
-        z-index: 5;
-        margin: 0.5rem 0 0.75rem 2.25rem;
-        padding: 1rem;
-        border: 1px solid var(--rz-primary);
-        border-radius: var(--rz-border-radius);
-        background: var(--rz-base-background-color, #fff);
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
-    }
-
-    .admin-menu-actions {
-        position: relative;
-        display: inline-flex;
-    }
-
-    .admin-menu-actions__popover,
-    .admin-menu-settings {
-        position: absolute;
-        top: calc(100% + 0.35rem);
-        right: 0;
-        z-index: 100;
-        border: 1px solid var(--rz-border-color);
-        border-radius: var(--rz-border-radius);
-        background: var(--rz-base-background-color, #fff);
-        box-shadow: var(--rz-shadow-4, 0 12px 30px rgba(15, 23, 42, 0.18));
-    }
-
-    .admin-menu-actions__popover {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-        min-width: 10rem;
-        padding: 0.35rem;
-    }
-
-    .admin-menu-actions__popover .rz-button {
-        justify-content: flex-start;
-        width: 100%;
-    }
-
-    .admin-menu-settings {
-        width: min(34rem, 84vw);
-        max-height: min(42rem, 75vh);
-        overflow: auto;
-        padding: 1rem;
-    }
-
-    .admin-menu-settings__grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.75rem;
-    }
-
-    .admin-menu-settings__field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .admin-menu-settings__color {
-        width: 100%;
-        height: 2.25rem;
-        padding: 0.15rem;
-        border: 1px solid var(--rz-border-color);
-        border-radius: var(--rz-border-radius);
-        background: transparent;
-    }
-</style>
 
 @code {
     private const string LinkNodeType = "LinkAdminNode";
@@ -485,12 +224,12 @@
     private string? RenamingNodeId { get; set; }
     private string? RenameText { get; set; }
     private bool IsAddMenuOpen { get; set; }
-    private bool IsSidebarSettingsOpen { get; set; }
-    private AdminSidebarSettings SidebarSettingsModel { get; set; } = CreateDefaultSidebarSettings();
-    private decimal SidebarExpansionMilliseconds
+    private bool IsPrimaryNavMenuSettingsOpen { get; set; }
+    private AdminPrimaryNavMenuSettings PrimaryNavMenuSettingsModel { get; set; } = CreateDefaultPrimaryNavMenuSettings();
+    private decimal PrimaryNavMenuExpansionMilliseconds
     {
-        get => SidebarSettingsModel.ExpansionDurationMilliseconds;
-        set => SidebarSettingsModel.ExpansionDurationMilliseconds = (int)Math.Clamp(value, 100, 2000);
+        get => PrimaryNavMenuSettingsModel.ExpansionDurationMilliseconds;
+        set => PrimaryNavMenuSettingsModel.ExpansionDurationMilliseconds = (int)Math.Clamp(value, 100, 2000);
     }
 
     private IReadOnlyList<ParentOption> ParentOptions
@@ -557,7 +296,7 @@
                 CollapseSelectedMenuNodes();
             }
 
-            SyncSidebarSettingsModel();
+            SyncPrimaryNavMenuSettingsModel();
             ShouldInitializeTree = true;
             await DisplayManager.RefreshAdminMenuAsync();
         }
@@ -618,15 +357,15 @@
             var result = await Api.Crest.Rest.AdminMenus.ExportLayoutAsync();
             if (result is null)
             {
-                Notifications.Notify(NotificationSeverity.Error, "Sidebar layout export failed", "The development export endpoint was not available or rejected the request.");
+                Notifications.Notify(NotificationSeverity.Error, "Primary navigation export failed", "The development export endpoint was not available or rejected the request.");
                 return;
             }
 
-            Notifications.Notify(NotificationSeverity.Success, "Sidebar layout exported", $"{result.File} saved with {result.ItemCount} layout items, {result.CustomItemCount} custom items, and {result.SeparatorCount} separators.");
+            Notifications.Notify(NotificationSeverity.Success, "Primary navigation exported", $"{result.File} saved with {result.ItemCount} layout items, {result.CustomItemCount} custom items, and {result.SeparatorCount} separators.");
         }
         catch (Exception ex)
         {
-            Notifications.Notify(NotificationSeverity.Error, "Sidebar layout export failed", ex.Message);
+            Notifications.Notify(NotificationSeverity.Error, "Primary navigation export failed", ex.Message);
         }
         finally
         {
@@ -648,8 +387,8 @@
         RenamingMenuId = null;
         MenuRenameText = null;
         IsAddMenuOpen = false;
-        IsSidebarSettingsOpen = false;
-        SyncSidebarSettingsModel();
+        IsPrimaryNavMenuSettingsOpen = false;
+        SyncPrimaryNavMenuSettingsModel();
         CollapseSelectedMenuNodes();
         ShouldInitializeTree = true;
     }
@@ -1022,22 +761,22 @@
     private void ToggleAddMenu()
     {
         IsAddMenuOpen = !IsAddMenuOpen;
-        IsSidebarSettingsOpen = false;
+        IsPrimaryNavMenuSettingsOpen = false;
     }
 
-    private async Task ToggleSidebarSettings()
+    private async Task TogglePrimaryNavMenuSettings()
     {
         IsAddMenuOpen = false;
-        if (IsSidebarSettingsOpen)
+        if (IsPrimaryNavMenuSettingsOpen)
         {
-            IsSidebarSettingsOpen = false;
-            SyncSidebarSettingsModel();
+            IsPrimaryNavMenuSettingsOpen = false;
+            SyncPrimaryNavMenuSettingsModel();
             return;
         }
 
         await LoadAsync(showLoading: false);
-        SyncSidebarSettingsModel();
-        IsSidebarSettingsOpen = true;
+        SyncPrimaryNavMenuSettingsModel();
+        IsPrimaryNavMenuSettingsOpen = true;
     }
 
     private void AddNodeFromMenu()
@@ -1073,22 +812,22 @@
         await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.CreateSeparatorAsync(SelectedMenu.Id, new(node.ParentId, node.Order + 1)));
     }
 
-    private RenderFragment SidebarSettingsFlyout() => @<div class="admin-menu-settings" role="dialog" aria-label="Sidebar settings">
+    private RenderFragment PrimaryNavMenuSettingsFlyout() => @<div class="admin-menu-settings" role="dialog" aria-label="Primary navigation settings">
         <RadzenStack Gap="1rem">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                <RadzenText TextStyle="TextStyle.H6" Text="Sidebar settings" />
-                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => IsSidebarSettingsOpen = false)" title="Close settings" />
+                <RadzenText TextStyle="TextStyle.H6" Text="Primary navigation settings" />
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => IsPrimaryNavMenuSettingsOpen = false)" title="Close settings" />
             </RadzenStack>
 
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                <RadzenCheckBox TValue="bool" @bind-Value="SidebarSettingsModel.Collapsible" />
+                <RadzenCheckBox TValue="bool" @bind-Value="PrimaryNavMenuSettingsModel.Collapsible" />
                 <RadzenLabel Text="Allow collapse/hover expand" />
             </RadzenStack>
 
             <div class="admin-menu-settings__field">
                 <RadzenLabel Text="Expansion speed (ms)" />
-                <CrestInputNumericMath Value="@SidebarExpansionMilliseconds"
-                                       ValueChanged="@SetSidebarExpansionMilliseconds"
+                <CrestInputNumericMath Value="@PrimaryNavMenuExpansionMilliseconds"
+                                       ValueChanged="@SetPrimaryNavMenuExpansionMilliseconds"
                                        Style="width: 100%;" />
             </div>
 
@@ -1153,8 +892,8 @@
             </div>
 
             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
-                <RadzenButton Text="Save" Icon="save" Click="SaveSidebarSettingsAsync" Disabled="@IsBusy" />
-                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => { SyncSidebarSettingsModel(); IsSidebarSettingsOpen = false; })" Disabled="@IsBusy" />
+                <RadzenButton Text="Save" Icon="save" Click="SavePrimaryNavMenuSettingsAsync" Disabled="@IsBusy" />
+                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => { SyncPrimaryNavMenuSettingsModel(); IsPrimaryNavMenuSettingsOpen = false; })" Disabled="@IsBusy" />
             </RadzenStack>
         </RadzenStack>
     </div>;
@@ -1224,7 +963,7 @@
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="6">
                         <RadzenLabel Text="Url" />
-                        <RadzenTextBox @bind-Value="model.Url" Disabled="@(SelectedMenu?.IsDefault == true || model.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? "Sidebar Layout placeholders do not link" : "/Admin/MyPage")" Style="width: 100%;" />
+                        <RadzenTextBox @bind-Value="model.Url" Disabled="@(SelectedMenu?.IsDefault == true || model.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? "Primary Navigation placeholders do not link" : "/Admin/MyPage")" Style="width: 100%;" />
                     </RadzenColumn>
                 </RadzenRow>
 
@@ -1300,7 +1039,7 @@
         if (result is not null)
         {
             CancelRename();
-            Notifications.Notify(NotificationSeverity.Success, "Sidebar item renamed", "The sidebar display text was updated.");
+            Notifications.Notify(NotificationSeverity.Success, "Primary navigation item renamed", "The primary navigation display text was updated.");
         }
 
         IsBusy = false;
@@ -1392,7 +1131,7 @@
         State = new(State.Menus.Select(existing => existing.Id == menu.Id ? menu : existing).ToArray());
         RegisterMenuIcons(menu);
         SelectedMenuId = menu.Id;
-        SyncSidebarSettingsModel();
+        SyncPrimaryNavMenuSettingsModel();
         ShouldInitializeTree = true;
         await DisplayManager.RefreshAdminMenuAsync();
         await InvokeAsync(StateHasChanged);
@@ -1406,7 +1145,7 @@
         }
     }
 
-    private async Task SaveSidebarSettingsAsync()
+    private async Task SavePrimaryNavMenuSettingsAsync()
     {
         if (SelectedMenu is null || !SelectedMenu.IsDefault)
         {
@@ -1414,23 +1153,23 @@
         }
 
         IsBusy = true;
-        var result = await Api.Crest.Rest.AdminMenus.UpdateSidebarSettingsAsync(SelectedMenu.Id, NormalizeSidebarSettings(SidebarSettingsModel));
+        var result = await Api.Crest.Rest.AdminMenus.UpdatePrimaryNavMenuSettingsAsync(SelectedMenu.Id, NormalizePrimaryNavMenuSettings(PrimaryNavMenuSettingsModel));
         await ApplyMenuResultAsync(result);
         if (result is not null)
         {
-            IsSidebarSettingsOpen = false;
-            Notifications.Notify(NotificationSeverity.Success, "Sidebar settings saved", "The sidebar settings were updated.");
+            IsPrimaryNavMenuSettingsOpen = false;
+            Notifications.Notify(NotificationSeverity.Success, "Primary navigation settings saved", "The primary navigation settings were updated.");
         }
 
         IsBusy = false;
     }
 
-    private void SyncSidebarSettingsModel()
+    private void SyncPrimaryNavMenuSettingsModel()
     {
-        SidebarSettingsModel = CloneSidebarSettings(SelectedMenu?.SidebarSettings ?? CreateDefaultSidebarSettings());
+        PrimaryNavMenuSettingsModel = ClonePrimaryNavMenuSettings(SelectedMenu?.PrimaryNavMenuSettings ?? CreateDefaultPrimaryNavMenuSettings());
     }
 
-    private static AdminSidebarSettings CloneSidebarSettings(AdminSidebarSettings settings) => new()
+    private static AdminPrimaryNavMenuSettings ClonePrimaryNavMenuSettings(AdminPrimaryNavMenuSettings settings) => new()
     {
         Collapsible = settings.Collapsible,
         ExpansionDurationMilliseconds = settings.ExpansionDurationMilliseconds,
@@ -1443,11 +1182,11 @@
         TierBaseRems = settings.TierBaseRems?.ToList() ?? [1.0, 0.95, 0.9],
     };
 
-    private static AdminSidebarSettings CreateDefaultSidebarSettings() => new();
+    private static AdminPrimaryNavMenuSettings CreateDefaultPrimaryNavMenuSettings() => new();
 
-    private static AdminSidebarSettings NormalizeSidebarSettings(AdminSidebarSettings settings)
+    private static AdminPrimaryNavMenuSettings NormalizePrimaryNavMenuSettings(AdminPrimaryNavMenuSettings settings)
     {
-        var normalized = CloneSidebarSettings(settings);
+        var normalized = ClonePrimaryNavMenuSettings(settings);
         normalized.ExpansionDurationMilliseconds = Math.Clamp(normalized.ExpansionDurationMilliseconds, 100, 2000);
         EnsureLength(normalized.TierSeparators, 3, false);
         EnsureLength(normalized.TierIndents, 4, "0rem");
@@ -1460,24 +1199,24 @@
         return normalized;
     }
 
-    private Task SetSidebarExpansionMilliseconds(decimal value)
+    private Task SetPrimaryNavMenuExpansionMilliseconds(decimal value)
     {
-        SidebarExpansionMilliseconds = value;
+        PrimaryNavMenuExpansionMilliseconds = value;
         return Task.CompletedTask;
     }
 
-    private decimal GetTierIndentValue(int index) => ParseCssMeasurement(GetValue(SidebarSettingsModel.TierIndents, index, index == 0 ? "0rem" : $"{index * 0.75:0.##}rem")).Value;
-    private string GetTierIndentUnit(int index) => ParseCssMeasurement(GetValue(SidebarSettingsModel.TierIndents, index, index == 0 ? "0rem" : $"{index * 0.75:0.##}rem")).Unit;
-    private void SetTierIndentValue(int index, decimal value) => SetMeasurement(SidebarSettingsModel.TierIndents, index, value, GetTierIndentUnit(index));
-    private void SetTierIndentUnit(int index, string unit) => SetMeasurement(SidebarSettingsModel.TierIndents, index, GetTierIndentValue(index), unit);
-    private bool GetTierSeparator(int index) => GetValue(SidebarSettingsModel.TierSeparators, index, false);
-    private void SetTierSeparator(int index, bool value) => SetValue(SidebarSettingsModel.TierSeparators, index, value);
-    private decimal GetTierBaseSizeValue(int index) => ParseCssMeasurement(GetValue(SidebarSettingsModel.TierBaseSizes, index, index == 0 ? "1rem" : $"{1 - (index * 0.05m):0.###}rem")).Value;
-    private string GetTierBaseSizeUnit(int index) => ParseCssMeasurement(GetValue(SidebarSettingsModel.TierBaseSizes, index, index == 0 ? "1rem" : $"{1 - (index * 0.05m):0.###}rem")).Unit;
-    private void SetTierBaseSizeValue(int index, decimal value) => SetMeasurement(SidebarSettingsModel.TierBaseSizes, index, value, GetTierBaseSizeUnit(index));
-    private void SetTierBaseSizeUnit(int index, string unit) => SetMeasurement(SidebarSettingsModel.TierBaseSizes, index, GetTierBaseSizeValue(index), unit);
-    private string GetTierColor(int index) => ToColorInputValue(GetValue(SidebarSettingsModel.TierBackgrounds, index, "transparent"));
-    private void SetTierBackground(int index, string? value) => SetValue(SidebarSettingsModel.TierBackgrounds, index, string.IsNullOrWhiteSpace(value) ? "transparent" : value.Trim());
+    private decimal GetTierIndentValue(int index) => ParseCssMeasurement(GetValue(PrimaryNavMenuSettingsModel.TierIndents, index, index == 0 ? "0rem" : $"{index * 0.75:0.##}rem")).Value;
+    private string GetTierIndentUnit(int index) => ParseCssMeasurement(GetValue(PrimaryNavMenuSettingsModel.TierIndents, index, index == 0 ? "0rem" : $"{index * 0.75:0.##}rem")).Unit;
+    private void SetTierIndentValue(int index, decimal value) => SetMeasurement(PrimaryNavMenuSettingsModel.TierIndents, index, value, GetTierIndentUnit(index));
+    private void SetTierIndentUnit(int index, string unit) => SetMeasurement(PrimaryNavMenuSettingsModel.TierIndents, index, GetTierIndentValue(index), unit);
+    private bool GetTierSeparator(int index) => GetValue(PrimaryNavMenuSettingsModel.TierSeparators, index, false);
+    private void SetTierSeparator(int index, bool value) => SetValue(PrimaryNavMenuSettingsModel.TierSeparators, index, value);
+    private decimal GetTierBaseSizeValue(int index) => ParseCssMeasurement(GetValue(PrimaryNavMenuSettingsModel.TierBaseSizes, index, index == 0 ? "1rem" : $"{1 - (index * 0.05m):0.###}rem")).Value;
+    private string GetTierBaseSizeUnit(int index) => ParseCssMeasurement(GetValue(PrimaryNavMenuSettingsModel.TierBaseSizes, index, index == 0 ? "1rem" : $"{1 - (index * 0.05m):0.###}rem")).Unit;
+    private void SetTierBaseSizeValue(int index, decimal value) => SetMeasurement(PrimaryNavMenuSettingsModel.TierBaseSizes, index, value, GetTierBaseSizeUnit(index));
+    private void SetTierBaseSizeUnit(int index, string unit) => SetMeasurement(PrimaryNavMenuSettingsModel.TierBaseSizes, index, GetTierBaseSizeValue(index), unit);
+    private string GetTierColor(int index) => ToColorInputValue(GetValue(PrimaryNavMenuSettingsModel.TierBackgrounds, index, "transparent"));
+    private void SetTierBackground(int index, string? value) => SetValue(PrimaryNavMenuSettingsModel.TierBackgrounds, index, string.IsNullOrWhiteSpace(value) ? "transparent" : value.Trim());
 
     private static void SetMeasurement(IList<string> values, int index, decimal value, string unit)
     {

@@ -1,0 +1,20 @@
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+@namespace Crest.Components.Primitives.Spreadsheet
+<div class="rz-virtual-grid" @attributes=@AdditionalAttributes>
+    <div @ref=@content class="rz-virtual-grid-content" style=@ContentStyle>
+    @ChildContent?.Invoke(this)
+@if (items is not null)
+{
+    @foreach (var item in items)
+    {
+        @Template?.Invoke(item)
+    }
+}
+    </div>
+    <div class="rz-virtual-grid-scroller" tabindex="-1" @ref=@scrollable>
+        <div class="rz-virtual-grid-spacer" style=@SpacerStyle></div>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+@using Microsoft.AspNetCore.Components
+@using Crest.Components.Primitives
+@inherits SpreadsheetDialogBase
+
+@namespace Crest.Components.Primitives.Spreadsheet
+<CrestStack Orientation="Orientation.Vertical" Gap="1rem">
+    <CrestTextBox @bind-Value=@Name Style="width: 100%" />
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <CrestText TextStyle="TextStyle.Caption" Style="color: var(--rz-form-error-color, #f44336)">@error</CrestText>
+    }
+    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-spreadsheet-dialog-actions">
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" />
+    </CrestStack>
+</CrestStack>

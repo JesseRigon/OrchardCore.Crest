@@ -69,8 +69,8 @@ async function main() {
     console.log(`api iconClass: ${updatedNode?.iconClass}`);
 
     await page.goto(`${baseUrl}/Admin/CRM/Customers`, { waitUntil: 'networkidle' });
-    await page.locator('.admin-menu-sidebar').waitFor({ timeout: 15000 });
-    const contentIcon = await page.locator('.admin-menu-sidebar__item-content', { hasText: /^Content$/ }).first().locator('.orchard-icon').evaluate(icon => ({
+    await page.locator('.primary-nav-menu').waitFor({ timeout: 15000 });
+    const contentIcon = await page.locator('.primary-nav-menu__item-content', { hasText: /^Content$/ }).first().locator('.orchard-icon').evaluate(icon => ({
       library: icon.getAttribute('data-icon-library'),
       version: icon.getAttribute('data-icon-version'),
       name: icon.getAttribute('data-icon-name'),

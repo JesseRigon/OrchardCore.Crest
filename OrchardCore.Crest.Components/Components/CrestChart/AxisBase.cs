@@ -1,0 +1,210 @@
+using Microsoft.AspNetCore.Components;
+using System;
+using System.Globalization;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// Base class for an axis in <see cref="CrestChart" />.
+    /// </summary>
+    public abstract class AxisBase : CrestChartComponentBase, IChartAxis
+    {
+        /// <summary>
+        /// Gets or sets the stroke (line color) of the axis.
+        /// </summary>
+        /// <value>The stroke.</value>
+        [Parameter]
+        public string? Stroke { get; set; }
+        /// <summary>
+        /// Gets or sets the pixel width of axis.
+        /// </summary>
+        /// <value>The width of the stroke.</value>
+        [Parameter]
+        public double StrokeWidth { get; set; } = 1;
+
+        /// <summary>
+        /// Gets or sets the child content.
+        /// </summary>
+        /// <value>The child content.</value>
+        [Parameter]
+        public RenderFragment? ChildContent { get; set; }
+
+        /// <summary>
+        /// Gets or sets the format string used to display the axis values.
+        /// </summary>
+        /// <value>The format string.</value>
+        [Parameter]
+        public string? FormatString { get; set; }
+
+        /// <summary>
+        /// Gets or sets a formatter function that formats the axis values.
+        /// </summary>
+        /// <value>The formatter.</value>
+        [Parameter]
+        public Func<object, string>? Formatter { get; set; }
+
+        /// <summary>
+        /// Gets or sets the type of the line used to display the axis.
+        /// </summary>
+        /// <value>The type of the line.</value>
+        [Parameter]
+        public LineType LineType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the grid lines configuration of the current axis.
+        /// </summary>
+        /// <value>The grid lines.</value>
+        public CrestGridLines GridLines { get; set; } = new CrestGridLines();
+
+        /// <summary>
+        /// Gets or sets the crosshair configuration of the current axis.
+        /// </summary>
+        /// <value>The crosshair.</value>
+        public CrestAxisCrosshair Crosshair { get; set; } = new CrestAxisCrosshair();
+
+        /// <summary>
+        /// Gets or sets the title configuration.
+        /// </summary>
+        /// <value>The title.</value>
+        public CrestAxisTitle Title { get; set; } = new CrestAxisTitle();
+
+        /// <summary>
+        /// Gets or sets the ticks configuration.
+        /// </summary>
+        /// <value>The ticks.</value>
+        public CrestTicks Ticks { get; set; } = new CrestTicks();
+
+        /// <summary>
+        /// Gets or sets the pixel distance between axis ticks. It is used to calculate the number of visible ticks depending on the available space. Set to 100 by default;
+        /// Setting <see cref="Step" /> will override this value.
+        /// </summary>
+        /// <value>The desired pixel distance between ticks.</value>
+        [Parameter]
+        public int TickDistance { get; set; } = 100;
+
+        /// <summary>
+        /// Gets or sets the width of the axis in pixels. If not set, the width is calculated automatically based on the axis content.
+        /// The parameter only has effect for vertically rendered value axes. It is ignored on the category axis in normal charts and on value axes in inverted (bar) charts
+        /// </summary>
+        [Parameter]
+        public int? Width { get; set; }
+
+        /// <summary>
+        /// Specifies the minimum value of the axis.
+        /// </summary>
+        /// <value>The minimum.</value>
+        [Parameter]
+        public object? Min { get; set; }
+
+        /// <summary>
+        /// Specifies the maximum value of the axis.
+        /// </summary>
+        /// <value>The maximum.</value>
+        [Parameter]
+        public object? Max { get; set; }
+
+        /// <summary>
+        /// Specifies the step of the axis.
+        /// </summary>
+        [Parameter]
+        public object? Step { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="AxisBase"/> is visible.
+        /// </summary>
+        /// <value><c>true</c> if visible; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool Visible { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this axis is inverted.
+        /// When <c>true</c>, the axis direction is reversed: values increase in the opposite visual direction
+        /// and categories are displayed in reverse order.
+        /// </summary>
+        [Parameter]
+        public bool Inverted { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this axis uses a logarithmic scale.
+        /// When <c>true</c>, the axis displays values on a logarithmic scale (base 10 by default).
+        /// Only positive values are supported. Set <see cref="LogarithmicBase"/> to change the base.
+        /// </summary>
+        [Parameter]
+        public bool Logarithmic { get; set; }
+
+        /// <summary>
+        /// Gets or sets the base of the logarithmic scale. Default is 10.
+        /// Only used when <see cref="Logarithmic"/> is <c>true</c>.
+        /// </summary>
+        [Parameter]
+        public double LogarithmicBase { get; set; } = 10;
+
+        /// <summary>
+        /// Specifies the value on the perpendicular axis where this axis should cross.
+        /// When set, the axis line and ticks are positioned at the corresponding location
+        /// instead of the chart edge. For example, setting <c>CrossesAt="0"</c> on the category axis
+        /// positions it where 0 is on the value axis.
+        /// </summary>
+        [Parameter]
+        public object? CrossesAt { get; set; }
+
+        /// <summary>
+        /// Specifies the label rotation angle in degrees. Set to <c>null</c> by default which means no rotation is applied. Has higher precedence than <see cref="LabelAutoRotation"/>.
+        /// </summary>
+        [Parameter]
+        public double? LabelRotation { get; set; } = null;
+
+        /// <summary>
+        /// Specifies the automatic label rotation angle in degrees. If set CrestChart will automatically rotate the labels to fit the available space by the specified value. Has lower precedence than <see cref="LabelRotation"/>.
+        /// </summary>
+        [Parameter]
+        public double? LabelAutoRotation { get; set; } = null;
+
+        /// <inheritdoc />
+        protected override bool ShouldRefreshChart(ParameterView parameters)
+        {
+            return DidParameterChange(parameters, nameof(Min), Min) ||
+                   DidParameterChange(parameters, nameof(Max), Max) ||
+                   DidParameterChange(parameters, nameof(Visible), Visible) ||
+                   DidParameterChange(parameters, nameof(LabelRotation), LabelRotation) ||
+                   DidParameterChange(parameters, nameof(LabelAutoRotation), LabelAutoRotation) ||
+                   DidParameterChange(parameters, nameof(Inverted), Inverted) ||
+                   DidParameterChange(parameters, nameof(CrossesAt), CrossesAt) ||
+                   DidParameterChange(parameters, nameof(Logarithmic), Logarithmic) ||
+                   DidParameterChange(parameters, nameof(LogarithmicBase), LogarithmicBase) ||
+                   DidParameterChange(parameters, nameof(Step), Step) ||
+                   DidParameterChange(parameters, nameof(Width), Width);
+        }
+
+        internal string Format(ScaleBase scale, double idx)
+        {
+            var value = scale.Value(idx);
+
+            return Format(scale, value);
+        }
+
+        internal string Format(ScaleBase scale, object value)
+        {
+            if (Formatter != null)
+            {
+                return Formatter(value);
+            }
+            else
+            {
+                return scale.FormatTick(FormatString ?? string.Empty, value);
+            }
+        }
+
+        internal double? GetCrossesAtValue()
+        {
+            if (CrossesAt == null)
+            {
+                return null;
+            }
+
+            return Convert.ToDouble(CrossesAt, CultureInfo.InvariantCulture);
+        }
+
+        internal abstract double Size { get; }
+    }
+}

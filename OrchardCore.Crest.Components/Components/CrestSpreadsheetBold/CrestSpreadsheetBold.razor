@@ -1,0 +1,11 @@
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inherits CrestSpreadsheetFormatToggleToolBase
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestToggleButton AriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Bold))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Bold))) Value=@IsToggled ValueChanged=@OnToggledChangedAsync Icon="format_bold" Disabled=@IsDisabled Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
+    ToggleVariant="Variant.Flat" ToggleButtonStyle="ButtonStyle.Primary" ToggleShade="Shade.Lighter" />
+
+@code {
+    protected override bool GetValue(Format format) => format.Bold;
+    protected override Format WithValue(Format format, bool value) => format.WithBold(value);
+}

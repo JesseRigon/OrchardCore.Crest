@@ -355,15 +355,6 @@ public sealed class BlazorAdminThemeMiddleware
 
     private async Task<bool> TryServeStaticWebAssetFallbackAsync(HttpContext context, string relativePath)
     {
-        if (relativePath.StartsWith("_content/Radzen.Blazor/", StringComparison.OrdinalIgnoreCase))
-        {
-            var packageRoot = ResolveNuGetPackageStaticWebAssets("radzen.blazor");
-            if (packageRoot is not null && await TryServeFileAsync(context, packageRoot, relativePath["_content/Radzen.Blazor/".Length..]))
-            {
-                return true;
-            }
-        }
-
         if (relativePath.StartsWith("_framework/Microsoft.DotNet.HotReload.WebAssembly.Browser.", StringComparison.OrdinalIgnoreCase)
             && relativePath.EndsWith(".lib.module.js", StringComparison.OrdinalIgnoreCase))
         {
@@ -375,22 +366,6 @@ public sealed class BlazorAdminThemeMiddleware
         }
 
         return false;
-    }
-
-    private static string? ResolveNuGetPackageStaticWebAssets(string packageId)
-    {
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var packageRoot = Path.Combine(home, ".nuget", "packages", packageId);
-        if (!Directory.Exists(packageRoot))
-        {
-            return null;
-        }
-
-        return Directory.GetDirectories(packageRoot)
-            .Select(directory => new { Directory = directory, Version = ParseVersion(Path.GetFileName(directory)) })
-            .OrderByDescending(candidate => candidate.Version)
-            .Select(candidate => Path.Combine(candidate.Directory, "staticwebassets"))
-            .FirstOrDefault(Directory.Exists);
     }
 
     private static string? ResolveDotNetSdkWebAssemblyAsset(string fileName)

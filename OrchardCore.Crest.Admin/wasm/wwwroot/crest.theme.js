@@ -52,7 +52,7 @@ window.crestTheme = (() => {
     const themeLink = document.getElementById('crest-radzen-theme');
 
     if (themeLink) {
-      themeLink.href = `/_content/Radzen.Blazor/css/${safeTheme}.css`;
+      themeLink.href = `/_content/OrchardCore.Crest.Components/css/${safeTheme}.css`;
     }
 
     try {
@@ -136,5 +136,11 @@ window.crestTheme = (() => {
     return isDarkTheme();
   }
 
-  return { apply, toggleMode, isDarkMode, rememberSignedInUser, getKnownUsers };
+  function setAdminCulture(cookieName, cookiePath, culture) {
+    if (!cookieName || !culture) return;
+    const path = cookiePath || '/';
+    document.cookie = `${encodeURIComponent(cookieName)}=c=${encodeURIComponent(culture)}|uic=${encodeURIComponent(culture)}; path=${path}; SameSite=Lax`;
+  }
+
+  return { apply, toggleMode, isDarkMode, rememberSignedInUser, getKnownUsers, setAdminCulture };
 })();

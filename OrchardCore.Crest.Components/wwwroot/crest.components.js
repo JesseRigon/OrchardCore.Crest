@@ -1,5 +1,7 @@
 window.crestComponents = window.crestComponents || {};
 
+const popupWindowBindings = new WeakMap();
+
 window.crestComponents.positionPopup = (element, anchorElement, options) => {
     if (!(element instanceof HTMLElement)) {
         return;
@@ -42,7 +44,51 @@ window.crestComponents.positionPopup = (element, anchorElement, options) => {
     element.style.maxHeight = windowAware ? `${maxHeight}px` : '';
     element.style.overflowY = windowAware ? 'auto' : '';
     element.dataset.crestPopupPlacement = shouldOpenAbove ? 'right-above' : 'right-below';
+
+    updatePopupWindowBinding(element, anchorElement, options, windowAware);
 };
+
+window.crestComponents.disposePopup = (element) => {
+    const binding = popupWindowBindings.get(element);
+    if (!binding) {
+        return;
+    }
+
+    window.removeEventListener('resize', binding.onResize);
+    popupWindowBindings.delete(element);
+};
+
+function updatePopupWindowBinding(element, anchorElement, options, windowAware) {
+    const existing = popupWindowBindings.get(element);
+    if (!windowAware) {
+        if (existing) {
+            window.removeEventListener('resize', existing.onResize);
+            popupWindowBindings.delete(element);
+        }
+        return;
+    }
+
+    if (existing) {
+        existing.anchorElement = anchorElement;
+        existing.options = options;
+        return;
+    }
+
+    const binding = { anchorElement, options, frame: 0, onResize: null };
+    binding.onResize = () => {
+        if (binding.frame) {
+            cancelAnimationFrame(binding.frame);
+        }
+
+        binding.frame = requestAnimationFrame(() => {
+            binding.frame = 0;
+            window.crestComponents.positionPopup(element, binding.anchorElement, binding.options);
+        });
+    };
+
+    popupWindowBindings.set(element, binding);
+    window.addEventListener('resize', binding.onResize, { passive: true });
+}
 
 function getPopupAnchors(anchorElement, options) {
     const mode = String(options?.anchorMode || 'Point').toLowerCase();

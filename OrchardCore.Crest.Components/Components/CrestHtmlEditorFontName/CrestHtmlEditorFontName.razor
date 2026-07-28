@@ -1,0 +1,23 @@
+@using Crest.Components.Primitives.Rendering
+
+@namespace Crest.Components.Primitives
+<EditorDropDown Title=@Title Value=@(Editor?.State?.FontName) Change=@OnChange Placeholder="@Placeholder"
+    Style="width:140px" PopupStyle="width: 200px; max-height: 200px; overflow: auto;">
+    <CascadingValue Value=@this>
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <CrestHtmlEditorFontNameItem Text="Arial" Value="Arial" />
+            <CrestHtmlEditorFontNameItem Text="Georgia" Value="Georgia" />
+            <CrestHtmlEditorFontNameItem Text="Helvetica" Value="Helvetica" />
+            <CrestHtmlEditorFontNameItem Text="Monospace" Value="monospace" />
+            <CrestHtmlEditorFontNameItem Text="Segoe UI" Value='"Segoe UI"' />
+            <CrestHtmlEditorFontNameItem Text="Tahoma" Value="Tahoma" />
+            <CrestHtmlEditorFontNameItem Text="Times New Roman" Value='"Times New Roman"' />
+            <CrestHtmlEditorFontNameItem Text="Verdana" Value="Verdana" />
+        }
+    </CascadingValue>
+</EditorDropDown>

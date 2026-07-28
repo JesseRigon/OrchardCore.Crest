@@ -42,7 +42,7 @@ async function main() {
     await button.waitFor({ timeout: 20000 });
     await button.click();
 
-    await page.getByText('Sidebar layout exported', { exact: false }).waitFor({ timeout: 20000 });
+    await page.getByText('PrimaryNavMenu layout exported', { exact: false }).waitFor({ timeout: 20000 });
 
     if (!fs.existsSync(exportFile)) {
       throw new Error(`Expected export file to exist: ${exportFile}`);

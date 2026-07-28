@@ -1,0 +1,161 @@
+.admin-titlebar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 4rem;
+    padding: 0.5rem 1rem;
+    border-bottom: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb);
+    background: var(--crest-color-surface-1, #fff);
+}
+
+.admin-titlebar__left,
+.admin-titlebar__right {
+    min-width: 0;
+}
+
+.admin-titlebar__page-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 1rem;
+    overflow: hidden;
+    color: var(--crest-color-text-2, var(--crest-color-text-1, #1f2937));
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-titlebar ::deep .admin-titlebar__tenant-avatar {
+    flex: 0 0 auto;
+}
+
+.admin-titlebar__avatar-menu {
+    --rz-profile-menu-padding: 0;
+}
+
+::deep .admin-titlebar__tenant-selector {
+    max-width: 18rem;
+}
+
+::deep .admin-titlebar__tenant-selector .crest-dropdown__trigger {
+    min-height: 2.25rem;
+    padding-inline: 0.35rem;
+    border-color: transparent;
+    background: transparent;
+    font-weight: 600;
+}
+
+::deep .admin-titlebar__tenant-selector .crest-dropdown__chevron .orchard-icon,
+::deep .admin-titlebar__tenant-selector .crest-dropdown__option--selected .orchard-icon {
+    color: var(--crest-color-accent-1, #2f6f4e);
+}
+
+::deep .admin-titlebar__tenant-option-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .admin-titlebar__culture-selector {
+    width: 3.5rem;
+}
+
+::deep .admin-titlebar__culture-selector .crest-dropdown__trigger {
+    justify-content: center;
+    min-height: 2.25rem;
+    padding-inline: 0.25rem;
+    border-color: transparent;
+    color: var(--crest-color-text-2, var(--crest-color-text-1, #1f2937));
+    font-weight: 600;
+}
+
+::deep .admin-titlebar__culture-selector .orchard-icon,
+::deep .admin-titlebar__culture-selector .crest-dropdown__chevron .orchard-icon {
+    color: var(--crest-color-accent-1, #2f6f4e);
+}
+
+::deep .admin-titlebar__culture-selector .crest-dropdown__option {
+    gap: 0.5rem;
+}
+
+::deep .admin-titlebar__culture-option-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-titlebar__avatar-menu ::deep .rz-navigation-item-link {
+    padding: 0.25rem;
+    border-radius: 999px;
+    color: var(--crest-color-text-1, #1f2937);
+    background: transparent;
+}
+
+.admin-titlebar__icon-button {
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    min-width: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--crest-border-radius-sm, 0.25rem);
+    color: var(--crest-color-accent-1, #2f6f4e);
+    background: transparent;
+    cursor: pointer;
+}
+
+.admin-titlebar__icon-button:hover,
+.admin-titlebar__icon-button:focus-visible {
+    background: var(--crest-color-hover-surface-1, color-mix(in srgb, var(--crest-color-accent-1, #2f6f4e) 10%, transparent));
+}
+
+.admin-titlebar__avatar-menu:hover ::deep .admin-titlebar__avatar,
+.admin-titlebar__avatar-menu:focus-within ::deep .admin-titlebar__avatar,
+.admin-titlebar__avatar-menu:has([aria-expanded="true"]) ::deep .admin-titlebar__avatar {
+    border-color: var(--crest-color-accent-1, #2f6f4e);
+}
+
+@media (max-width: 1024px) {
+    .admin-titlebar {
+        min-height: 3.5rem;
+        padding: 0.4rem 0.75rem;
+    }
+
+    .admin-titlebar ::deep .admin-titlebar__tenant-avatar,
+    .admin-titlebar ::deep .admin-titlebar__avatar,
+    .admin-titlebar__icon-button {
+        width: 2rem;
+        height: 2rem;
+        min-width: 2rem;
+    }
+
+    ::deep .admin-titlebar__tenant-selector {
+        max-width: min(42vw, 14rem);
+    }
+
+    ::deep .admin-titlebar__culture-selector {
+        width: 3.2rem;
+    }
+}
+
+@media (max-width: 640px) {
+    ::deep .admin-titlebar__tenant-selector {
+        max-width: 34vw;
+    }
+
+    .admin-titlebar__icon-button {
+        width: 1.9rem;
+        min-width: 1.9rem;
+    }
+
+    ::deep .admin-titlebar__culture-selector {
+        width: 3rem;
+    }
+}

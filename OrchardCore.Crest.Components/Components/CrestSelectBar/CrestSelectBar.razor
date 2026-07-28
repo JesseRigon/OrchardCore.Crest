@@ -1,0 +1,54 @@
+@using Crest.Components.Primitives.Rendering
+@using System.Linq
+@using System.Collections
+@typeparam TValue
+@using Microsoft.AspNetCore.Components.Forms
+@inherits FormComponent<TValue>
+@implements IRadzenSelectBar
+@namespace Crest.Components.Primitives
+@if (Items != null)
+{
+    <CascadingValue Value=this>
+        @Items
+    </CascadingValue>
+}
+@if (Visible)
+{
+    <div @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()"
+         role="@(Multiple ? "toolbar" : "radiogroup")" aria-orientation="@(Orientation == Orientation.Vertical ? "vertical" : "horizontal")"
+         aria-label="@AriaLabel" aria-labelledby="@AriaLabelledBy" aria-disabled="@(Disabled ? "true" : "false")" aria-activedescendant="@ActiveDescendantId"
+         @onfocus=@this.AsNonRenderingEventHandler(OnFocus) @onblur=@this.AsNonRenderingEventHandler(OnBlur)
+         tabindex="@(Disabled ? "-1" : $"{TabIndex}")" @onkeydown="@(args => OnKeyPress(args))" @onkeydown:preventDefault=preventKeyPress @onkeydown:stopPropagation="stopKeydownPropagation">
+        @foreach (var item in NavigableItems)
+        {
+            <button type="button" @ref="@item.Element" id="@item.GetItemId()"
+                @onclick="@(args => SelectItem(item))"
+                @attributes="item.Attributes" style="@item.Style" class=@ButtonClass(item)
+                role="@(Multiple ? null : "radio")"
+                aria-label="@(item.AriaLabel ?? item.Text)"
+                aria-pressed="@(Multiple ? (IsSelected(item) ? "true" : "false") : null)"
+                aria-checked="@(Multiple ? null : (IsSelected(item) ? "true" : "false"))"
+                disabled="@(Disabled || item.Disabled)" tabindex="-1">
+                @if (item.Template != null)
+                {
+                    @item.Template(item)
+                }
+                else
+                {
+                    @if (!string.IsNullOrEmpty(item.Icon))
+                    {
+                        <i class="notranslate rz-button-icon-left rzi" aria-hidden="true" style="@(!string.IsNullOrEmpty(item.IconColor) ? $"color:{item.IconColor}" : null)">@item.Icon</i>
+                    }
+                    @if (!string.IsNullOrEmpty(item.Image))
+                    {
+                        <img class="notranslate rz-button-icon-left rzi" src="@item.Image" alt=@item.ImageAlternateText/>
+                    }
+                    @if (!string.IsNullOrEmpty(item.Text))
+                    {
+                        <span class="rz-button-text">@item.Text</span>
+                    }
+                }
+            </button>
+        }
+    </div>
+}

@@ -25,7 +25,7 @@ async function validatePage(page, route, expected) {
 
   try {
     await page.locator('.admin-shell').waitFor({ timeout: 20000 });
-    await page.locator('.admin-menu-sidebar').waitFor({ timeout: 20000 });
+    await page.locator('.primary-nav-menu').waitFor({ timeout: 20000 });
     await page.locator('.admin-dashboard__main').waitFor({ timeout: 20000 });
     await page.getByRole('heading', { name: expected.heading, exact: true, level: 4 }).waitFor({ timeout: 20000 });
     for (const text of expected.texts) {
@@ -42,13 +42,13 @@ async function validatePage(page, route, expected) {
 
   const result = await page.evaluate(() => ({
     shellCount: document.querySelectorAll('.admin-shell').length,
-    sidebarVisible: !!document.querySelector('.admin-menu-sidebar') && getComputedStyle(document.querySelector('.admin-menu-sidebar')).display !== 'none',
+    primaryNavMenuVisible: !!document.querySelector('.primary-nav-menu') && getComputedStyle(document.querySelector('.primary-nav-menu')).display !== 'none',
     mainText: document.querySelector('.admin-dashboard__main')?.innerText?.replace(/\s+/g, ' ').trim().slice(0, 500) || '',
   }));
 
   console.log(`${route}: ${JSON.stringify(result)}`);
 
-  if (result.shellCount !== 1 || !result.sidebarVisible) {
+  if (result.shellCount !== 1 || !result.primaryNavMenuVisible) {
     throw new Error(`Expected visible Crest admin shell for ${route}.`);
   }
 

@@ -1,0 +1,13 @@
+@inherits CrestComponent
+@using Crest.Components.Primitives
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Rendering
+@using Crest.Components.Primitives.Rendering
+
+<div @ref=Element @onmousedown:preventDefault=@PreventDefault @attributes=@Attributes style=@Style id=@GetId()>
+    @if (open || !Lazy)
+    {
+        @ChildContent
+    }
+</div>

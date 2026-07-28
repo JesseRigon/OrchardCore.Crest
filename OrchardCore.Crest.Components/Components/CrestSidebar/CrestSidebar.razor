@@ -1,0 +1,13 @@
+@inherits CrestComponentWithChildren
+
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+    @if (IsResponsive)
+    {
+        <CrestMediaQuery Query="@Query" Change=@OnChange />
+    }
+    <div @ref="@Element" style="@GetStyle()" @attributes="Attributes" class="@GetCssClass()" id="@GetId()" inert="@Collapsed">
+        @ChildContent
+    </div>
+}

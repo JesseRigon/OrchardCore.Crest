@@ -1,0 +1,26 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Rendering
+
+@namespace Crest.Components.Primitives
+<g class="rz-arc-gauge-scale-value">
+@{
+    var scale = Scale;
+}
+@if (scale != null)
+    {
+        <GaugeBand 
+        From=@scale.Min
+            To=@Value
+            Fill=@Fill
+            Stroke=@Stroke
+            StrokeWidth=@StrokeWidth
+        Radius=@scale.CurrentRadius
+        Center=@scale.CurrentCenter
+        StartAngle=@scale.StartAngle
+        EndAngle=@scale.EndAngle
+        Min=@scale.Min
+        Max=@scale.Max
+        Size=@scale.CurrentSize
+        />
+    }
+</g>

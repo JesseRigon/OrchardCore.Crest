@@ -1,0 +1,15 @@
+@namespace Crest.Components.Primitives
+<CrestDialog @attributes="Attributes" />
+<CrestNotification @attributes="Attributes" />
+<CrestContextMenu @attributes="Attributes" />
+<CrestTooltip @attributes="Attributes" />
+<CrestChartTooltip @attributes="Attributes" />
+
+@code {
+    /// <summary>
+    /// Specifies additional custom attributes that will be rendered by the component.
+    /// </summary>
+    /// <value>The attributes.</value>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? Attributes { get; set; }
+}

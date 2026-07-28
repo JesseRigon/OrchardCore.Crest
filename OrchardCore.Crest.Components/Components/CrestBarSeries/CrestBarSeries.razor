@@ -1,0 +1,86 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Rendering
+@typeparam TItem
+@inherits Crest.Components.Primitives.CartesianSeries<TItem>
+@implements IChartBarSeries
+
+@namespace Crest.Components.Primitives
+<CascadingValue Value="@this">
+  @ChildContent
+</CascadingValue>
+
+@code {
+    public override RenderFragment Render(ScaleBase categoryScale, ScaleBase valueScale)
+    {
+        var chart = Chart;
+        if (chart == null)
+        {
+            return _ => { };
+        }
+
+        var vs = chart.GetInvertedValueScale(ValueAxisName);
+        var va = chart.GetValueAxis(ValueAxisName);
+        var value = ComposeValue(vs);
+        var category = ComposeCategory(chart.ValueScale);
+        var ticks = vs.Ticks(va.TickDistance);
+        var x0 = vs.Scale(Math.Max(0, ticks.Start));
+        var style = $"clip-path: url(#{chart.ClipPath}); -webkit-clip-path: url(#{chart.ClipPath});";
+
+        var barSeries = VisibleBarSeries;
+        if (barSeries.Count == 0)
+        {
+            return _ => { };
+        }
+
+        var index = barSeries.IndexOf(this);
+        if (index < 0)
+        {
+            return _ => { };
+        }
+        var barOptions = chart.BarOptions;
+        var padding = barOptions?.Margin ?? 0;
+
+        var barHeight = BandHeight;
+        var (height, groupHeight) = BandLayout.Resolve(barHeight, barSeries.Count, padding, barOptions?.EffectiveMaxHeight);
+        var className = $"rz-bar-series rz-series-{chart.Series.IndexOf(this)}";
+
+        var groupStyle = $"--rz-zero-x: {x0.ToInvariantString()}px";
+        var grad = new GradientFill(chart.UniqueID, chart.Series.IndexOf(this));
+        var gradient = FillMode == FillMode.Gradient;
+        return
+        @<g class="@className" style="@groupStyle">
+            @foreach (var data in Items)
+            {
+                var y = category(data) - groupHeight / 2 + index * (height + padding);
+                var x = value(data);
+                var itemValue = Value(data);
+                var radius = barOptions?.Radius ?? 0;
+                var width = Math.Abs(x0 - x);
+
+                if (radius > height / 2 || radius > width)
+                {
+                    radius = 0;
+                }
+
+                var r = radius.ToInvariantString();
+
+                var path = $"M {x0.ToInvariantString()} {y.ToInvariantString()} L {(x - radius).ToInvariantString()} {y.ToInvariantString()} A {r} {r} 0 0 1 {x.ToInvariantString()} {(y + radius).ToInvariantString()} L {x.ToInvariantString()} {(y + height - radius).ToInvariantString()} A {r} {r} 0 0 1 {(x - radius).ToInvariantString()} {(y + height).ToInvariantString()} L {x0.ToInvariantString()} {(y + height).ToInvariantString()} Z";
+
+                if (x < x0)
+                {
+                    path = $"M {x0.ToInvariantString()} {y.ToInvariantString()} L {(x + radius).ToInvariantString()} {y.ToInvariantString()} A {r} {r} 0 0 0 {x.ToInvariantString()} {(y + radius).ToInvariantString()} L {x.ToInvariantString()} {(y + height - radius).ToInvariantString()} A {r} {r} 0 0 0 {(x + radius).ToInvariantString()} {(y + height).ToInvariantString()} L {x0.ToInvariantString()} {(y + height).ToInvariantString()} Z";
+                }
+                var fill = PickColor(Items.IndexOf(data), Fills, Fill, FillRange, itemValue);
+                var stroke = PickColor(Items.IndexOf(data), Strokes, Stroke, StrokeRange, itemValue);
+                var fillRef = gradient ? grad.Url(fill ?? "var(--rz-series-color)", itemValue < 0 ? -1 : 1) : (FillMode == FillMode.None ? "none" : fill);
+
+                <Path @key="@path" D="@path" Stroke="@stroke" StrokeWidth="@StrokeWidth" Fill="@fillRef" LineType="@LineType" Style="@style" />
+            }
+            @if (gradient)
+            {
+                <GradientDefs Plan="@grad" Vertical="false" StartOpacity="@GradientStartOpacity" EndOpacity="@GradientEndOpacity" />
+            }
+        </g>;
+    }
+}

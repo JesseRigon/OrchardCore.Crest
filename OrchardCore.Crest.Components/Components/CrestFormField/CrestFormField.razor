@@ -1,0 +1,33 @@
+@using Crest.Components.Primitives
+@inherits CrestComponent
+
+@namespace Crest.Components.Primitives
+@if (Visible)
+{
+<div @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">
+    <div class="rz-form-field-content">
+        <CascadingValue Value=@context>
+        @if (Start != null)
+        {
+        <div class="rz-form-field-start">
+            @Start
+        </div>
+        }
+        @ChildContent
+        <label class="rz-form-field-label rz-text-truncate" for="@(string.IsNullOrEmpty(Component) ? null : Component)">  @if (TextTemplate is null) {@Text} else {@TextTemplate} </label>
+        @if (End != null)
+        {
+        <div class="rz-form-field-end">
+            @End
+        </div>
+        }
+        </CascadingValue>
+    </div>
+    @if (Helper != null)
+    {
+    <div class="rz-form-field-helper">
+        @Helper
+    </div>
+    }
+</div>
+}

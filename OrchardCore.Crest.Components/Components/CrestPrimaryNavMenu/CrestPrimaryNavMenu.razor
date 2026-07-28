@@ -1,0 +1,73 @@
+@namespace Crest.Components.Layout
+@using Microsoft.AspNetCore.Components
+
+@* 
+   Derived from Crest.Components.Primitives's navigation layout primitives (MIT), then made Crest-owned.
+   See ../NOTICE.md for the license and attribution.
+*@
+
+@if (Visible)
+{
+    <nav @attributes="AdditionalAttributes"
+           class="@CssClass"
+           style="@Style"
+           inert="@(!Expanded ? "" : null)"
+           aria-hidden="@(!Expanded ? "true" : null)"
+           aria-label="@AriaLabel">
+        @ChildContent
+    </nav>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string AriaLabel { get; set; } = "Primary navigation";
+
+    [Parameter]
+    public bool Visible { get; set; } = true;
+
+    [Parameter]
+    public bool Responsive { get; set; } = true;
+
+    [Parameter]
+    public bool FullHeight { get; set; }
+
+    [Parameter]
+    public CrestPrimaryNavMenuPosition Position { get; set; } = CrestPrimaryNavMenuPosition.Start;
+
+    [Parameter]
+    public string ResponsiveMaxWidth { get; set; } = "768px";
+
+    [Parameter]
+    public bool Expanded { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<bool> ExpandedChanged { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string CssClass => string.Join(' ', new[]
+    {
+        "crest-primary-nav-menu",
+        Expanded ? "crest-primary-nav-menu--expanded" : "crest-primary-nav-menu--collapsed",
+        Responsive ? "crest-primary-nav-menu--responsive" : null,
+        FullHeight ? "crest-primary-nav-menu--fullheight" : null,
+        $"crest-primary-nav-menu--{Position.ToString().ToLowerInvariant()}",
+        Class,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    public async Task ToggleAsync()
+    {
+        Expanded = !Expanded;
+        await ExpandedChanged.InvokeAsync(Expanded);
+    }
+}

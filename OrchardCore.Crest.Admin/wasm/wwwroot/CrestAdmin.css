@@ -1,0 +1,29 @@
+/*
+    Admin global CSS only.
+
+    Design tokens live in CrestAdmin.DesignSystem.Default.css or in the active
+    tenant/user design-system payload. Component implementation styles should
+    live in scoped component CSS.
+*/
+
+.rz-context-menu .rz-menu.rz-profile-menu {
+    min-width: clamp(14rem, 28vw, 22rem);
+    width: max-content;
+    max-width: min(90vw, 26rem);
+    height: auto;
+    max-height: min(75vh, 42rem);
+    overflow-y: auto;
+    align-items: stretch;
+}
+
+.rz-context-menu .rz-menu.rz-profile-menu .rz-navigation-item-link {
+    width: auto;
+    justify-content: flex-start;
+    white-space: nowrap;
+}
+
+.rz-context-menu .admin-titlebar__profile-separator {
+    border-top: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb);
+    margin-top: var(--crest-space-xs, 0.25rem);
+    padding-top: var(--crest-space-xs, 0.25rem);
+}

@@ -311,19 +311,19 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         menu.Name,
         menu.Items.Select(ToDisplayMenuItem).ToArray(),
         (menu.Separators ?? []).Select(ToDisplayMenuSeparator).ToArray(),
-        ToDisplaySidebarSettings(menu.SidebarSettings));
+        ToDisplayPrimaryNavMenuSettings(menu.PrimaryNavMenuSettings));
 
-    private static DisplaySidebarSettings ToDisplaySidebarSettings(AdminSidebarSettings? settings) => settings is null
-        ? DisplaySidebarSettings.Default
-        : new DisplaySidebarSettings
+    private static DisplayPrimaryNavMenuSettings ToDisplayPrimaryNavMenuSettings(AdminPrimaryNavMenuSettings? settings) => settings is null
+        ? DisplayPrimaryNavMenuSettings.Default
+        : new DisplayPrimaryNavMenuSettings
         {
             Collapsible = settings.Collapsible,
             ExpansionDurationMilliseconds = Math.Clamp(settings.ExpansionDurationMilliseconds, 100, 2000),
-            TierIndents = NormalizeStrings(settings.TierIndents, DisplaySidebarSettings.Default.TierIndents, 4),
-            TierBackgrounds = NormalizeStrings(settings.TierBackgrounds, DisplaySidebarSettings.Default.TierBackgrounds, 4),
-            TierSeparators = NormalizeBools(settings.TierSeparators, DisplaySidebarSettings.Default.TierSeparators, 3),
+            TierIndents = NormalizeStrings(settings.TierIndents, DisplayPrimaryNavMenuSettings.Default.TierIndents, 4),
+            TierBackgrounds = NormalizeStrings(settings.TierBackgrounds, DisplayPrimaryNavMenuSettings.Default.TierBackgrounds, 4),
+            TierSeparators = NormalizeBools(settings.TierSeparators, DisplayPrimaryNavMenuSettings.Default.TierSeparators, 3),
             TierBaseSizes = settings.TierBaseSizes is { Count: > 0 }
-                ? NormalizeStrings(settings.TierBaseSizes, DisplaySidebarSettings.Default.TierBaseSizes, 3)
+                ? NormalizeStrings(settings.TierBaseSizes, DisplayPrimaryNavMenuSettings.Default.TierBaseSizes, 3)
                 : NormalizeDoubles(settings.TierBaseRems, [1.0, 0.95, 0.9], 3)
                     .Select(value => $"{Math.Clamp(value, 0.5, 2.0):0.###}rem")
                     .ToArray(),

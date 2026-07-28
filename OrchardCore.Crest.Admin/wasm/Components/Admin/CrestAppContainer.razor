@@ -1,7 +1,7 @@
 @using Crest.Admin.DisplayManagement
 @using Crest.Admin.Options
-@using Radzen
-@using Radzen.Blazor
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
 @implements IDisposable
 @inject DisplayManager DisplayManager
 @inject CrestRoutingOptions Routing
@@ -17,14 +17,14 @@ else if (DisplayManager.IsAuthenticated)
 {
     <CascadingValue Value="DisplayManager">
         <div class="admin-shell">
-            <AdminTitleBar ToggleSidebar="ToggleSidebar" />
+            <AdminTitleBar />
             <div class="@DashboardClass">
-                <AdminMenuSidebar />
-                @if (IsSidebarOpen)
+                <PrimaryNavMenu IsMobileOpen="@IsPrimaryNavMenuOpen" />
+                @if (IsPrimaryNavMenuOpen)
                 {
-                    <button type="button" class="admin-dashboard__backdrop" aria-label="Close navigation menu" @onclick="CloseSidebar"></button>
+                    <button type="button" class="admin-dashboard__backdrop" aria-label="Close navigation menu" @onclick="ClosePrimaryNavMenu"></button>
                 }
-                <main class="admin-dashboard__main" @onclick="CloseSidebar">
+                <main class="admin-dashboard__main" @onclick="ClosePrimaryNavMenu">
                     @ChildContent
                 </main>
             </div>
@@ -36,9 +36,9 @@ else if (DisplayManager.IsAuthenticated)
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
-    private bool IsSidebarOpen { get; set; }
+    private bool IsPrimaryNavMenuOpen { get; set; }
 
-    private string DashboardClass => IsSidebarOpen ? "admin-dashboard admin-dashboard--sidebar-open" : "admin-dashboard";
+    private string DashboardClass => IsPrimaryNavMenuOpen ? "admin-dashboard admin-dashboard--primary-nav-menu-open" : "admin-dashboard";
 
     protected override async Task OnInitializedAsync()
     {
@@ -52,9 +52,7 @@ else if (DisplayManager.IsAuthenticated)
         DisplayManager.Changed -= StateHasChanged;
     }
 
-    private void ToggleSidebar() => IsSidebarOpen = !IsSidebarOpen;
-
-    private void CloseSidebar() => IsSidebarOpen = false;
+    private void ClosePrimaryNavMenu() => IsPrimaryNavMenuOpen = false;
 
     private void EnsureAuthenticated()
     {

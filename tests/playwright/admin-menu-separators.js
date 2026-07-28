@@ -20,7 +20,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
     await login(page);
     await page.goto(`${baseUrl}/Admin/AdminMenus`, { waitUntil: 'domcontentloaded' });
-    await page.getByRole('heading', { name: 'Sidebar Layout', exact: true }).waitFor({ timeout: 20000 });
+    await page.getByRole('heading', { name: 'Primary Navigation', exact: true }).waitFor({ timeout: 20000 });
 
     if (cleanupExtra > 0) {
       for (let index = 0; index < cleanupExtra; index++) {

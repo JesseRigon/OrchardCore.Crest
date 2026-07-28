@@ -1,0 +1,78 @@
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@implements IDisposable
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestSelectBar Value=@CurrentVerticalAlign ValueChanged=@OnVerticalAlignChangedAsync TValue="Crest.Components.Primitives.VerticalAlign" Disabled=@IsDisabled Size="ButtonSize.Small">
+    <Items>
+        <CrestSelectBarItem Value=@Crest.Components.Primitives.VerticalAlign.Top Icon="align_vertical_top" AriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_AlignTop))) />
+        <CrestSelectBarItem Value=@Crest.Components.Primitives.VerticalAlign.Middle Icon="align_vertical_center" AriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_AlignMiddle))) />
+        <CrestSelectBarItem Value=@Crest.Components.Primitives.VerticalAlign.Bottom Icon="align_vertical_bottom" AriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_AlignBottom))) />
+    </Items>
+</CrestSelectBar>
+
+@code {
+#nullable enable
+
+    [CascadingParameter]
+    public Worksheet? Worksheet { get; set; }
+
+    [CascadingParameter]
+    public ISpreadsheet? Spreadsheet { get; set; }
+
+    private Crest.Components.Primitives.VerticalAlign CurrentVerticalAlign
+    {
+        get
+        {
+            if (Worksheet?.Cells.TryGet(Worksheet.Selection.Cell.Row, Worksheet.Selection.Cell.Column, out var cell) == true)
+            {
+                return cell.Format.VerticalAlign ?? Crest.Components.Primitives.VerticalAlign.Top;
+            }
+            return Crest.Components.Primitives.VerticalAlign.Top;
+        }
+    }
+
+    private async Task OnVerticalAlignChangedAsync(Crest.Components.Primitives.VerticalAlign value)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        if (!Worksheet.Cells.TryGet(Worksheet.Selection.Cell.Row, Worksheet.Selection.Cell.Column, out var cell))
+        {
+            return;
+        }
+
+        var command = new FormatCommand(Worksheet, Worksheet.Selection.Range, cell.Format.WithVerticalAlign(value));
+        await Spreadsheet.ExecuteAsync(command);
+    }
+
+    private bool IsDisabled
+        => Worksheet?.Selection.Cell == CellRef.Invalid
+        || Spreadsheet?.IsFeatureAllowed(SpreadsheetFeature.CellFormatting) == false;
+
+    private readonly EventBinding<Selection> selectionBinding;
+
+    public CrestSpreadsheetVerticalAlign()
+    {
+        selectionBinding = new EventBinding<Selection>(
+            s => s.Changed += OnSelectionChanged,
+            s => s.Changed -= OnSelectionChanged);
+    }
+
+    protected override void OnParametersSet()
+    {
+        selectionBinding.Bind(Worksheet?.Selection);
+    }
+
+    private void OnSelectionChanged()
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        selectionBinding.Dispose();
+    }
+}

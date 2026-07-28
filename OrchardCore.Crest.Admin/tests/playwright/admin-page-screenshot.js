@@ -33,10 +33,10 @@ async function main() {
     url: window.location.href,
     title: document.title,
     hasCrestShell: !!document.querySelector('.admin-shell'),
-    hasSidebar: !!document.querySelector('.admin-menu-sidebar'),
+    hasPrimaryNavMenu: !!document.querySelector('.primary-nav-menu'),
     h1: Array.from(document.querySelectorAll('h1,h2,h3,.rz-text-h4,.rz-text-h5')).map(x => x.textContent?.trim()).filter(Boolean).slice(0, 10),
     bodyPreview: document.body.innerText.replace(/\s+/g, ' ').trim().slice(0, 500),
-    activeItems: Array.from(document.querySelectorAll('.admin-menu-sidebar__item-content--active .rz-navigation-item-text')).map(x => x.textContent?.trim()).filter(Boolean)
+    activeItems: Array.from(document.querySelectorAll('.primary-nav-menu__item-content--active .rz-navigation-item-text')).map(x => x.textContent?.trim()).filter(Boolean)
   }));
 
   await page.screenshot({ path: output, fullPage: true });

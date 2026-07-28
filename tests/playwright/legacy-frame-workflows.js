@@ -19,9 +19,9 @@ async function login(page) {
 async function assertNoNestedCrestShell(frame, label) {
   const nestedFrames = await frame.locator('iframe.legacy-admin-frame').count();
   const nestedShellNotice = await frame.getByText('This Orchard admin page is running inside the Crest Admin shell.').count();
-  const nestedSidebar = await frame.locator('.admin-menu-sidebar').count();
-  if (nestedFrames || nestedShellNotice || nestedSidebar) {
-    throw new Error(`${label} rendered nested Crest shell/chrome: frames=${nestedFrames}, notice=${nestedShellNotice}, sidebar=${nestedSidebar}`);
+  const nestedPrimaryNavMenu = await frame.locator('.primary-nav-menu').count();
+  if (nestedFrames || nestedShellNotice || nestedPrimaryNavMenu) {
+    throw new Error(`${label} rendered nested Crest shell/chrome: frames=${nestedFrames}, notice=${nestedShellNotice}, primaryNavMenu=${nestedPrimaryNavMenu}`);
   }
 }
 

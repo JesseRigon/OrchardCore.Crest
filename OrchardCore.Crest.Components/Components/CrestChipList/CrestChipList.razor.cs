@@ -1,0 +1,346 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Crest.Components.Primitives.Rendering;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// Displays and manages a collection of chips with optional selection and removal.
+    /// </summary>
+    /// <typeparam name="TValue">The selected value type. Use IEnumerable for multiple selection mode.</typeparam>
+    [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2026, Justification = TrimMessages.DataTypePreserved)]
+    public partial class CrestChipList<TValue> : FormComponent<TValue>, IRadzenChipList
+    {
+        /// <summary>
+        /// Gets or sets the name of the data property used as chip value.
+        /// </summary>
+        [Parameter]
+        public string? ValueProperty { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the data property used as chip text.
+        /// </summary>
+        [Parameter]
+        public string? TextProperty { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the data property used for item disabled state.
+        /// </summary>
+        [Parameter]
+        public string? DisabledProperty { get; set; }
+
+        /// <summary>
+        /// Gets or sets the data source used to generate chip items.
+        /// </summary>
+        [Parameter]
+        public IEnumerable? Data { get; set; }
+
+        /// <summary>
+        /// Gets or sets declarative chip items.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? Items { get; set; }
+
+        /// <summary>
+        /// Gets or sets a template for custom chip content.
+        /// </summary>
+        [Parameter]
+        public RenderFragment<CrestChipItem>? Template { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether multiple items can be selected.
+        /// </summary>
+        [Parameter]
+        public bool Multiple { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether chips can be removed.
+        /// </summary>
+        [Parameter]
+        public bool AllowDelete { get; set; }
+
+        /// <summary>
+        /// Gets or sets the chip list orientation.
+        /// </summary>
+        [Parameter]
+        public Orientation Orientation { get; set; } = Orientation.Horizontal;
+
+        /// <summary>
+        /// Gets or sets the wrapping behavior.
+        /// </summary>
+        [Parameter]
+        public FlexWrap Wrap { get; set; } = FlexWrap.Wrap;
+
+        /// <summary>
+        /// Gets or sets the default style applied to chips.
+        /// </summary>
+        [Parameter]
+        public BadgeStyle ChipStyle { get; set; } = BadgeStyle.Base;
+
+        /// <summary>
+        /// Gets or sets the default variant applied to chips.
+        /// </summary>
+        [Parameter]
+        public Variant Variant { get; set; } = Variant.Filled;
+
+        /// <summary>
+        /// Gets or sets the default shade applied to chips.
+        /// </summary>
+        [Parameter]
+        public Shade Shade { get; set; } = Shade.Default;
+
+        /// <summary>
+        /// Gets or sets the default chip size.
+        /// </summary>
+        [Parameter]
+        public ChipSize Size { get; set; } = ChipSize.Medium;
+
+        private string? removeChipTitle;
+
+        /// <summary>
+        /// Gets or sets the close button accessible title.
+        /// </summary>
+        [Parameter]
+        public string RemoveChipTitle { get => removeChipTitle ?? Localize(nameof(CrestStrings.ChipList_RemoveChipTitle)); set => removeChipTitle = value; }
+
+        /// <summary>
+        /// Gets or sets the callback invoked when a chip remove action is requested.
+        /// </summary>
+        [Parameter]
+        public EventCallback<object?> ChipRemoved { get; set; }
+
+        readonly List<CrestChipItem> items = new();
+        List<CrestChipItem> allItems = new();
+
+        int focusedIndex = -1;
+        bool focused;
+        bool preventKeyPress = true;
+
+        bool IsFocused(CrestChipItem item)
+        {
+            return allItems.IndexOf(item) == focusedIndex;
+        }
+
+        void OnFocus()
+        {
+            focusedIndex = focusedIndex == -1 ? 0 : focusedIndex;
+            focused = true;
+        }
+
+        void OnBlur()
+        {
+            focused = false;
+        }
+
+        /// <inheritdoc />
+        protected override void OnParametersSet()
+        {
+            base.OnParametersSet();
+            UpdateAllItems();
+        }
+
+        /// <inheritdoc />
+        protected override string GetComponentCssClass()
+        {
+            return GetClassList("rz-chip-list")
+                .Add(Orientation == Orientation.Horizontal ? "rz-chip-list-horizontal" : "rz-chip-list-vertical")
+                .Add("rz-chip-list-nowrap", Wrap == FlexWrap.NoWrap)
+                .Add("rz-chip-list-wrap-reverse", Wrap == FlexWrap.WrapReverse)
+                .ToString();
+        }
+
+        void UpdateAllItems()
+        {
+            var dataItems = (Data != null ? Data.Cast<object>() : Enumerable.Empty<object>()).Select(i =>
+            {
+                var item = new CrestChipItem();
+                item.SetText($"{PropertyAccess.GetItemOrValueFromProperty(i, TextProperty ?? string.Empty)}");
+                item.SetValue(PropertyAccess.GetItemOrValueFromProperty(i, ValueProperty ?? string.Empty));
+
+                if (!string.IsNullOrEmpty(DisabledProperty) &&
+                    PropertyAccess.TryGetItemOrValueFromProperty<bool>(i, DisabledProperty, out var disabledResult))
+                {
+                    item.SetDisabled(disabledResult);
+                }
+
+                return item;
+            });
+
+            allItems = items.Concat(dataItems).Where(i => i.Visible).ToList();
+        }
+
+        internal bool IsSelected(CrestChipItem item)
+        {
+            if (Multiple)
+            {
+                return Value != null && ((IEnumerable)Value).Cast<object>().Any(v => Equals(v, item.Value));
+            }
+
+            return Equals(Value, item.Value);
+        }
+
+        internal async Task SelectItem(CrestChipItem item)
+        {
+            if (Disabled || item.Disabled)
+            {
+                return;
+            }
+
+            focusedIndex = allItems.IndexOf(item);
+
+            if (Multiple)
+            {
+                var type = typeof(TValue).IsGenericType ? typeof(TValue).GetGenericArguments()[0] : typeof(TValue);
+                var selectedValues = Value != null
+                    ? new List<dynamic>(((IEnumerable)Value).Cast<dynamic>())
+                    : new List<dynamic>();
+
+                if (item.Value != null && !selectedValues.Contains(item.Value))
+                {
+                    selectedValues.Add(item.Value);
+                }
+                else if (item.Value != null)
+                {
+                    selectedValues.Remove(item.Value);
+                }
+
+                Value = (TValue)selectedValues.AsQueryable().Cast(type);
+            }
+            else
+            {
+                Value = item.Value is TValue typedValue ? typedValue : default!;
+            }
+
+            await ValueChanged.InvokeAsync(Value);
+            if (FieldIdentifier.FieldName != null) { EditContext?.NotifyFieldChanged(FieldIdentifier); }
+            await Change.InvokeAsync(Value);
+
+            StateHasChanged();
+        }
+
+        internal async Task RemoveItemAsync(CrestChipItem item)
+        {
+            if (Disabled || item.Disabled || !AllowDelete)
+            {
+                return;
+            }
+
+            await ChipRemoved.InvokeAsync(item.Value);
+        }
+
+        internal EventCallback<MouseEventArgs> GetRemoveCallback(CrestChipItem item)
+        {
+            return AllowDelete
+                ? EventCallback.Factory.Create<MouseEventArgs>(this, args => RemoveItemAsync(item))
+                : default;
+        }
+
+        internal async Task OnItemKeyDown(KeyboardEventArgs args, CrestChipItem item)
+        {
+            var key = args.Code ?? args.Key;
+            if (key == "Enter" || key == "Space")
+            {
+                await SelectItem(item);
+            }
+            else if ((key == "Delete" || key == "Backspace") && AllowDelete)
+            {
+                await RemoveItemAsync(item);
+            }
+        }
+
+        internal async Task OnKeyPress(KeyboardEventArgs args)
+        {
+            var key = args.Code ?? args.Key;
+            var count = allItems.Count;
+            if (count == 0)
+            {
+                return;
+            }
+
+            if ((Orientation == Orientation.Horizontal && (key == "ArrowLeft" || key == "ArrowRight")) ||
+                (Orientation == Orientation.Vertical && (key == "ArrowUp" || key == "ArrowDown")))
+            {
+                preventKeyPress = true;
+                var direction = key == "ArrowLeft" || key == "ArrowUp" ? -1 : 1;
+                focusedIndex = focusedIndex < 0 ? 0 : Math.Clamp(focusedIndex + direction, 0, count - 1);
+                await InvokeAsync(StateHasChanged);
+            }
+            else if (key == "Home" || key == "End")
+            {
+                preventKeyPress = true;
+                focusedIndex = key == "Home" ? 0 : count - 1;
+                await InvokeAsync(StateHasChanged);
+            }
+            else if (key == "Space" || key == "Enter")
+            {
+                preventKeyPress = true;
+                var item = focusedIndex >= 0 && focusedIndex < count ? allItems[focusedIndex] : allItems[0];
+                await SelectItem(item);
+            }
+            else if ((key == "Delete" || key == "Backspace") && AllowDelete)
+            {
+                preventKeyPress = true;
+                if (focusedIndex >= 0 && focusedIndex < count)
+                {
+                    await RemoveItemAsync(allItems[focusedIndex]);
+                }
+            }
+            else
+            {
+                preventKeyPress = false;
+            }
+        }
+
+        internal string WrapStyle => Wrap switch
+        {
+            FlexWrap.NoWrap => "flex-wrap: nowrap;",
+            FlexWrap.WrapReverse => "flex-wrap: wrap-reverse;",
+            _ => "flex-wrap: wrap;"
+        };
+
+        /// <summary>
+        /// Adds the specified item to the chip list.
+        /// </summary>
+        /// <param name="item">The item to add.</param>
+        public void AddItem(CrestChipItem item)
+        {
+            if (items.IndexOf(item) == -1)
+            {
+                items.Add(item);
+                UpdateAllItems();
+                StateHasChanged();
+            }
+        }
+
+        /// <summary>
+        /// Removes the specified item from the chip list.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        public void RemoveItem(CrestChipItem item)
+        {
+            if (items.Remove(item))
+            {
+                UpdateAllItems();
+                if (!disposed)
+                {
+                    try { InvokeAsync(StateHasChanged); } catch { }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Refreshes this instance.
+        /// </summary>
+        public void Refresh()
+        {
+            UpdateAllItems();
+            StateHasChanged();
+        }
+    }
+}

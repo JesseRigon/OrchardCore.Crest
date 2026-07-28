@@ -1,0 +1,6 @@
+.design-system-preview {
+    border: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb);
+    border-radius: var(--crest-radius-sm, 4px);
+    padding: var(--crest-space-lg, 1rem);
+    background: var(--crest-color-surface-1, #fff);
+}

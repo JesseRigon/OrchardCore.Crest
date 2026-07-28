@@ -1,0 +1,51 @@
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives.Spreadsheet
+@using Crest.Components.Primitives.Spreadsheet.Tools
+@using Crest.Components.Primitives.Documents.Spreadsheet
+@inject DialogService DialogService
+@inherits CrestSpreadsheetToolBase
+
+@namespace Crest.Components.Primitives.Spreadsheet.Tools
+<CrestSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_ConditionalFormatTool))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_ConditionalFormatTool))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_ConditionalFormatTool))) Click=@OnClickAsync Icon="format_color_fill" Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_Conditional)) ?? "Conditional") Disabled=@IsDisabled Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small">
+    <ChildContent>
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_GreaterThanMenu)) ?? "Greater Than...") Value="greater" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_LessThanMenu)) ?? "Less Than...") Value="less" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_BetweenMenu)) ?? "Between...") Value="between" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_EqualToMenu)) ?? "Equal To...") Value="equal" />
+        <CrestSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_TextContainsMenu)) ?? "Text Contains...") Value="text" />
+    </ChildContent>
+</CrestSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.ConditionalFormatting;
+
+    private async Task OnClickAsync(CrestSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid)
+        {
+            return;
+        }
+
+        var ruleType = item?.Value switch
+        {
+            "less" => ConditionalFormatRuleType.LessThan,
+            "between" => ConditionalFormatRuleType.Between,
+            "equal" => ConditionalFormatRuleType.EqualTo,
+            "text" => ConditionalFormatRuleType.TextContains,
+            _ => ConditionalFormatRuleType.GreaterThan
+        };
+
+        var result = await DialogService.OpenAsync<ConditionalFormatDialog>(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_ConditionalFormattingTitle)) ?? "Conditional Formatting",
+            new Dictionary<string, object?>
+            {
+                { "RuleType", ruleType },
+                { "Culture", Worksheet.Culture }
+            });
+
+        if (result is ConditionalFormatBase rule && Spreadsheet is not null)
+        {
+            var command = new ConditionalFormatCommand(Worksheet, Worksheet.Selection.Range, rule);
+            await Spreadsheet.ExecuteAsync(command);
+        }
+    }
+}

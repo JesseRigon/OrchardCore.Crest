@@ -1,0 +1,16 @@
+@inherits CrestComponent
+
+@inject NavigationManager uriHelper
+@namespace Crest.Components.Primitives
+@if (Parameters != null)
+{
+    <CascadingValue Value=this>
+        @Parameters
+    </CascadingValue>
+}
+@if (Visible)
+{
+    <div @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">
+        <iframe frameborder="0" src="@ReportUrl" @onload=OnLoad></iframe>
+    </div>
+}

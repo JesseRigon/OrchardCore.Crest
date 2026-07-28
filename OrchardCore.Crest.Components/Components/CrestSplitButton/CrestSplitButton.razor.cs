@@ -1,0 +1,588 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using Crest.Components.Primitives.Rendering;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Crest.Components.Primitives
+{
+    /// <summary>
+    /// A split button component that combines a primary action button with a dropdown menu of additional related actions.
+    /// CrestSplitButton displays a main button with a small dropdown toggle, allowing quick access to a default action while providing alternatives.
+    /// Ideal when you have a primary action and several related alternatives. The left side executes the default action, the right side opens a menu of options.
+    /// Common examples include Save (with options: Save As, Save and Close), Download (with options: Download PDF, Download Excel, Download CSV), and Send (with options: Send Now, Schedule Send, Save Draft).
+    /// Features main action triggered by clicking the left portion, additional options in a dropdown from the right toggle, ButtonStyle/Variant/Shade/Size for consistent appearance,
+    /// optional icon on the main button, and keyboard navigation (Arrow keys, Enter, Escape) for menu navigation.
+    /// Menu items are defined using CrestSplitButtonItem components as child content.
+    /// </summary>
+    /// <example>
+    /// Basic split button:
+    /// <code>
+    /// &lt;CrestSplitButton Text="Save" Icon="save" Click=@OnSave&gt;
+    ///     &lt;ChildContent&gt;
+    ///         &lt;CrestSplitButtonItem Text="Save and Close" Value="save-close" /&gt;
+    ///         &lt;CrestSplitButtonItem Text="Save As..." Value="save-as" /&gt;
+    ///     &lt;/ChildContent&gt;
+    /// &lt;/CrestSplitButton&gt;
+    /// @code {
+    ///     void OnSave(CrestSplitButtonItem item)
+    ///     {
+    ///         Console.WriteLine(item?.Value ?? "primary");
+    ///     }
+    /// }
+    /// </code>
+    /// Download split button with variants:
+    /// <code>
+    /// &lt;CrestSplitButton Text="Download" Icon="download" ButtonStyle="ButtonStyle.Success" Click=@Download&gt;
+    ///     &lt;ChildContent&gt;
+    ///         &lt;CrestSplitButtonItem Text="Download PDF" Icon="picture_as_pdf" Value="pdf" /&gt;
+    ///         &lt;CrestSplitButtonItem Text="Download Excel" Icon="table_view" Value="excel" /&gt;
+    ///         &lt;CrestSplitButtonItem Text="Download CSV" Icon="description" Value="csv" /&gt;
+    ///     &lt;/ChildContent&gt;
+    /// &lt;/CrestSplitButton&gt;
+    /// </code>
+    /// </example>
+    public partial class CrestSplitButton : CrestComponentWithChildren
+    {
+        /// <summary>
+        /// Gets or sets the child content.
+        /// </summary>
+        /// <value>The child content.</value>
+        [Parameter]
+        public RenderFragment? ButtonContent { get; set; }
+
+        private string? imageAlternateText;
+
+        /// <summary>
+        /// Gets or sets the text.
+        /// </summary>
+        /// <value>The text.</value>
+        [Parameter]
+        public string ImageAlternateText { get => imageAlternateText ?? Localize(nameof(CrestStrings.SplitButton_ImageAlternateText)); set => imageAlternateText = value; }
+
+        /// <summary>
+        /// Gets or sets the text.
+        /// </summary>
+        /// <value>The text.</value>
+        [Parameter]
+        public string Text { get; set; } = "";
+
+        /// <summary>
+        /// Gets or sets the icon.
+        /// </summary>
+        /// <value>The icon.</value>
+        [Parameter]
+        public string? Icon { get; set; }
+
+        /// <summary>
+        /// Gets or sets the icon color.
+        /// </summary>
+        /// <value>The icon color.</value>
+        [Parameter]
+        public string? IconColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the image.
+        /// </summary>
+        /// <value>The image.</value>
+        [Parameter]
+        public string? Image { get; set; }
+
+        /// <summary>
+        /// Gets or sets the button style.
+        /// </summary>
+        /// <value>The button style.</value>
+        [Parameter]
+        public ButtonStyle ButtonStyle { get; set; } = ButtonStyle.Primary;
+
+        /// <summary>
+        /// Gets or sets the design variant of the button.
+        /// </summary>
+        /// <value>The variant of the button.</value>
+        [Parameter]
+        public Variant Variant { get; set; } = Variant.Filled;
+
+        /// <summary>
+        /// Gets or sets the color shade of the button.
+        /// </summary>
+        /// <value>The color shade of the button.</value>
+        [Parameter]
+        public Shade Shade { get; set; } = Shade.Default;
+
+        /// <summary>
+        /// Gets or sets the size.
+        /// </summary>
+        /// <value>The size.</value>
+        [Parameter]
+        public ButtonSize Size { get; set; } = ButtonSize.Medium;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance busy text is shown.
+        /// </summary>
+        /// <value><c>true</c> if this instance busy text is shown; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool IsBusy { get; set; }
+
+        /// <summary>
+        /// Gets or sets the busy text.
+        /// </summary>
+        /// <value>The busy text.</value>
+        [Parameter]
+        public string BusyText { get; set; } = "";
+
+        /// <summary>
+        /// Gets a value indicating whether this instance is disabled.
+        /// </summary>
+        /// <value><c>true</c> if this instance is disabled; otherwise, <c>false</c>.</value>
+        public bool IsDisabled { get => Disabled || IsBusy; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="CrestSplitButton"/> is disabled.
+        /// </summary>
+        /// <value><c>true</c> if disabled; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool Disabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the value indication behaviour to always open popup with item on click and not invoke <see cref="Click"/> event.
+        /// </summary>
+        /// <value><c>true</c> to alway open popup with items; othersie, <c>false</c>. Default is <c>false</c>.</value>
+        [Parameter]
+        public bool AlwaysOpenPopup { get; set; }
+
+        private string? openAriaLabel;
+
+        /// <summary>
+        /// Gets or sets the open button aria-label attribute.
+        /// </summary>
+        [Parameter]
+        public string OpenAriaLabel { get => openAriaLabel ?? Localize(nameof(CrestStrings.SplitButton_OpenAriaLabel)); set => openAriaLabel = value; }
+
+        /// <summary>
+        /// Gets or sets the icon of the drop down.
+        /// </summary>
+        [Parameter]
+        public string DropDownIcon { get; set; } = "arrow_drop_down";
+
+        /// <summary>
+        /// Gets or sets the index of the tab.
+        /// </summary>
+        /// <value>The index of the tab.</value>
+        [Parameter]
+        public int TabIndex { get; set; } = 0;
+
+        /// <summary>
+        /// Gets or sets the click callback.
+        /// </summary>
+        /// <value>The click callback.</value>
+        [Parameter]
+        public EventCallback<CrestSplitButtonItem> Click { get; set; }
+
+        /// <summary>
+        /// Gets or sets the type of the button.
+        /// </summary>
+        /// <value>The type of the button.</value>
+        [Parameter]
+        public ButtonType ButtonType { get; set; } = ButtonType.Button;
+
+        /// <summary>
+        /// Handles the click event.
+        /// </summary>
+        /// <param name="args">The <see cref="MouseEventArgs"/> instance containing the event data.</param>
+        public async System.Threading.Tasks.Task OnClick(MouseEventArgs args)
+        {
+            if (!Disabled)
+            {
+                if (JSRuntime != null)
+                {
+                    if (AlwaysOpenPopup)
+                    {
+                        IsOpen = !IsOpen;
+
+                        if (IsOpen && focusedIndex == -1 && items.Count > 0)
+                        {
+                            focusedIndex = 0;
+                        }
+
+                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", Element, PopupID);
+
+                        if (IsOpen)
+                        {
+                            await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", MenuId);
+                        }
+                    }
+                    else
+                    {
+                        IsOpen = false;
+
+                        await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID);
+                        await Click.InvokeAsync(null);
+                    }
+                }
+            }
+        }
+
+        async Task OnToggleClick()
+        {
+            if (Disabled)
+            {
+                return;
+            }
+
+            IsOpen = !IsOpen;
+
+            if (IsOpen)
+            {
+                if (focusedIndex == -1 && items.Count > 0)
+                {
+                    focusedIndex = 0;
+                }
+
+                if (JSRuntime != null)
+                {
+                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", MenuId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Closes this instance popup.
+        /// </summary>
+        public void Close()
+        {
+            IsOpen = false;
+
+            if (JSRuntime != null)
+            {
+                JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.closePopup", PopupID);
+            }
+        }
+
+        /// <summary>
+        /// Gets the popup identifier.
+        /// </summary>
+        /// <value>The popup identifier.</value>
+        private string PopupID
+        {
+            get
+            {
+                return $"popup{GetId()}";
+            }
+        }
+
+        private string MenuId => $"{GetId()}-menu";
+
+        private string ToggleButtonId => $"{GetId()}-toggle";
+
+        string ButtonClass => ClassList.Create("rz-button")
+                                       .AddButtonSize(Size)
+                                       .AddVariant(Variant)
+                                       .AddButtonStyle(ButtonStyle)
+                                       .AddShade(Shade)
+                                       .Add("rz-button-icon-only", string.IsNullOrEmpty(Text) && !string.IsNullOrEmpty(Icon))
+                                       .AddDisabled(IsDisabled)
+                                       .ToString();
+
+        string PopupButtonClass => ClassList.Create("rz-splitbutton-menubutton rz-button rz-button-icon-only")
+                                            .AddButtonSize(Size)
+                                            .AddVariant(Variant)
+                                            .AddButtonStyle(ButtonStyle)
+                                            .AddShade(Shade)
+                                            .AddDisabled(IsDisabled)
+                                            .ToString();
+
+        string PopupMenuClass => ClassList.Create("rz-splitbutton-menu")
+                                          .Add(Size switch
+                                          {
+                                              ButtonSize.ExtraSmall => "rz-input-xs",
+                                              ButtonSize.Small => "rz-input-sm",
+                                              ButtonSize.Large => "rz-input-lg",
+                                              _ => "rz-input-md",
+                                          })
+                                          .ToString();
+
+        private string OpenPopupScript()
+        {
+            if (Disabled)
+            {
+                return string.Empty;
+            }
+
+            return $"Crest.Components.Primitives.togglePopup(this.parentNode, '{PopupID}')";
+        }
+
+        /// <inheritdoc />
+        protected override string GetComponentCssClass()
+        {
+            return Disabled ? "rz-splitbutton rz-buttonset rz-state-disabled" : "rz-splitbutton rz-buttonset";
+        }
+
+        IJSObjectReference? _jsRef;
+        bool _visibleChanged;
+
+        /// <inheritdoc />
+        public override async Task SetParametersAsync(ParameterView parameters)
+        {
+            if (parameters.DidParameterChange(nameof(Visible), Visible))
+            {
+                _visibleChanged = true;
+            }
+
+            await base.SetParametersAsync(parameters);
+        }
+
+        /// <inheritdoc />
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+
+            if ((firstRender || _visibleChanged) && JSRuntime != null)
+            {
+                _visibleChanged = false;
+
+                if (_jsRef != null)
+                {
+                    await _jsRef.InvokeVoidAsync("dispose");
+                    await _jsRef.DisposeAsync();
+                    _jsRef = null;
+                }
+
+                if (Visible)
+                {
+                    _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                        "Crest.Components.Primitives.createSplitButton", Element, PopupID);
+                }
+                else
+                {
+                    IsOpen = false;
+
+                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.destroyPopup", PopupID);
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            if (IsJSRuntimeAvailable && JSRuntime != null)
+            {
+                JSRuntime.InvokeVoid("Crest.Components.Primitives.destroyPopup", PopupID);
+            }
+
+            _jsRef?.InvokeVoidAsync("dispose");
+            _jsRef?.DisposeAsync();
+
+            GC.SuppressFinalize(this);
+        }
+
+        internal int focusedIndex = -1;
+        bool preventKeyPress;
+        bool stopKeydownPropagation;
+
+        async Task Open(int index)
+        {
+            focusedIndex = items.Count > 0 ? Math.Clamp(index, 0, items.Count - 1) : -1;
+
+            IsOpen = true;
+
+            if (JSRuntime != null)
+            {
+                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.togglePopup", Element, PopupID);
+                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", MenuId);
+            }
+        }
+
+        async Task OnToggleKeyDown(KeyboardEventArgs args)
+        {
+            var key = args.Code != null ? args.Code : args.Key;
+
+            if (!IsOpen && (key == "ArrowDown" || key == "ArrowUp") && items.Count > 0)
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                await Open(key == "ArrowDown" ? 0 : items.Count - 1);
+            }
+            else if (IsOpen && key == "Escape")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                await CloseAndFocusToggle();
+            }
+            else
+            {
+                preventKeyPress = false;
+                stopKeydownPropagation = false;
+            }
+        }
+
+        async Task CloseAndFocusToggle()
+        {
+            Close();
+
+            if (JSRuntime != null)
+            {
+                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", ToggleButtonId);
+            }
+        }
+
+        async Task OnMenuKeyDown(KeyboardEventArgs args)
+        {
+            var key = args.Code != null ? args.Code : args.Key;
+
+            if (!IsOpen)
+            {
+                preventKeyPress = false;
+                stopKeydownPropagation = false;
+
+                return;
+            }
+
+            if (key == "Home" || key == "End")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                if (items.Count > 0)
+                {
+                    focusedIndex = key == "Home" ? 0 : items.Count - 1;
+                }
+            }
+            else if (key == "ArrowUp" || key == "ArrowDown")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                focusedIndex = Math.Clamp(focusedIndex + (key == "ArrowUp" ? -1 : 1), 0, items.Count - 1);
+            }
+            else if (key == "Space" || key == "Enter" || key == "NumpadEnter")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                if (focusedIndex >= 0 && focusedIndex < items.Count)
+                {
+                    await items[focusedIndex].OnClick(new MouseEventArgs());
+                }
+
+                if (JSRuntime != null)
+                {
+                    await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.focusElement", ToggleButtonId);
+                }
+            }
+            else if (key == "Escape")
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                await CloseAndFocusToggle();
+            }
+            else if (args.Key != null && args.Key.Length == 1 && !args.AltKey && !args.CtrlKey && !args.MetaKey && !char.IsControl(args.Key[0]))
+            {
+                preventKeyPress = true;
+                stopKeydownPropagation = true;
+
+                TypeAhead(args.Key);
+            }
+            else
+            {
+                preventKeyPress = false;
+                stopKeydownPropagation = false;
+            }
+        }
+
+        void TypeAhead(string character)
+        {
+            if (items.Count == 0)
+            {
+                return;
+            }
+
+            var start = focusedIndex < 0 ? 0 : (focusedIndex + 1) % items.Count;
+
+            for (var i = 0; i < items.Count; i++)
+            {
+                var index = (start + i) % items.Count;
+                var item = items[index];
+
+                if (!item.Disabled && !string.IsNullOrEmpty(item.Text) && item.Text.StartsWith(character, StringComparison.OrdinalIgnoreCase))
+                {
+                    focusedIndex = index;
+                    return;
+                }
+            }
+        }
+
+        internal bool IsFocused(CrestSplitButtonItem item)
+        {
+            return items?.IndexOf(item) == focusedIndex && focusedIndex != -1;
+        }
+
+        internal bool IsOpen { get; private set; }
+
+        internal string ItemId(CrestSplitButtonItem item)
+        {
+            var index = items?.IndexOf(item) ?? -1;
+            return $"{GetId()}-item-{index}";
+        }
+
+        internal string? ActiveDescendantId
+        {
+            get
+            {
+                if (IsOpen && focusedIndex >= 0 && focusedIndex < items.Count)
+                {
+                    return $"{GetId()}-item-{focusedIndex}";
+                }
+
+                return null;
+            }
+        }
+
+        List<CrestSplitButtonItem> items = new List<CrestSplitButtonItem>();
+
+        /// <summary>
+        /// Adds the item.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        public void AddItem(CrestSplitButtonItem item)
+        {
+            if (items.IndexOf(item) == -1)
+            {
+                items.Add(item);
+                StateHasChanged();
+            }
+        }
+
+        /// <summary>
+        /// Removes the item.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        public void RemoveItem(CrestSplitButtonItem item)
+        {
+            if (items.IndexOf(item) != -1)
+            {
+                items.Remove(item);
+                StateHasChanged();
+            }
+        }
+
+        internal string? SplitButtonId()
+        {
+            return GetId();
+        }
+
+        private string? buttonAriaLabel;
+
+        /// <summary>
+        /// Gets or sets the add button aria-label attribute.
+        /// </summary>
+        [Parameter]
+        public string ButtonAriaLabel { get => buttonAriaLabel ?? Localize(nameof(CrestStrings.SplitButton_ButtonAriaLabel)); set => buttonAriaLabel = value; }
+    }
+}

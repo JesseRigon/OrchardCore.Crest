@@ -1,0 +1,104 @@
+@using System.Text
+@namespace Crest.Components.Primitives.Rendering
+<path class="@CurrentClass()" d="@D" stroke-linecap="@StrokeLineCap" stroke-linejoin="round" stroke-dasharray="@StrokeDashArray" style="@CurrentStyle()"></path>
+@code {
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
+
+    /// <summary>
+    /// When set the path geometry is also emitted as a CSS <c>d</c> property so changes morph
+    /// via the <c>rz-path-transition</c> CSS transition (browsers without CSS <c>d</c> support fall back to the attribute).
+    /// </summary>
+    [Parameter]
+    public bool Transition { get; set; }
+
+    private string CurrentClass()
+    {
+        return Transition ? $"{Class} rz-path-transition".Trim() : Class;
+    }
+
+    private string CurrentStyle()
+    {
+        var style = new StringBuilder();
+
+        if (Transition)
+        {
+            style.Append($"d: path(\"{D}\");");
+        }
+
+        if (Stroke != null)
+        {
+            style.Append($"stroke: {Stroke};");
+        }
+
+        if (Fill != null)
+        {
+            style.Append($"fill: {Fill};");
+        }
+
+        if (StrokeWidth >= 0)
+        {
+            style.Append($"stroke-width: {StrokeWidth.ToInvariantString()};");
+        }
+
+        if (!string.IsNullOrEmpty(Style))
+        {
+            if (style.Length > 0)
+            {
+                style.Append(";");
+            }
+            style.Append(Style);
+        }
+
+        return style.ToString();
+    }
+
+    [Parameter]
+    public string D { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Stroke { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Fill { get; set; } = string.Empty;
+
+    [Parameter]
+    public double StrokeWidth { get; set; }
+
+    [Parameter]
+    public LineType LineType { get; set; }
+
+    [Parameter]
+    public string Class { get; set;} = string.Empty;
+
+    private string? StrokeLineCap
+    {
+        get
+        {
+            switch (LineType)
+            {
+                case LineType.Dotted:
+                case LineType.Solid:
+                return "round";
+                default:
+                return null;
+            }
+        }
+    }
+
+    private string? StrokeDashArray
+    {
+        get
+        {
+            switch (LineType)
+            {
+                case LineType.Dotted:
+                return $"0 {StrokeWidth * 2}";
+                case LineType.Dashed:
+                return $"{StrokeWidth * 3} {StrokeWidth * 3}";
+                default:
+                return null;
+            }
+        }
+    }
+}

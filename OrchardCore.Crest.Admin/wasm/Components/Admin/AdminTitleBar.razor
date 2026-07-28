@@ -1,32 +1,41 @@
 @using Crest.Admin.Api
 @using Crest.Admin.DisplayManagement
 @using Crest.Admin.Options
+@using Crest.Components.Inputs
+@using Crest.Components.Display
+@using Crest.Icons.Components
 @using Microsoft.JSInterop
-@using Radzen
-@using Radzen.Blazor
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
 @inject NavigationManager Navigation
 @inject CrestRoutingOptions Routing
 @inject IJSRuntime Js
 
 <header class="admin-titlebar">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-titlebar__left">
-        <RadzenButton Icon="menu" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ToggleSidebar" class="admin-titlebar__menu-button" aria-label="Open navigation menu" />
-        <div class="admin-titlebar__logo" aria-hidden="true">@TenantInitial</div>
+        <CrestAvatar ImageUrl="@TitleBarSettings.TenantAvatarImageUrl"
+                     FallbackText="@TenantInitial"
+                     AriaLabel="@($"{SelectedTenantName} tenant")"
+                     BackgroundColor="var(--crest-color-accent-1, #2f6f4e)"
+                     ForegroundColor="var(--crest-color-on-accent-1, #fff)"
+                     Shape="@TenantAvatarShape"
+                     ClipPath="@TitleBarSettings.TenantAvatarClipPath"
+                     BorderRadius="@TitleBarSettings.TenantAvatarBorderRadius"
+                     Class="admin-titlebar__tenant-avatar" />
 
-        <RadzenProfileMenu class="admin-titlebar__tenant-menu" ShowIcon="false" ToggleAriaLabel="Select tenant">
-            <Template>
-                <span class="admin-titlebar__tenant-trigger">
-                    <span class="admin-titlebar__tenant-name">@SelectedTenantName</span>
-                    <RadzenIcon Icon="keyboard_arrow_down" class="admin-titlebar__tenant-arrow" />
-                </span>
-            </Template>
-            <ChildContent>
-                @foreach (var tenant in TenantOptions)
-                {
-                    <RadzenProfileMenuItem Text="@tenant.Name" Icon="@(IsSelectedTenant(tenant) ? "check" : "apartment")" Click="@(() => SelectTenant(tenant))" />
-                }
-            </ChildContent>
-        </RadzenProfileMenu>
+        <CrestDropDown TItem="Tenant"
+                        TValue="string"
+                        Data="TenantOptions"
+                        Value="@SelectedTenantName"
+                        ValueChanged="SelectTenantByName"
+                        LabelProperty="@nameof(Tenant.Name)"
+                        ValueProperty="@nameof(Tenant.Name)"
+                        Template="TenantOptionTemplate"
+                        TriggerIcon="ChevronDownIcon"
+                        ShowValueLabel="true"
+                        AriaLabel="Select tenant"
+                        Class="admin-titlebar__tenant-selector"
+                        Style="--crest-dropdown-color: var(--crest-color-text-2, var(--crest-color-text-1, #1f2937)); --crest-dropdown-border-color: transparent; --crest-dropdown-popup-border-color: var(--crest-color-border-1, #e5e7eb); --crest-dropdown-popup-background: var(--crest-color-surface-1, #fff); --crest-dropdown-option-active-background: var(--crest-color-hover-surface-1, color-mix(in srgb, var(--crest-color-accent-1, #2f6f4e) 10%, transparent));" />
     </RadzenStack>
 
     @if (DisplayManager?.Manifest?.AdminSettings.DisplayTitlesInTopbar == true && !string.IsNullOrWhiteSpace(CurrentTitle))
@@ -35,33 +44,51 @@
     }
 
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem" class="admin-titlebar__right">
-        @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
+        @if (CultureOptions.Length > 1)
         {
-            <RadzenButton Icon="@ThemeToggleIcon" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ToggleThemeAsync" class="admin-titlebar__icon-button" title="Toggle dark/light mode" aria-label="Toggle dark/light mode" />
+            <CrestDropDown TItem="CultureOption"
+                            TValue="string"
+                            Data="CultureOptions"
+                            Value="@SelectedCulture"
+                            ValueChanged="SelectCultureAsync"
+                            LabelProperty="@nameof(CultureOption.Label)"
+                            ValueProperty="@nameof(CultureOption.Value)"
+                            Template="CultureOptionTemplate"
+                            TriggerIcon="ChevronDownIcon"
+                            ShowValueLabel="@TitleBarSettings.DisplayCultureLabel"
+                            AllowFiltering="true"
+                            FilterPlaceholder="Filter cultures"
+                            AriaLabel="Select administration culture"
+                            Class="admin-titlebar__culture-selector"
+                            Style="--crest-dropdown-color: var(--crest-color-accent-1, #2f6f4e); --crest-dropdown-border-color: transparent; --crest-dropdown-popup-border-color: var(--crest-color-border-1, #e5e7eb); --crest-dropdown-popup-background: var(--crest-color-surface-1, #fff); --crest-dropdown-option-active-background: var(--crest-color-hover-surface-1, color-mix(in srgb, var(--crest-color-accent-1, #2f6f4e) 10%, transparent));" />
         }
 
-        <RadzenProfileMenu class="admin-titlebar__icon-menu" ShowIcon="false" ToggleAriaLabel="Open admin actions">
-            <Template>
-                <RadzenIcon Icon="more_vert" class="admin-titlebar__action-icon" />
-            </Template>
-            <ChildContent>
-                <RadzenProfileMenuItem Text="Admin dashboard" Icon="dashboard" Path="/Admin" />
-                <RadzenProfileMenuItem Text="Open site" Icon="open_in_new" Path="/" />
-            </ChildContent>
-        </RadzenProfileMenu>
+        @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
+        {
+            <button type="button" class="admin-titlebar__icon-button" @onclick="ToggleThemeAsync" title="Toggle dark/light mode" aria-label="Toggle dark/light mode">
+                <OrchardIcon IconKey="@ThemeToggleIcon" Size="1.25rem" />
+            </button>
+        }
 
         <RadzenProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="Open user menu">
             <Template>
-                <span class="admin-titlebar__avatar" title="@UserName">@UserInitials</span>
+                <CrestAvatar FallbackText="@UserInitials"
+                             AriaLabel="@UserName"
+                             BackgroundColor="transparent"
+                             ForegroundColor="var(--crest-color-accent-1, #2f6f4e)"
+                             Shape="CrestAvatarShape.Circle"
+                             Class="admin-titlebar__avatar" />
             </Template>
             <ChildContent>
-                <RadzenProfileMenuItem Text="@UserName" Icon="person" Path="/Admin/Profile" />
-                <RadzenProfileMenuItem Text="Sign in as another user" Icon="switch_account" Click="SignInAsAnotherUserAsync" class="admin-titlebar__profile-separator" />
+                <RadzenProfileMenuItem Text="@UserName" Path="/Admin/Profile" />
+                <RadzenProfileMenuItem Text="Admin dashboard" Path="/Admin" />
+                <RadzenProfileMenuItem Text="Open site" Path="/" />
+                <RadzenProfileMenuItem Text="Sign in as another user" Click="SignInAsAnotherUserAsync" class="admin-titlebar__profile-separator" />
                 @foreach (var user in OtherKnownUsers)
                 {
-                    <RadzenProfileMenuItem Text="@UserLabel(user)" Icon="account_circle" Click="@(() => SignInAsUserAsync(user))" />
+                    <RadzenProfileMenuItem Text="@UserLabel(user)" Click="@(() => SignInAsUserAsync(user))" />
                 }
-                <RadzenProfileMenuItem Text="Logout" Icon="logout" Click="LogoutAsync" class="admin-titlebar__profile-separator" />
+                <RadzenProfileMenuItem Text="Logout" Click="LogoutAsync" class="admin-titlebar__profile-separator" />
             </ChildContent>
         </RadzenProfileMenu>
     </RadzenStack>
@@ -70,9 +97,6 @@
 @code {
     [CascadingParameter]
     public DisplayManager? DisplayManager { get; set; }
-
-    [Parameter]
-    public EventCallback ToggleSidebar { get; set; }
 
     private Tenant[] TenantOptions => DisplayManager?.Manifest?.Tenants is { Length: > 0 } tenants
         ? tenants
@@ -86,8 +110,51 @@
     private LocalUser[] KnownUsers { get; set; } = [];
     private IEnumerable<LocalUser> OtherKnownUsers => KnownUsers
         .Where(user => !user.UserName.Equals(UserName, StringComparison.OrdinalIgnoreCase));
-    private string ThemeToggleIcon { get; set; } = "dark_mode";
+    private string ThemeToggleIcon { get; set; } = "iconify.mdi/current/default/weather-night";
     private string? LastRememberedUserContext { get; set; }
+    private CultureOption[] CultureOptions => DisplayManager?.Manifest?.CultureSelector.Cultures ?? [];
+    private string? SelectedCulture => DisplayManager?.Manifest?.CultureSelector.CurrentCulture;
+    private CrestTitleBarSettingsDto TitleBarSettings => DisplayManager?.Manifest?.TitleBarSettings ?? CrestTitleBarSettingsDto.Default;
+    private CrestAvatarShape TenantAvatarShape => Enum.TryParse<CrestAvatarShape>(TitleBarSettings.TenantAvatarShape, true, out var shape)
+        ? shape
+        : CrestAvatarShape.Circle;
+    private RenderFragment<CrestDropDownRenderContext<CultureOption>> CultureOptionTemplate => context => builder =>
+    {
+        var culture = context.Item;
+        builder.OpenComponent<OrchardIcon>(0);
+        builder.AddAttribute(1, nameof(OrchardIcon.IconKey), culture.Icon);
+        builder.AddAttribute(2, nameof(OrchardIcon.Size), "1.1rem");
+        builder.CloseComponent();
+        if (context.Surface == CrestDropDownSurface.Option)
+        {
+            builder.OpenElement(3, "span");
+            builder.AddAttribute(4, "class", "admin-titlebar__culture-option-label");
+            builder.AddContent(5, culture.Label);
+            builder.CloseElement();
+        }
+    };
+    private RenderFragment<CrestDropDownRenderContext<Tenant>> TenantOptionTemplate => context => builder =>
+    {
+        if (context.Surface == CrestDropDownSurface.Option && context.IsSelected)
+        {
+            builder.OpenComponent<OrchardIcon>(0);
+            builder.AddAttribute(1, nameof(OrchardIcon.IconKey), "iconify.mdi/current/default/check");
+            builder.AddAttribute(2, nameof(OrchardIcon.Size), "1rem");
+            builder.CloseComponent();
+        }
+
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "admin-titlebar__tenant-option-label");
+        builder.AddContent(5, context.Item.Name);
+        builder.CloseElement();
+    };
+    private RenderFragment ChevronDownIcon => builder =>
+    {
+        builder.OpenComponent<OrchardIcon>(0);
+        builder.AddAttribute(1, nameof(OrchardIcon.IconKey), "iconify.mdi/current/default/chevron-down");
+        builder.AddAttribute(2, nameof(OrchardIcon.Size), "1rem");
+        builder.CloseComponent();
+    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -95,7 +162,9 @@
         if (firstRender)
         {
             var isDark = await Js.InvokeAsync<bool>("crestTheme.isDarkMode");
-            ThemeToggleIcon = isDark ? "light_mode" : "dark_mode";
+            ThemeToggleIcon = isDark
+                ? "iconify.mdi/current/default/weather-sunny"
+                : "iconify.mdi/current/default/weather-night";
             shouldRender = true;
         }
 
@@ -167,10 +236,35 @@
         Navigation.NavigateTo(path, forceLoad: true);
     }
 
+    private void SelectTenantByName(string? name)
+    {
+        var tenant = TenantOptions.FirstOrDefault(candidate =>
+            candidate.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (tenant is not null)
+        {
+            SelectTenant(tenant);
+        }
+    }
+
     private async Task ToggleThemeAsync()
     {
         var isDark = await Js.InvokeAsync<bool>("crestTheme.toggleMode");
-        ThemeToggleIcon = isDark ? "light_mode" : "dark_mode";
+        ThemeToggleIcon = isDark
+            ? "iconify.mdi/current/default/weather-sunny"
+            : "iconify.mdi/current/default/weather-night";
+    }
+
+    private async Task SelectCultureAsync(string? culture)
+    {
+        var selector = DisplayManager?.Manifest?.CultureSelector;
+        if (selector is null || string.IsNullOrWhiteSpace(culture) ||
+            string.Equals(culture, selector.CurrentCulture, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await Js.InvokeVoidAsync("crestTheme.setAdminCulture", selector.CookieName, selector.CookiePath, culture);
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 
     private async Task SignInAsAnotherUserAsync()

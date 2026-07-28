@@ -19,6 +19,6 @@
 
 - Always validate the specific Blazor/admin page being changed with Playwright before calling the work done.
 - Client-side Crest DisplayManager/rendering logic may duplicate Orchard templating concepts because WASM Blazor rendering is separate from Orchard Razor/Liquid shapes.
-- Crest components should use Radzen theme tokens for visual styling. Use Crest component parameters/local CSS variables only for structural mechanics Radzen does not define.
+- Shared Crest components should not depend on Admin/Site or Radzen token names. Expose style parameters/local Crest variables; themes/design systems feed concrete token values into those slots.
 - Admin menu items should declare icons explicitly with the Crest convention `.AddClass("icon-class-...")`, using canonical Crest/Iconify provider references such as `.AddClass("icon-class-@iconify:mdi:account-group")`. Do not add raw Font Awesome compatibility classes; legacy third-party menu icons should be handled through admin icon overrides.
 - Do not use fallback dictionaries or hardcoded menu-class-to-icon mappings for icons; use real source icon lists/metadata, cached locally when needed.
