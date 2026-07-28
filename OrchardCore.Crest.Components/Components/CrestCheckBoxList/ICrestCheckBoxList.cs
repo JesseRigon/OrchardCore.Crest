@@ -8,19 +8,19 @@ namespace Crest.Components.Primitives;
 /// Represents the common <see cref="CrestCheckBoxList{TValue}" /> API used by
 /// its items. Injected as a cascading property in <see cref="CrestCheckBoxListItem{TValue}" />.
 /// </summary>
-public interface IRadzenCheckBoxList
+public interface ICrestCheckBoxList
 {
     /// <summary>
     /// Adds the specified item to the list.
     /// </summary>
     /// <param name="item">The item to add.</param>
-    void AddItem(IRadzenCheckBoxListItem item);
+    void AddItem(ICrestCheckBoxListItem item);
 
     /// <summary>
     /// Removes the specified item from the list.
     /// </summary>
     /// <param name="item">The item.</param>
-    void RemoveItem(IRadzenCheckBoxListItem item);
+    void RemoveItem(ICrestCheckBoxListItem item);
 }
 
 /// <summary>
@@ -28,7 +28,7 @@ public interface IRadzenCheckBoxList
 /// <see cref="CrestCheckBoxList{TValue}" /> regardless of the item value type. Allows items whose
 /// declared value type differs from the list value type (e.g. <c>int</c> items in a <c>int?</c> list).
 /// </summary>
-public interface IRadzenCheckBoxListItem
+public interface ICrestCheckBoxListItem
 {
     /// <summary>
     /// Gets the text.

@@ -1,3 +1,4 @@
+using Crest.Components.Overlay;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
@@ -21,7 +22,7 @@ namespace Crest.Components.Primitives
     /// &lt;CrestTimeSpanPicker @bind-Value="@someValue" TValue="TimeSpan" Change=@(args => Console.WriteLine($"Selected time span: {args}")) /&gt;
     /// </code>
     /// </example>
-    public partial class CrestTimeSpanPicker<TValue> : CrestComponent, IRadzenFormComponent
+    public partial class CrestTimeSpanPicker<TValue> : CrestComponent, ICrestFormComponent
     {
         #region Parameters: value
         private TValue? valueField;
@@ -365,12 +366,12 @@ namespace Crest.Components.Primitives
 
 
         #region Form fields
-        private IRadzenForm? form;
+        private ICrestForm? form;
         /// <summary>
         /// Specifies the form this component belongs to.
         /// </summary>
         [CascadingParameter]
-        public IRadzenForm? Form
+        public ICrestForm? Form
         {
             get => form;
             set
@@ -752,7 +753,7 @@ namespace Crest.Components.Primitives
         #endregion
 
         #region Internal: popup general actions
-        private RadzenPopup? popup;
+        private CrestPopup? popup;
 
         private Task TogglePopup()
             => Inline ? Task.CompletedTask : popup?.ToggleAsync(Element) ?? Task.CompletedTask;
@@ -835,7 +836,7 @@ namespace Crest.Components.Primitives
             var canBePositive = max > TimeSpan.Zero;
             canBeEitherPositiveOrNegative = canBeNegative && canBePositive;
 
-            _negativeTimeFieldsMaxValues = canBeNegative ? GetTimeUnitMaxValues(min) : new (_timeUnitZeroValues);
+            _negativeTimeFieldsMaxValues = canBeNegative ? GetTimeUnitMaxValues(min) : new(_timeUnitZeroValues);
             _positiveTimeFieldsMaxValues = canBePositive ? GetTimeUnitMaxValues(max) : new(_timeUnitZeroValues);
         }
 
@@ -887,7 +888,7 @@ namespace Crest.Components.Primitives
 
             return timeUnitMaxValues;
         }
-#endregion
+        #endregion
 
         #region Internal: panel value changes
         private Task UpdateSign(bool isNegative)

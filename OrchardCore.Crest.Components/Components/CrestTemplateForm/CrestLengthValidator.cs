@@ -48,7 +48,7 @@ namespace Crest.Components.Primitives
         public int? Max { get; set; }
 
         /// <inheritdoc />
-        protected override bool Validate(IRadzenFormComponent component)
+        protected override bool Validate(ICrestFormComponent component)
         {
             ArgumentNullException.ThrowIfNull(component);
             string? value = component.GetValue() as string;

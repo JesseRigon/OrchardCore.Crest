@@ -1,27 +1,13 @@
 @namespace Crest.Components.Inputs
 @using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components
-@using Crest.Components.Primitives
-@using PrimitiveColorPicker = Crest.Components.RadzenSource.RadzenColorPicker
+@using Crest.Components
+@using PrimitiveColorPicker = Crest.Components.CrestColorPicker
 
-<PrimitiveColorPicker Value="@Value"
-                   Change="OnChangeAsync"
-                   ValueExpression="@ValueExpression"
-                   Name="@Name"
-                   Disabled="@Disabled"
-                   Style="@Style"
-                   Class="@CssClass"
-                   ShowRGBA="@ShowRgba"
-                   ShowHSV="@ShowHsv"
-                   ShowColors="@ShowColors"
-                   ShowButton="@ShowButton"
-                   ButtonText="@ButtonText"
-                   HexText="@HexText"
-                   RedText="@RedText"
-                   GreenText="@GreenText"
-                   BlueText="@BlueText"
-                   AlphaText="@AlphaText"
-                   @attributes="AdditionalAttributes">
+<PrimitiveColorPicker Value="@Value" Change="OnChangeAsync" ValueExpression="@ValueExpression" Name="@Name"
+                      Disabled="@Disabled" Style="@Style" Class="@CssClass" ShowRGBA="@ShowRgba" ShowHSV="@ShowHsv"
+                      ShowColors="@ShowColors" ShowButton="@ShowButton" ButtonText="@ButtonText" HexText="@HexText" RedText="@RedText"
+                      GreenText="@GreenText" BlueText="@BlueText" AlphaText="@AlphaText" @attributes="AdditionalAttributes">
     @ChildContent
 </PrimitiveColorPicker>
 
@@ -41,7 +27,11 @@
     [Parameter] public string? Style { get; set; } = "width: 100%;";
     [Parameter] public string? Class { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
-    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? AdditionalAttributes
+    {
+        get; set;
+    }
 
     [Parameter] public bool ShowRgba { get; set; } = DefaultShowRgba;
     [Parameter] public bool ShowHsv { get; set; } = DefaultShowHsv;

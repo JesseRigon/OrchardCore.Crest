@@ -1,11 +1,10 @@
 @namespace Crest.Components.Primitives.Rendering
 <div title=@Title @onmousedown:preventDefault>
-    <RadzenColorPicker @bind-Value=@Value Change=@OnChange Icon=@Icon IconColor=@IconColor
-        InputSize="InputSize.Small" ShowArrow="false" TabIndex=-1
-        Disabled=@(Editor?.Disabled == true || !EnabledModes.HasFlag(Editor?.GetMode() ?? HtmlEditorMode.Design))
-        Open=@OnOpen ShowHSV=@ShowHSV ShowRGBA=@ShowRGBA ShowColors=@ShowColors ShowButton=@ShowButton
-        HexText=@HexText RedText=@RedText GreenText=@GreenText BlueText=@BlueText AlphaText=@AlphaText
-        ButtonText=@ButtonText ChildContent=@ChildContent />
+    <CrestColorPicker @bind-Value=@Value Change=@OnChange Icon=@Icon IconColor=@IconColor InputSize="InputSize.Small"
+                      ShowArrow="false" TabIndex=-1 Disabled=@(Editor?.Disabled == true || !EnabledModes.HasFlag(Editor?.GetMode() ??
+                              HtmlEditorMode.Design)) Open=@OnOpen ShowHSV=@ShowHSV ShowRGBA=@ShowRGBA ShowColors=@ShowColors
+                      ShowButton=@ShowButton HexText=@HexText RedText=@RedText GreenText=@GreenText BlueText=@BlueText
+                      AlphaText=@AlphaText ButtonText=@ButtonText ChildContent=@ChildContent />
 </div>
 
 @code {

@@ -5,62 +5,85 @@
 
 @namespace Crest.Components.Primitives.Spreadsheet
 <CrestStack Gap="0" Style="max-height: 70vh; display: flex; flex-direction: column">
-<CrestStack Gap="0.5rem" Style="padding: 0.25rem; overflow-y: auto; flex: 1">
-    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ChartType)) Component="chartType" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-        <RadzenDropDown Value=@Draft.ChartType Change=@(v => Draft.ChartType = (SpreadsheetChartType)v) Data=@chartTypes TextProperty="Text" ValueProperty="Value" Name="chartType" InputSize="InputSize.Small" Style="flex: 1" />
-    </CrestStack>
-    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ChartTitle)) Component="chartTitle" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-        <CrestTextBox Value=@Draft.Title Change=@(v => Draft.Title = v) Name="chartTitle" InputSize="InputSize.Small" Style="flex: 1" />
-    </CrestStack>
-    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="padding-inline-start: 8.5rem">
-        <CrestCheckBox Value=@Draft.ShowLegend Change=@((bool v) => Draft.ShowLegend = v) TValue="bool" Name="showLegend" />
-        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ShowLegend)) Component="showLegend" class="rz-text-subtitle2" />
-    </CrestStack>
-    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_LegendPosition)) Component="legendPosition" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-        <RadzenDropDown Value=@Draft.LegendPosition Change=@(v => Draft.LegendPosition = (ChartLegendPosition)v) Data=@legendPositions TextProperty="Text" ValueProperty="Value"
-            Disabled=@(!Draft.ShowLegend) Name="legendPosition" InputSize="InputSize.Small" Style="flex: 1" />
-    </CrestStack>
-    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Style="margin-top: 0.5rem">
-        <CrestText TextStyle="TextStyle.Subtitle1" Text=@L(nameof(CrestStrings.Spreadsheet_Series)) />
-        <CrestButton Icon="add" Text=@L(nameof(CrestStrings.Spreadsheet_AddSeries)) ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.ExtraSmall" Click=@OnAddSeries />
-    </CrestStack>
-    @foreach (var entry in Draft.Series)
-    {
-        var index = entry.Index;
-        var categoryFieldId = CategoryFieldId(index);
-        var valueFieldId = ValueFieldId(index);
-        var seriesTitleFieldId = $"seriesTitle_{index}";
-        <CrestFieldset Text=@(entry.Name ?? FormatSeriesName(index + 1))>
-            <CrestStack Gap="0.5rem">
-                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                    <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_SeriesTitle)) Component=@seriesTitleFieldId class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                    <CrestTextBox Value=@entry.Name Change=@(v => entry.Name = v) Name=@seriesTitleFieldId InputSize="InputSize.Small" Style="flex: 1" />
-                    <RadzenColorPicker Value=@entry.Color Change=@(v => entry.Color = v) ShowHSV=false ShowRGBA=false ShowButton=false InputSize="InputSize.Small" />
-                    <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small"
-                        Click=@(() => OnRemoveSeries(entry)) Disabled=@(Draft.Series.Count <= 1) />
+    <CrestStack Gap="0.5rem" Style="padding: 0.25rem; overflow-y: auto; flex: 1">
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ChartType)) Component="chartType"
+                        class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+            <CrestDropDown Value=@Draft.ChartType Change=@(v => Draft.ChartType = (SpreadsheetChartType)v)
+                           Data=@chartTypes TextProperty="Text" ValueProperty="Value" Name="chartType" InputSize="InputSize.Small"
+                           Style="flex: 1" />
+        </CrestStack>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ChartTitle)) Component="chartTitle"
+                        class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+            <CrestTextBox Value=@Draft.Title Change=@(v => Draft.Title = v) Name="chartTitle"
+                          InputSize="InputSize.Small" Style="flex: 1" />
+        </CrestStack>
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
+                    Style="padding-inline-start: 8.5rem">
+            <CrestCheckBox Value=@Draft.ShowLegend Change=@((bool v) => Draft.ShowLegend = v) TValue="bool"
+                           Name="showLegend" />
+            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ShowLegend)) Component="showLegend"
+                        class="rz-text-subtitle2" />
+        </CrestStack>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_LegendPosition)) Component="legendPosition"
+                        class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+            <CrestDropDown Value=@Draft.LegendPosition Change=@(v => Draft.LegendPosition = (ChartLegendPosition)v)
+                           Data=@legendPositions TextProperty="Text" ValueProperty="Value" Disabled=@(!Draft.ShowLegend)
+                           Name="legendPosition" InputSize="InputSize.Small" Style="flex: 1" />
+        </CrestStack>
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                    JustifyContent="JustifyContent.SpaceBetween" Style="margin-top: 0.5rem">
+            <CrestText TextStyle="TextStyle.Subtitle1" Text=@L(nameof(CrestStrings.Spreadsheet_Series)) />
+            <CrestButton Icon="add" Text=@L(nameof(CrestStrings.Spreadsheet_AddSeries))
+                         ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" Shade="Shade.Lighter"
+                         Size="ButtonSize.ExtraSmall" Click=@OnAddSeries />
+        </CrestStack>
+        @foreach (var entry in Draft.Series)
+        {
+            var index = entry.Index;
+            var categoryFieldId = CategoryFieldId(index);
+            var valueFieldId = ValueFieldId(index);
+            var seriesTitleFieldId = $"seriesTitle_{index}";
+            <CrestFieldset Text=@(entry.Name ?? FormatSeriesName(index + 1))>
+                <CrestStack Gap="0.5rem">
+                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_SeriesTitle)) Component=@seriesTitleFieldId
+                                    class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+                        <CrestTextBox Value=@entry.Name Change=@(v => entry.Name = v) Name=@seriesTitleFieldId
+                                      InputSize="InputSize.Small" Style="flex: 1" />
+                        <CrestColorPicker Value=@entry.Color Change=@(v => entry.Color = v) ShowHSV=false ShowRGBA=false
+                                          ShowButton=false InputSize="InputSize.Small" />
+                        <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                                     Size="ButtonSize.Small" Click=@(() => OnRemoveSeries(entry)) Disabled=@(Draft.Series.Count <=
+                                                             1) />
+                    </CrestStack>
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_CategoryRange)) class="rz-text-subtitle2"
+                                    Style="width: 8rem; text-align: end" />
+                        <RangePicker Value=@entry.Categories ValueChanged=@(v => entry.Categories = v) OnPickRequested=@(()
+                                                             => RequestPick(categoryFieldId, entry.Categories ?? string.Empty))
+                                     ShouldFocusOnLoad=@(FocusFieldId == categoryFieldId) InputSize="InputSize.Small"
+                                     Style="flex: 1" />
+                    </CrestStack>
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ValueRange)) class="rz-text-subtitle2"
+                                    Style="width: 8rem; text-align: end" />
+                        <RangePicker Value=@entry.Values ValueChanged=@(v => entry.Values = v) OnPickRequested=@(() =>
+                                                             RequestPick(valueFieldId, entry.Values ?? string.Empty)) ShouldFocusOnLoad=@(FocusFieldId ==
+                                                             valueFieldId) InputSize="InputSize.Small" Style="flex: 1" />
+                    </CrestStack>
                 </CrestStack>
-                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                    <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_CategoryRange)) class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                    <RangePicker Value=@entry.Categories ValueChanged=@(v => entry.Categories = v)
-                        OnPickRequested=@(() => RequestPick(categoryFieldId, entry.Categories ?? string.Empty))
-                        ShouldFocusOnLoad=@(FocusFieldId == categoryFieldId) InputSize="InputSize.Small" Style="flex: 1" />
-                </CrestStack>
-                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                    <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ValueRange)) class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                    <RangePicker Value=@entry.Values ValueChanged=@(v => entry.Values = v)
-                        OnPickRequested=@(() => RequestPick(valueFieldId, entry.Values ?? string.Empty))
-                        ShouldFocusOnLoad=@(FocusFieldId == valueFieldId) InputSize="InputSize.Small" Style="flex: 1" />
-                </CrestStack>
-            </CrestStack>
-        </CrestFieldset>
-    }
+            </CrestFieldset>
+        }
     </CrestStack>
-    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-spreadsheet-dialog-actions">
-        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
-        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" />
+    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"
+                class="rz-spreadsheet-dialog-actions">
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base"
+                     Variant="Variant.Outlined" />
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary"
+                     Variant="Variant.Flat" />
     </CrestStack>
 </CrestStack>
 
@@ -82,7 +105,8 @@
     private List<object> legendPositions = [];
 
     private string FormatSeriesName(int number) =>
-        string.Format(System.Globalization.CultureInfo.CurrentCulture, L(nameof(CrestStrings.Spreadsheet_SeriesFormat)), number);
+        string.Format(System.Globalization.CultureInfo.CurrentCulture, L(nameof(CrestStrings.Spreadsheet_SeriesFormat)),
+number);
 
     protected override void OnInitialized()
     {

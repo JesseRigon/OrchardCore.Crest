@@ -138,7 +138,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Adds the <see cref="CookieThemeService" /> to the service collection.
         /// </summary>
-        public static IServiceCollection AddRadzenCookieThemeService(this IServiceCollection services)
+        public static IServiceCollection AddCrestCookieThemeService(this IServiceCollection services)
         {
             services.AddOptions<CookieThemeServiceOptions>();
             services.AddScoped<CookieThemeService>();
@@ -149,7 +149,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Adds the <see cref="CookieThemeService" /> to the service collection with the specified configuration.
         /// </summary>
-        public static IServiceCollection AddRadzenCookieThemeService(this IServiceCollection services, Action<CookieThemeServiceOptions> configure)
+        public static IServiceCollection AddCrestCookieThemeService(this IServiceCollection services, Action<CookieThemeServiceOptions> configure)
         {
             services.Configure(configure);
             services.AddScoped<CookieThemeService>();

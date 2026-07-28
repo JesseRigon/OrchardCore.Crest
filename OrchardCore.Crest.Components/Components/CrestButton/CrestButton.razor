@@ -4,9 +4,8 @@
 @if (Visible)
 {
     <button @ref="@Element" style="@Style" disabled="@IsDisabled" tabindex="@(Disabled ? -1 : TabIndex)"
-            type="@(Enum.GetName(typeof(ButtonType), ButtonType)?.ToLowerInvariant() ?? "button")"
-            @attributes="Attributes" class="@GetCssClass()" id="@GetId()"
-            @onclick="@OnClick">
+            type="@(Enum.GetName(typeof(ButtonType), ButtonType)?.ToLowerInvariant() ?? "button")" @attributes="Attributes"
+            class="@GetCssClass()" id="@GetId()" @onclick="@OnClick">
         <span class="rz-button-box">
             @if (ChildContent != null)
             {
@@ -16,7 +15,7 @@
             {
                 @if (IsBusy)
                 {
-                    <RadzenIcon Icon="refresh" Style="animation: rotation 700ms linear infinite" />
+                    <CrestIcon IconKey="iconify.mdi/current/default/refresh" Style="animation: rotation 700ms linear infinite" />
                     @if (!string.IsNullOrEmpty(BusyText))
                     {
                         <span class="rz-button-text">@BusyText</span>
@@ -26,7 +25,8 @@
                 {
                     @if (!string.IsNullOrEmpty(@Icon))
                     {
-                        <i class="notranslate rz-button-icon-left rzi" aria-hidden="true" style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)">@Icon</i>
+                        <i class="notranslate rz-button-icon-left rzi" aria-hidden="true"
+                           style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)">@Icon</i>
                     }
                     @if (!string.IsNullOrEmpty(Image))
                     {

@@ -1,3 +1,4 @@
+using Crest.Components.Overlay;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -326,8 +327,8 @@ public partial class CrestSpreadsheet : CrestComponent, IAsyncDisposable, ISprea
 
     private VirtualGrid? grid;
     private Spreadsheet.SpreadsheetAccessibility? accessibility;
-    private RadzenPopup? cellMenuPopup;
-    private RadzenPopup? validationListPopup;
+    private CrestPopup? cellMenuPopup;
+    private CrestPopup? validationListPopup;
     private RangePickerBar? rangePickerBar;
     private int cellMenuRow = -1;
     private int cellMenuColumn = -1;
@@ -1835,9 +1836,9 @@ public partial class CrestSpreadsheet : CrestComponent, IAsyncDisposable, ISprea
         if (IsFeatureAllowed(SpreadsheetFeature.Clipboard))
         {
             if (IsFeatureAllowed(SpreadsheetFeature.Clipboard))
-        {
-            menuItems.Add(new() { Text = Localize(nameof(CrestStrings.Spreadsheet_Copy)), Value = "copy", Icon = "content_copy" });
-        }
+            {
+                menuItems.Add(new() { Text = Localize(nameof(CrestStrings.Spreadsheet_Copy)), Value = "copy", Icon = "content_copy" });
+            }
         }
         if (canCutPaste)
         {
@@ -1855,10 +1856,18 @@ public partial class CrestSpreadsheet : CrestComponent, IAsyncDisposable, ISprea
 
         if (FindTableAt(row, column) is not null && IsFeatureAllowed(SpreadsheetFeature.Tables))
         {
-            menuItems.Add(new() { Text = Localize(nameof(CrestStrings.Spreadsheet_ConvertTableToRange)),
-                Value = "convert-table-to-range", Icon = "grid_off" });
-            menuItems.Add(new() { Text = Localize(nameof(CrestStrings.Spreadsheet_DeleteTable)),
-                Value = "delete-table", Icon = "delete" });
+            menuItems.Add(new()
+            {
+                Text = Localize(nameof(CrestStrings.Spreadsheet_ConvertTableToRange)),
+                Value = "convert-table-to-range",
+                Icon = "grid_off"
+            });
+            menuItems.Add(new()
+            {
+                Text = Localize(nameof(CrestStrings.Spreadsheet_DeleteTable)),
+                Value = "delete-table",
+                Icon = "delete"
+            });
         }
 
         ContextMenuService.Open(args.Pointer, menuItems,

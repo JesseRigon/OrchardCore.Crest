@@ -5,52 +5,57 @@
 @if (Visible)
 {
     <div @ref="@Element" style="@Style" @attributes="Attributes" class="@GetCssClass()" id="@GetId()">
-        <button aria-label="@(ButtonAriaLabel ?? Text)" tabindex="@(IsDisabled ? -1 : TabIndex)" disabled="@IsDisabled" class=@ButtonClass type="@((Enum.GetName(typeof(ButtonType), ButtonType) ?? ButtonType.ToString()).ToLower())" @onclick="@OnClick">
+        <button aria-label="@(ButtonAriaLabel ?? Text)" tabindex="@(IsDisabled ? -1 : TabIndex)" disabled="@IsDisabled"
+                class=@ButtonClass type="@((Enum.GetName(typeof(ButtonType), ButtonType) ?? ButtonType.ToString()).ToLower())"
+                @onclick="@OnClick">
             <span class="rz-button-box">
-            @if (ButtonContent != null)
-            {
-                @ButtonContent
-            }
-            else
-            {
-                @if (IsBusy)
+                @if (ButtonContent != null)
                 {
-                    <RadzenIcon Icon="refresh" Style="animation: rotation 700ms linear infinite" />
-                    @if (!string.IsNullOrEmpty(BusyText))
-                    {
-                        <span class="rz-button-text">@BusyText</span>
-                    }
+                    @ButtonContent
                 }
                 else
                 {
-                    @if (!string.IsNullOrEmpty(@Icon))
+                    @if (IsBusy)
                     {
-                        <i class="notranslate rz-button-icon-left rzi" aria-hidden="true" style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)">@Icon</i>
-                    }
-                    @if (!string.IsNullOrEmpty(Image))
-                    {
-                        <img class="notranslate rz-button-icon-left rzi" src="@Image" alt=@ImageAlternateText />
-                    }
-                    @if (!string.IsNullOrEmpty(Text))
-                    {
-                        <span class="rz-button-text">@Text</span>
+                        <CrestIcon IconKey="iconify.mdi/current/default/refresh" Style="animation: rotation 700ms linear infinite" />
+                        @if (!string.IsNullOrEmpty(BusyText))
+                        {
+                            <span class="rz-button-text">@BusyText</span>
+                        }
                     }
                     else
                     {
-                        <span class="rz-button-text">&nbsp;</span>
+                        @if (!string.IsNullOrEmpty(@Icon))
+                        {
+                            <i class="notranslate rz-button-icon-left rzi" aria-hidden="true"
+                               style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)">@Icon</i>
+                        }
+                        @if (!string.IsNullOrEmpty(Image))
+                        {
+                            <img class="notranslate rz-button-icon-left rzi" src="@Image" alt=@ImageAlternateText />
+                        }
+                        @if (!string.IsNullOrEmpty(Text))
+                        {
+                            <span class="rz-button-text">@Text</span>
+                        }
+                        else
+                        {
+                            <span class="rz-button-text">&nbsp;</span>
+                        }
                     }
                 }
-            }
             </span>
         </button>
-        <button id="@ToggleButtonId" tabindex="@(IsDisabled ? -1 : TabIndex)" disabled="@IsDisabled" class=@PopupButtonClass type="button" @onclick="@OnToggleClick"
-                aria-label="@OpenAriaLabel" aria-haspopup="menu" aria-controls="@PopupID" aria-expanded="@(IsOpen ? "true" : "false")"
-                @onkeydown="@OnToggleKeyDown" @onkeydown:preventDefault=preventKeyPress @onkeydown:stopPropagation="stopKeydownPropagation">
-            <RadzenIcon Icon="@DropDownIcon" />
+        <button id="@ToggleButtonId" tabindex="@(IsDisabled ? -1 : TabIndex)" disabled="@IsDisabled" class=@PopupButtonClass
+                type="button" @onclick="@OnToggleClick" aria-label="@OpenAriaLabel" aria-haspopup="menu"
+                aria-controls="@PopupID" aria-expanded="@(IsOpen ? "true" : "false")" @onkeydown="@OnToggleKeyDown"
+                @onkeydown:preventDefault=preventKeyPress @onkeydown:stopPropagation="stopKeydownPropagation">
+            <CrestIcon IconKey="@DropDownIcon" />
         </button>
         <div id="@PopupID" class="@PopupMenuClass">
-            <ul id="@MenuId" class="rz-menu-list" role="menu" aria-orientation="vertical" aria-label="@OpenAriaLabel" tabindex="-1"
-                aria-activedescendant="@ActiveDescendantId" @onkeydown="@OnMenuKeyDown" @onkeydown:preventDefault=preventKeyPress @onkeydown:stopPropagation="stopKeydownPropagation">
+            <ul id="@MenuId" class="rz-menu-list" role="menu" aria-orientation="vertical" aria-label="@OpenAriaLabel"
+                tabindex="-1" aria-activedescendant="@ActiveDescendantId" @onkeydown="@OnMenuKeyDown"
+                @onkeydown:preventDefault=preventKeyPress @onkeydown:stopPropagation="stopKeydownPropagation">
                 <CascadingValue Value=this>
                     @ChildContent
                 </CascadingValue>

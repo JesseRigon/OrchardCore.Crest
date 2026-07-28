@@ -15,7 +15,7 @@ namespace Crest.Components.Primitives
     /// </summary>
     /// <typeparam name="TValue">The selected value type. Use IEnumerable for multiple selection mode.</typeparam>
     [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2026, Justification = TrimMessages.DataTypePreserved)]
-    public partial class CrestChipList<TValue> : FormComponent<TValue>, IRadzenChipList
+    public partial class CrestChipList<TValue> : FormComponent<TValue>, ICrestChipList
     {
         /// <summary>
         /// Gets or sets the name of the data property used as chip value.

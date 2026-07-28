@@ -118,7 +118,7 @@ namespace Crest.Components.Primitives
     /// Components inheriting from FormComponent automatically work with CrestTemplateForm and validators.
     /// </summary>
     /// <typeparam name="T">The type of the component's bound value (string, int, DateTime, etc.).</typeparam>
-    public class FormComponent<T> : CrestComponent, IRadzenFormComponent
+    public class FormComponent<T> : CrestComponent, ICrestFormComponent
     {
         /// <summary>
         /// Gets or sets the unique name identifier for this form component.
@@ -155,7 +155,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// The form
         /// </summary>
-        IRadzenForm? _form;
+        ICrestForm? _form;
 
         /// <summary>
         /// Gets or sets the edit context.
@@ -169,7 +169,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The form.</value>
         [CascadingParameter]
-        public IRadzenForm? Form
+        public ICrestForm? Form
         {
             get
             {

@@ -43,7 +43,7 @@ namespace Crest.Components.Primitives
     /// Features top-aligned or floating labels via Text property, Start/End content for icons or buttons before/after the input (e.g., search icon, clear button),
     /// helper text for explanatory text or validation messages below the input, Filled/Outlined/Flat variants matching Material Design,
     /// floating labels that animate upward when input is focused or has value, and automatic display of validation messages when used with validators.
-    /// Compatible with CrestTextBox, CrestTextArea, CrestPassword, RadzenDropDown, CrestNumeric, CrestDatePicker, and similar input components.
+    /// Compatible with CrestTextBox, CrestTextArea, CrestPassword, CrestDropDown, CrestNumeric, CrestDatePicker, and similar input components.
     /// Use Start for leading icons (search, email), End for trailing icons (visibility toggle, clear button).
     /// </summary>
     /// <example>
@@ -57,7 +57,7 @@ namespace Crest.Components.Primitives
     /// <code>
     /// &lt;CrestTemplateForm Data=@model&gt;
     ///     &lt;CrestFormField Text="Search" Variant="Variant.Outlined"&gt;
-    ///         &lt;Start&gt;&lt;RadzenIcon Icon="search" /&gt;&lt;/Start&gt;
+    ///         &lt;Start&gt;&lt;CrestIcon Icon="search" /&gt;&lt;/Start&gt;
     ///         &lt;ChildContent&gt;
     ///             &lt;CrestTextBox Name="SearchTerm" @bind-Value=@model.SearchTerm /&gt;
     ///         &lt;/ChildContent&gt;
@@ -126,7 +126,7 @@ namespace Crest.Components.Primitives
 
         /// <summary>
         /// Gets or sets the input component to wrap.
-        /// Place the input component (CrestTextBox, RadzenDropDown, etc.) here.
+        /// Place the input component (CrestTextBox, CrestDropDown, etc.) here.
         /// The form field automatically integrates with the input for labels and validation.
         /// </summary>
         /// <value>The input component render fragment.</value>

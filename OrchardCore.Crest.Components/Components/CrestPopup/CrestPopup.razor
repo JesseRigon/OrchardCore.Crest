@@ -4,26 +4,47 @@
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
-@if (IsOpen)
-{
-    <div @ref="PopupElement"
-         @attributes="AdditionalAttributes"
-         class="@CssClass"
-         style="@InitialStyle"
-         role="@Role"
-         @onmouseenter="OnMouseEnter"
-         @onmouseleave="OnMouseLeave">
+@* Two positioning backends live side by side: anchor-point declarative mode (IsOpen +
+   AnchorX/Y/Element/Selector, driven by crestComponents.positionPopup) for consumers that
+   bind IsOpen from parent state, and the imperative Radzen-derived mode (ToggleAsync/CloseAsync,
+   driven by Crest.openPopup/closePopup in Radzen.Blazor.js) for consumers that hold a @ref and
+   drive open/close themselves. Both share one component so every caller gets smart positioning,
+   outside-click handling, and Lazy/eager mounting from a single source of truth. *@
+
+<div @ref="PopupElement"
+     id="@Id"
+     @attributes="AdditionalAttributes"
+     class="@CssClass"
+     style="@ComputedStyle"
+     role="@Role"
+     @onmousedown:preventDefault="@PreventDefault"
+     @onmouseenter="OnMouseEnter"
+     @onmouseleave="OnMouseLeave">
+    @if (IsOpen || !Lazy)
+    {
         @ChildContent
-    </div>
-}
+    }
+</div>
 
 @code {
     private ElementReference PopupElement;
     private ElementReference LastPopupElement;
     private bool PopupRegistered;
+    private bool _declarativeOpen;
+    private bool _open;
+    private DotNetObjectReference<CrestPopup>? _selfReference;
 
+    /// <summary>
+    /// Gets or sets whether the popup is open. Setting it drives the declarative anchor-point
+    /// mode; the getter also reflects imperative opens from <see cref="ToggleAsync"/> so both
+    /// modes can share one flag (e.g. consumers reading popup.IsOpen after ToggleAsync).
+    /// </summary>
     [Parameter]
-    public bool IsOpen { get; set; }
+    public bool IsOpen
+    {
+        get => _declarativeOpen || _open;
+        set => _declarativeOpen = value;
+    }
 
     [Parameter]
     public CrestPopupAnchorMode AnchorMode { get; set; } = CrestPopupAnchorMode.Point;
@@ -68,6 +89,9 @@
     public string? ZIndex { get; set; }
 
     [Parameter]
+    public string? Id { get; set; }
+
+    [Parameter]
     public string? Class { get; set; }
 
     [Parameter]
@@ -75,6 +99,34 @@
 
     [Parameter]
     public string Role { get; set; } = "menu";
+
+    /// <summary>
+    /// Determines whether the popup content is unmounted and re-created every time the popup
+    /// closes and reopens, instead of staying mounted in the DOM with visibility toggled by JS.
+    /// Defaults to <c>true</c>, unlike Radzen's <c>false</c> default, so anchor-mode consumers
+    /// that never set this parameter keep their existing mount-only-when-open behavior.
+    /// </summary>
+    [Parameter]
+    public bool Lazy { get; set; } = true;
+
+    /// <summary>
+    /// Specifies whether to prevent the default action on mouse down.
+    /// </summary>
+    [Parameter]
+    public bool PreventDefault { get; set; }
+
+    /// <summary>
+    /// Specifies whether the first focusable element in the popup should be automatically focused.
+    /// </summary>
+    [Parameter]
+    public bool AutoFocusFirstElement { get; set; } = true;
+
+    /// <summary>
+    /// Specifies whether the popup should close when clicking outside of it. Only applies to the
+    /// imperative (ToggleAsync/CloseAsync) mode.
+    /// </summary>
+    [Parameter]
+    public bool CloseOnClickOutside { get; set; } = true;
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
@@ -85,21 +137,137 @@
     [Parameter]
     public EventCallback<MouseEventArgs> OnMouseLeave { get; set; }
 
+    /// <summary>
+    /// Raised after the popup opens via <see cref="ToggleAsync"/>.
+    /// </summary>
+    [Parameter]
+    public EventCallback Open { get; set; }
+
+    /// <summary>
+    /// Raised after the popup closes via <see cref="ToggleAsync"/>, <see cref="CloseAsync()"/>, or an outside click.
+    /// </summary>
+    [Parameter]
+    public EventCallback Close { get; set; }
+
     [Parameter(CaptureUnmatchedValues = true)]
     public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
+    private bool IsAnchorPositioned => AnchorElement is not null
+        || !string.IsNullOrWhiteSpace(AnchorSelector)
+        || !string.IsNullOrWhiteSpace(AnchorId)
+        || !string.IsNullOrWhiteSpace(AnchorClass);
+
     private string CssClass => string.IsNullOrWhiteSpace(Class) ? "crest-popup" : $"crest-popup {Class}";
 
-    private string InitialStyle => string.Join(' ', new[]
+    private string ComputedStyle => string.Join(' ', new[]
     {
-        $"left: {AnchorX + OffsetX}px;",
-        $"top: {AnchorY + OffsetY}px;",
+        IsAnchorPositioned ? $"left: {AnchorX + OffsetX}px;" : null,
+        IsAnchorPositioned ? $"top: {AnchorY + OffsetY}px;" : null,
+        !IsAnchorPositioned && !Lazy ? "display: none;" : null,
         string.IsNullOrWhiteSpace(ZIndex) ? null : $"--crest-popup-z-index: {ZIndex};",
         Style,
     }.Where(value => !string.IsNullOrWhiteSpace(value)));
 
+    /// <summary>
+    /// Toggles the popup open or closed, positioning it relative to <paramref name="target"/> via
+    /// the Radzen-derived smart-positioning JS. Ported from RadzenPopup.
+    /// </summary>
+    public async Task ToggleAsync(ElementReference target, bool disableSmartPosition = false, bool syncWidth = false)
+    {
+        _open = !_open;
+
+        if (_open)
+        {
+            await Open.InvokeAsync();
+
+            if (Lazy)
+            {
+                // The popup element only mounts once _open flips true; give Blazor a render
+                // pass so document.getElementById(Id) can find it before JS runs.
+                StateHasChanged();
+                await Task.Yield();
+            }
+
+            _selfReference ??= DotNetObjectReference.Create(this);
+
+            try
+            {
+                await JS.InvokeVoidAsync(
+                    "Crest.openPopup",
+                    target,
+                    Id,
+                    syncWidth,
+                    null,
+                    null,
+                    null,
+                    _selfReference,
+                    nameof(OnClose),
+                    CloseOnClickOutside,
+                    AutoFocusFirstElement,
+                    disableSmartPosition);
+            }
+            catch (JSException)
+            {
+            }
+        }
+        else
+        {
+            await CloseImperativelyAsync();
+        }
+    }
+
+    /// <summary>
+    /// Closes the popup imperatively. Ported from RadzenPopup.
+    /// </summary>
+    public async Task CloseAsync(ElementReference target)
+    {
+        _open = false;
+        await CloseImperativelyAsync();
+    }
+
+    /// <summary>
+    /// Closes the popup imperatively. Ported from RadzenPopup.
+    /// </summary>
+    public async Task CloseAsync()
+    {
+        _open = false;
+        await CloseImperativelyAsync();
+    }
+
+    /// <summary>
+    /// Invoked from JavaScript when the popup closes itself (e.g. an outside click).
+    /// </summary>
+    [JSInvokable]
+    public async Task OnClose()
+    {
+        _open = false;
+        StateHasChanged();
+        await Close.InvokeAsync();
+    }
+
+    private async Task CloseImperativelyAsync()
+    {
+        if (_selfReference is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("Crest.closePopup", Id, _selfReference, nameof(OnClose));
+        }
+        catch (JSException)
+        {
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!IsAnchorPositioned)
+        {
+            return;
+        }
+
         if (!IsOpen)
         {
             if (PopupRegistered)
@@ -145,17 +313,28 @@
 
     public async ValueTask DisposeAsync()
     {
-        if (!PopupRegistered)
+        if (PopupRegistered)
         {
-            return;
+            try
+            {
+                await JS.InvokeVoidAsync("crestComponents.disposePopup", LastPopupElement);
+            }
+            catch (JSException)
+            {
+            }
         }
 
-        try
+        if (_selfReference is not null)
         {
-            await JS.InvokeVoidAsync("crestComponents.disposePopup", LastPopupElement);
-        }
-        catch (JSException)
-        {
+            try
+            {
+                await JS.InvokeVoidAsync("Crest.destroyPopup", Id);
+            }
+            catch (JSException)
+            {
+            }
+
+            _selfReference.Dispose();
         }
     }
 }

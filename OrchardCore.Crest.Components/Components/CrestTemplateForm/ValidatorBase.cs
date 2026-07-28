@@ -9,16 +9,16 @@ namespace Crest.Components.Primitives
     /// <summary>
     /// Base class of Crest validator components.
     /// </summary>
-    public abstract class ValidatorBase : CrestComponent, IRadzenFormValidator
+    public abstract class ValidatorBase : CrestComponent, ICrestFormValidator
     {
         /// <summary>
         /// Gets or sets the form which contains this validator.
         /// </summary>
         [CascadingParameter]
-        public IRadzenForm? Form { get; set; }
+        public ICrestForm? Form { get; set; }
 
         /// <summary>
-        /// Specifies the component which this validator should validate. Must be set to the <see cref="IRadzenFormComponent.Name" /> of an existing component.
+        /// Specifies the component which this validator should validate. Must be set to the <see cref="ICrestFormComponent.Name" /> of an existing component.
         /// </summary>
         [Parameter]
         public string Component { get; set; } = default!;
@@ -167,7 +167,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <param name="component">The component to validate.</param>
         /// <returns><c>true</c> if validation is successful, <c>false</c> otherwise.</returns>
-        protected abstract bool Validate(IRadzenFormComponent component);
+        protected abstract bool Validate(ICrestFormComponent component);
 
         private void ValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
         {

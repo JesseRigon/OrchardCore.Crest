@@ -57,7 +57,7 @@
 
                         @if (!AllowSortingColumnPicker)
                         {
-                            <RadzenDropDown SelectAllText="@AllColumnsText" AllowSelectAll="@AllowPickAllColumns"
+                            <CrestDropDown SelectAllText="@AllColumnsText" AllowSelectAll="@AllowPickAllColumns"
                                             MaxSelectedLabels="@ColumnsPickerMaxSelectedLabels" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", SelectVisibleColumnsAriaLabel }})"
                                             SelectedItemsText="@ColumnsShowingText" Change=@ToggleColumns
                                             @bind-Value="@selectedColumns" FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive
@@ -522,7 +522,7 @@
                                         }
                                         else
                                         {
-                                            <RadzenDropDown Style="width:100%" AllowClear="true" AllowFiltering="false" TValue="@object"
+                                            <CrestDropDown Style="width:100%" AllowClear="true" AllowFiltering="false" TValue="@object"
                                                             Value=@column.GetFilterValue() Multiple="false" Placeholder="@EnumFilterSelectText" TextProperty="Text" ValueProperty="Value"
                                                             Data=@((PropertyAccess.IsNullableEnum(column.FilterPropertyType) ? new object[]{ new { Value = Convert.ChangeType(-1, Enum.GetUnderlyingType(Nullable.GetUnderlyingType(column.FilterPropertyType) ?? column.FilterPropertyType)), Text = EnumNullFilterText}} : Enumerable.Empty<object>()).Concat(EnumExtensions.EnumAsKeyValuePair(Nullable.GetUnderlyingType(column.FilterPropertyType) ?? column.FilterPropertyType, EnumFilterTranslationFunc)))
                                                             Change="@(args => {column.SetFilterValue(args);column.SetFilterOperator(object.Equals(args, -1) ? FilterOperator.IsNull : FilterOperator.Equals);InvokeAsync(() => ApplyFilter(column, true));})" />

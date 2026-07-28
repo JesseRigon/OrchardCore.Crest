@@ -33,7 +33,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The color picker.</value>
         [CascadingParameter]
-        public RadzenColorPicker? ColorPicker { get; set; }
+        public CrestColorPicker? ColorPicker { get; set; }
 
         private bool isSelected;
 

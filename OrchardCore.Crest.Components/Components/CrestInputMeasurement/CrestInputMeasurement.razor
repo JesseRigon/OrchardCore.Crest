@@ -1,21 +1,12 @@
 @namespace Crest.Components.Inputs
+@using Crest.Components
 @using Crest.Components.Primitives
-@using Crest.Components.RadzenSource
 
 <div class="@CssClass" style="@Style">
-    <CrestInputNumericMath Value="@Value"
-                           ValueChanged="@OnValueChanged"
-                           Disabled="@Disabled"
-                           Placeholder="@Placeholder"
+    <CrestInputNumericMath Value="@Value" ValueChanged="@OnValueChanged" Disabled="@Disabled" Placeholder="@Placeholder"
                            Class="crest-input-measurement__number" />
-    <RadzenDropDown TValue="string"
-                    Data="@Units"
-                    TextProperty="Text"
-                    ValueProperty="Value"
-                    Value="@Unit"
-                    Change="@OnUnitChanged"
-                    Disabled="@Disabled"
-                    class="crest-input-measurement__unit" />
+    <CrestDropDown TValue="string" Data="@Units" TextProperty="Text" ValueProperty="Value" Value="@Unit"
+                   Change="@OnUnitChanged" Disabled="@Disabled" class="crest-input-measurement__unit" />
 </div>
 
 @code {
@@ -54,7 +45,8 @@
     [Parameter]
     public bool Disabled { get; set; }
 
-    private string CssClass => string.Join(' ', new[] { "crest-input-measurement", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));
+    private string CssClass => string.Join(' ', new[] { "crest-input-measurement", Class }.Where(value =>
+!string.IsNullOrWhiteSpace(value)));
 
     private async Task OnValueChanged(decimal value) => await ValueChanged.InvokeAsync(value);
 

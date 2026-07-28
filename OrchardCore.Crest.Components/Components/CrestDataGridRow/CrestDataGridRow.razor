@@ -1,6 +1,6 @@
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam TItem
-@implements IRadzenForm
+@implements ICrestForm
 @namespace Crest.Components.Primitives
  <CascadingValue Value=@EditContext>
     <CascadingValue Value=this>
@@ -144,9 +144,9 @@
         [Parameter]
         public EditContext? EditContext { get; set; }
 
-        List<IRadzenFormComponent> components = new();
+        List<ICrestFormComponent> components = new();
 
-        public void AddComponent(IRadzenFormComponent component)
+        public void AddComponent(ICrestFormComponent component)
         {
             if (components != null)
             {
@@ -156,7 +156,7 @@
                 }
             }
         }
-        public void RemoveComponent(IRadzenFormComponent component)
+        public void RemoveComponent(ICrestFormComponent component)
         {
             components?.Remove(component);
         }
@@ -165,13 +165,13 @@
         {
             if (InEditMode != parameters.GetValueOrDefault<bool>("InEditMode"))
             {
-                components = new List<IRadzenFormComponent>();
+                components = new List<ICrestFormComponent>();
             }
 
             return base.SetParametersAsync(parameters);
         }
 
-        public IRadzenFormComponent FindComponent(string name)
+        public ICrestFormComponent FindComponent(string name)
         {
             return components.Where(component => component.Name == name).FirstOrDefault()!;
         }

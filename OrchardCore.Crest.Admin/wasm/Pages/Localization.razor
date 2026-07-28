@@ -62,19 +62,16 @@
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
                     <div class="localization-page__add-picker">
                         <RadzenLabel Text="Add a standard culture" />
-                        <CrestDropDown TItem="CrestCulture"
-                                        TValue="string"
+                        <CrestDropDown TValue="string"
                                         Data="AvailableCultureOptions"
                                         Value="@SelectedCultureToAdd"
                                         ValueChanged="SelectCultureToAddAsync"
-                                        LabelProperty="@nameof(CrestCulture.Label)"
+                                        TextProperty="@nameof(CrestCulture.Label)"
                                         ValueProperty="@nameof(CrestCulture.Value)"
-                                        TriggerIcon="ChevronDownIcon"
                                         Placeholder="Choose a culture"
-                                        AriaLabel="Choose a standard culture to add"
                                         AllowFiltering="true"
                                         FilterPlaceholder="Filter cultures"
-                                        Class="localization-page__culture-dropdown" />
+                                        class="localization-page__culture-dropdown" />
                     </div>
                     <RadzenButton Text="Add culture" Icon="add" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(SelectedCultureToAdd))" Click="AddSelectedCultureAsync" />
                 </RadzenStack>
@@ -94,19 +91,16 @@
             <RadzenStack Gap="0.75rem">
                 <RadzenText TextStyle="TextStyle.Subtitle1" Text="Default culture" />
                 <RadzenText TextStyle="TextStyle.Body2" Text="This is used when a request does not select one of the supported cultures." />
-                <CrestDropDown TItem="CrestCulture"
-                                TValue="string"
+                <CrestDropDown TValue="string"
                                 Data="SupportedCultureOptions"
                                 Value="@Model.DefaultCulture"
                                 ValueChanged="SelectDefaultCultureAsync"
-                                LabelProperty="@nameof(CrestCulture.Label)"
+                                TextProperty="@nameof(CrestCulture.Label)"
                                 ValueProperty="@nameof(CrestCulture.Value)"
-                                TriggerIcon="ChevronDownIcon"
                                 Placeholder="Choose the default culture"
-                                AriaLabel="Choose the default culture"
                                 AllowFiltering="true"
                                 FilterPlaceholder="Filter supported cultures"
-                                Class="localization-page__culture-dropdown" />
+                                class="localization-page__culture-dropdown" />
                 <div>
                     <RadzenCheckBox @bind-Value="Model.FallBackToParentCulture" Name="fallback-to-parent" Disabled="@IsSaving" />
                     <label for="fallback-to-parent"> Fall back to parent cultures</label>
@@ -258,12 +252,4 @@
     private static string DisplayCultureName(CrestCulture culture) => string.IsNullOrWhiteSpace(culture.NativeLabel)
         ? culture.Label
         : $"{culture.NativeLabel} ({culture.Label})";
-
-    private RenderFragment ChevronDownIcon => builder =>
-    {
-        builder.OpenComponent<Crest.Icons.Components.OrchardIcon>(0);
-        builder.AddAttribute(1, nameof(Crest.Icons.Components.OrchardIcon.IconKey), "@iconify:mdi:chevron-down");
-        builder.AddAttribute(2, nameof(Crest.Icons.Components.OrchardIcon.Size), "1rem");
-        builder.CloseComponent();
-    };
 }

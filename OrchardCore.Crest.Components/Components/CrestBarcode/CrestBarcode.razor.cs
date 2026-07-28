@@ -70,7 +70,7 @@ namespace Crest.Components.Primitives
     /// </summary>
     /// <example>
     /// <code>
-    /// &lt;CrestBarcode Value="RADZEN-12345" Type="CrestBarcodeType.Code128" Height="80px" /&gt;
+    /// &lt;CrestBarcode Value="Crest-12345" Type="CrestBarcodeType.Code128" Height="80px" /&gt;
     /// </code>
     /// </example>
     public partial class CrestBarcode : CrestComponent

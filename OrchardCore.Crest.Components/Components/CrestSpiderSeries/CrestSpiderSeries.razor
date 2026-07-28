@@ -1,7 +1,7 @@
 @typeparam TItem
 @inherits CrestComponent
 @implements IDisposable
-@implements Crest.Components.Primitives.IRadzenSpiderSeries
+@implements Crest.Components.Primitives.ICrestSpiderSeries
 @using Crest.Components.Primitives.Rendering
 @using Microsoft.AspNetCore.Components.Rendering
 @using Microsoft.AspNetCore.Components.Web
@@ -71,7 +71,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        
+
         if (Chart != null && !_registered)
         {
             _registered = true;
@@ -102,13 +102,13 @@
     /// </summary>
     internal int Index { get; set; }
 
-    int IRadzenSpiderSeries.Index { get => Index; set => Index = value; }
-    string IRadzenSpiderSeries.Title => Title;
-    bool IRadzenSpiderSeries.IsVisible { get => IsVisible; set => IsVisible = value; }
-    bool IRadzenSpiderSeries.MarkersVisible => MarkersVisible;
-    double IRadzenSpiderSeries.MarkerSize => MarkerSize;
-    double IRadzenSpiderSeries.StrokeWidth => StrokeWidth;
-    SpiderSeriesType IRadzenSpiderSeries.SeriesType => SpiderSeriesType.Area;
+    int ICrestSpiderSeries.Index { get => Index; set => Index = value; }
+    string ICrestSpiderSeries.Title => Title;
+    bool ICrestSpiderSeries.IsVisible { get => IsVisible; set => IsVisible = value; }
+    bool ICrestSpiderSeries.MarkersVisible => MarkersVisible;
+    double ICrestSpiderSeries.MarkerSize => MarkerSize;
+    double ICrestSpiderSeries.StrokeWidth => StrokeWidth;
+    SpiderSeriesType ICrestSpiderSeries.SeriesType => SpiderSeriesType.Area;
 
     /// <summary>
     /// Measures the legend text width for this series.
@@ -123,9 +123,9 @@
         return TextMeasurer.TextWidth(Title);
     }
 
-    double IRadzenSpiderSeries.MeasureLegend() => MeasureLegend();
+    double ICrestSpiderSeries.MeasureLegend() => MeasureLegend();
 
-    IEnumerable<string> IRadzenSpiderSeries.GetCategories()
+    IEnumerable<string> ICrestSpiderSeries.GetCategories()
     {
         if (Data == null || string.IsNullOrEmpty(CategoryProperty))
         {
@@ -139,7 +139,7 @@
                    .ToList();
     }
 
-    IEnumerable<double> IRadzenSpiderSeries.GetValues()
+    IEnumerable<double> ICrestSpiderSeries.GetValues()
     {
         if (Data == null || string.IsNullOrEmpty(ValueProperty))
         {
@@ -150,7 +150,7 @@
         return Data.Select(item => valueGetter(item)).ToList();
     }
 
-    double IRadzenSpiderSeries.GetValue(string category)
+    double ICrestSpiderSeries.GetValue(string category)
     {
         if (Data == null || string.IsNullOrEmpty(CategoryProperty) || string.IsNullOrEmpty(ValueProperty))
         {
@@ -164,7 +164,7 @@
         return item != null ? valueGetter(item) : 0;
     }
 
-    object? IRadzenSpiderSeries.GetData(string category)
+    object? ICrestSpiderSeries.GetData(string category)
     {
         if (Data == null || string.IsNullOrEmpty(CategoryProperty))
         {
@@ -175,7 +175,7 @@
         return Data.FirstOrDefault(d => categoryGetter(d) == category);
     }
 
-    string IRadzenSpiderSeries.FormatValue(double value)
+    string ICrestSpiderSeries.FormatValue(double value)
     {
         if (ValueFormatter != null)
         {
@@ -190,8 +190,8 @@
         return value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    RenderFragment IRadzenSpiderSeries.RenderLegendItem() => RenderLegendItem();
-    void IRadzenSpiderSeries.ForceUpdate() => ForceUpdate();
+    RenderFragment ICrestSpiderSeries.RenderLegendItem() => RenderLegendItem();
+    void ICrestSpiderSeries.ForceUpdate() => ForceUpdate();
 
     /// <summary>
     /// Renders the legend item for this series.

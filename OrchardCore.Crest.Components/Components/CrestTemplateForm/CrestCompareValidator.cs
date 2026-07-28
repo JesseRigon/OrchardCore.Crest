@@ -134,7 +134,7 @@ namespace Crest.Components.Primitives
         }
 
         /// <inheritdoc />
-        protected override bool Validate(IRadzenFormComponent component)
+        protected override bool Validate(ICrestFormComponent component)
         {
             ArgumentNullException.ThrowIfNull(component);
             var componentValue = component.GetValue();

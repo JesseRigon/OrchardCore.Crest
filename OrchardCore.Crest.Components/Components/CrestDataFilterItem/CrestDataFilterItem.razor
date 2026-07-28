@@ -2,24 +2,30 @@
 @namespace Crest.Components.Primitives
 @if (Filter != null && Filter.Filters != null)
 {
-    <CrestSelectBar @bind-Value=Filter.LogicalFilterOperator Change="@((LogicalFilterOperator args) => { InvokeAsync(ChangeState); InvokeAsync(ApplyFilter); })" Size="ButtonSize.Small">
+    <CrestSelectBar @bind-Value=Filter.LogicalFilterOperator
+                    Change="@((LogicalFilterOperator args) => { InvokeAsync(ChangeState); InvokeAsync(ApplyFilter); })"
+                    Size="ButtonSize.Small">
         <Items>
-            <CrestSelectBarItem Text="@(DataFilter?.AndOperatorText ?? "")" Value="LogicalFilterOperator.And" title="@(DataFilter?.AndOperatorText ?? "")" />
-            <CrestSelectBarItem Text="@(DataFilter?.OrOperatorText ?? "")" Value="LogicalFilterOperator.Or" title="@(DataFilter?.OrOperatorText ?? "")" />
+            <CrestSelectBarItem Text="@(DataFilter?.AndOperatorText ?? "")" Value="LogicalFilterOperator.And"
+                                title="@(DataFilter?.AndOperatorText ?? "")" />
+            <CrestSelectBarItem Text="@(DataFilter?.OrOperatorText ?? "")" Value="LogicalFilterOperator.Or"
+                                title="@(DataFilter?.OrOperatorText ?? "")" />
         </Items>
     </CrestSelectBar>
 
-    <CrestButton title="@(DataFilter?.RemoveFilterText ?? "")" class="rz-datafilter-item-clear" Icon="clear" Click="@RemoveFilter" Variant="Variant.Text" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Dark"/>
+    <CrestButton title="@(DataFilter?.RemoveFilterText ?? "")" class="rz-datafilter-item-clear" Icon="clear"
+                 Click="@RemoveFilter" Variant="Variant.Text" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Dark" />
 
     <ul class="rz-datafilter-group">
-        @foreach(var filter in Filter.Filters)
+        @foreach (var filter in Filter.Filters)
         {
             <li class="rz-datafilter-item @(filter.Filters != null ? "rz-datafilter-group-item" : "")">
                 <CrestDataFilterItem DataFilter="@this.DataFilter" Filter="@filter" Parent=@this />
             </li>
         }
         <li class="rz-datafilter-item rz-datafilter-bar">
-            <CrestSplitButton Icon="add" Click="@(args => AddFilter(args?.Value == "group"))" Size="ButtonSize.Small" Variant="Variant.Flat" ButtonStyle="ButtonStyle.Primary" Shade="Shade.Lighter">
+            <CrestSplitButton Icon="add" Click="@(args => AddFilter(args?.Value == "group"))" Size="ButtonSize.Small"
+                              Variant="Variant.Flat" ButtonStyle="ButtonStyle.Primary" Shade="Shade.Lighter">
                 <CrestSplitButtonItem Icon="add" Text="@(DataFilter?.AddFilterText ?? "")" />
                 <CrestSplitButtonItem Icon="playlist_add" Value="group" Text="@(DataFilter?.AddFilterGroupText ?? "")" />
             </CrestSplitButton>
@@ -28,34 +34,42 @@
 }
 else if (Filter != null)
 {
-    <RadzenDropDown @bind-Value="@Filter.Property" Data="@(DataFilter?.properties)" TextProperty="Title" ValueProperty="Property" TValue="string"
-                    DisabledProperty="@(DataFilter?.UniqueFilters == true ? nameof(property.IsSelected) : null)"
-                    InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", $"{DataFilter?.PropertyAriaLabel} {property?.Title ?? property?.Property}".Trim() }})"
-                    Change="@OnPropertyChange" AllowFiltering="@(DataFilter?.AllowColumnFiltering ?? false)" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" class="rz-datafilter-property">
+    <CrestDropDown @bind-Value="@Filter.Property" Data="@(DataFilter?.properties)" TextProperty="Title"
+                   ValueProperty="Property" TValue="string"
+                   DisabledProperty="@(DataFilter?.UniqueFilters == true ? nameof(property.IsSelected) : null)"
+                   InputAttributes="@(new Dictionary<string, object>() { { "aria-label", $"{DataFilter?.PropertyAriaLabel} {property?.Title ?? property?.Property}".Trim() } })"
+                   Change="@OnPropertyChange" AllowFiltering="@(DataFilter?.AllowColumnFiltering ?? false)"
+                   FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" class="rz-datafilter-property">
         <Template>
             @{
                 var property = (CrestDataFilterProperty<TItem>)context;
             }
             @(property.Title ?? property.Property)
         </Template>
-    </RadzenDropDown>
+    </CrestDropDown>
     if (property != null)
     {
-        <RadzenDropDown @onclick:preventDefault="true" Data="@(property.GetFilterOperators().Select(t => new DropDownItem<FilterOperator> { Text = property.GetFilterOperatorText(t), Value = t }))"
-                InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", $"{DataFilter?.FilterOperatorAriaLabel} {(Filter.FilterOperator != null ? property.GetFilterOperatorText(Filter.FilterOperator.Value) : "")}".Trim() }})"
-                TextProperty="Text" ValueProperty="Value" TValue="FilterOperator?" @bind-Value="@Filter.FilterOperator" Change="@OnOperatorChange" class="rz-datafilter-operator" />
+        <CrestDropDown @onclick:preventDefault="true"
+                       Data="@(property.GetFilterOperators().Select(t => new DropDownItem<FilterOperator> { Text = property.GetFilterOperatorText(t), Value = t }))"
+                       InputAttributes="@(new Dictionary<string, object>() { { "aria-label", $"{DataFilter?.FilterOperatorAriaLabel} {(Filter.FilterOperator != null ? property.GetFilterOperatorText(Filter.FilterOperator.Value) : "")}".Trim() } })"
+                       TextProperty="Text" ValueProperty="Value" TValue="FilterOperator?" @bind-Value="@Filter.FilterOperator"
+                       Change="@OnOperatorChange" class="rz-datafilter-operator" />
         @if (property.FilterTemplate != null)
         {
             <div class="rz-datafilter-editor" style="display:flex">
                 @property.FilterTemplate(Filter)
             </div>
         }
-        else if (PropertyAccess.IsNullableEnum(property.FilterPropertyType) || PropertyAccess.IsEnum(property.FilterPropertyType))
+        else if (PropertyAccess.IsNullableEnum(property.FilterPropertyType) ||
+PropertyAccess.IsEnum(property.FilterPropertyType))
         {
-            <RadzenDropDown Disabled="@IsOperatorNullOrEmpty()" AllowClear="false" AllowFiltering="false" TValue="@object" class="rz-datafilter-editor"
-                            InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", $"{DataFilter?.FilterValueAriaLabel} {Filter.FilterValue}".Trim() }})"
-                            @bind-Value=@Filter.FilterValue Multiple="false" Placeholder="@(DataFilter?.EnumFilterSelectText ?? "")" TextProperty="Text" ValueProperty="Value"
-                            Data=@EnumExtensions.EnumAsKeyValuePair(property.FilterPropertyType != null ? (Nullable.GetUnderlyingType(property.FilterPropertyType!)! ?? property.FilterPropertyType) : typeof(object)) Change=@(args => { _ = InvokeAsync(ApplyFilter); }) />
+            <CrestDropDown Disabled="@IsOperatorNullOrEmpty()" AllowClear="false" AllowFiltering="false" TValue="@object"
+                           class="rz-datafilter-editor"
+                           InputAttributes="@(new Dictionary<string, object>() { { "aria-label", $"{DataFilter?.FilterValueAriaLabel} {Filter.FilterValue}".Trim() } })"
+                           @bind-Value=@Filter.FilterValue Multiple="false" Placeholder="@(DataFilter?.EnumFilterSelectText ?? "")"
+                           TextProperty="Text" ValueProperty="Value" Data=@EnumExtensions.EnumAsKeyValuePair(property.FilterPropertyType !=
+                               null ? (Nullable.GetUnderlyingType(property.FilterPropertyType!)! ?? property.FilterPropertyType) : typeof(object))
+                           Change=@(args => { _ = InvokeAsync(ApplyFilter); }) />
         }
         else if (property.FilterPropertyType != null && PropertyAccess.IsNumeric(property.FilterPropertyType))
         {
@@ -63,21 +77,26 @@ else if (Filter != null)
         }
         else if (PropertyAccess.IsDate(property.FilterPropertyType))
         {
-            <CrestDatePicker Disabled="@IsOperatorNullOrEmpty()" @bind-Value=@Filter.FilterValue TValue="@object" ShowTime="true" class="rz-datafilter-editor"
-                              InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", $"{DataFilter?.FilterValueAriaLabel} {Filter.FilterValue}".Trim() }})"
-                              ShowTimeOkButton="true" DateFormat="@getFilterDateFormat()" Change=@(args => InvokeAsync(ApplyFilter)) />
+            <CrestDatePicker Disabled="@IsOperatorNullOrEmpty()" @bind-Value=@Filter.FilterValue TValue="@object" ShowTime="true"
+                             class="rz-datafilter-editor"
+                             InputAttributes="@(new Dictionary<string, object>() { { "aria-label", $"{DataFilter?.FilterValueAriaLabel} {Filter.FilterValue}".Trim() } })"
+                             ShowTimeOkButton="true" DateFormat="@getFilterDateFormat()" Change=@(args => InvokeAsync(ApplyFilter)) />
         }
         else if (property.FilterPropertyType == typeof(bool) || property.FilterPropertyType == typeof(bool?))
         {
-            <CrestCheckBox Disabled="@IsOperatorNullOrEmpty()" TriState="true" TValue="@object" @bind-Value=@Filter.FilterValue Change=@(args => InvokeAsync(ApplyFilter)) class="rz-datafilter-check"
-                            InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", $"{DataFilter?.FilterValueAriaLabel} {Filter.FilterValue}".Trim() }})" />
+            <CrestCheckBox Disabled="@IsOperatorNullOrEmpty()" TriState="true" TValue="@object" @bind-Value=@Filter.FilterValue
+                           Change=@(args => InvokeAsync(ApplyFilter)) class="rz-datafilter-check"
+                           InputAttributes="@(new Dictionary<string, object>() { { "aria-label", $"{DataFilter?.FilterValueAriaLabel} {Filter.FilterValue}".Trim() } })" />
         }
         else
         {
-            <CrestTextBox Disabled="@IsOperatorNullOrEmpty()" class="rz-datafilter-editor" aria-label="@($"{DataFilter?.FilterValueAriaLabel} {Filter.FilterValue}".Trim())" Value="@($"{Filter.FilterValue}")" Change=@(args => { Filter.FilterValue = args; InvokeAsync(ApplyFilter); }) />
+            <CrestTextBox Disabled="@IsOperatorNullOrEmpty()" class="rz-datafilter-editor"
+                          aria-label="@($"{DataFilter?.FilterValueAriaLabel} {Filter.FilterValue}".Trim())" Value="@($"{Filter.FilterValue}")"
+                          Change=@(args => { Filter.FilterValue = args; InvokeAsync(ApplyFilter); }) />
         }
 
-        <CrestButton title="@(DataFilter?.RemoveFilterText ?? "")" class="rz-datafilter-item-clear" Icon="clear" Click="@RemoveFilter" Variant="Variant.Text" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Dark"/>
+        <CrestButton title="@(DataFilter?.RemoveFilterText ?? "")" class="rz-datafilter-item-clear" Icon="clear"
+                     Click="@RemoveFilter" Variant="Variant.Text" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Dark" />
     }
 }
 @code {
@@ -103,7 +122,7 @@ else if (Filter != null)
             {
                 if (Filter.Property != null)
                 {
-                    property = DataFilter?.properties.FirstOrDefault(f => object.Equals(f.Property, Filter.Property)); 
+                    property = DataFilter?.properties.FirstOrDefault(f => object.Equals(f.Property, Filter.Property));
                 }
                 else if (property == null && DataFilter?.UniqueFilters == true)
                 {
@@ -168,7 +187,7 @@ else if (Filter != null)
 
     async Task OnPropertyChange(object p)
     {
-        if (Filter == null) 
+        if (Filter == null)
         {
             await Task.CompletedTask;
             return;
@@ -197,7 +216,8 @@ else if (Filter != null)
 
         Filter.Type = property.FilterPropertyType;
 
-        var defaultOperator = typeof(System.Collections.IEnumerable).IsAssignableFrom(property.FilterPropertyType) ? FilterOperator.Contains : default(FilterOperator);
+        var defaultOperator = typeof(System.Collections.IEnumerable).IsAssignableFrom(property.FilterPropertyType) ?
+FilterOperator.Contains : default(FilterOperator);
 
         if (property.GetFilterOperators().Any(o => o == property.FilterOperator))
         {
@@ -219,7 +239,7 @@ else if (Filter != null)
     {
         if (Filter != null)
         {
-            return Filter.FilterOperator == FilterOperator.IsEmpty ||  Filter.FilterOperator == FilterOperator.IsNotEmpty ||
+            return Filter.FilterOperator == FilterOperator.IsEmpty || Filter.FilterOperator == FilterOperator.IsNotEmpty ||
                     Filter.FilterOperator == FilterOperator.IsNull || Filter.FilterOperator == FilterOperator.IsNotNull;
         }
 
@@ -244,7 +264,7 @@ else if (Filter != null)
 
     async Task AddFilter(bool isGroup)
     {
-        if (Filter == null) 
+        if (Filter == null)
         {
             await Task.CompletedTask;
             return;
@@ -256,7 +276,8 @@ else if (Filter != null)
         }
         if (isGroup)
         {
-            Filter.Filters = (Filter.Filters ?? Enumerable.Empty<CompositeFilterDescriptor>()).Concat(new CompositeFilterDescriptor[]
+            Filter.Filters = (Filter.Filters ?? Enumerable.Empty<CompositeFilterDescriptor>()).Concat(new
+CompositeFilterDescriptor[]
                 {
                     new CompositeFilterDescriptor()
                     {
@@ -267,7 +288,8 @@ else if (Filter != null)
         }
         else
         {
-            Filter.Filters = (Filter.Filters ?? Enumerable.Empty<CompositeFilterDescriptor>()).Concat(new CompositeFilterDescriptor[] { new CompositeFilterDescriptor() });
+            Filter.Filters = (Filter.Filters ?? Enumerable.Empty<CompositeFilterDescriptor>()).Concat(new
+CompositeFilterDescriptor[] { new CompositeFilterDescriptor() });
         }
 
         if (DataFilter?.Auto == true)
@@ -288,7 +310,8 @@ else if (Filter != null)
         {
             if (Parent.Filter != null)
             {
-                Parent.Filter.Filters = Parent.Filter.Filters?.Where(f => f != Filter).ToList() ?? new List<CompositeFilterDescriptor>();
+                Parent.Filter.Filters = Parent.Filter.Filters?.Where(f => f != Filter).ToList() ?? new
+List<CompositeFilterDescriptor>();
             }
             await Parent.ChangeState();
         }
@@ -362,7 +385,8 @@ else if (Filter != null)
                 }
             }
 
-            builder.AddAttribute(5, "InputAttributes", new Dictionary<string, object>() { { "aria-label", $"{DataFilter?.FilterValueAriaLabel} {Filter?.FilterValue}".Trim() } });
+            builder.AddAttribute(5, "InputAttributes", new Dictionary<string, object>() { { "aria-label",
+$"{DataFilter?.FilterValueAriaLabel} {Filter?.FilterValue}".Trim() } });
 
             builder.CloseComponent();
         };

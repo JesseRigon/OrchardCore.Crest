@@ -31,4 +31,10 @@ public sealed class CrestPanelMenuItem
     public bool HasChildren => !IsSeparator && Items.Count > 0;
 
     public bool HasLink => !IsSeparator && !string.IsNullOrWhiteSpace(Href);
+
+    /// <summary>
+    /// The DOM id rendered on this item's wrapper, used for roving-focus keyboard
+    /// navigation (aria-activedescendant and scroll-into-view targeting).
+    /// </summary>
+    public string ElementId => $"crest-panel-menu-item-{Key}";
 }

@@ -1,3 +1,4 @@
+using Crest.Components.Overlay;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
@@ -35,7 +36,7 @@ namespace Crest.Components.Primitives
     /// &lt;CrestDatePicker @bind-Value=@selectedDate TValue="DateTime" Min="@DateTime.Today" Max="@DateTime.Today.AddMonths(6)" /&gt;
     /// </code>
     /// </example>
-    public partial class CrestDatePicker<TValue> : CrestComponent, IRadzenFormComponent
+    public partial class CrestDatePicker<TValue> : CrestComponent, ICrestFormComponent
     {
         /// <summary>
         /// Gets or sets a value indicating whether the component should update its value on every input event
@@ -196,8 +197,8 @@ namespace Crest.Components.Primitives
         [Parameter]
         public IReadOnlyDictionary<string, object>? InputAttributes { get; set; }
 
-        RadzenDropDown<int>? monthDropDown;
-        RadzenDropDown<int>? yearDropDown;
+        CrestDropDown<int>? monthDropDown;
+        CrestDropDown<int>? yearDropDown;
         CrestNumeric<int>? hourNumeric;
 
         bool shouldFocusDay;
@@ -484,7 +485,7 @@ namespace Crest.Components.Primitives
                 Close();
             }
 
-            if(Min.HasValue && CurrentDate < Min.Value || Max.HasValue && CurrentDate > Max.Value)
+            if (Min.HasValue && CurrentDate < Min.Value || Max.HasValue && CurrentDate > Max.Value)
             {
                 return;
             }
@@ -1141,14 +1142,14 @@ namespace Crest.Components.Primitives
             }
         }
 
-        IRadzenForm? _form;
+        ICrestForm? _form;
 
         /// <summary>
         /// Gets or sets the form.
         /// </summary>
         /// <value>The form.</value>
         [CascadingParameter]
-        public IRadzenForm? Form
+        public ICrestForm? Form
         {
             get
             {
@@ -2000,7 +2001,7 @@ namespace Crest.Components.Primitives
             }
         }
 
-        RadzenPopup? popup;
+        CrestPopup? popup;
 
         /// <summary>
         /// Gets or sets the render mode.
@@ -2042,7 +2043,7 @@ namespace Crest.Components.Primitives
         async Task OnPopupKeyDown(KeyboardEventArgs args)
         {
             var key = args.Code != null ? args.Code : args.Key;
-            if(key == "Escape")
+            if (key == "Escape")
             {
                 preventKeyPress = false;
 
@@ -2144,7 +2145,7 @@ namespace Crest.Components.Primitives
                 catch
                 { }
             }
-            
+
         }
     }
 }

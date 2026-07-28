@@ -7,29 +7,35 @@
 @namespace Crest.Components.Primitives.Spreadsheet.Tools
 <CrestStack Gap="0.5rem" Style="min-width: 400px">
     <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ValidationType)) Component="validationType" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-        <RadzenDropDown @bind-Value=@ValidationType Data=@ValidationTypes TextProperty="Name" ValueProperty="Value" Name="validationType" InputSize="InputSize.Small" Style="flex: 1" Change=@OnTypeChanged />
+        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ValidationType)) Component="validationType"
+                    class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+        <CrestDropDown @bind-Value=@ValidationType Data=@ValidationTypes TextProperty="Name" ValueProperty="Value"
+                       Name="validationType" InputSize="InputSize.Small" Style="flex: 1" Change=@OnTypeChanged />
     </CrestStack>
 
     @if (ValidationType != DataValidationType.List && ValidationType != DataValidationType.Custom)
     {
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Operator)) Component="operator" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-            <RadzenDropDown @bind-Value=@Operator Data=@Operators TextProperty="Name" ValueProperty="Value" Name="operator" InputSize="InputSize.Small" Style="flex: 1" />
+            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Operator)) Component="operator" class="rz-text-subtitle2"
+                        Style="width: 8rem; text-align: end" />
+            <CrestDropDown @bind-Value=@Operator Data=@Operators TextProperty="Name" ValueProperty="Value" Name="operator"
+                           InputSize="InputSize.Small" Style="flex: 1" />
         </CrestStack>
     }
 
     @if (ValidationType == DataValidationType.Custom)
     {
         <CrestStack Orientation="Orientation.Vertical" Gap="0.25rem">
-            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Formula)) Component="formula" class="rz-text-subtitle2" Style="align-self: start" />
+            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Formula)) Component="formula" class="rz-text-subtitle2"
+                        Style="align-self: start" />
             <CrestTextBox @bind-Value=@Formula1 Name="formula" InputSize="InputSize.Small" Style="width: 100%" />
         </CrestStack>
     }
     else if (ValidationType == DataValidationType.List)
     {
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Start">
-            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ValuesCommaSeparated)) Component="valuesList" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+            <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ValuesCommaSeparated)) Component="valuesList"
+                        class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
             <CrestTextArea @bind-Value=@Formula1 Name="valuesList" Rows="3" InputSize="InputSize.Small" Style="flex: 1" />
         </CrestStack>
     }
@@ -38,33 +44,43 @@
         @if (ValidationType == DataValidationType.Date)
         {
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Minimum)) Component="minimum" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                <CrestDatePicker @bind-Value=@Formula1Date DateFormat="yyyy-MM-dd" Name="minimum" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Minimum)) Component="minimum" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
+                <CrestDatePicker @bind-Value=@Formula1Date DateFormat="yyyy-MM-dd" Name="minimum" InputSize="InputSize.Small"
+                                 Style="flex: 1" />
             </CrestStack>
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Maximum)) Component="maximum" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                <CrestDatePicker @bind-Value=@Formula2Date DateFormat="yyyy-MM-dd" Name="maximum" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Maximum)) Component="maximum" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
+                <CrestDatePicker @bind-Value=@Formula2Date DateFormat="yyyy-MM-dd" Name="maximum" InputSize="InputSize.Small"
+                                 Style="flex: 1" />
             </CrestStack>
         }
         else if (ValidationType == DataValidationType.Time)
         {
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Minimum)) Component="minimum" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                <CrestDatePicker @bind-Value=@Formula1Date ShowTime="true" TimeOnly="true" Name="minimum" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Minimum)) Component="minimum" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
+                <CrestDatePicker @bind-Value=@Formula1Date ShowTime="true" TimeOnly="true" Name="minimum"
+                                 InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Maximum)) Component="maximum" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                <CrestDatePicker @bind-Value=@Formula2Date ShowTime="true" TimeOnly="true" Name="maximum" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Maximum)) Component="maximum" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
+                <CrestDatePicker @bind-Value=@Formula2Date ShowTime="true" TimeOnly="true" Name="maximum"
+                                 InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
         }
         else
         {
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Minimum)) Component="minimum" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Minimum)) Component="minimum" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
                 <CrestTextBox @bind-Value=@Formula1 Name="minimum" InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Maximum)) Component="maximum" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Maximum)) Component="maximum" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
                 <CrestTextBox @bind-Value=@Formula2 Name="maximum" InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
         }
@@ -74,68 +90,88 @@
         @if (ValidationType == DataValidationType.Date)
         {
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Value)) Component="value" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                <CrestDatePicker @bind-Value=@Formula1Date DateFormat="yyyy-MM-dd" Name="value" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Value)) Component="value" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
+                <CrestDatePicker @bind-Value=@Formula1Date DateFormat="yyyy-MM-dd" Name="value" InputSize="InputSize.Small"
+                                 Style="flex: 1" />
             </CrestStack>
         }
         else if (ValidationType == DataValidationType.Time)
         {
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Value)) Component="value" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
-                <CrestDatePicker @bind-Value=@Formula1Date ShowTime="true" TimeOnly="true" Name="value" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Value)) Component="value" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
+                <CrestDatePicker @bind-Value=@Formula1Date ShowTime="true" TimeOnly="true" Name="value"
+                                 InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
         }
         else
         {
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Value)) Component="value" class="rz-text-subtitle2" Style="width: 8rem; text-align: end" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Value)) Component="value" class="rz-text-subtitle2"
+                            Style="width: 8rem; text-align: end" />
                 <CrestTextBox @bind-Value=@Formula1 Name="value" InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
         }
     }
 
-    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="padding-inline-start: 8.5rem">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
+                Style="padding-inline-start: 8.5rem">
         <CrestCheckBox @bind-Value=@AllowBlank TValue="bool" Name="allowBlank" />
-        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_AllowBlank)) Component="allowBlank" class="rz-text-subtitle2" />
+        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_AllowBlank)) Component="allowBlank"
+                    class="rz-text-subtitle2" />
     </CrestStack>
 
     <CrestFieldset Text=@L(nameof(CrestStrings.Spreadsheet_ErrorAlert))>
         <CrestStack Gap="0.5rem">
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Style)) Component="errorStyle" class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
-                <RadzenDropDown @bind-Value=@ErrorStyle Data=@ErrorStyles TextProperty="Name" ValueProperty="Value" Name="errorStyle" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Style)) Component="errorStyle"
+                            class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
+                <CrestDropDown @bind-Value=@ErrorStyle Data=@ErrorStyles TextProperty="Name" ValueProperty="Value"
+                               Name="errorStyle" InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Title)) Component="errorTitle" class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Title)) Component="errorTitle"
+                            class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
                 <CrestTextBox @bind-Value=@ErrorTitle Name="errorTitle" InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Start">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Message)) Component="errorMessage" class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
-                <CrestTextArea @bind-Value=@ErrorMessage Name="errorMessage" Rows="2" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Message)) Component="errorMessage"
+                            class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
+                <CrestTextArea @bind-Value=@ErrorMessage Name="errorMessage" Rows="2" InputSize="InputSize.Small"
+                               Style="flex: 1" />
             </CrestStack>
         </CrestStack>
     </CrestFieldset>
 
     <CrestFieldset Text=@L(nameof(CrestStrings.Spreadsheet_InputPrompt))>
         <CrestStack Gap="0.5rem">
-            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="padding-inline-start: 7.5rem">
+            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
+                        Style="padding-inline-start: 7.5rem">
                 <CrestCheckBox @bind-Value=@ShowInputMessage TValue="bool" Name="showInputMessage" />
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ShowInputMessage)) Component="showInputMessage" class="rz-text-subtitle2" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_ShowInputMessage)) Component="showInputMessage"
+                            class="rz-text-subtitle2" />
             </CrestStack>
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Title)) Component="inputTitle" class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Title)) Component="inputTitle"
+                            class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
                 <CrestTextBox @bind-Value=@InputTitle Name="inputTitle" InputSize="InputSize.Small" Style="flex: 1" />
             </CrestStack>
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Start">
-                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Message)) Component="inputMessage" class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
-                <CrestTextArea @bind-Value=@InputMessage Name="inputMessage" Rows="2" InputSize="InputSize.Small" Style="flex: 1" />
+                <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_Message)) Component="inputMessage"
+                            class="rz-text-subtitle2" Style="width: 7rem; text-align: end" />
+                <CrestTextArea @bind-Value=@InputMessage Name="inputMessage" Rows="2" InputSize="InputSize.Small"
+                               Style="flex: 1" />
             </CrestStack>
         </CrestStack>
     </CrestFieldset>
 
-    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-spreadsheet-dialog-actions">
-        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
-        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" />
+    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"
+                class="rz-spreadsheet-dialog-actions">
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base"
+                     Variant="Variant.Outlined" />
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary"
+                     Variant="Variant.Flat" />
     </CrestStack>
 </CrestStack>
 
@@ -230,7 +266,8 @@
                 formula2 = (Formula2Date.Value.TimeOfDay.TotalDays).ToString(CultureInfo.InvariantCulture);
             }
         }
-        else if (ValidationType is DataValidationType.WholeNumber or DataValidationType.Decimal or DataValidationType.TextLength)
+        else if (ValidationType is DataValidationType.WholeNumber or DataValidationType.Decimal or
+DataValidationType.TextLength)
         {
             // Bounds are typed in the workbook culture but stored as canonical invariant fragments.
             formula1 = NormalizeNumericBound(formula1);

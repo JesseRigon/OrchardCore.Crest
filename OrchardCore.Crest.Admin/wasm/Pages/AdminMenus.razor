@@ -521,7 +521,7 @@
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
                     <span class="admin-menu-node__handle" draggable="@(!IsMoveLockedNode(node) ? "true" : "false")" title="@(IsMoveLockedNode(node) ? "The New menu branch has a fixed position" : "Drag to move")">
-                        <RadzenIcon Icon="drag_indicator" />
+                        <CrestIcon IconKey="iconify.mdi/current/default/drag" />
                     </span>
                     @if (node.Items.Length > 0)
                     {
@@ -603,7 +603,7 @@
         <div class="admin-menu-separator">
             <div class="admin-menu-separator__content">
                 <span class="admin-menu-node__handle" draggable="true" title="Drag to move">
-                    <RadzenIcon Icon="drag_indicator" />
+                    <CrestIcon IconKey="iconify.mdi/current/default/drag" />
                 </span>
                 <span class="admin-menu-node__spacer"></span>
                 <RadzenText TextStyle="TextStyle.Subtitle2" Text="Separator" />
@@ -947,11 +947,11 @@
                 <RadzenRow Gap="1rem">
                     <RadzenColumn Size="12" SizeMD="6">
                         <RadzenLabel Text="Node type" />
-                        <RadzenDropDown TValue="string" Data="@AvailableNodeTypes" TextProperty="Text" ValueProperty="Value" @bind-Value="model.Type" Disabled="@(EditingNodeId is not null || SelectedMenu?.IsDefault == true)" Style="width: 100%;" />
+                        <CrestDropDown TValue="string" Data="@AvailableNodeTypes" TextProperty="Text" ValueProperty="Value" @bind-Value="model.Type" Disabled="@(EditingNodeId is not null || SelectedMenu?.IsDefault == true)" Style="width: 100%;" />
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="6">
                         <RadzenLabel Text="Parent Node" />
-                        <RadzenDropDown TValue="string" Data="@ParentOptions" TextProperty="Text" ValueProperty="Value" @bind-Value="model.ParentNodeId" Placeholder="Root level" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
+                        <CrestDropDown TValue="string" Data="@ParentOptions" TextProperty="Text" ValueProperty="Value" @bind-Value="model.ParentNodeId" Placeholder="Root level" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </RadzenColumn>
                 </RadzenRow>
 

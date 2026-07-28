@@ -24,7 +24,7 @@ namespace Crest.Components.Primitives
         /// Gets or sets the parent spider chart (non-generic contract).
         /// </summary>
         [CascadingParameter]
-        public IRadzenSpiderChart? Chart { get; set; }
+        public ICrestSpiderChart? Chart { get; set; }
 
         /// <inheritdoc />
         protected override void OnInitialized()

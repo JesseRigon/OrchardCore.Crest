@@ -53,14 +53,14 @@
                             <SettingsSwitch Label="Use resources cache busting" Hint="Whether cache busting (append a version) is used for scripts and stylesheets." @bind-Value="Model.AppendVersion" />
                             <SettingsSwitch Label="Use framework CDN (Content Delivery Network)" Hint="Whether a framework CDN is used for registered scripts and stylesheets, such as jQuery, or their local version." @bind-Value="Model.UseCdn" />
                             <RadzenFormField Text="Site CDN (Content Delivery Network) base URL" Style="width: 100%;"><RadzenTextBox @bind-Value="Model.CdnBaseUrl" Style="width: 100%;" /></RadzenFormField>
-                            <RadzenFormField Text="Resource Debug Mode" Style="width: 100%; max-width: 48rem;"><RadzenDropDown @bind-Value="Model.ResourceDebugMode" Data="ResourceDebugOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></RadzenFormField>
+                            <RadzenFormField Text="Resource Debug Mode" Style="width: 100%; max-width: 48rem;"><CrestDropDown @bind-Value="Model.ResourceDebugMode" Data="ResourceDebugOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></RadzenFormField>
                             <RadzenText TextStyle="TextStyle.Caption" Text="Determines whether scripts and stylesheets load in their debuggable or minified form." />
                             </RadzenStack>
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Cache" Icon="cached">
                             <RadzenStack Gap="1rem">
                             <RadzenText TextStyle="TextStyle.H5" Text="Cache" />
-                            <RadzenFormField Text="Cache Mode" Style="width: 100%; max-width: 48rem;"><RadzenDropDown @bind-Value="Model.CacheMode" Data="CacheModeOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></RadzenFormField>
+                            <RadzenFormField Text="Cache Mode" Style="width: 100%; max-width: 48rem;"><CrestDropDown @bind-Value="Model.CacheMode" Data="CacheModeOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></RadzenFormField>
                             <RadzenText TextStyle="TextStyle.Caption" Text="Determines whether caches are enabled or disabled." />
                             </RadzenStack>
                         </RadzenTabsItem>

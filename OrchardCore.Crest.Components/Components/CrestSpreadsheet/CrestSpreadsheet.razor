@@ -1,3 +1,4 @@
+@using Crest.Components.Overlay
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @using Crest.Components.Primitives
@@ -9,185 +10,223 @@
 @inherits CrestComponent
 
 @namespace Crest.Components.Primitives
-<div @ref=@Element class=@GetCssClass() style=@Style tabindex="0" @attributes=@Attributes id=@GetId()
-     role="application" aria-label=@(AriaLabel ?? Localize(nameof(CrestStrings.Spreadsheet_A11yGridLabel)))
-     aria-keyshortcuts="F6 Shift+F6" aria-describedby=@($"{GetId()}-a11y-instructions")>
+<div @ref=@Element class=@GetCssClass() style=@Style tabindex="0" @attributes=@Attributes id=@GetId() role="application"
+     aria-label=@(AriaLabel ?? Localize(nameof(CrestStrings.Spreadsheet_A11yGridLabel))) aria-keyshortcuts="F6 Shift+F6"
+     aria-describedby=@($"{GetId()}-a11y-instructions")>
     <CascadingValue TValue="ISpreadsheet" Value=this IsFixed="true">
-    <CascadingValue Value=@Worksheet TValue="Worksheet">
-    <CascadingValue Value=@ActiveView?.Commands TValue="UndoRedoStack">
-        @if (ShowToolbar)
-        {
-        <CrestTabs SelectedIndex=@SelectedToolsetIndex SelectedIndexChanged=@SelectedToolsetIndexChanged>
-            <Tabs>
-                @if (ChildContent != null)
+        <CascadingValue Value=@Worksheet TValue="Worksheet">
+            <CascadingValue Value=@ActiveView?.Commands TValue="UndoRedoStack">
+                @if (ShowToolbar)
                 {
-                    @ChildContent
+                    <CrestTabs SelectedIndex=@SelectedToolsetIndex SelectedIndexChanged=@SelectedToolsetIndexChanged>
+                        <Tabs>
+                            @if (ChildContent != null)
+                            {
+                                @ChildContent
+                            }
+                            else
+                            {
+                                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_FileTab))>
+                                    <CrestStack class="rz-toolbar" role="group"
+                                                aria-label=@Localize(nameof(CrestStrings.Spreadsheet_FileTab))
+                                                Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
+                                        <CrestSpreadsheetOpen CsvImportOptions=@CsvImportOptions />
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestSpreadsheetSave FileName=@ExportFileName CsvExportOptions=@CsvExportOptions />
+                                    </CrestStack>
+                                </CrestTabsItem>
+                                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_HomeTab))>
+                                    <CrestStack class="rz-toolbar" role="group"
+                                                aria-label=@Localize(nameof(CrestStrings.Spreadsheet_HomeTab))
+                                                Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem"
+                                                    AlignItems="AlignItems.Center">
+                                            <CrestSpreadsheetUndo />
+                                            <CrestSpreadsheetRedo />
+                                        </CrestStack>
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem"
+                                                    AlignItems="AlignItems.Center">
+                                            <CrestSpreadsheetFontFamily />
+                                            <CrestSpreadsheetFontSize />
+                                        </CrestStack>
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem"
+                                                    AlignItems="AlignItems.Center">
+                                            <CrestSpreadsheetBold />
+                                            <CrestSpreadsheetItalic />
+                                            <CrestSpreadsheetUnderline />
+                                            <CrestSpreadsheetStrikethrough />
+                                            <CrestSpreadsheetColor />
+                                            <CrestSpreadsheetBackgroundColor />
+                                            <CrestSpreadsheetCellBorders />
+                                        </CrestStack>
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem"
+                                                    AlignItems="AlignItems.Center">
+                                            <CrestSpreadsheetTextAlign />
+                                            <CrestSpreadsheetVerticalAlign />
+                                            <CrestSpreadsheetTextWrap />
+                                            <CrestSpreadsheetMergeCells />
+                                        </CrestStack>
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem"
+                                                    AlignItems="AlignItems.Center">
+                                            <CrestSpreadsheetConditionalFormat />
+                                        </CrestStack>
+                                    </CrestStack>
+                                </CrestTabsItem>
+                                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_FormatTab))>
+                                    <CrestStack class="rz-toolbar" role="group"
+                                                aria-label=@Localize(nameof(CrestStrings.Spreadsheet_FormatTab))
+                                                Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
+                                        <CrestSpreadsheetDataFormat />
+                                        <CrestSpreadsheetIncreaseDecimals />
+                                        <CrestSpreadsheetDecreaseDecimals />
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestButton Text=@Localize(nameof(CrestStrings.Spreadsheet_FormatCells))
+                                                     Click=@OnFormatCellsAsync Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                                     Size="ButtonSize.Small" Disabled=@(Worksheet?.Selection.Cell == CellRef.Invalid ||
+                                                                                         !IsFeatureAllowed(SpreadsheetFeature.CellFormatting)) />
+                                    </CrestStack>
+                                </CrestTabsItem>
+                                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_InsertTab))>
+                                    <CrestStack class="rz-toolbar" role="group"
+                                                aria-label=@Localize(nameof(CrestStrings.Spreadsheet_InsertTab))
+                                                Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem"
+                                                    AlignItems="AlignItems.Center">
+                                            <CrestSpreadsheetInsertRowAfter />
+                                            <CrestSpreadsheetInsertRowBefore />
+                                        </CrestStack>
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem"
+                                                    AlignItems="AlignItems.Center">
+                                            <CrestSpreadsheetInsertColumnAfter />
+                                            <CrestSpreadsheetInsertColumnBefore />
+                                        </CrestStack>
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem"
+                                                    AlignItems="AlignItems.Center">
+                                            <CrestSpreadsheetInsertHyperlink />
+                                            <CrestSpreadsheetInsertImage />
+                                            <CrestSpreadsheetInsertTable />
+                                            <CrestSpreadsheetInsertChart />
+                                        </CrestStack>
+                                    </CrestStack>
+                                </CrestTabsItem>
+                                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_ViewTab))>
+                                    <CrestStack class="rz-toolbar" role="group"
+                                                aria-label=@Localize(nameof(CrestStrings.Spreadsheet_ViewTab))
+                                                Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
+                                        <CrestSpreadsheetFreeze />
+                                    </CrestStack>
+                                </CrestTabsItem>
+                                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_DataTab))>
+                                    <CrestStack class="rz-toolbar" role="group"
+                                                aria-label=@Localize(nameof(CrestStrings.Spreadsheet_DataTab))
+                                                Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
+                                        <CrestSpreadsheetAutoFilter />
+                                        <CrestSpreadsheetCustomSort />
+                                        <div class="rz-toolbar-separator"></div>
+                                        <CrestSpreadsheetDataValidation />
+                                    </CrestStack>
+                                </CrestTabsItem>
+                                <CrestSpreadsheetTableDesignToolset />
+                            }
+                        </Tabs>
+                    </CrestTabs>
+                    <CrestButton Icon="help" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                 Size="ButtonSize.ExtraSmall"
+                                 Style="position: absolute; inset-block-start: 0.25rem; inset-inline-end: 0.25rem; z-index: 1"
+                                 Click=@(_ => OpenShortcutsHelpAsync())
+                                 title=@Localize(nameof(CrestStrings.Spreadsheet_HelpShowShortcuts))
+                                 aria-label=@Localize(nameof(CrestStrings.Spreadsheet_HelpShowShortcuts)) />
                 }
-                else
+                @if (Worksheet != null)
                 {
-                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_FileTab))>
-                    <CrestStack class="rz-toolbar" role="group" aria-label=@Localize(nameof(CrestStrings.Spreadsheet_FileTab)) Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                        <CrestSpreadsheetOpen CsvImportOptions=@CsvImportOptions />
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestSpreadsheetSave FileName=@ExportFileName CsvExportOptions=@CsvExportOptions />
-                    </CrestStack>
-                </CrestTabsItem>
-                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_HomeTab))>
-                    <CrestStack class="rz-toolbar" role="group" aria-label=@Localize(nameof(CrestStrings.Spreadsheet_HomeTab)) Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                            <CrestSpreadsheetUndo />
-                            <CrestSpreadsheetRedo />
-                        </CrestStack>
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                            <CrestSpreadsheetFontFamily/>
-                            <CrestSpreadsheetFontSize/>
-                        </CrestStack>
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                            <CrestSpreadsheetBold/>
-                            <CrestSpreadsheetItalic/>
-                            <CrestSpreadsheetUnderline/>
-                            <CrestSpreadsheetStrikethrough/>
-                            <CrestSpreadsheetColor/>
-                            <CrestSpreadsheetBackgroundColor/>
-                            <CrestSpreadsheetCellBorders/>
-                        </CrestStack>
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                            <CrestSpreadsheetTextAlign/>
-                            <CrestSpreadsheetVerticalAlign/>
-                            <CrestSpreadsheetTextWrap/>
-                            <CrestSpreadsheetMergeCells/>
-                        </CrestStack>
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                            <CrestSpreadsheetConditionalFormat/>
-                        </CrestStack>
-                    </CrestStack>
-                </CrestTabsItem>
-                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_FormatTab))>
-                    <CrestStack class="rz-toolbar" role="group" aria-label=@Localize(nameof(CrestStrings.Spreadsheet_FormatTab)) Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                        <CrestSpreadsheetDataFormat/>
-                        <CrestSpreadsheetIncreaseDecimals/>
-                        <CrestSpreadsheetDecreaseDecimals/>
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestButton Text=@Localize(nameof(CrestStrings.Spreadsheet_FormatCells)) Click=@OnFormatCellsAsync
-                            Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
-                            Disabled=@(Worksheet?.Selection.Cell == CellRef.Invalid || !IsFeatureAllowed(SpreadsheetFeature.CellFormatting)) />
-                    </CrestStack>
-                </CrestTabsItem>
-                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_InsertTab))>
-                    <CrestStack class="rz-toolbar" role="group" aria-label=@Localize(nameof(CrestStrings.Spreadsheet_InsertTab)) Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                            <CrestSpreadsheetInsertRowAfter/>
-                            <CrestSpreadsheetInsertRowBefore/>
-                        </CrestStack>
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                            <CrestSpreadsheetInsertColumnAfter/>
-                            <CrestSpreadsheetInsertColumnBefore/>
-                        </CrestStack>
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                            <CrestSpreadsheetInsertHyperlink/>
-                            <CrestSpreadsheetInsertImage/>
-                            <CrestSpreadsheetInsertTable/>
-                            <CrestSpreadsheetInsertChart/>
-                        </CrestStack>
-                    </CrestStack>
-                </CrestTabsItem>
-                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_ViewTab))>
-                    <CrestStack class="rz-toolbar" role="group" aria-label=@Localize(nameof(CrestStrings.Spreadsheet_ViewTab)) Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                        <CrestSpreadsheetFreeze/>
-                    </CrestStack>
-                </CrestTabsItem>
-                <CrestTabsItem Text=@Localize(nameof(CrestStrings.Spreadsheet_DataTab))>
-                    <CrestStack class="rz-toolbar" role="group" aria-label=@Localize(nameof(CrestStrings.Spreadsheet_DataTab)) Orientation="Orientation.Horizontal" Gap="0.125rem" AlignItems="AlignItems.Center">
-                        <CrestSpreadsheetAutoFilter/>
-                        <CrestSpreadsheetCustomSort/>
-                        <div class="rz-toolbar-separator"></div>
-                        <CrestSpreadsheetDataValidation/>
-                    </CrestStack>
-                </CrestTabsItem>
-                <CrestSpreadsheetTableDesignToolset />
-                }
-            </Tabs>
-        </CrestTabs>
-        <CrestButton Icon="help" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
-                      Style="position: absolute; inset-block-start: 0.25rem; inset-inline-end: 0.25rem; z-index: 1"
-                      Click=@(_ => OpenShortcutsHelpAsync())
-                      title=@Localize(nameof(CrestStrings.Spreadsheet_HelpShowShortcuts))
-                      aria-label=@Localize(nameof(CrestStrings.Spreadsheet_HelpShowShortcuts)) />
-        }
-@if (Worksheet != null)
-{
-        <span id=@($"{GetId()}-a11y-instructions") class="rz-sr-only">@Localize(nameof(CrestStrings.Spreadsheet_A11yInstructions))</span>
-        <SpreadsheetAccessibility @ref=@accessibility Worksheet=@Worksheet Spreadsheet=this />
-        <CascadingValue Value="@CellTypes">
-        @if (ShowFormulaBar)
-        {
-        <FormulaEditor Worksheet=@Worksheet Editor=@Editor />
-        }
-        <VirtualGrid @ref=@grid style="flex: 1" View=@ActiveView>
-            <Template>
-                @switch (context)
-                {
-                    case VirtualCorner corner:
-                        <CornerHeaderCell Rect=@context.Rect />
-                        break;
-                    case VirtualColumnHeader column:
-                        <ColumnHeader Worksheet=@Worksheet FrozenState=@column.FrozenState Column=@column.Column Rect=@context.Rect />
-                        break;
-                    case VirtualRowHeader row:
-                        <RowHeader Worksheet=@Worksheet FrozenState=@row.FrozenState Row=@row.Row Rect=@context.Rect />
-                        break;
-                    case VirtualDataItem item:
-                        <CellView Worksheet=@Worksheet Column=@item.Column Row=@item.Row FrozenState=@item.FrozenState Rect=@context.Rect Toggle=@OnCellToggleAsync />
-                        break;
-                    case VirtualHorizontalSplitter horizontalSplitter:
-                        <Splitter class="rz-spreadsheet-horizontal-splitter" Rect=@horizontalSplitter.Rect />
-                        break;
-                    case VirtualVerticalSplitter verticalSplitter:
-                        <Splitter class="rz-spreadsheet-vertical-splitter" Rect=@verticalSplitter.Rect />
-                        break;
-                }
-            </Template>
-            <ChildContent>
-                <SelectionOverlay Worksheet=@Worksheet Context=@context />
-                <AutofillOverlay Worksheet=@Worksheet Context=@context />
-                <ImageOverlay Worksheet=@Worksheet Context=@context />
-                <ChartOverlay Worksheet=@Worksheet Context=@context />
-                <CellEditor Worksheet=@Worksheet Editor=@Editor Context=@context />
-                @foreach (var table in Worksheet.Tables)
-                {
-                    <TableFrame Worksheet=@Worksheet Table=@table Context=@context />
-                }
-                <InputPrompt Worksheet=@Worksheet Context=@context />
-                <ValidationError Worksheet=@Worksheet Context=@context />
-            </ChildContent>
-        </VirtualGrid>
-        @if (ShowSheetTabs)
-        {
-        <div class="rz-spreadsheet-sheet-tabs">
-            <CrestButton Icon="add" Click=@OnAddSheetAsync Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" class="rz-spreadsheet-add-sheet" Disabled=@ReadOnly />
-            <CrestTabs SelectedIndex=@sheetIndex Change=@OnSheetTabChanged RenderMode="TabRenderMode.Server" TabPosition="TabPosition.Bottom">
-                <Tabs>
-                    @for (var i = 0; i < workbook!.Sheets.Count; i++)
-                    {
-                        var sheet = workbook.Sheets[i];
-                        <CrestTabsItem Text=@sheet.Name>
-                            <Template Context="tab">
-                                <CrestSplitButton Text=@sheet.Name
-                                    Click=@(item => OnSheetAction(item, sheet))
-                                    ButtonStyle="ButtonStyle.Base"
-                                    Variant="Variant.Text"
-                                    Size="ButtonSize.ExtraSmall">
-                                    <ChildContent>
-                                        <CrestSplitButtonItem Text=@Localize(nameof(CrestStrings.Spreadsheet_Rename)) Value="rename" Icon="edit" Disabled=@ReadOnly />
-                                        <CrestSplitButtonItem Text=@Localize(nameof(CrestStrings.Spreadsheet_Delete)) Value="delete" Icon="delete" Disabled=@(ReadOnly || workbook.Sheets.Count <= 1) />
-                                        <CrestSplitButtonItem Text=@Localize(nameof(CrestStrings.Spreadsheet_MoveLeft)) Value="move-left" Icon="chevron_left" Disabled=@(ReadOnly || workbook.IndexOf(sheet) == 0) />
-                                        <CrestSplitButtonItem Text=@Localize(nameof(CrestStrings.Spreadsheet_MoveRight)) Value="move-right" Icon="chevron_right" Disabled=@(ReadOnly || workbook.IndexOf(sheet) == workbook.Sheets.Count - 1) />
+                    <span id=@($"{GetId()}-a11y-instructions")
+                          class="rz-sr-only">@Localize(nameof(CrestStrings.Spreadsheet_A11yInstructions))</span>
+                    <SpreadsheetAccessibility @ref=@accessibility Worksheet=@Worksheet Spreadsheet=this />
+                    <CascadingValue Value="@CellTypes">
+                        @if (ShowFormulaBar)
+                        {
+                            <FormulaEditor Worksheet=@Worksheet Editor=@Editor />
+                        }
+                        <VirtualGrid @ref=@grid style="flex: 1" View=@ActiveView>
+                            <Template>
+                                @switch (context)
+                                {
+                                    case VirtualCorner corner:
+                                        <CornerHeaderCell Rect=@context.Rect />
+                                        break;
+                                    case VirtualColumnHeader column:
+                                        <ColumnHeader Worksheet=@Worksheet FrozenState=@column.FrozenState Column=@column.Column
+                                                      Rect=@context.Rect />
+                                        break;
+                                    case VirtualRowHeader row:
+                                        <RowHeader Worksheet=@Worksheet FrozenState=@row.FrozenState Row=@row.Row
+                                                   Rect=@context.Rect />
+                                        break;
+                                    case VirtualDataItem item:
+                                        <CellView Worksheet=@Worksheet Column=@item.Column Row=@item.Row
+                                                  FrozenState=@item.FrozenState Rect=@context.Rect Toggle=@OnCellToggleAsync />
+                                        break;
+                                    case VirtualHorizontalSplitter horizontalSplitter:
+                                        <Splitter class="rz-spreadsheet-horizontal-splitter" Rect=@horizontalSplitter.Rect />
+                                        break;
+                                    case VirtualVerticalSplitter verticalSplitter:
+                                        <Splitter class="rz-spreadsheet-vertical-splitter" Rect=@verticalSplitter.Rect />
+                                        break;
+                                }
+                            </Template>
+                            <ChildContent>
+                                <SelectionOverlay Worksheet=@Worksheet Context=@context />
+                                <AutofillOverlay Worksheet=@Worksheet Context=@context />
+                                <ImageOverlay Worksheet=@Worksheet Context=@context />
+                                <ChartOverlay Worksheet=@Worksheet Context=@context />
+                                <CellEditor Worksheet=@Worksheet Editor=@Editor Context=@context />
+                                @foreach (var table in Worksheet.Tables)
+                                {
+                                    <TableFrame Worksheet=@Worksheet Table=@table Context=@context />
+                                }
+                                <InputPrompt Worksheet=@Worksheet Context=@context />
+                                <ValidationError Worksheet=@Worksheet Context=@context />
+                            </ChildContent>
+                        </VirtualGrid>
+                        @if (ShowSheetTabs)
+                        {
+                            <div class="rz-spreadsheet-sheet-tabs">
+                                <CrestButton Icon="add" Click=@OnAddSheetAsync Variant="Variant.Text"
+                                             ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" class="rz-spreadsheet-add-sheet"
+                                             Disabled=@ReadOnly />
+                                <CrestTabs SelectedIndex=@sheetIndex Change=@OnSheetTabChanged RenderMode="TabRenderMode.Server"
+                                           TabPosition="TabPosition.Bottom">
+                                    <Tabs>
+                                        @for (var i = 0; i < workbook!.Sheets.Count; i++)
+                                        {
+                                            var sheet = workbook.Sheets[i];
+                                            <CrestTabsItem Text=@sheet.Name>
+                                                <Template Context="tab">
+                                                    <CrestSplitButton Text=@sheet.Name Click=@(item => OnSheetAction(item, sheet))
+                                                                      ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                                                                      Size="ButtonSize.ExtraSmall">
+                                                        <ChildContent>
+                                                            <CrestSplitButtonItem
+                                                            Text=@Localize(nameof(CrestStrings.Spreadsheet_Rename))
+                                                            Value="rename" Icon="edit" Disabled=@ReadOnly />
+                                                            <CrestSplitButtonItem
+                                                            Text=@Localize(nameof(CrestStrings.Spreadsheet_Delete))
+                                                            Value="delete" Icon="delete" Disabled=@(ReadOnly ||
+                                                                                                                workbook.Sheets.Count <= 1) />
+                                        <CrestSplitButtonItem
+                                        Text=@Localize(nameof(CrestStrings.Spreadsheet_MoveLeft))
+                                        Value="move-left" Icon="chevron_left" Disabled=@(ReadOnly ||
+                                                                                            workbook.IndexOf(sheet) == 0) />
+                                        <CrestSplitButtonItem
+                                        Text=@Localize(nameof(CrestStrings.Spreadsheet_MoveRight))
+                                        Value="move-right" Icon="chevron_right" Disabled=@(ReadOnly ||
+                                                                                            workbook.IndexOf(sheet) == workbook.Sheets.Count - 1) />
                                     </ChildContent>
                                 </CrestSplitButton>
                             </Template>
@@ -196,27 +235,29 @@
                 </Tabs>
             </CrestTabs>
         </div>
+    }
+    <CrestPopup @ref=@cellMenuPopup class="rz-spreadsheet-cell-popup rz-context-menu" Lazy="true">
+        @if (cellMenuRow >= 0 && cellMenuColumn >= 0)
+        {
+            <CellMenu Worksheet=@Worksheet Row=@cellMenuRow Column=@cellMenuColumn
+                      Cancel=@OnCellMenuCancelAsync Apply=@OnCellMenuApplyAsync SortAscending=@(() =>
+                                                  OnCellMenuSortAsync(SortOrder.Ascending)) SortDescending=@(() =>
+                                                  OnCellMenuSortAsync(SortOrder.Descending)) Clear=@OnCellMenuClearAsync
+                      CustomFilter=@OnCellMenuCustomFilterAsync Top10Filter=@OnCellMenuTop10FilterAsync
+                      DynamicFilter=@OnCellMenuDynamicFilterAsync />
         }
-        <RadzenPopup @ref=@cellMenuPopup class="rz-spreadsheet-cell-popup rz-context-menu" Lazy="true">
-            @if (cellMenuRow >= 0 && cellMenuColumn >= 0)
-            {
-                <CellMenu Worksheet=@Worksheet Row=@cellMenuRow Column=@cellMenuColumn Cancel=@OnCellMenuCancelAsync Apply=@OnCellMenuApplyAsync
-                         SortAscending=@(() => OnCellMenuSortAsync(SortOrder.Ascending)) SortDescending=@(() => OnCellMenuSortAsync(SortOrder.Descending)) Clear=@OnCellMenuClearAsync
-                         CustomFilter=@OnCellMenuCustomFilterAsync
-                         Top10Filter=@OnCellMenuTop10FilterAsync
-                         DynamicFilter=@OnCellMenuDynamicFilterAsync />
-            }
-        </RadzenPopup>
-        <RadzenPopup @ref=@validationListPopup class="rz-spreadsheet-cell-popup" Lazy="true">
-            @if (validationListItems.Count > 0)
-            {
-                <ValidationListPopup Items=@validationListItems Value=@GetValidationListValue() ValueSelected=@OnValidationListValueSelectedAsync />
-            }
-        </RadzenPopup>
-        </CascadingValue>
+    </CrestPopup>
+    <CrestPopup @ref=@validationListPopup class="rz-spreadsheet-cell-popup" Lazy="true">
+        @if (validationListItems.Count > 0)
+        {
+            <ValidationListPopup Items=@validationListItems Value=@GetValidationListValue()
+                                 ValueSelected=@OnValidationListValueSelectedAsync />
+        }
+    </CrestPopup>
+</CascadingValue>
 }
-    </CascadingValue>
-    </CascadingValue>
-    </CascadingValue>
-    <RangePickerBar @ref=@rangePickerBar CancelTitle=@Localize(nameof(CrestStrings.Spreadsheet_Cancel)) />
+</CascadingValue>
+</CascadingValue>
+</CascadingValue>
+<RangePickerBar @ref=@rangePickerBar CancelTitle=@Localize(nameof(CrestStrings.Spreadsheet_Cancel)) />
 </div>

@@ -6,7 +6,7 @@ namespace Crest.Components.Primitives;
 /// Represents the common <see cref="CrestChipList{TValue}" /> API used by
 /// chip list items. Injected as a cascading property in <see cref="CrestChipItem" />.
 /// </summary>
-public interface IRadzenChipList
+public interface ICrestChipList
 {
     /// <summary>
     /// Adds the specified item to the chip list.

@@ -9,21 +9,24 @@
 @namespace Crest.Components.Primitives
 @if (Visible)
 {
-    <div @ref="@Element" @attributes="Attributes" class="@GetCssClass()" style="@Style" id="@GetId()" >
+    <div @ref="@Element" @attributes="Attributes" class="@GetCssClass()" style="@Style" id="@GetId()">
         <!-- Chat Header -->
         @if (!string.IsNullOrWhiteSpace(Title) || ShowClearButton)
-        {       
-            <CrestStack class="rz-chat-header" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem">
+        {
+            <CrestStack class="rz-chat-header" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                        JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem">
                 @if (!string.IsNullOrWhiteSpace(Title))
                 {
                     <span class="rz-chat-header-title">@Title</span>
                 }
-                <CrestStack class="rz-chat-header-actions" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem">
-                @if (ShowClearButton)
-                {
-                    <CrestButton Icon="delete_history" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" 
-                                Click="@OnClearChat" Title="@Localize(nameof(CrestStrings.AIChat_ClearChatTitle))" class="rz-chat-header-clear" />
-                }
+                <CrestStack class="rz-chat-header-actions" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                            JustifyContent="JustifyContent.Center" Gap="0.5rem">
+                    @if (ShowClearButton)
+                    {
+                        <CrestButton Icon="delete_history" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                     Size="ButtonSize.Small" Click="@OnClearChat"
+                                     Title="@Localize(nameof(CrestStrings.AIChat_ClearChatTitle))" class="rz-chat-header-clear" />
+                    }
                 </CrestStack>
             </CrestStack>
         }
@@ -34,14 +37,15 @@
             {
                 if (EmptyTemplate != null)
                 {
-                    @EmptyTemplate    
+                    @EmptyTemplate
                 }
                 else
                 {
-                <CrestStack class="rz-chat-empty" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="1rem">
-                    <RadzenIcon Icon="chat_bubble_outline" class="rz-text-secondary-color" />
-                    <CrestText TextStyle="TextStyle.Body2" class="rz-mt-2 rz-text-tertiary-color">@EmptyMessage</CrestText>
-                </CrestStack>
+                    <CrestStack class="rz-chat-empty" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center"
+                                Gap="1rem">
+                        <CrestIcon IconKey="iconify.mdi/current/default/chat-outline" class="rz-text-secondary-color" />
+                        <CrestText TextStyle="TextStyle.Body2" class="rz-mt-2 rz-text-tertiary-color">@EmptyMessage</CrestText>
+                    </CrestStack>
                 }
             }
             else
@@ -58,73 +62,71 @@
                         else
                         {
                             <div class="rz-chat-date-separator">
-                                <span>@message.Timestamp.ToString(DateSeparatorFormat, Culture ?? System.Globalization.CultureInfo.CurrentCulture)</span>
+                                <span>@message.Timestamp.ToString(DateSeparatorFormat, Culture ??
+                                                    System.Globalization.CultureInfo.CurrentCulture)</span>
+                                </div>
+                            }
+                        }
+                        previousDate = message.Timestamp;
+                        if (MessageTemplate != null)
+                        {
+                            @MessageTemplate(message)
+                        }
+                        else
+                        {
+                            <div class="rz-chat-message @(message.IsUser ? "rz-chat-message-user" : "rz-chat-message-assistant")"
+                                 @key="message.Id">
+                                <CrestStack class="rz-chat-message-avatar" AlignItems="AlignItems.Center"
+                                            JustifyContent="JustifyContent.Center" Gap="0">
+                                    @if (message.IsUser)
+                                    {
+                                        <span class="rz-chat-avatar-initials" title="@UserAvatarText">@UserAvatarText</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="rz-chat-avatar-initials" title="@AssistantAvatarText">@AssistantAvatarText</span>
+                                    }
+                                </CrestStack>
+                                <CrestStack Orientation="Orientation.Vertical"
+                                            AlignItems="@(message.IsUser ? AlignItems.End : AlignItems.Start)" Gap="0.25rem"
+                                            class="rz-chat-message-content">
+                                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                                JustifyContent="@(message.IsUser ? JustifyContent.End : JustifyContent.Start)" Gap="0.5rem"
+                                                class="rz-chat-message-info">
+                                        <div class="rz-chat-message-time">
+                                            @message.Timestamp.ToString(TimestampFormat, Culture ??
+                                System.Globalization.CultureInfo.CurrentCulture)
+                                        </div>
+                                    </CrestStack>
+                                    <div class="rz-chat-message-text">
+                                        @if (message.IsStreaming)
+                                        {
+                                            @message.Content
+                                            <CrestIcon IconKey="iconify.mdi/current/default/dots-horizontal" class="rz-chat-message-streaming-icon" />
+                                        }
+                                        else
+                                        {
+                                            <CrestMarkdown Text=@message.Content />
+                                        }
+                                    </div>
+                                </CrestStack>
                             </div>
                         }
                     }
-                    previousDate = message.Timestamp;
-                    if (MessageTemplate != null)
-                    {
-                        @MessageTemplate(message)
-                    }
-                    else
-                    {
-                    <div class="rz-chat-message @(message.IsUser ? "rz-chat-message-user" : "rz-chat-message-assistant")" @key="message.Id">
-                        <CrestStack class="rz-chat-message-avatar" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0">
-                            @if (message.IsUser)
-                            {
-                                <span class="rz-chat-avatar-initials" title="@UserAvatarText">@UserAvatarText</span>
-                            }
-                            else
-                            {
-                                <span class="rz-chat-avatar-initials" title="@AssistantAvatarText">@AssistantAvatarText</span>
-                            }
-                        </CrestStack>
-                        <CrestStack Orientation="Orientation.Vertical" AlignItems="@(message.IsUser ? AlignItems.End : AlignItems.Start)" Gap="0.25rem" class="rz-chat-message-content">
-                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="@(message.IsUser ? JustifyContent.End : JustifyContent.Start)" Gap="0.5rem" class="rz-chat-message-info">
-                                <div class="rz-chat-message-time">
-                                    @message.Timestamp.ToString(TimestampFormat, Culture ?? System.Globalization.CultureInfo.CurrentCulture)
-                                </div>
-                            </CrestStack>
-                            <div class="rz-chat-message-text">
-                                @if (message.IsStreaming)
-                                {
-                                    @message.Content <RadzenIcon Icon="more_horiz" class="rz-chat-message-streaming-icon" />
-                                }
-                                else
-                                {
-                                    <CrestMarkdown Text=@message.Content />
-                                }
-                            </div>
-                        </CrestStack>
-                    </div>
-                    }
                 }
-            }
-        </div>
+            </div>
 
-        <!-- Chat Input -->
-        <div class="rz-chat-input">
-            <div class="rz-chat-input-inner">
-                <textarea @ref="inputElement" 
-                          value="@CurrentInput"
-                          @oninput="OnInput" 
-                          @onkeydown="OnKeyDown" 
-                          @onkeydown:preventDefault="preventDefault"
-                          class="rz-textarea rz-chat-textarea"
-                          placeholder="@Placeholder"
-                          disabled="@Disabled"
-                          readonly="@ReadOnly"
-                          rows="1"
-                          @attributes="@InputAttributes"></textarea>
-                    <CrestButton Icon="send"
-                                ButtonStyle="ButtonStyle.Primary" 
-                                Variant="Variant.Text"
-                                Disabled="@(string.IsNullOrWhiteSpace(CurrentInput) || IsLoading || Disabled)"
-                                Click="@OnSendMessage"
-                                Title="@Localize(nameof(CrestStrings.AIChat_SendTitle))"
-                                class="rz-chat-send-btn" />
+            <!-- Chat Input -->
+            <div class="rz-chat-input">
+                <div class="rz-chat-input-inner">
+                    <textarea @ref="inputElement" value="@CurrentInput" @oninput="OnInput" @onkeydown="OnKeyDown"
+                              @onkeydown:preventDefault="preventDefault" class="rz-textarea rz-chat-textarea"
+                              placeholder="@Placeholder" disabled="@Disabled" readonly="@ReadOnly" rows="1"
+                              @attributes="@InputAttributes"></textarea>
+                    <CrestButton Icon="send" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Text"
+                                 Disabled="@(string.IsNullOrWhiteSpace(CurrentInput) || IsLoading || Disabled)" Click="@OnSendMessage"
+                                 Title="@Localize(nameof(CrestStrings.AIChat_SendTitle))" class="rz-chat-send-btn" />
+                </div>
             </div>
         </div>
-    </div>
-}
+    }

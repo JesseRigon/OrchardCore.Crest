@@ -58,7 +58,7 @@ namespace Crest.Components.Primitives
     /// <example>
     /// Basic QR code for URL:
     /// <code>
-    /// &lt;CrestQRCode Value="https://radzen.com" Size="200px" /&gt;
+    /// &lt;CrestQRCode Value="https://Crest.com" Size="200px" /&gt;
     /// </code>
     /// Customized QR code with logo:
     /// <code>

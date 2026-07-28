@@ -7,7 +7,7 @@ namespace Crest.Components.Primitives
     /// CrestCheckBoxListItem component.
     /// </summary>
     /// <typeparam name="TValue">The type of the value.</typeparam>
-    public partial class CrestCheckBoxListItem<TValue> : CrestComponent, IRadzenCheckBoxListItem
+    public partial class CrestCheckBoxListItem<TValue> : CrestComponent, ICrestCheckBoxListItem
     {
         /// <summary>
         /// Gets or sets the text.
@@ -44,14 +44,14 @@ namespace Crest.Components.Primitives
         [Parameter]
         public bool ReadOnly { get; set; }
 
-        IRadzenCheckBoxList? checkBoxList;
+        ICrestCheckBoxList? checkBoxList;
 
         /// <summary>
         /// Gets or sets the CheckBox list.
         /// </summary>
         /// <value>The CheckBox list.</value>
         [CascadingParameter]
-        public IRadzenCheckBoxList? CheckBoxList
+        public ICrestCheckBoxList? CheckBoxList
         {
             get
             {
@@ -67,19 +67,19 @@ namespace Crest.Components.Primitives
             }
         }
 
-        object? IRadzenCheckBoxListItem.Value => Value;
+        object? ICrestCheckBoxListItem.Value => Value;
 
-        RenderFragment? IRadzenCheckBoxListItem.Template => Template?.Invoke(this);
+        RenderFragment? ICrestCheckBoxListItem.Template => Template?.Invoke(this);
 
-        ElementReference IRadzenCheckBoxListItem.Element
+        ElementReference ICrestCheckBoxListItem.Element
         {
             get => Element;
             set => Element = value;
         }
 
-        string? IRadzenCheckBoxListItem.GetItemId() => GetItemId();
+        string? ICrestCheckBoxListItem.GetItemId() => GetItemId();
 
-        string IRadzenCheckBoxListItem.GetItemCssClass() => GetItemCssClass();
+        string ICrestCheckBoxListItem.GetItemCssClass() => GetItemCssClass();
 
         /// <summary>
         /// Disposes this instance.

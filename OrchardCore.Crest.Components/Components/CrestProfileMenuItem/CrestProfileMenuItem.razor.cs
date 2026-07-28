@@ -17,7 +17,7 @@ namespace Crest.Components.Primitives
     /// <code>
     /// &lt;CrestProfileMenu&gt;
     ///     &lt;Template&gt;
-    ///         &lt;RadzenIcon Icon="account_circle" /&gt; John Doe
+    ///         &lt;CrestIcon Icon="account_circle" /&gt; John Doe
     ///     &lt;/Template&gt;
     ///     &lt;ChildContent&gt;
     ///         &lt;CrestProfileMenuItem Text="Profile" Icon="person" Path="/profile" /&gt;

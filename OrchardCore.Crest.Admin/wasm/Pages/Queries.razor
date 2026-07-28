@@ -46,7 +46,7 @@
                 }
                 <RadzenRow Gap="1rem">
                     <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Name" Style="width: 100%;"><RadzenTextBox @bind-Value="DraftName" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Source" Style="width: 100%;"><RadzenDropDown @bind-Value="DraftSource" Data="@Catalog.Sources" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Source" Style="width: 100%;"><CrestDropDown @bind-Value="DraftSource" Data="@Catalog.Sources" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
                     <RadzenColumn Size="12"><RadzenFormField Text="Result schema (optional)" Style="width: 100%;"><RadzenTextBox @bind-Value="DraftSchema" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
                 </RadzenRow>
                 <RadzenCheckBox @bind-Value="DraftReturnContentItems" Name="return-content-items" /> <span>Return content items</span>

@@ -13,7 +13,7 @@ namespace Crest.Components.Primitives
     /// Commonly used in application layouts for primary navigation menus.
     /// Features responsive design (automatically collapses on mobile devices and expands on desktop, configurable), positioning on Left/Right/Start/End of the layout,
     /// full height option to span entire layout height or align with body section only, programmatic expand/collapse via Expanded property or Toggle() method,
-    /// seamless integration with CrestLayout/CrestHeader/CrestBody/CrestFooter, and typically contains RadzenPanelMenu or CrestMenu for navigation.
+    /// seamless integration with CrestLayout/CrestHeader/CrestBody/CrestFooter, and typically contains CrestPanelMenu or CrestMenu for navigation.
     /// Must be used inside CrestLayout to enable responsive behavior and proper layout integration. Use @bind-Expanded for two-way binding to control sidebar state from code.
     /// </summary>
     /// <example>
@@ -22,10 +22,10 @@ namespace Crest.Components.Primitives
     /// &lt;CrestLayout&gt;
     ///     &lt;CrestHeader&gt;...&lt;/CrestHeader&gt;
     ///     &lt;CrestSidebar @bind-Expanded=@sidebarExpanded&gt;
-    ///         &lt;RadzenPanelMenu&gt;
+    ///         &lt;CrestPanelMenu&gt;
     ///             &lt;CrestPanelMenuItem Text="Home" Icon="home" Path="/" /&gt;
     ///             &lt;CrestPanelMenuItem Text="Orders" Icon="shopping_cart" Path="/orders" /&gt;
-    ///         &lt;/RadzenPanelMenu&gt;
+    ///         &lt;/CrestPanelMenu&gt;
     ///     &lt;/CrestSidebar&gt;
     ///     &lt;CrestBody&gt;...&lt;/CrestBody&gt;
     /// &lt;/CrestLayout&gt;

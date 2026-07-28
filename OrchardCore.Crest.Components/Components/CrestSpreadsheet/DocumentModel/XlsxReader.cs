@@ -742,13 +742,13 @@ static class XlsxReader
             return;
         }
 
-        // <colorFilter dxfId="0" cellColor="1" radzen:color="#FFFF00"/>
+        // <colorFilter dxfId="0" cellColor="1" Crest:color="#FFFF00"/>
         var colorElement = filterColumn.Element(sNs + "colorFilter");
         if (colorElement is not null)
         {
-            // Read the radzen-private color attribute we round-trip until dxfs land.
-            var radzenNs = XNamespace.Get("urn:schemas-radzen:spreadsheet");
-            var color = colorElement.Attribute(radzenNs + "color")?.Value
+            // Read the Crest-private color attribute we round-trip until dxfs land.
+            var CrestNs = XNamespace.Get("urn:schemas-Crest:spreadsheet");
+            var color = colorElement.Attribute(CrestNs + "color")?.Value
                 ?? colorElement.Attribute("color")?.Value;
             var fontColor = colorElement.Attribute("cellColor")?.Value == "0";
             if (!string.IsNullOrEmpty(color))

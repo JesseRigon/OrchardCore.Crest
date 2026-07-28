@@ -26,13 +26,14 @@
         }
         else
         {
-        <div class="crest-panel-menu__item-wrapper">
+        <div id="@item.ElementId" class="crest-panel-menu__item-wrapper">
             @if (hasExpandableChildren)
             {
                 <button type="button"
                         class="@GetItemLinkClass(item)"
                         disabled="@item.IsDisabled"
                         aria-expanded="@IsExpanded(item)"
+                        tabindex="-1"
                         @onclick="@(() => ToggleExpanded(item))">
                     @RenderItemContent(item)
                     @RenderActionIcon(item, GetExpandIconClass(item), "iconify.mdi/current/default/chevron-down", "Toggle submenu")
@@ -45,6 +46,7 @@
                         data-crest-panel-menu-flyout-anchor="@item.Key"
                         disabled="@item.IsDisabled"
                         aria-haspopup="menu"
+                        tabindex="-1"
                     @onmouseover="@(args => OpenFlyout(item, args))"
                     @onmouseout="CloseFlyoutSoon">
                     @RenderItemContent(item)
@@ -56,6 +58,7 @@
                 <a class="@GetItemLinkClass(item)"
                    href="@item.Href"
                    target="@item.Target"
+                   tabindex="-1"
                    aria-current="@(item.IsActive ? "page" : null)">
                     @RenderItemContent(item)
                 </a>
@@ -64,7 +67,8 @@
             {
                 <button type="button"
                         class="@GetItemLinkClass(item)"
-                        disabled="@item.IsDisabled">
+                        disabled="@item.IsDisabled"
+                        tabindex="-1">
                     @RenderItemContent(item)
                 </button>
             }
@@ -90,7 +94,8 @@
                                      LevelBackgrounds="LevelBackgrounds"
                                      LevelBaseSizes="LevelBaseSizes"
                                      TierSeparators="TierSeparators"
-                                     ActionIcon="ActionIcon" />
+                                     ActionIcon="ActionIcon"
+                                     FocusedItemKey="FocusedItemKey" />
                     </ul>
                 </div>
             </div>
@@ -143,6 +148,9 @@
 
     [Parameter]
     public RenderFragment<CrestPanelMenuActionIconContext>? ActionIcon { get; set; }
+
+    [Parameter]
+    public string? FocusedItemKey { get; set; }
 
     private bool IsExpanded(CrestPanelMenuItem item) => item.HasChildren && !ShouldRenderFlyout(item) && ExpandedItemKeys.Contains(item.Key);
 
@@ -204,6 +212,7 @@
         item.IsActive ? "crest-panel-menu__item-link--active" : null,
         IsExpanded(item) ? "crest-panel-menu__item-link--expanded" : null,
         item.HasLink ? "crest-panel-menu__item-link--linked" : null,
+        item.Key == FocusedItemKey ? "crest-panel-menu__item-link--focused" : null,
         item.LinkCssClass,
     }.Where(value => !string.IsNullOrWhiteSpace(value)));
 

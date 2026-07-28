@@ -1,3 +1,4 @@
+using Crest.Components.Overlay;
 using Crest.Components.Primitives;
 using Crest.Components.Primitives.Rendering;
 using Microsoft.AspNetCore.Components;
@@ -7,11 +8,11 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 
-namespace Crest.Components.RadzenSource
+namespace Crest.Components
 {
     /// <summary>
     /// A color picker component that allows users to select colors through various input methods including color palette, RGB sliders, hex input, and predefined swatches.
-    /// RadzenColorPicker provides a comprehensive color selection interface with alpha channel support.
+    /// CrestColorPicker provides a comprehensive color selection interface with alpha channel support.
     /// Displays a button showing the current color. Clicking opens a popup with multiple color selection methods including visual picker (click on hue/saturation gradient to select colors visually),
     /// hue/alpha sliders to fine-tune hue and transparency, RGB input to enter specific Red/Green/Blue values (0-255), hex input to enter hex color codes (#RRGGBB or #RRGGBBAA),
     /// and predefined swatches for quick selection.
@@ -21,21 +22,21 @@ namespace Crest.Components.RadzenSource
     /// <example>
     /// Basic color picker:
     /// <code>
-    /// &lt;RadzenColorPicker @bind-Value=@backgroundColor /&gt;
+    /// &lt;CrestColorPicker @bind-Value=@backgroundColor /&gt;
     /// @code {
     ///     string backgroundColor = "#FF5733";
     /// }
     /// </code>
     /// Color picker with predefined swatches:
     /// <code>
-    /// &lt;RadzenColorPicker @bind-Value=@color Change=@OnColorChange&gt;
-    ///     &lt;RadzenColorPickerItem Value="#FF0000" /&gt;
-    ///     &lt;RadzenColorPickerItem Value="#00FF00" /&gt;
-    ///     &lt;RadzenColorPickerItem Value="#0000FF" /&gt;
-    /// &lt;/RadzenColorPicker&gt;
+    /// &lt;CrestColorPicker @bind-Value=@color Change=@OnColorChange&gt;
+    ///     &lt;CrestColorPickerItem Value="#FF0000" /&gt;
+    ///     &lt;CrestColorPickerItem Value="#00FF00" /&gt;
+    ///     &lt;CrestColorPickerItem Value="#0000FF" /&gt;
+    /// &lt;/CrestColorPicker&gt;
     /// </code>
     /// </example>
-    public partial class RadzenColorPicker : FormComponent<string>
+    public partial class CrestColorPicker : FormComponent<string>
     {
         private string? toggleAriaLabel;
 
@@ -174,7 +175,7 @@ namespace Crest.Components.RadzenSource
         [Parameter]
         public string ButtonText { get => buttonText ?? Localize(nameof(CrestStrings.ColorPicker_ButtonText)); set => buttonText = value; }
 
-        RadzenPopup Popup { get; set; } = default!;
+        CrestPopup Popup { get; set; } = default!;
         bool isPopupOpen;
 
         internal event EventHandler<string>? SelectedColorChanged;
@@ -598,7 +599,7 @@ namespace Crest.Components.RadzenSource
 
                 if (lastHueRect == null && JSRuntime != null)
                 {
-                    lastHueRect = await JSRuntime.InvokeAsync<Rect>("Radzen.clientRect", (GetId() + "hue"));
+                    lastHueRect = await JSRuntime.InvokeAsync<Rect>("Crest.clientRect", (GetId() + "hue"));
                 }
 
                 if (lastHueRect != null)
@@ -626,7 +627,7 @@ namespace Crest.Components.RadzenSource
 
                 if (lastAlphaRect == null && JSRuntime != null)
                 {
-                    lastAlphaRect = await JSRuntime.InvokeAsync<Rect>("Radzen.clientRect", (GetId() + "alpha"));
+                    lastAlphaRect = await JSRuntime.InvokeAsync<Rect>("Crest.clientRect", (GetId() + "alpha"));
                 }
 
                 if (lastAlphaRect != null)
@@ -650,7 +651,7 @@ namespace Crest.Components.RadzenSource
 
             if (lastHslRect == null && JSRuntime != null)
             {
-                lastHslRect = await JSRuntime.InvokeAsync<Rect>("Radzen.clientRect", (GetId() + "hsl"));
+                lastHslRect = await JSRuntime.InvokeAsync<Rect>("Crest.clientRect", (GetId() + "hsl"));
             }
 
             if (key == "ArrowLeft" || key == "ArrowRight" || key == "ArrowUp" || key == "ArrowDown")
@@ -707,7 +708,7 @@ namespace Crest.Components.RadzenSource
             await Popup.CloseAsync();
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Radzen.focusElement", GetId());
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", GetId());
             }
         }
     }

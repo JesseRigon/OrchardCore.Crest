@@ -6,7 +6,7 @@ namespace Crest.Components.Primitives
     /// Non-generic contract for <see cref="CrestSpiderChart"/> used by configuration components
     /// like <see cref="CrestSpiderLegend"/> without relying on reflection (important for trimming/AOT).
     /// </summary>
-    public interface IRadzenSpiderChart
+    public interface ICrestSpiderChart
     {
         /// <summary>
         /// Gets or sets the legend configuration for the chart.

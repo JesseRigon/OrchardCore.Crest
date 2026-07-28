@@ -49,7 +49,7 @@
                             <RadzenDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="Feature" />
                             <RadzenDataGridColumn TItem="SecurityPolicyOption" Title="Allowed by">
                                 <Template Context="option">
-                                    <RadzenDropDown TValue="string" Value="@GetPermissionOrigin(option.Key)" Change="@(value => SetPermissionOrigin(option.Key, value?.ToString() ?? "()"))" Data="PermissionOriginOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
+                                    <CrestDropDown TValue="string" Value="@GetPermissionOrigin(option.Key)" Change="@(value => SetPermissionOrigin(option.Key, value?.ToString() ?? "()"))" Data="PermissionOriginOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
                                 </Template>
                             </RadzenDataGridColumn>
                             <RadzenDataGridColumn TItem="SecurityPolicyOption" Title="Additional origins">
@@ -68,7 +68,7 @@
             <RadzenTabsItem Text="Referrer Policy">
                 <RadzenStack Gap="1rem" class="pt-3">
                     <RadzenFormField Text="Referrer policy" Style="width: 100%; max-width: 42rem;">
-                        <RadzenDropDown TValue="string" @bind-Value="ReferrerPolicy" Data="ReferrerPolicyOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
+                        <CrestDropDown TValue="string" @bind-Value="ReferrerPolicy" Data="ReferrerPolicyOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
                     </RadzenFormField>
                     <RadzenText TextStyle="TextStyle.Body2" Text="Controls how much referrer information the browser includes when navigating away from a page." />
                 </RadzenStack>

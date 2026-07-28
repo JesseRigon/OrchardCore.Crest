@@ -38,19 +38,19 @@ namespace Crest.Components.Primitives
     /// </example>
     [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2026, Justification = TrimMessages.DataTypePreserved)]
     [CascadingTypeParameter(nameof(TValue))]
-    public partial class CrestRadioButtonList<TValue> : FormComponent<TValue>, IRadzenRadioButtonList
+    public partial class CrestRadioButtonList<TValue> : FormComponent<TValue>, ICrestRadioButtonList
     {
-        string ItemClass(IRadzenRadioButtonListItem item) => ClassList.Create("rz-radiobutton-box")
+        string ItemClass(ICrestRadioButtonListItem item) => ClassList.Create("rz-radiobutton-box")
                                                                             .Add("rz-state-active", IsSelected(item))
                                                                             .Add("rz-state-focused", IsFocused(item) && focused)
                                                                             .AddDisabled(Disabled || item.Disabled)
                                                                             .ToString();
 
-        string IconClass(IRadzenRadioButtonListItem item) => ClassList.Create("rz-radiobutton-icon")
+        string IconClass(ICrestRadioButtonListItem item) => ClassList.Create("rz-radiobutton-icon")
                                                                              .Add("notranslate rzi rzi-circle-on", IsSelected(item))
                                                                              .ToString();
 
-        string LabelClass(IRadzenRadioButtonListItem item) => ClassList.Create("rz-radiobutton-label")
+        string LabelClass(ICrestRadioButtonListItem item) => ClassList.Create("rz-radiobutton-label")
                                                                              .AddDisabled(Disabled || item.Disabled)
                                                                              .ToString();
 
@@ -110,7 +110,7 @@ namespace Crest.Components.Primitives
         [Parameter]
         public string? VisibleProperty { get; set; }
 
-        List<IRadzenRadioButtonListItem> allItems = new();
+        List<ICrestRadioButtonListItem> allItems = new();
 
         void UpdateAllItems()
         {
@@ -130,7 +130,7 @@ namespace Crest.Components.Primitives
                     item.SetVisible(visibleResult);
                 }
 
-                return (IRadzenRadioButtonListItem)item;
+                return (ICrestRadioButtonListItem)item;
             })).ToList();
         }
 
@@ -171,7 +171,7 @@ namespace Crest.Components.Primitives
             var horizontal = Orientation == Orientation.Horizontal;
 
             return $"rz-radio-button-list rz-radio-button-list-{(horizontal ? "horizontal" : "vertical")}";
-            
+
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace Crest.Components.Primitives
         [Parameter]
         public RenderFragment? Items { get; set; }
 
-        List<IRadzenRadioButtonListItem> items = new List<IRadzenRadioButtonListItem>();
+        List<ICrestRadioButtonListItem> items = new List<ICrestRadioButtonListItem>();
 
         /// <summary>
         /// Adds the item.
@@ -196,14 +196,14 @@ namespace Crest.Components.Primitives
         /// <param name="item">The item.</param>
         public void AddItem(CrestRadioButtonListItem<TValue> item)
         {
-            AddItem((IRadzenRadioButtonListItem)item);
+            AddItem((ICrestRadioButtonListItem)item);
         }
 
         /// <summary>
         /// Adds the item.
         /// </summary>
         /// <param name="item">The item.</param>
-        public void AddItem(IRadzenRadioButtonListItem item)
+        public void AddItem(ICrestRadioButtonListItem item)
         {
             if (items.IndexOf(item) == -1)
             {
@@ -219,14 +219,14 @@ namespace Crest.Components.Primitives
         /// <param name="item">The item.</param>
         public void RemoveItem(CrestRadioButtonListItem<TValue> item)
         {
-            RemoveItem((IRadzenRadioButtonListItem)item);
+            RemoveItem((ICrestRadioButtonListItem)item);
         }
 
         /// <summary>
         /// Removes the item.
         /// </summary>
         /// <param name="item">The item.</param>
-        public void RemoveItem(IRadzenRadioButtonListItem item)
+        public void RemoveItem(ICrestRadioButtonListItem item)
         {
             if (items.Remove(item))
             {
@@ -242,7 +242,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns><c>true</c> if the specified item is selected; otherwise, <c>false</c>.</returns>
-        protected bool IsSelected(IRadzenRadioButtonListItem item)
+        protected bool IsSelected(ICrestRadioButtonListItem item)
         {
             ArgumentNullException.ThrowIfNull(item);
 
@@ -253,7 +253,7 @@ namespace Crest.Components.Primitives
         /// Selects the item.
         /// </summary>
         /// <param name="item">The item.</param>
-        protected async System.Threading.Tasks.Task SelectItem(IRadzenRadioButtonListItem item)
+        protected async System.Threading.Tasks.Task SelectItem(ICrestRadioButtonListItem item)
         {
             ArgumentNullException.ThrowIfNull(item);
             if (Disabled || item.Disabled)
@@ -273,7 +273,7 @@ namespace Crest.Components.Primitives
             StateHasChanged();
         }
 
-        async Task OnItemKeyDown(KeyboardEventArgs args, IRadzenRadioButtonListItem item)
+        async Task OnItemKeyDown(KeyboardEventArgs args, ICrestRadioButtonListItem item)
         {
             var key = args.Code != null ? args.Code : args.Key;
             if (key == "Enter" || key == "Space")
@@ -388,7 +388,7 @@ namespace Crest.Components.Primitives
             ? null
             : Name;
 
-        bool IsFocused(IRadzenRadioButtonListItem item)
+        bool IsFocused(ICrestRadioButtonListItem item)
         {
             return allItems.IndexOf(item) == focusedIndex;
         }

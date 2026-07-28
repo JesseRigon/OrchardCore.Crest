@@ -42,7 +42,7 @@
                             <RadzenFieldset Text="Title bar">
                                 <RadzenStack Gap="0.75rem">
                                     <SettingsSwitch Label="Display culture label" Hint="Show the culture name beside its flag. The default is the flag icon only." @bind-Value="TitleBarModel.DisplayCultureLabel" />
-                                    <RadzenDropDown Data="@AvatarShapes" @bind-Value="TitleBarModel.TenantAvatarShape" TextProperty="Label" ValueProperty="Value" Placeholder="Tenant avatar shape" Style="width: 100%;" />
+                                    <CrestDropDown Data="@AvatarShapes" @bind-Value="TitleBarModel.TenantAvatarShape" TextProperty="Label" ValueProperty="Value" Placeholder="Tenant avatar shape" Style="width: 100%;" />
                                     <RadzenTextBox @bind-Value="TitleBarModel.TenantAvatarImageUrl" Placeholder="Tenant avatar image URL (optional)" Style="width: 100%;" />
                                     @if (string.Equals(TitleBarModel.TenantAvatarShape, "Custom", StringComparison.OrdinalIgnoreCase))
                                     {
@@ -143,7 +143,7 @@
         <div class="admin-menu-node">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
-                    <span class="admin-menu-node__handle" title="Drag to move"><RadzenIcon Icon="drag_indicator" /></span>
+                    <span class="admin-menu-node__handle" title="Drag to move"><CrestIcon IconKey="iconify.mdi/current/default/drag" /></span>
                     @if (node.Items.Length > 0)
                     {
                         <RadzenButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" title="Expand/collapse coming soon" />

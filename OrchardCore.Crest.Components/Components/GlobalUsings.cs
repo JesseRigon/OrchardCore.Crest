@@ -1,1 +1,1 @@
-global using Crest.Components.RadzenSource;
+global using Crest.Components;

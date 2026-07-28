@@ -13,15 +13,15 @@ namespace Crest.Components.Primitives
     /// <summary>
     /// CrestSpiderChart component displays multi-dimensional data in a spider web format.
     /// </summary>
-    public partial class CrestSpiderChart : CrestComponent, IRadzenSpiderChart
+    public partial class CrestSpiderChart : CrestComponent, ICrestSpiderChart
     {
         /// <summary>
         /// Gets the legend settings for the spider chart.
         /// </summary>
         internal CrestSpiderLegend Legend { get; set; } = new CrestSpiderLegend();
 
-        // Explicit IRadzenSpiderChart implementation to avoid exposing internal members as public API.
-        CrestSpiderLegend IRadzenSpiderChart.Legend
+        // Explicit ICrestSpiderChart implementation to avoid exposing internal members as public API.
+        CrestSpiderLegend ICrestSpiderChart.Legend
         {
             get => Legend;
             set => Legend = value;
@@ -111,13 +111,13 @@ namespace Crest.Components.Primitives
         private TooltipService TooltipService { get; set; } = default!;
         private double? Width { get; set; }
         private double? Height { get; set; }
-        
+
         /// <summary>
         /// Gets the series collection.
         /// </summary>
-        internal List<IRadzenSpiderSeries> Series { get; } = new();
-        
-        private IRadzenSpiderSeries? HoveredSeries { get; set; }
+        internal List<ICrestSpiderSeries> Series { get; } = new();
+
+        private ICrestSpiderSeries? HoveredSeries { get; set; }
         private bool IsLegendHover { get; set; }
         private double MinValue { get; set; }
         private double MaxValue { get; set; } = 100;
@@ -125,12 +125,12 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Gets the visible series.
         /// </summary>
-        internal IEnumerable<IRadzenSpiderSeries> VisibleSeries => Series.Where(s => s.IsVisible);
+        internal IEnumerable<ICrestSpiderSeries> VisibleSeries => Series.Where(s => s.IsVisible);
 
         /// <summary>
         /// Adds a series to the chart.
         /// </summary>
-        internal void AddSeries(IRadzenSpiderSeries series)
+        internal void AddSeries(ICrestSpiderSeries series)
         {
             if (!Series.Contains(series))
             {
@@ -144,7 +144,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Removes a series from the chart.
         /// </summary>
-        internal void RemoveSeries(IRadzenSpiderSeries series)
+        internal void RemoveSeries(ICrestSpiderSeries series)
         {
             if (Series.Remove(series))
             {
@@ -198,12 +198,12 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Gets the value for a series at a specific category.
         /// </summary>
-        private double GetSeriesValue(IRadzenSpiderSeries series, string category) => series.GetValue(category);
+        private double GetSeriesValue(ICrestSpiderSeries series, string category) => series.GetValue(category);
 
         /// <summary>
         /// Formats a value for display.
         /// </summary>
-        private string FormatValue(IRadzenSpiderSeries series, double value) => series.FormatValue(value);
+        private string FormatValue(ICrestSpiderSeries series, double value) => series.FormatValue(value);
 
         /// <summary>
         /// Gets the angle in radians for a category at the given index.
@@ -274,7 +274,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Gets the series path for rendering.
         /// </summary>
-        private string GetSeriesPath(IRadzenSpiderSeries series)
+        private string GetSeriesPath(ICrestSpiderSeries series)
         {
             var categories = GetAllCategories();
             var points = new List<string>();
@@ -644,7 +644,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Handles series click events.
         /// </summary>
-        private async Task InvokeSeriesClick(IRadzenSpiderSeries series, string? category = null, double? value = null, object? data = null)
+        private async Task InvokeSeriesClick(ICrestSpiderSeries series, string? category = null, double? value = null, object? data = null)
         {
             if (!SeriesClick.HasDelegate)
             {
@@ -663,7 +663,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Handles area mouse enter events.
         /// </summary>
-        private void OnAreaMouseEnter(MouseEventArgs args, IRadzenSpiderSeries series)
+        private void OnAreaMouseEnter(MouseEventArgs args, ICrestSpiderSeries series)
         {
             HoveredSeries = series;
             StateHasChanged();
@@ -681,20 +681,20 @@ namespace Crest.Components.Primitives
             }
         }
 
-        
-        private IRadzenSpiderSeries? currentTooltipSeries;
+
+        private ICrestSpiderSeries? currentTooltipSeries;
         private string? currentTooltipCategory;
-        
+
         /// <summary>
         /// Handles marker mouse enter events.
         /// </summary>
-        private async Task OnMarkerMouseEnter(MouseEventArgs args, IRadzenSpiderSeries series, string category, double value)
+        private async Task OnMarkerMouseEnter(MouseEventArgs args, ICrestSpiderSeries series, string category, double value)
         {
             HoveredSeries = series;
             await ShowMarkerTooltip(args, series, category, value);
         }
-        
-        
+
+
         /// <summary>
         /// Handles marker mouse leave events.
         /// </summary>
@@ -703,11 +703,11 @@ namespace Crest.Components.Primitives
             HoveredSeries = null;
             HideTooltip();
         }
-        
+
         /// <summary>
         /// Shows tooltip for a marker.
         /// </summary>
-        private async Task ShowMarkerTooltip(MouseEventArgs args, IRadzenSpiderSeries series, string category, double value)
+        private async Task ShowMarkerTooltip(MouseEventArgs args, ICrestSpiderSeries series, string category, double value)
         {
             if (!this.ShowTooltip || TooltipService == null)
             {
@@ -722,7 +722,7 @@ namespace Crest.Components.Primitives
 
             currentTooltipSeries = series;
             currentTooltipCategory = category;
-            
+
             var valueStr = FormatValue(series, value);
 
             // Open tooltip using TooltipService
@@ -747,7 +747,7 @@ namespace Crest.Components.Primitives
                 builder.CloseComponent();
             }, new ChartTooltipOptions());
         }
-        
+
         /// <summary>
         /// Hides the tooltip.
         /// </summary>
@@ -758,7 +758,7 @@ namespace Crest.Components.Primitives
             TooltipService?.Close();
         }
 
-        
+
         /// <summary>
         /// Handles chart mouse leave events.
         /// </summary>
@@ -784,13 +784,13 @@ namespace Crest.Components.Primitives
             await InvokeAsync(StateHasChanged);
         }
 
-        Task IRadzenSpiderChart.Refresh() => Refresh();
+        Task ICrestSpiderChart.Refresh() => Refresh();
 
 
         /// <summary>
         /// Highlights a series on hover.
         /// </summary>
-        internal void HighlightSeries(IRadzenSpiderSeries series)
+        internal void HighlightSeries(ICrestSpiderSeries series)
         {
             HoveredSeries = series;
             IsLegendHover = true;
@@ -811,7 +811,7 @@ namespace Crest.Components.Primitives
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await base.OnAfterRenderAsync(firstRender);
-            
+
             if (firstRender || !Width.HasValue || !Height.HasValue)
             {
                 Rendering.Rect rect;
@@ -825,7 +825,7 @@ namespace Crest.Components.Primitives
                     // Fallback if JSRuntime is not available.
                     rect = new Rendering.Rect { Width = 0, Height = 0 };
                 }
-                
+
                 if (!Width.HasValue && rect.Width > 0)
                 {
                     Width = rect.Width;
@@ -845,9 +845,9 @@ namespace Crest.Components.Primitives
                     // Fallback if JavaScript sizing fails
                     Height = 500;
                 }
-                
+
                 // Legend width handled by flexbox layout
-                
+
                 StateHasChanged();
             }
         }
@@ -859,27 +859,27 @@ namespace Crest.Components.Primitives
         public void Resize(double width, double height)
         {
             bool stateHasChanged = false;
-            
+
             if (Width != width)
             {
                 Width = width;
                 stateHasChanged = true;
             }
-            
+
             if (Height != height)
             {
                 Height = height;
                 stateHasChanged = true;
             }
-            
+
             // Legend width handled by flexbox layout
-            
+
             if (stateHasChanged)
             {
                 StateHasChanged();
             }
         }
-        
+
         /// <inheritdoc />
         public override void Dispose()
         {
@@ -908,7 +908,7 @@ namespace Crest.Components.Primitives
         /// Polygon grid shape.
         /// </summary>
         Polygon,
-        
+
         /// <summary>
         /// Circular grid shape.
         /// </summary>

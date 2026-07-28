@@ -1,4 +1,6 @@
 @namespace Crest.Components.Navigation
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
 
 <nav @attributes="AdditionalAttributes"
      class="@CssClass"
@@ -17,10 +19,178 @@
                         LevelBackgrounds="LevelBackgrounds"
                         LevelBaseSizes="LevelBaseSizes"
                         TierSeparators="TierSeparators"
-                        ActionIcon="ActionIcon" />
+                        ActionIcon="ActionIcon"
+                        FocusedItemKey="_focusedKey"
+                        PreventKeyDown="_preventKeyDown"
+                        OnItemKeyDown="HandleKeyDownAsync"
+                        OnFocusIn="HandleFocusIn" />
 </nav>
 
 @code {
+    // Ported from RadzenPanelMenu's OnKeyPress: roving-focus keyboard navigation over the
+    // flattened, currently-visible item tree (arrow keys, Home/End, expand/collapse, activate).
+    // The new Items/ExpandedItemKeys data model has no parent back-references, so visibility
+    // and parent linkage are recomputed by walking the tree fresh on every keystroke; menus at
+    // this scale make that cheap enough to not warrant caching.
+    private string? _focusedKey;
+    private bool _preventKeyDown;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    private sealed record FocusNode(CrestPanelMenuItem Item, string? ParentKey);
+
+    private List<FocusNode> BuildVisibleNodes()
+    {
+        var result = new List<FocusNode>();
+
+        void Walk(IReadOnlyList<CrestPanelMenuItem> items, string? parentKey, int level)
+        {
+            foreach (var item in items)
+            {
+                if (item.IsSeparator)
+                {
+                    continue;
+                }
+
+                result.Add(new FocusNode(item, parentKey));
+
+                var isFlyout = level >= FlyoutDepth && item.HasChildren;
+                if (item.HasChildren && !isFlyout && ExpandedItemKeys.Contains(item.Key))
+                {
+                    Walk(item.Items, item.Key, level + 1);
+                }
+            }
+        }
+
+        Walk(Items, null, 0);
+        return result;
+    }
+
+    private void HandleFocusIn()
+    {
+        if (_focusedKey is null)
+        {
+            var nodes = BuildVisibleNodes();
+            if (nodes.Count > 0)
+            {
+                _focusedKey = nodes[0].Item.Key;
+            }
+        }
+    }
+
+    private async Task HandleKeyDownAsync(KeyboardEventArgs args)
+    {
+        var nodes = BuildVisibleNodes();
+        if (nodes.Count == 0)
+        {
+            _preventKeyDown = false;
+            return;
+        }
+
+        var currentIndex = _focusedKey is null ? -1 : nodes.FindIndex(n => n.Item.Key == _focusedKey);
+
+        switch (args.Key)
+        {
+            case "ArrowDown":
+                _preventKeyDown = true;
+                SetFocus(nodes[Math.Clamp(currentIndex + 1, 0, nodes.Count - 1)].Item.Key);
+                break;
+
+            case "ArrowUp":
+                _preventKeyDown = true;
+                SetFocus(nodes[Math.Clamp(currentIndex < 0 ? 0 : currentIndex - 1, 0, nodes.Count - 1)].Item.Key);
+                break;
+
+            case "Home":
+                _preventKeyDown = true;
+                SetFocus(nodes[0].Item.Key);
+                break;
+
+            case "End":
+                _preventKeyDown = true;
+                SetFocus(nodes[^1].Item.Key);
+                break;
+
+            case "ArrowRight":
+                _preventKeyDown = true;
+                if (currentIndex >= 0)
+                {
+                    var item = nodes[currentIndex].Item;
+                    if (item.HasChildren && !ExpandedItemKeys.Contains(item.Key))
+                    {
+                        await ExpandedChanged.InvokeAsync(new CrestPanelMenuExpansionChangedEventArgs(item, true));
+                        if (item.Items.Count > 0)
+                        {
+                            SetFocus(item.Items[0].Key);
+                        }
+                    }
+                }
+                break;
+
+            case "ArrowLeft":
+            case "Escape":
+                _preventKeyDown = true;
+                if (currentIndex >= 0)
+                {
+                    var item = nodes[currentIndex].Item;
+                    if (item.HasChildren && ExpandedItemKeys.Contains(item.Key))
+                    {
+                        await ExpandedChanged.InvokeAsync(new CrestPanelMenuExpansionChangedEventArgs(item, false));
+                    }
+                    else if (nodes[currentIndex].ParentKey is { } parentKey)
+                    {
+                        SetFocus(parentKey);
+                    }
+                }
+                break;
+
+            case "Enter":
+            case " ":
+                _preventKeyDown = true;
+                if (currentIndex >= 0)
+                {
+                    var item = nodes[currentIndex].Item;
+                    if (!item.IsDisabled)
+                    {
+                        if (item.HasChildren)
+                        {
+                            await ExpandedChanged.InvokeAsync(new CrestPanelMenuExpansionChangedEventArgs(item, !ExpandedItemKeys.Contains(item.Key)));
+                        }
+                        else if (item.HasLink)
+                        {
+                            Navigation.NavigateTo(item.Href!);
+                        }
+                    }
+                }
+                break;
+
+            default:
+                _preventKeyDown = false;
+                break;
+        }
+    }
+
+    private void SetFocus(string key)
+    {
+        _focusedKey = key;
+        _ = ScrollFocusedIntoViewAsync(key);
+    }
+
+    private async Task ScrollFocusedIntoViewAsync(string key)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("crestComponents.scrollIntoViewIfNeeded", $"crest-panel-menu-item-{key}");
+        }
+        catch (JSException)
+        {
+        }
+    }
+
     private static readonly string[] DefaultLevelIndents = ["0rem", "0.75rem", "1.25rem", "1.75rem"];
     private static readonly string[] DefaultLevelBackgrounds = ["transparent"];
     private static readonly string[] DefaultLevelBaseSizes = ["1rem", "0.95rem", "0.9rem"];

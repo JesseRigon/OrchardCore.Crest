@@ -19,12 +19,12 @@ namespace Crest.Components.Primitives
     /// </code>
     /// External link opening in new tab:
     /// <code>
-    /// &lt;CrestLink Path="https://radzen.com" Text="Visit Crest" Target="_blank" Icon="open_in_new" /&gt;
+    /// &lt;CrestLink Path="https://Crest.com" Text="Visit Crest" Target="_blank" Icon="open_in_new" /&gt;
     /// </code>
     /// Link with custom content:
     /// <code>
     /// &lt;CrestLink Path="/dashboard"&gt;
-    ///     &lt;RadzenIcon Icon="dashboard" /&gt; Go to Dashboard
+    ///     &lt;CrestIcon Icon="dashboard" /&gt; Go to Dashboard
     /// &lt;/CrestLink&gt;
     /// </code>
     /// </example>

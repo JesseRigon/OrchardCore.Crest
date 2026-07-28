@@ -114,10 +114,10 @@ namespace Crest.Components.Primitives
                     return true;
                 }
 
-                return editContexts.All(c => 
-                { 
+                return editContexts.All(c =>
+                {
                     c.Value.Validate();
-                    return !c.Value.GetValidationMessages().Any(); 
+                    return !c.Value.GetValidationMessages().Any();
                 });
             }
         }
@@ -216,7 +216,7 @@ namespace Crest.Components.Primitives
             var view = AllowPaging ? PagedView : View;
             var top = request.Count;
 
-            if(top <= 0)
+            if (top <= 0)
             {
                 top = PageSize;
             }
@@ -245,7 +245,7 @@ namespace Crest.Components.Primitives
         {
             var top = request.Count;
 
-            if(top <= 0)
+            if (top <= 0)
             {
                 top = PageSize;
             }
@@ -275,7 +275,7 @@ namespace Crest.Components.Primitives
             {
                 if (AllowVirtualization)
                 {
-                    if(AllowGrouping && Groups.Any() && !LoadData.HasDelegate)
+                    if (AllowGrouping && Groups.Any() && !LoadData.HasDelegate)
                     {
                         builder.OpenComponent(0, typeof(Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize<GroupResult>));
                         builder.AddAttribute(1, "ItemsProvider", new Microsoft.AspNetCore.Components.Web.Virtualization.ItemsProviderDelegate<GroupResult>(LoadGroups));
@@ -323,7 +323,7 @@ namespace Crest.Components.Primitives
                             });
                         }));
 
-                        if(VirtualizationOverscanCount != default(int))
+                        if (VirtualizationOverscanCount != default(int))
                         {
                             builder.AddAttribute(1, "OverscanCount", VirtualizationOverscanCount);
                         }
@@ -533,7 +533,7 @@ namespace Crest.Components.Primitives
 
             if (column.FrozenPosition == FrozenColumnPosition.Left)
             {
-                for(var i=0; i<ColumnsCollection.Count; i++)
+                for (var i = 0; i < ColumnsCollection.Count; i++)
                 {
                     if (ColumnsCollection[i] == column)
                     {
@@ -546,7 +546,7 @@ namespace Crest.Components.Primitives
                             return "rz-frozen-cell rz-frozen-cell-left";
                         }
                     }
-                    if(!ColumnsCollection[i].IsFrozen())
+                    if (!ColumnsCollection[i].IsFrozen())
                     {
                         break;
                     }
@@ -554,11 +554,11 @@ namespace Crest.Components.Primitives
                 return "rz-frozen-cell rz-frozen-cell-left-inner";
             }
 
-            for (var i = ColumnsCollection.Count-1; i >=0; i--)
+            for (var i = ColumnsCollection.Count - 1; i >= 0; i--)
             {
                 if (ColumnsCollection[i] == column)
                 {
-                    if (i - 1 >=0 && (!ColumnsCollection[i-1].IsFrozen() || ColumnsCollection[i-1].FrozenPosition == FrozenColumnPosition.Left))
+                    if (i - 1 >= 0 && (!ColumnsCollection[i - 1].IsFrozen() || ColumnsCollection[i - 1].FrozenPosition == FrozenColumnPosition.Left))
                     {
                         return "rz-frozen-cell rz-frozen-cell-right rz-frozen-cell-right-end";
                     }
@@ -1028,7 +1028,7 @@ namespace Crest.Components.Primitives
                 builder.AddAttribute(1, "Value", isFirst ? column.GetFilterValue() : column.GetSecondFilterValue());
                 builder.AddAttribute(2, "ShowUpDown", column.ShowUpDownForNumericFilter());
                 builder.AddAttribute(3, "Style", "width:100%");
-                builder.AddAttribute(4, "InputAttributes", new Dictionary<string,object>(){ { "aria-label", column.Title + $"{(!isFirst ? " second " : " ")}filter value " + (isFirst ? column.GetFilterValue() : column.GetSecondFilterValue()) } });
+                builder.AddAttribute(4, "InputAttributes", new Dictionary<string, object>() { { "aria-label", column.Title + $"{(!isFirst ? " second " : " ")}filter value " + (isFirst ? column.GetFilterValue() : column.GetSecondFilterValue()) } });
                 builder.AddAttribute(5, "id", getFilterInputId(column) + (isFirst ? "f" : "s"));
 
                 Action<object> action;
@@ -1997,7 +1997,7 @@ namespace Crest.Components.Primitives
 
                     await ColumnReordering.InvokeAsync(reorderingArgs);
 
-                    if(reorderingArgs.Cancel)
+                    if (reorderingArgs.Cancel)
                     {
                         indexOfColumnToReoder = null;
                         return;
@@ -2527,7 +2527,7 @@ namespace Crest.Components.Primitives
                 selectedColumns = allColumns.Where(c => c.Pickable && c.GetVisible()).ToList();
                 sorts.Clear();
                 columns = allColumns.Where(c => c.Parent == null).ToList();
-           }
+            }
         }
 
         /// <summary>
@@ -2852,8 +2852,10 @@ namespace Crest.Components.Primitives
         {
             bool emptyTextChanged = false, allowColumnPickingChanged = false, valueChanged = false, allGroupsExpandedChanged = false;
 
-            foreach (var parameter in parameters) {
-                switch (parameter.Name) {
+            foreach (var parameter in parameters)
+            {
+                switch (parameter.Name)
+                {
                     case nameof(EmptyText):
                         emptyTextChanged = HasChanged(parameter.Value, EmptyText); break;
 
@@ -2925,7 +2927,7 @@ namespace Crest.Components.Primitives
                 await Task.Yield();
                 Data = Enumerable.Empty<TItem>().Append(default(TItem)!);
             }
-            else if(settings == null)
+            else if (settings == null)
             {
                 await base.ReloadOnFirstRender();
             }
@@ -3053,7 +3055,7 @@ namespace Crest.Components.Primitives
         /// <returns></returns>
         public async System.Threading.Tasks.Task CollapseAll()
         {
-            foreach(var item in expandedItems.Keys.ToList())
+            foreach (var item in expandedItems.Keys.ToList())
             {
                 await CollapseItem(item);
             }
@@ -3072,7 +3074,7 @@ namespace Crest.Components.Primitives
                 return;
             }
 
-            foreach (TItem item in items.Where(x=> expandedItems.Keys.Any(i => ItemEquals(i, x))))
+            foreach (TItem item in items.Where(x => expandedItems.Keys.Any(i => ItemEquals(i, x))))
             {
                 await CollapseItem(item);
             }
@@ -3379,10 +3381,10 @@ namespace Crest.Components.Primitives
         /// <param name="item">The item.</param>
         public async System.Threading.Tasks.Task EditRow(TItem item)
         {
-            if(itemsToInsert.Count > 0 && EditMode == DataGridEditMode.Single)
+            if (itemsToInsert.Count > 0 && EditMode == DataGridEditMode.Single)
             {
                 var itemsToCancel = itemsToInsert.ToList();
-                foreach( var itemToCancel in itemsToCancel)
+                foreach (var itemToCancel in itemsToCancel)
                 {
                     CancelEditRow(itemToCancel);
                 }
@@ -3483,7 +3485,7 @@ namespace Crest.Components.Primitives
         {
             if (itemsToInsert.Contains(item))
             {
-                if(!IsVirtualizationAllowed())
+                if (!IsVirtualizationAllowed())
                 {
                     var list = this.PagedView.ToList();
                     list.Remove(item);
@@ -3495,12 +3497,12 @@ namespace Crest.Components.Primitives
                 else
                 {
                     itemsToInsert.Remove(item);
-                    if(virtualize != null)
+                    if (virtualize != null)
                     {
                         virtualize.RefreshDataAsync();
                     }
 
-                    if(groupVirtualize != null)
+                    if (groupVirtualize != null)
                     {
                         groupVirtualize.RefreshDataAsync();
                     }
@@ -3602,7 +3604,7 @@ namespace Crest.Components.Primitives
 
         internal bool IsOData()
         {
-            if(isOData == null && Data != null)
+            if (isOData == null && Data != null)
             {
                 isOData = typeof(ODataEnumerable<TItem>).IsAssignableFrom(Data.GetType());
             }
@@ -3673,9 +3675,9 @@ namespace Crest.Components.Primitives
                 CrestDataGridColumn<TItem>? column;
                 column = columns.FirstOrDefault(c => c.GetGroupProperty() == ((GroupDescriptor)args.NewItems![0]!).Property);
 
-                if(column == null && args.NewItems != null && args.NewItems.Count > 0 && args.NewItems[0] is GroupDescriptor newGroup)
+                if (column == null && args.NewItems != null && args.NewItems.Count > 0 && args.NewItems[0] is GroupDescriptor newGroup)
                 {
-                   column = allColumns.FirstOrDefault(c => c.GetGroupProperty() == newGroup.Property);
+                    column = allColumns.FirstOrDefault(c => c.GetGroupProperty() == newGroup.Property);
                 }
 
                 if (column != null && HideGroupedColumn)
@@ -3745,10 +3747,10 @@ namespace Crest.Components.Primitives
 
         internal async Task EndColumnDropToGroup()
         {
-            if(indexOfColumnToReoder != null && uniqueIDOfColumnToReoder != null && AllowGrouping && JSRuntime != null)
+            if (indexOfColumnToReoder != null && uniqueIDOfColumnToReoder != null && AllowGrouping && JSRuntime != null)
             {
                 var callbackKey = $"{getColumnUniqueId(indexOfColumnToReoder.Value)}end";
-                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.invokeRadzenCallback", callbackKey);
+                await JSRuntime.InvokeVoidAsync("Crest.Components.Primitives.invokeCrestCallback", callbackKey);
 
                 var column = allColumns.Where(c => (!string.IsNullOrEmpty(c.UniqueID) ? c.UniqueID : c.Property) == uniqueIDOfColumnToReoder).FirstOrDefault();
 
@@ -3757,7 +3759,7 @@ namespace Crest.Components.Primitives
                     var descriptor = Groups.Where(d => d.Property == column.GetGroupProperty()).FirstOrDefault();
                     if (descriptor == null)
                     {
-                        descriptor = new GroupDescriptor() { Property = column.GetGroupProperty(), Title = column.GetTitle(), SortOrder = column.GetSortOrder() ?? SortOrder.Ascending, FormatString = column.FormatString  };
+                        descriptor = new GroupDescriptor() { Property = column.GetGroupProperty(), Title = column.GetTitle(), SortOrder = column.GetSortOrder() ?? SortOrder.Ascending, FormatString = column.FormatString };
                         Groups.Add(descriptor);
                         _groupedPagedView = null;
 
@@ -4098,7 +4100,7 @@ namespace Crest.Components.Primitives
 
             // Fix nested property settings load issue
             // GetFilterValue reads settings as list only if the filterProperty type is IEnumerable and the settings value is JsonElement array.
-            if ( columnSettings.FilterValue is JsonElement jsonElement && jsonElement.ValueKind != JsonValueKind.Array
+            if (columnSettings.FilterValue is JsonElement jsonElement && jsonElement.ValueKind != JsonValueKind.Array
                 && !typeof(string).IsAssignableFrom(gridColumn.FilterPropertyType) && (typeof(IEnumerable<>).IsAssignableFrom(gridColumn.FilterPropertyType) || typeof(IEnumerable).IsAssignableFrom(gridColumn.FilterPropertyType)))
             {
                 filterPropertyType = PropertyAccess.GetElementType(gridColumn.FilterPropertyType);
@@ -4139,7 +4141,7 @@ namespace Crest.Components.Primitives
 
                     foreach (var column in settings.Columns.OrderBy(c => c.SortIndex))
                     {
-                        var gridColumn = allColumns.Where(c => !string.IsNullOrEmpty(column.UniqueID) && c.UniqueID == column.UniqueID).FirstOrDefault() ?? 
+                        var gridColumn = allColumns.Where(c => !string.IsNullOrEmpty(column.UniqueID) && c.UniqueID == column.UniqueID).FirstOrDefault() ??
                             allColumns.Where(c => !string.IsNullOrEmpty(column.Property) && c.Property == column.Property).FirstOrDefault();
                         if (gridColumn != null)
                         {
@@ -4154,7 +4156,7 @@ namespace Crest.Components.Primitives
 
                     foreach (var column in settings.Columns)
                     {
-                        var gridColumn = allColumns.Where(c => !string.IsNullOrEmpty(column.UniqueID) && c.UniqueID == column.UniqueID).FirstOrDefault() ?? 
+                        var gridColumn = allColumns.Where(c => !string.IsNullOrEmpty(column.UniqueID) && c.UniqueID == column.UniqueID).FirstOrDefault() ??
                             allColumns.Where(c => !string.IsNullOrEmpty(column.Property) && c.Property == column.Property).FirstOrDefault();
                         if (gridColumn != null)
                         {
@@ -4180,7 +4182,7 @@ namespace Crest.Components.Primitives
                             }
 
                             // Filtering
-                            if( SetColumnFilterValueFromSettings(gridColumn, column, true))
+                            if (SetColumnFilterValueFromSettings(gridColumn, column, true))
                             {
                                 shouldUpdateState = true;
                             }
@@ -4192,7 +4194,7 @@ namespace Crest.Components.Primitives
                             }
 
                             // 2nd filter value
-                            if( SetColumnFilterValueFromSettings(gridColumn, column, false))
+                            if (SetColumnFilterValueFromSettings(gridColumn, column, false))
                             {
                                 shouldUpdateState = true;
                             }

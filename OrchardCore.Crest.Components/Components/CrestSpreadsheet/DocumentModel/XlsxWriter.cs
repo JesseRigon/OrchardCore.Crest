@@ -1318,7 +1318,7 @@ class XlsxWriter(Workbook sourceWorkbook)
             if (rowDict.Count > 0)
             {
                 var firstCol = rowDict.Keys.First();
-                var lastCol  = rowDict.Keys.Last();
+                var lastCol = rowDict.Keys.Last();
                 rowElement.Add(new XAttribute("spans", $"{firstCol + 1}:{lastCol + 1}"));
 
                 foreach (var (_, cellEl) in rowDict)
@@ -1685,12 +1685,12 @@ class XlsxWriter(Workbook sourceWorkbook)
     private static string CellErrorToString(CellError error) => error switch
     {
         CellError.Value => "#VALUE!",
-        CellError.Div0  => "#DIV/0!",
-        CellError.Ref   => "#REF!",
-        CellError.Name  => "#NAME?",
-        CellError.Num   => "#NUM!",
-        CellError.NA    => "#N/A",
-        _               => "#NAME?",
+        CellError.Div0 => "#DIV/0!",
+        CellError.Ref => "#REF!",
+        CellError.Name => "#NAME?",
+        CellError.Num => "#NUM!",
+        CellError.NA => "#N/A",
+        _ => "#NAME?",
     };
 
     private static void AddCellValue(XElement cellElement, Cell cell, Dictionary<string, int> sharedStrings, XDocument sharedStringsDoc)
@@ -1977,7 +1977,7 @@ class XlsxWriter(Workbook sourceWorkbook)
                 new XElement(ns + "colorFilter",
                     new XAttribute("dxfId", "0"),
                     new XAttribute("cellColor", colorCriterion.FontColor ? "0" : "1"),
-                    new XAttribute(XNamespace.Get("urn:schemas-radzen:spreadsheet") + "color",
+                    new XAttribute(XNamespace.Get("urn:schemas-Crest:spreadsheet") + "color",
                         colorCriterion.Color ?? "")));
         }
 

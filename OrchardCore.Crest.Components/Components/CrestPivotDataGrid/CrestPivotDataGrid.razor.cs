@@ -1,3 +1,4 @@
+using Crest.Components.Overlay;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
@@ -518,7 +519,7 @@ namespace Crest.Components.Primitives
 
         // Filter functionality
         private CrestPivotField<TItem>? currentFilterField;
-        private RadzenPopup? filterPopup;
+        private CrestPopup? filterPopup;
 
         /// <summary>
         /// Gets the columns collection.
@@ -896,8 +897,8 @@ namespace Crest.Components.Primitives
                         .Where(f => f.FilterValue != null
                             || f.FilterOperator == FilterOperator.IsNotNull || f.FilterOperator == FilterOperator.IsNull
                             || f.FilterOperator == FilterOperator.IsEmpty | f.FilterOperator == FilterOperator.IsNotEmpty)
-                        .Select(f => new FilterDescriptor() 
-                        { 
+                        .Select(f => new FilterDescriptor()
+                        {
                             Property = f.Property,
                             FilterProperty = f.FilterProperty,
                             FilterOperator = f.FilterOperator ?? FilterOperator.Equals,
@@ -976,7 +977,7 @@ namespace Crest.Components.Primitives
                 StateHasChanged();
             }
         }
-        
+
         /// <summary>
         /// Adds a pivot aggregate to the pivot grid if it does not already exist.
         /// </summary>
@@ -1070,7 +1071,7 @@ namespace Crest.Components.Primitives
                 {
                     builder.OpenElement(0, "tr");
                     builder.AddAttribute(1, "class", $"rz-pivot-row {(rowIndex % 2 == 0 ? "rz-pivot-row-even" : "rz-pivot-row-odd")}");
-                    
+
                     // Render row headers, accounting for active rowspans
                     var colIndex = 0;
                     foreach (var rowHeaderCell in pivotRow.RowHeaderCells)
@@ -1091,7 +1092,7 @@ namespace Crest.Components.Primitives
                         builder.AddAttribute(3, "class", $"rz-pivot-row-header {GetFrozenRowHeaderClass(colIndex)}");
                         builder.AddAttribute(4, "rowspan", rowHeaderCell.RowSpan);
                         builder.AddAttribute(5, "style", $"inset-inline-start: {colIndex * 140}px");
-                        
+
                         // Check if this is a drill down row header
                         if (AllowDrillDown && !string.IsNullOrEmpty(rowHeaderCell.PathKey) && rowHeaderCell.HasChildren)
                         {
@@ -1127,7 +1128,7 @@ namespace Crest.Components.Primitives
                         {
                             activeRowSpans[colIndex] = rowHeaderCell.RowSpan - 1;
                         }
-                        
+
                         colIndex++;
                     }
 
@@ -1192,11 +1193,11 @@ namespace Crest.Components.Primitives
                             {
                                 builder.AddContent(15, aggregate.FormatValue(rowTotal!));
                             }
-                            
+
                             builder.CloseElement();
                         }
                     }
-                    
+
                     builder.CloseElement();
                     rowIndex++;
                 }
@@ -1251,12 +1252,12 @@ namespace Crest.Components.Primitives
                         {
                             builder.AddContent(seq++, aggregate.FormatValue(total));
                         }
-                        
+
                         builder.CloseElement();
                     }
                 }
 
-                if(ShowRowsTotals)
+                if (ShowRowsTotals)
                 {
                     foreach (var aggregate in pivotAggregates)
                     {
@@ -1268,11 +1269,11 @@ namespace Crest.Components.Primitives
 
                         if (aggregate.RowTotalTemplate != null)
                         {
-                            var context = new CrestPivotAggreateContext<TItem>() 
-                            { 
+                            var context = new CrestPivotAggreateContext<TItem>()
+                            {
                                 View = View,
-                                Aggregate = aggregate, 
-                                Value= total
+                                Aggregate = aggregate,
+                                Value = total
                             };
 
                             builder.AddContent(seq++, aggregate.RowTotalTemplate(context));
@@ -1281,7 +1282,7 @@ namespace Crest.Components.Primitives
                         {
                             builder.AddContent(seq++, aggregate.FormatValue(total!));
                         }
-                        
+
                         builder.CloseElement();
                     }
                 }
@@ -1533,7 +1534,7 @@ namespace Crest.Components.Primitives
 
             var row = pivotRows[level];
 
-            var groups = items.GroupByMany(new string[]{ row.Property! });
+            var groups = items.GroupByMany(new string[] { row.Property! });
 
             var sortedAggregate = pivotAggregates.FirstOrDefault(a => a.GetSortOrder() != null);
 
@@ -1640,7 +1641,8 @@ namespace Crest.Components.Primitives
             {
                 foreach (var child in node.Children)
                 {
-                    var cell = new RowHeaderCell {
+                    var cell = new RowHeaderCell
+                    {
                         Value = child.Value,
                         Title = child.Title,
                         RowSpan = GetLeafCount(child),
@@ -1649,7 +1651,7 @@ namespace Crest.Components.Primitives
                         HasChildren = child.Level < pivotRows.Count
                     };
                     var newPrefix = new List<RowHeaderCell>(prefix) { cell };
-                    
+
                     if (child.IsCollapsed)
                     {
                         // For collapsed groups, create a single row with values aggregated across all descendants.
@@ -2297,7 +2299,7 @@ namespace Crest.Components.Primitives
             {
                 // Trigger filter change event
                 await OnFilterChanged();
-                
+
                 if (filterPopup != null)
                 {
                     await filterPopup.CloseAsync(FilterIconRef[filterIconRefKey]);
@@ -2314,10 +2316,10 @@ namespace Crest.Components.Primitives
             {
                 currentFilterField.ClearFilterValues();
                 StateHasChanged();
-                
+
                 // Trigger filter change event
                 await OnFilterChanged();
-                
+
                 if (filterPopup != null)
                 {
                     await filterPopup.CloseAsync(FilterIconRef[filterIconRefKey]);
@@ -2339,7 +2341,7 @@ namespace Crest.Components.Primitives
                 }
             }
         }
-        
+
         async Task OnFilterChanged()
         {
             await InvokeAsync(Reload);
@@ -2512,10 +2514,10 @@ namespace Crest.Components.Primitives
                         innerFilterExpressions.Add(secondFilterExpression);
                     }
 
-                    filterExpressions.Add(new CompositeFilterDescriptor() 
-                    { 
+                    filterExpressions.Add(new CompositeFilterDescriptor()
+                    {
                         Property = property,
-                        Filters = innerFilterExpressions,  
+                        Filters = innerFilterExpressions,
                         LogicalFilterOperator = logicalOperator
                     });
                 }
@@ -2586,7 +2588,7 @@ namespace Crest.Components.Primitives
 
                 var filters = GetFilters();
                 var orderBy = GetOrderBy();
-                
+
                 if (filters.Count > 0)
                 {
                     baseView = baseView.Where(filters, LogicalFilterOperator, FilterCaseSensitivity);

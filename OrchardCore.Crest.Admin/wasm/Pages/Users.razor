@@ -12,7 +12,7 @@
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" Gap=".5rem">
         <RadzenTextBox @bind-Value="Search" Placeholder="Search users" Style="width: 20rem" />
-        <RadzenDropDown @bind-Value="Status" Data="Statuses" TextProperty="Text" ValueProperty="Value" Style="width: 10rem" />
+        <CrestDropDown @bind-Value="Status" Data="Statuses" TextProperty="Text" ValueProperty="Value" Style="width: 10rem" />
         <RadzenButton Text="Filter" Click="LoadAsync" />
     </RadzenStack>
     @if (List is null) { <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" /> }

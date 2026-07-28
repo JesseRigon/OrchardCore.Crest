@@ -11,84 +11,87 @@
         <CrestLabel Text=@($"{Range.Start}:{Range.End}") class="rz-text-subtitle2" />
         <span style="flex:1"></span>
         <CrestCheckBox @bind-Value=@hasHeaders Name="hasHeadersCheck" TValue="bool" />
-        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_SortHasHeaders)) Component="hasHeadersCheck" class="rz-text-subtitle2" />
+        <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_SortHasHeaders)) Component="hasHeadersCheck"
+                    class="rz-text-subtitle2" />
     </CrestStack>
 
     <CrestTable class="rz-density-compact" Style="height: 200px">
         <CrestTableHeader>
             <CrestTableHeaderRow>
                 <CrestTableHeaderCell Style="width:32px" />
-                <CrestTableHeaderCell Style="width:160px"><span class="rz-column-title rz-ps-0">@L(nameof(CrestStrings.Spreadsheet_SortLevelColumn))</span></CrestTableHeaderCell>
-                <CrestTableHeaderCell Style="width:120px"><span class="rz-column-title rz-ps-0">@L(nameof(CrestStrings.Spreadsheet_SortLevelSortOn))</span></CrestTableHeaderCell>
-                <CrestTableHeaderCell Style="width:130px"><span class="rz-column-title rz-ps-0">@L(nameof(CrestStrings.Spreadsheet_SortLevelOrder))</span></CrestTableHeaderCell>
-                <CrestTableHeaderCell><span class="rz-column-title rz-ps-0">@L(nameof(CrestStrings.Spreadsheet_SortLevelCustomList))</span></CrestTableHeaderCell>
-                <CrestTableHeaderCell Style="width:60px"><span class="rz-column-title rz-ps-0" title=@L(nameof(CrestStrings.Spreadsheet_SortLevelCase))>Aa</span></CrestTableHeaderCell>
-                <CrestTableHeaderCell Style="width:120px" />
-            </CrestTableHeaderRow>
-        </CrestTableHeader>
-        <CrestTableBody>
-            @for (var i = 0; i < levels.Count; i++)
-            {
-                var idx = i;
-                var level = levels[idx];
-                <CrestTableRow>
-                    <CrestTableCell>@(idx + 1)</CrestTableCell>
-                    <CrestTableCell>
-                        <RadzenDropDown TValue="int" Data=@columnOptions
-                            TextProperty="@nameof(ColumnOption.Text)" ValueProperty="@nameof(ColumnOption.Value)"
-                            Value=@level.ColumnIndex
-                            Change=@(v => level.ColumnIndex = (int)v)
-                            InputSize="InputSize.Small" Style="width:100%" />
-                    </CrestTableCell>
-                    <CrestTableCell>
-                        <RadzenDropDown TValue="SortOn" Data=@SortOnOptions
-                            TextProperty="@nameof(SortOnOption.Text)" ValueProperty="@nameof(SortOnOption.Value)"
-                            Value=@level.SortOn
-                            Change=@(v => level.SortOn = (SortOn)v)
-                            InputSize="InputSize.Small" Style="width:100%" />
-                    </CrestTableCell>
-                    <CrestTableCell>
-                        <RadzenDropDown TValue="SortOrder" Data=@OrderOptions
-                            TextProperty="@nameof(OrderOption.Text)" ValueProperty="@nameof(OrderOption.Value)"
-                            Value=@level.Order
-                            Change=@(v => level.Order = (SortOrder)v)
-                            InputSize="InputSize.Small" Style="width:100%" />
-                    </CrestTableCell>
-                    <CrestTableCell>
-                        <CrestTextBox @bind-Value=@level.CustomListText
-                            Placeholder=@L(nameof(CrestStrings.Spreadsheet_SortLevelCustomListPlaceholder))
-                            InputSize="InputSize.Small" Style="width:100%" />
-                    </CrestTableCell>
-                    <CrestTableCell>
-                        <CrestCheckBox @bind-Value=@level.CaseSensitive TValue="bool" />
-                    </CrestTableCell>
-                    <CrestTableCell Style="white-space: nowrap">
-                        <CrestButton Icon="arrow_upward" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
-                            Size="ButtonSize.Small" Disabled=@(idx == 0)
-                            Click=@(() => Move(idx, -1)) />
-                        <CrestButton Icon="arrow_downward" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
-                            Size="ButtonSize.Small" Disabled=@(idx == levels.Count - 1)
-                            Click=@(() => Move(idx, 1)) />
-                        <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
-                            Size="ButtonSize.Small" Disabled=@(levels.Count == 1)
-                            Click=@(() => RemoveLevel(idx)) />
-                    </CrestTableCell>
-                </CrestTableRow>
-            }
-        </CrestTableBody>
-    </CrestTable>
+                <CrestTableHeaderCell Style="width:160px"><span
+                    class="rz-column-title rz-ps-0">@L(nameof(CrestStrings.Spreadsheet_SortLevelColumn))</span>
+                </CrestTableHeaderCell>
+                <CrestTableHeaderCell Style="width:120px"><span
+                    class="rz-column-title rz-ps-0">@L(nameof(CrestStrings.Spreadsheet_SortLevelSortOn))</span>
+                </CrestTableHeaderCell>
+                <CrestTableHeaderCell Style="width:130px"><span
+                    class="rz-column-title rz-ps-0">@L(nameof(CrestStrings.Spreadsheet_SortLevelOrder))</span>
+                </CrestTableHeaderCell>
+                <CrestTableHeaderCell><span
+                    class="rz-column-title rz-ps-0">@L(nameof(CrestStrings.Spreadsheet_SortLevelCustomList))</span>
+                </CrestTableHeaderCell>
+                <CrestTableHeaderCell Style="width:60px"><span class="rz-column-title rz-ps-0"
+                                                                   title=@L(nameof(CrestStrings.Spreadsheet_SortLevelCase))>Aa</span></CrestTableHeaderCell>
+                    <CrestTableHeaderCell Style="width:120px" />
+                </CrestTableHeaderRow>
+            </CrestTableHeader>
+            <CrestTableBody>
+                @for (var i = 0; i < levels.Count; i++)
+                {
+                    var idx = i;
+                    var level = levels[idx];
+                    <CrestTableRow>
+                        <CrestTableCell>@(idx + 1)</CrestTableCell>
+                        <CrestTableCell>
+                            <CrestDropDown TValue="int" Data=@columnOptions TextProperty="@nameof(ColumnOption.Text)"
+                                           ValueProperty="@nameof(ColumnOption.Value)" Value=@level.ColumnIndex Change=@(v =>
+                                                                   level.ColumnIndex = (int)v) InputSize="InputSize.Small" Style="width:100%" />
+            </CrestTableCell>
+            <CrestTableCell>
+                <CrestDropDown TValue="SortOn" Data=@SortOnOptions TextProperty="@nameof(SortOnOption.Text)"
+                               ValueProperty="@nameof(SortOnOption.Value)" Value=@level.SortOn Change=@(v => level.SortOn =
+                                                       (SortOn)v) InputSize="InputSize.Small" Style="width:100%" />
+            </CrestTableCell>
+            <CrestTableCell>
+                <CrestDropDown TValue="SortOrder" Data=@OrderOptions TextProperty="@nameof(OrderOption.Text)"
+                               ValueProperty="@nameof(OrderOption.Value)" Value=@level.Order Change=@(v => level.Order =
+                                                       (SortOrder)v) InputSize="InputSize.Small" Style="width:100%" />
+            </CrestTableCell>
+            <CrestTableCell>
+                <CrestTextBox @bind-Value=@level.CustomListText
+                              Placeholder=@L(nameof(CrestStrings.Spreadsheet_SortLevelCustomListPlaceholder))
+                              InputSize="InputSize.Small" Style="width:100%" />
+            </CrestTableCell>
+            <CrestTableCell>
+                <CrestCheckBox @bind-Value=@level.CaseSensitive TValue="bool" />
+            </CrestTableCell>
+            <CrestTableCell Style="white-space: nowrap">
+                <CrestButton Icon="arrow_upward" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                             Size="ButtonSize.Small" Disabled=@(idx == 0) Click=@(() => Move(idx, -1)) />
+                <CrestButton Icon="arrow_downward" ButtonStyle="ButtonStyle.Base" Variant="Variant.Text"
+                             Size="ButtonSize.Small" Disabled=@(idx == levels.Count - 1) Click=@(() => Move(idx, 1)) />
+                <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                             Size="ButtonSize.Small" Disabled=@(levels.Count == 1) Click=@(() => RemoveLevel(idx)) />
+            </CrestTableCell>
+        </CrestTableRow>
+    }
+</CrestTableBody>
+</CrestTable>
 
-    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-        <CrestButton Icon="add" Text=@L(nameof(CrestStrings.Spreadsheet_SortLevelAddLevel))
-            ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Small" Click=@AddLevel />
-    </CrestStack>
+<CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+    <CrestButton Icon="add" Text=@L(nameof(CrestStrings.Spreadsheet_SortLevelAddLevel))
+                 ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Small"
+                 Click=@AddLevel />
+</CrestStack>
 
-    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-spreadsheet-dialog-actions">
-        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined"
-            Click=@OnCancel />
-        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat"
-            Click=@OnOk />
-    </CrestStack>
+<CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End"
+            class="rz-spreadsheet-dialog-actions">
+    <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) ButtonStyle="ButtonStyle.Base"
+                 Variant="Variant.Outlined" Click=@OnCancel />
+    <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) ButtonStyle="ButtonStyle.Primary"
+                 Variant="Variant.Flat" Click=@OnOk />
+</CrestStack>
 </CrestStack>
 
 @code {
@@ -131,7 +134,8 @@
     ];
 
     private string FormatColumnName(int number) =>
-        string.Format(System.Globalization.CultureInfo.CurrentCulture, L(nameof(CrestStrings.Spreadsheet_ColumnFormat)), number);
+        string.Format(System.Globalization.CultureInfo.CurrentCulture, L(nameof(CrestStrings.Spreadsheet_ColumnFormat)),
+number);
 
     protected override void OnInitialized()
     {

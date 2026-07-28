@@ -4,7 +4,7 @@
 @implements IDisposable
 
 @namespace Crest.Components.Primitives.Spreadsheet.Tools
-<RadzenDropDown EmptyAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DataFormat))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DataFormat))) Value=@CurrentFormat ValueChanged=@OnFormatChangedAsync TValue="string" Data=@FormatOptions TextProperty="Name" ValueProperty="FormatCode"
+<CrestDropDown EmptyAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DataFormat))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_DataFormat))) Value=@CurrentFormat ValueChanged=@OnFormatChangedAsync TValue="string" Data=@FormatOptions TextProperty="Name" ValueProperty="FormatCode"
     Disabled=@IsDisabled InputSize="InputSize.Small" Style="width: 130px" />
 
 @code {

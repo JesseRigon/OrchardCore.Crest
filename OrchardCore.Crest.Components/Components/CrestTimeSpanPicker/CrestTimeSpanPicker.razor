@@ -1,3 +1,4 @@
+@using Crest.Components.Overlay
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives.Rendering
 @using Microsoft.AspNetCore.Components.Forms
@@ -7,7 +8,7 @@
 
 @typeparam TValue
 @inherits CrestComponent
-@implements IRadzenFormComponent
+@implements ICrestFormComponent
 
 @namespace Crest.Components.Primitives
 @if (!Visible)
@@ -41,12 +42,12 @@
         {
             <button type="button" class="notranslate rz-dropdown-clear-icon rzi rzi-times" aria-label="@ClearAriaLabel" @onclick="@Clear" @onclick:stopPropagation="true"></button>
         }
-        <RadzenPopup id="@($"{GetId()}-popup")" @ref="@popup" Lazy="@(PopupRenderMode == PopupRenderMode.OnDemand)"
+        <CrestPopup id="@($"{GetId()}-popup")" @ref="@popup" Lazy="@(PopupRenderMode == PopupRenderMode.OnDemand)"
                    Open="@OnPopupOpen" Close="@OnPopupClose"
                    role="dialog" aria-label="@PopupAriaLabel"
                    class="rz-timespanpicker-popup-container">
             @RenderPanel()
-        </RadzenPopup>
+        </CrestPopup>
     }
 </div>
 

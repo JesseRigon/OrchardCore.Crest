@@ -68,7 +68,8 @@
                     </div>
                     <div class="rz-html-editor-dialog-item">
                         <label>@CellBackgroundText</label>
-                        <RadzenColorPicker @bind-Value=@attributes.CellBackground Style="width: 100%" ShowButton="false" ShowHSV="true" ShowRGBA="true" ShowColors="true" />
+                        <CrestColorPicker @bind-Value=@attributes.CellBackground Style="width: 100%" ShowButton="false"
+                                          ShowHSV="true" ShowRGBA="true" ShowColors="true" />
                     </div>
                     <div class="rz-html-editor-dialog-item">
                         <label>@CellPaddingPxText</label>
@@ -76,15 +77,15 @@
                     </div>
                     <div class="rz-html-editor-dialog-item">
                         <label>@CellTextAlignText</label>
-                        <RadzenDropDown @bind-Value=@attributes.CellTextAlign Data=@TextAlignOptions Style="width: 100%" />
+                        <CrestDropDown @bind-Value=@attributes.CellTextAlign Data=@TextAlignOptions Style="width: 100%" />
                     </div>
                     <div class="rz-html-editor-dialog-item">
                         <label>@CellVerticalAlignText</label>
-                        <RadzenDropDown @bind-Value=@attributes.CellVerticalAlign Data=@VerticalAlignOptions Style="width: 100%" />
+                        <CrestDropDown @bind-Value=@attributes.CellVerticalAlign Data=@VerticalAlignOptions Style="width: 100%" />
                     </div>
                     <div class="rz-html-editor-dialog-item">
                         <label>@BorderStyleText</label>
-                        <RadzenDropDown @bind-Value=@attributes.BorderStyle Data=@BorderStyleOptions Style="width: 100%" />
+                        <CrestDropDown @bind-Value=@attributes.BorderStyle Data=@BorderStyleOptions Style="width: 100%" />
                     </div>
                     <div class="rz-html-editor-dialog-item">
                         <label>@BorderWidthPxText</label>
@@ -92,15 +93,25 @@
                     </div>
                     <div class="rz-html-editor-dialog-item">
                         <label>@BorderColorText</label>
-                        <RadzenColorPicker @bind-Value=@attributes.BorderColor Style="width: 100%" ShowButton="false" ShowHSV="true" ShowRGBA="true" ShowColors="true" />
+                        <CrestColorPicker @bind-Value=@attributes.BorderColor Style="width: 100%" ShowButton="false" ShowHSV="true"
+                                          ShowRGBA="true" ShowColors="true" />
                     </div>
                     <div class="rz-html-editor-dialog-item">
                         <label>@CellBorderText</label>
                         <div class="rz-html-editor-table-actions">
-                            <div><CrestCheckBox @bind-Value=@attributes.BorderTop TValue="bool" /> <label>@BorderTopText</label></div>
-                            <div><CrestCheckBox @bind-Value=@attributes.BorderRight TValue="bool" /> <label>@BorderRightText</label></div>
-                            <div><CrestCheckBox @bind-Value=@attributes.BorderBottom TValue="bool" /> <label>@BorderBottomText</label></div>
-                            <div><CrestCheckBox @bind-Value=@attributes.BorderLeft TValue="bool" /> <label>@BorderLeftText</label></div>
+                            <div>
+                                <CrestCheckBox @bind-Value=@attributes.BorderTop TValue="bool" /> <label>@BorderTopText</label>
+                            </div>
+                            <div>
+                                <CrestCheckBox @bind-Value=@attributes.BorderRight TValue="bool" /> <label>@BorderRightText</label>
+                            </div>
+                            <div>
+                                <CrestCheckBox @bind-Value=@attributes.BorderBottom TValue="bool" />
+                                <label>@BorderBottomText</label>
+                            </div>
+                            <div>
+                                <CrestCheckBox @bind-Value=@attributes.BorderLeft TValue="bool" /> <label>@BorderLeftText</label>
+                            </div>
                         </div>
                     </div>
                 }
@@ -109,22 +120,34 @@
                     <div class="rz-html-editor-dialog-item">
                         <label>@EditText</label>
                         <div class="rz-html-editor-table-actions">
-                            <CrestButton Text=@InsertRowAboveText Click=@(() => ExecuteTableAction(ds, "addRowBefore")) ButtonStyle="ButtonStyle.Secondary" />
-                            <CrestButton Text=@InsertRowBelowText Click=@(() => ExecuteTableAction(ds, "addRowAfter")) ButtonStyle="ButtonStyle.Secondary" />
-                            <CrestButton Text=@InsertColumnLeftText Click=@(() => ExecuteTableAction(ds, "addColumnBefore")) ButtonStyle="ButtonStyle.Secondary" />
-                            <CrestButton Text=@InsertColumnRightText Click=@(() => ExecuteTableAction(ds, "addColumnAfter")) ButtonStyle="ButtonStyle.Secondary" />
-                            <CrestButton Text=@DeleteRowText Click=@(() => ExecuteTableAction(ds, "deleteRow")) ButtonStyle="ButtonStyle.Secondary" />
-                            <CrestButton Text=@DeleteColumnText Click=@(() => ExecuteTableAction(ds, "deleteColumn")) ButtonStyle="ButtonStyle.Secondary" />
-                            <CrestButton Text=@MergeRightText Click=@(() => ExecuteTableAction(ds, "mergeCellRight")) ButtonStyle="ButtonStyle.Secondary" Disabled=@(!Selection.CanMergeRight) />
-                            <CrestButton Text=@MergeDownText Click=@(() => ExecuteTableAction(ds, "mergeCellDown")) ButtonStyle="ButtonStyle.Secondary" Disabled=@(!Selection.CanMergeDown) />
-                            <CrestButton Text=@SplitCellText Click=@(() => ExecuteTableAction(ds, "splitCell")) ButtonStyle="ButtonStyle.Secondary" Disabled=@(!Selection.CanSplit) />
-                            <CrestButton Text=@DeleteTableText Click=@(() => ExecuteTableAction(ds, "deleteTable")) ButtonStyle="ButtonStyle.Danger" />
+                            <CrestButton Text=@InsertRowAboveText Click=@(() => ExecuteTableAction(ds, "addRowBefore"))
+                                         ButtonStyle="ButtonStyle.Secondary" />
+                            <CrestButton Text=@InsertRowBelowText Click=@(() => ExecuteTableAction(ds, "addRowAfter"))
+                                         ButtonStyle="ButtonStyle.Secondary" />
+                            <CrestButton Text=@InsertColumnLeftText Click=@(() => ExecuteTableAction(ds, "addColumnBefore"))
+                                         ButtonStyle="ButtonStyle.Secondary" />
+                            <CrestButton Text=@InsertColumnRightText Click=@(() => ExecuteTableAction(ds, "addColumnAfter"))
+                                         ButtonStyle="ButtonStyle.Secondary" />
+                            <CrestButton Text=@DeleteRowText Click=@(() => ExecuteTableAction(ds, "deleteRow"))
+                                         ButtonStyle="ButtonStyle.Secondary" />
+                            <CrestButton Text=@DeleteColumnText Click=@(() => ExecuteTableAction(ds, "deleteColumn"))
+                                         ButtonStyle="ButtonStyle.Secondary" />
+                            <CrestButton Text=@MergeRightText Click=@(() => ExecuteTableAction(ds, "mergeCellRight"))
+                                         ButtonStyle="ButtonStyle.Secondary" Disabled=@(!Selection.CanMergeRight) />
+                            <CrestButton Text=@MergeDownText Click=@(() => ExecuteTableAction(ds, "mergeCellDown"))
+                                         ButtonStyle="ButtonStyle.Secondary" Disabled=@(!Selection.CanMergeDown) />
+                            <CrestButton Text=@SplitCellText Click=@(() => ExecuteTableAction(ds, "splitCell"))
+                                         ButtonStyle="ButtonStyle.Secondary" Disabled=@(!Selection.CanSplit) />
+                            <CrestButton Text=@DeleteTableText Click=@(() => ExecuteTableAction(ds, "deleteTable"))
+                                         ButtonStyle="ButtonStyle.Danger" />
                         </div>
                     </div>
                 }
                 <div class="rz-html-editor-dialog-buttons">
-                    <CrestButton Text=@CancelText Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
-                    <CrestButton Text="@(Selection.InTable ? UpdateText : OkText)" ButtonType="ButtonType.Submit" Variant="Variant.Flat" />
+                    <CrestButton Text=@CancelText Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Base"
+                                 Variant="Variant.Outlined" />
+                    <CrestButton Text="@(Selection.InTable ? UpdateText : OkText)" ButtonType="ButtonType.Submit"
+                                 Variant="Variant.Flat" />
                 </div>
             </CrestTemplateForm>
         </div>);

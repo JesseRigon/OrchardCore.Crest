@@ -228,11 +228,11 @@ namespace Crest.Components.Primitives
                 ? Icon
                 : AlertStyle switch
                 {
-                    AlertStyle.Success => "check_circle",
-                    AlertStyle.Danger => "error",
-                    AlertStyle.Warning => "warning_amber",
-                    AlertStyle.Info => "info",
-                    _ => "lightbulb",
+                    AlertStyle.Success => "iconify.mdi/current/default/check-circle",
+                    AlertStyle.Danger => "iconify.mdi/current/default/alert-circle",
+                    AlertStyle.Warning => "iconify.mdi/current/default/alert",
+                    AlertStyle.Info => "iconify.mdi/current/default/information",
+                    _ => "iconify.mdi/current/default/lightbulb",
                 };
 
         async Task OnClose()

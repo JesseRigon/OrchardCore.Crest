@@ -8,13 +8,12 @@ using Microsoft.AspNetCore.Components.Web;
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using Crest.Components.Primitives.Rendering;
 
-namespace Crest.Components.RadzenSource
+namespace Crest.Components.Primitives
 {
     /// <summary>
     /// A dropdown select component that allows users to choose one or multiple items from a popup list.
-    /// RadzenDropDown supports data binding, filtering, templates, virtual scrolling, and both single and multiple selection modes.
+    /// CrestDropDown supports data binding, filtering, templates, virtual scrolling, and both single and multiple selection modes.
     /// Binds to a data source via the Data property and uses TextProperty and ValueProperty to determine what to display and what value to bind.
     /// Supports filtering (with configurable operators and case sensitivity), custom item templates, empty state templates, value templates for the selected item display,
     /// and can be configured as editable to allow custom text entry. For multiple selection, set Multiple=true and bind to a collection type.
@@ -23,19 +22,19 @@ namespace Crest.Components.RadzenSource
     /// <example>
     /// Basic dropdown with data binding:
     /// <code>
-    /// &lt;RadzenDropDown @bind-Value=@customerID TValue="string" Data=@customers TextProperty="CompanyName" ValueProperty="CustomerID" /&gt;
+    /// &lt;CrestDropDown @bind-Value=@customerID TValue="string" Data=@customers TextProperty="CompanyName" ValueProperty="CustomerID" /&gt;
     /// </code>
     /// Dropdown with filtering and placeholder:
     /// <code>
-    /// &lt;RadzenDropDown @bind-Value=@selectedId TValue="int" Data=@items TextProperty="Name" ValueProperty="Id" 
+    /// &lt;CrestDropDown @bind-Value=@selectedId TValue="int" Data=@items TextProperty="Name" ValueProperty="Id"
     ///                  AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Placeholder="Select an item..." /&gt;
     /// </code>
     /// Multiple selection dropdown:
     /// <code>
-    /// &lt;RadzenDropDown @bind-Value=@selectedIds TValue="IEnumerable&lt;int&gt;" Data=@items Multiple="true" Chips="true" /&gt;
+    /// &lt;CrestDropDown @bind-Value=@selectedIds TValue="IEnumerable&lt;int&gt;" Data=@items Multiple="true" Chips="true" /&gt;
     /// </code>
     /// </example>
-    public partial class RadzenDropDown<TValue> : DropDownBase<TValue>
+    public partial class CrestDropDown<TValue> : DropDownBase<TValue>
     {
         IJSObjectReference? _jsRef;
 
@@ -139,10 +138,10 @@ namespace Crest.Components.RadzenSource
         {
             var disabled = !string.IsNullOrEmpty(DisabledProperty) ? GetItemOrValueFromProperty(item.Item, DisabledProperty) : false;
 
-            var args = new DropDownItemRenderEventArgs<TValue>() 
-            { 
-                DropDown = this, 
-                Item = item.Item, 
+            var args = new DropDownItemRenderEventArgs<TValue>()
+            {
+                DropDown = this,
+                Item = item.Item,
                 Disabled = disabled is bool ? (bool)disabled : false,
             };
 
@@ -183,12 +182,12 @@ namespace Crest.Components.RadzenSource
             isPopupOpen = false;
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Radzen.closePopup", PopupID, Reference, nameof(OnClose), null, key == "Tab");
+                await JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID, Reference, nameof(OnClose), null, key == "Tab");
             }
 
             if (key == "Enter" && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Radzen.focusElement", UniqueID, true);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", UniqueID, true);
                 OpenOnFocus = of;
             }
         }
@@ -217,18 +216,18 @@ namespace Crest.Components.RadzenSource
             {
                 if (OpenOnFocus)
                 {
-                    await JSRuntime.InvokeVoidAsync("Radzen.openPopup", Element, PopupID, true, null, null, null, Reference, nameof(OnClose));
+                    await JSRuntime.InvokeVoidAsync("Crest.openPopup", Element, PopupID, true, null, null, null, Reference, nameof(OnClose));
                 }
                 else
                 {
-                    await JSRuntime.InvokeVoidAsync("Radzen.togglePopup", Element, PopupID, true, Reference, nameof(OnClose));
+                    await JSRuntime.InvokeVoidAsync("Crest.togglePopup", Element, PopupID, true, Reference, nameof(OnClose));
                 }
-                await JSRuntime.InvokeVoidAsync("Radzen.focusElement", isFilter ? UniqueID : SearchID);
+                await JSRuntime.InvokeVoidAsync("Crest.focusElement", isFilter ? UniqueID : SearchID);
             }
 
             if (list != null && selectedIndex != -1 && JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Radzen.selectListItem", search, list, selectedIndex);
+                await JSRuntime.InvokeVoidAsync("Crest.selectListItem", search, list, selectedIndex);
             }
         }
 
@@ -405,13 +404,13 @@ namespace Crest.Components.RadzenSource
 
                     if (!Disabled && JSRuntime != null)
                     {
-                        await JSRuntime.InvokeVoidAsync("Radzen.preventArrows", Element);
+                        await JSRuntime.InvokeVoidAsync("Crest.preventArrows", Element);
                     }
 
                     if (JSRuntime != null)
                     {
                         _jsRef = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                            "Radzen.createDropDown", Element);
+                            "Crest.createDropDown", Element);
                     }
 
                     if (reload)
@@ -427,7 +426,7 @@ namespace Crest.Components.RadzenSource
 
                 if (JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Radzen.repositionPopup", Element, PopupID);
+                    await JSRuntime.InvokeVoidAsync("Crest.repositionPopup", Element, PopupID);
                 }
             }
         }
@@ -446,7 +445,7 @@ namespace Crest.Components.RadzenSource
                 var key = args.Code ?? args.Key;
                 if (key == "Tab" && isFilter && wasOpen && JSRuntime != null)
                 {
-                    await JSRuntime.InvokeVoidAsync("Radzen.focusNext", Element, args.ShiftKey);
+                    await JSRuntime.InvokeVoidAsync("Crest.focusNext", Element, args.ShiftKey);
                 }
             }
         }
@@ -467,7 +466,7 @@ namespace Crest.Components.RadzenSource
 
                 if (ClearSearchAfterSelection)
                 {
-                    await JSRuntime.InvokeAsync<string>("Radzen.setInputValue", search, string.Empty);
+                    await JSRuntime.InvokeAsync<string>("Crest.setInputValue", search, string.Empty);
                     searchText = null;
                     _view = null;
                     await SearchTextChanged.InvokeAsync(searchText);
@@ -523,7 +522,7 @@ namespace Crest.Components.RadzenSource
 
             if (IsJSRuntimeAvailable && JSRuntime != null)
             {
-                JSRuntime.InvokeVoid("Radzen.destroyPopup", PopupID);
+                JSRuntime.InvokeVoid("Crest.destroyPopup", PopupID);
             }
 
             _jsRef?.InvokeVoidAsync("dispose");
@@ -548,7 +547,7 @@ namespace Crest.Components.RadzenSource
             isOpen = false;
             if (JSRuntime != null)
             {
-                await JSRuntime.InvokeVoidAsync("Radzen.closePopup", PopupID, Reference, nameof(OnClose));
+                await JSRuntime.InvokeVoidAsync("Crest.closePopup", PopupID, Reference, nameof(OnClose));
             }
         }
     }

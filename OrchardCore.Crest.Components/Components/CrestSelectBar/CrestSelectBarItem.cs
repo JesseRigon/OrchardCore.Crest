@@ -82,14 +82,14 @@ namespace Crest.Components.Primitives
         [Parameter]
         public bool Disabled { get; set; }
 
-        IRadzenSelectBar? selectBar;
+        ICrestSelectBar? selectBar;
 
         /// <summary>
         /// Gets or sets the select bar.
         /// </summary>
         /// <value>The select bar.</value>
         [CascadingParameter]
-        public IRadzenSelectBar? SelectBar
+        public ICrestSelectBar? SelectBar
         {
             get
             {

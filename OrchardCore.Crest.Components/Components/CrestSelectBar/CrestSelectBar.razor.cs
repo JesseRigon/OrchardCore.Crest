@@ -42,7 +42,7 @@ namespace Crest.Components.Primitives
     /// </code>
     /// </example>
     [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2026, Justification = TrimMessages.DataTypePreserved)]
-    public partial class CrestSelectBar<TValue> : FormComponent<TValue>, IRadzenSelectBar
+    public partial class CrestSelectBar<TValue> : FormComponent<TValue>, ICrestSelectBar
     {
         /// <summary>
         /// Gets or sets the size of the buttons in the select bar.

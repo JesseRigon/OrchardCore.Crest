@@ -127,8 +127,8 @@
                     <RadzenStack Gap="1rem">
                         <RadzenText TextStyle="TextStyle.H5" Text="@NodeDialogTitle" />
                         <RadzenRow Gap="1rem">
-                            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Type" Style="width: 100%;"><RadzenDropDown @bind-Value="NodeDialogModel.Type" Data="AvailableNodeTypes" TextProperty="DisplayName" ValueProperty="Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
-                            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Parent" Style="width: 100%;"><RadzenDropDown @bind-Value="NodeDialogModel.ParentNodeId" Data="ParentOptions" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="Root" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Type" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.Type" Data="AvailableNodeTypes" TextProperty="DisplayName" ValueProperty="Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="6"><RadzenFormField Text="Parent" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.ParentNodeId" Data="ParentOptions" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="Root" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
                             <RadzenColumn Size="12"><RadzenFormField Text="Text" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Text" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8"><RadzenFormField Text="URL" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Url" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="4"><RadzenFormField Text="Target" Style="width: 100%;"><RadzenTextBox @bind-Value="NodeDialogModel.Target" Placeholder="_blank" Style="width: 100%;" /></RadzenFormField></RadzenColumn>
@@ -292,7 +292,7 @@
         <div class="admin-menu-node">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
-                    <span class="admin-menu-node__handle" draggable="true" title="Drag to move"><RadzenIcon Icon="drag_indicator" /></span>
+                    <span class="admin-menu-node__handle" draggable="true" title="Drag to move"><CrestIcon IconKey="iconify.mdi/current/default/drag" /></span>
                     @if (node.Items.Length > 0) { <RadzenButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" /> }
                     else { <span class="admin-menu-node__spacer"></span> }
                     <RadzenStack Gap="0.1rem" Style="flex: 1; min-width: 0;">

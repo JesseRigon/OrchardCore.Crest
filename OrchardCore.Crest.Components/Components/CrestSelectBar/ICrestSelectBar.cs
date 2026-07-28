@@ -6,7 +6,7 @@ namespace Crest.Components.Primitives;
 /// Represents the common <see cref="CrestSelectBar{TValue}" /> API used by
 /// its items. Injected as a cascading property in <see cref="CrestSelectBarItem" />.
 /// </summary>
-public interface IRadzenSelectBar
+public interface ICrestSelectBar
 {
     /// <summary>
     /// Adds the specified item to the select bar.

@@ -26,7 +26,7 @@
                     <RadzenTextBox @bind-Value="SearchText" Placeholder="Search name, ID, category, description, or dependency..." Style="width: 100%;" data-testid="features-search" />
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="3">
-                    <RadzenDropDown @bind-Value="StatusFilter" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" data-testid="features-status-filter" />
+                    <CrestDropDown @bind-Value="StatusFilter" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" data-testid="features-status-filter" />
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="3">
                     <RadzenCheckBox @bind-Value="HideAlwaysEnabled" TValue="bool" />

@@ -12,20 +12,28 @@
     </CrestStack>
 
     <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-        <RadzenDropDown @bind-Value=@selectedOperator Data=@availableOperators TextProperty="Text" ValueProperty="Value"
-            Placeholder=@L(nameof(CrestStrings.Spreadsheet_SelectOperator)) InputSize="InputSize.Small" Style="width: 12rem" />
-        <CrestTextBox @bind-Value=@filterValue Placeholder=@L(nameof(CrestStrings.Spreadsheet_EnterValue)) InputSize="InputSize.Small" Style="flex: 1" />
+        <CrestDropDown @bind-Value=@selectedOperator Data=@availableOperators TextProperty="Text" ValueProperty="Value"
+                       Placeholder=@L(nameof(CrestStrings.Spreadsheet_SelectOperator)) InputSize="InputSize.Small"
+                       Style="width: 12rem" />
+        <CrestTextBox @bind-Value=@filterValue Placeholder=@L(nameof(CrestStrings.Spreadsheet_EnterValue))
+                      InputSize="InputSize.Small" Style="flex: 1" />
     </CrestStack>
 
-    <CrestSelectBar @bind-Value=@logicalOperator Data=@logicalOperators TextProperty="Text" ValueProperty="Value" Size="ButtonSize.Small" />
+    <CrestSelectBar @bind-Value=@logicalOperator Data=@logicalOperators TextProperty="Text" ValueProperty="Value"
+                    Size="ButtonSize.Small" />
     <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-        <RadzenDropDown @bind-Value=@secondOperator Data=@availableOperators TextProperty="Text"
-            ValueProperty="Value" Placeholder=@L(nameof(CrestStrings.Spreadsheet_SelectOperator)) InputSize="InputSize.Small" Style="width: 12rem" />
-        <CrestTextBox @bind-Value=@secondFilterValue Placeholder=@L(nameof(CrestStrings.Spreadsheet_EnterValue)) InputSize="InputSize.Small" Style="flex:1" />
+        <CrestDropDown @bind-Value=@secondOperator Data=@availableOperators TextProperty="Text" ValueProperty="Value"
+                       Placeholder=@L(nameof(CrestStrings.Spreadsheet_SelectOperator)) InputSize="InputSize.Small"
+                       Style="width: 12rem" />
+        <CrestTextBox @bind-Value=@secondFilterValue Placeholder=@L(nameof(CrestStrings.Spreadsheet_EnterValue))
+                      InputSize="InputSize.Small" Style="flex:1" />
     </CrestStack>
 
-    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-spreadsheet-dialog-actions">
-        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
-        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" />
+    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End"
+                class="rz-spreadsheet-dialog-actions">
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base"
+                     Variant="Variant.Outlined" />
+        <CrestButton Text=@L(nameof(CrestStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary"
+                     Variant="Variant.Flat" />
     </CrestStack>
 </CrestStack>

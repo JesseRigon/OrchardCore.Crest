@@ -3,7 +3,10 @@
 @implements IDisposable
 
 @namespace Crest.Components.Primitives.Spreadsheet.Tools
-<RadzenColorPicker ToggleAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_BackgroundColor))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_BackgroundColor))) Value=@CurrentColor ValueChanged=@OnColorChangedAsync Icon="opacity" Disabled=@IsDisabled InputSize="InputSize.Small" ShowArrow="false" />
+<CrestColorPicker ToggleAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_BackgroundColor)))
+                  title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_BackgroundColor))) Value=@CurrentColor
+                  ValueChanged=@OnColorChangedAsync Icon="opacity" Disabled=@IsDisabled InputSize="InputSize.Small"
+                  ShowArrow="false" />
 
 @code {
 #nullable enable

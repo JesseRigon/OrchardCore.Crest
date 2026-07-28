@@ -164,7 +164,7 @@ namespace Crest.Components.Primitives
         /// Gets or sets the icon of the drop down.
         /// </summary>
         [Parameter]
-        public string DropDownIcon { get; set; } = "arrow_drop_down";
+        public string DropDownIcon { get; set; } = "iconify.mdi/current/default/chevron-down";
 
         /// <summary>
         /// Gets or sets the index of the tab.

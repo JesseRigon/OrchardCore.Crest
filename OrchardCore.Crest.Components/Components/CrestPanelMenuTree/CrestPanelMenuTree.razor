@@ -1,6 +1,14 @@
 @namespace Crest.Components.Navigation
+@using Microsoft.AspNetCore.Components.Web
 
-<ul class="crest-panel-menu__list">
+<ul class="crest-panel-menu__list"
+    role="menu"
+    aria-orientation="vertical"
+    tabindex="0"
+    aria-activedescendant="@(FocusedItemKey is null ? null : $"crest-panel-menu-item-{FocusedItemKey}")"
+    @onkeydown="OnItemKeyDown"
+    @onkeydown:preventDefault="@PreventKeyDown"
+    @onfocus="OnFocusIn">
     <CrestPanelMenuItems Items="Items"
                          ExpandedItemKeys="ExpandedItemKeys"
                          ExpansionVersion="ExpansionVersion"
@@ -14,7 +22,8 @@
                          LevelBackgrounds="LevelBackgrounds"
                          LevelBaseSizes="LevelBaseSizes"
                          TierSeparators="TierSeparators"
-                         ActionIcon="ActionIcon" />
+                         ActionIcon="ActionIcon"
+                         FocusedItemKey="FocusedItemKey" />
 </ul>
 
 @code {
@@ -29,6 +38,8 @@
     private bool _renderedIndentItems;
     private bool _renderedIndentWhenCollapsed;
     private RenderFragment<CrestPanelMenuActionIconContext>? _renderedActionIcon;
+    private string? _renderedFocusedItemKey;
+    private bool _renderedPreventKeyDown;
 
     [Parameter] public IReadOnlyList<CrestPanelMenuItem> Items { get; set; } = [];
     [Parameter] public ISet<string> ExpandedItemKeys { get; set; } = new HashSet<string>();
@@ -44,6 +55,10 @@
     [Parameter] public IReadOnlyList<string> LevelBaseSizes { get; set; } = [];
     [Parameter] public IReadOnlyList<bool> TierSeparators { get; set; } = [];
     [Parameter] public RenderFragment<CrestPanelMenuActionIconContext>? ActionIcon { get; set; }
+    [Parameter] public string? FocusedItemKey { get; set; }
+    [Parameter] public bool PreventKeyDown { get; set; }
+    [Parameter] public EventCallback<KeyboardEventArgs> OnItemKeyDown { get; set; }
+    [Parameter] public EventCallback OnFocusIn { get; set; }
 
     protected override bool ShouldRender()
     {
@@ -57,7 +72,9 @@
             || !ReferenceEquals(_renderedLevelBackgrounds, LevelBackgrounds)
             || !ReferenceEquals(_renderedLevelBaseSizes, LevelBaseSizes)
             || !ReferenceEquals(_renderedTierSeparators, TierSeparators)
-            || _renderedActionIcon != ActionIcon;
+            || _renderedActionIcon != ActionIcon
+            || _renderedFocusedItemKey != FocusedItemKey
+            || _renderedPreventKeyDown != PreventKeyDown;
 
         if (shouldRender)
         {
@@ -72,6 +89,8 @@
             _renderedLevelBaseSizes = LevelBaseSizes;
             _renderedTierSeparators = TierSeparators;
             _renderedActionIcon = ActionIcon;
+            _renderedFocusedItemKey = FocusedItemKey;
+            _renderedPreventKeyDown = PreventKeyDown;
         }
 
         return shouldRender;

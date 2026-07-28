@@ -3,7 +3,7 @@ namespace Crest.Components.Primitives;
 /// <summary>
 /// The interface that a validator component must implement in order to be supported by <see cref="Crest.Components.Primitives.CrestTemplateForm{TItem}" />.
 /// </summary>
-public interface IRadzenFormValidator
+public interface ICrestFormValidator
 {
     /// <summary>
     /// Returns true if valid.

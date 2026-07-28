@@ -20,7 +20,7 @@ namespace Crest.Components.Primitives
     /// Notification count badge:
     /// <code>
     /// &lt;div style="position: relative; display: inline-block;"&gt;
-    ///     &lt;RadzenIcon Icon="notifications" /&gt;
+    ///     &lt;CrestIcon Icon="notifications" /&gt;
     ///     &lt;CrestBadge BadgeStyle="BadgeStyle.Danger" Text="3" IsPill="true" 
     ///                  Style="position: absolute; top: -8px; right: -8px;" /&gt;
     /// &lt;/div&gt;
@@ -72,7 +72,7 @@ namespace Crest.Components.Primitives
         [Parameter]
         public Variant Variant { get; set; } = Variant.Filled;
 
-         /// <summary>
+        /// <summary>
         /// Gets or sets the color intensity shade for the badge.
         /// Works in combination with <see cref="BadgeStyle"/> to adjust the color darkness/lightness.
         /// </summary>

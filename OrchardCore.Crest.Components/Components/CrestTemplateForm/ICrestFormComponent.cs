@@ -7,7 +7,7 @@ namespace Crest.Components.Primitives;
 /// <summary>
 /// Specifies the interface that form components must implement in order to be supported by <see cref="CrestTemplateForm{TItem}" />.
 /// </summary>
-public interface IRadzenFormComponent
+public interface ICrestFormComponent
 {
     /// <summary>
     /// Gets a value indicating whether this component is bound.

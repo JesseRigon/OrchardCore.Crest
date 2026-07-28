@@ -46,7 +46,7 @@ namespace Crest.Components.Primitives
         private string? text;
 
         /// <inheritdoc />
-        protected override bool Validate(IRadzenFormComponent component)
+        protected override bool Validate(ICrestFormComponent component)
         {
             ArgumentNullException.ThrowIfNull(component);
             return component.HasValue && !object.Equals(DefaultValue, component.GetValue());

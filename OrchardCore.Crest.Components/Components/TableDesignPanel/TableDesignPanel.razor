@@ -19,7 +19,7 @@
 
         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
             <CrestLabel Text=@L(nameof(CrestStrings.Spreadsheet_TableDesignStyle)) Component="tableStyleDD" />
-            <RadzenDropDown TValue="string" Data=@styleOptions
+            <CrestDropDown TValue="string" Data=@styleOptions
                 Value=@(CurrentTable.TableStyle ?? "")
                 Change=@(v => CommitStyle(v as string))
                 Name="tableStyleDD" InputSize="InputSize.Small" Style="width:200px" />
@@ -81,7 +81,7 @@
         {
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
                 <CrestLabel Text=@string.Format(System.Globalization.CultureInfo.CurrentCulture, L(nameof(CrestStrings.Spreadsheet_TableDesignTotalsForColumn)), totalsCol.Name) />
-                <RadzenDropDown TValue="TotalsCalculation" Data=@TotalsOptions
+                <CrestDropDown TValue="TotalsCalculation" Data=@TotalsOptions
                     TextProperty="@nameof(TotalsOption.Text)" ValueProperty="@nameof(TotalsOption.Value)"
                     Value=@totalsCol.TotalsCalculation
                     Change=@(v => CommitTotals(totalsCol, (TotalsCalculation)v))

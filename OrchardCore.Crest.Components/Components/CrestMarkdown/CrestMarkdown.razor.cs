@@ -32,7 +32,7 @@ namespace Crest.Components.Primitives;
 /// This is **bold** and this is *italic*.
 /// - List item 1
 /// - List item 2
-/// [Link to Crest](https://radzen.com)
+/// [Link to Crest](https://Crest.com)
 /// &lt;/CrestMarkdown&gt;
 /// </code>
 /// Markdown from variable:
@@ -143,8 +143,8 @@ public partial class CrestMarkdown : CrestComponent
         document.Accept(visitor);
     }
 
-    private static void Empty(RenderTreeBuilder builder, int marker) 
-    { 
+    private static void Empty(RenderTreeBuilder builder, int marker)
+    {
     }
 
     private void ProcessFramesWithMarkers(RenderTreeBuilder builder, ArrayRange<RenderTreeFrame> frames)
@@ -262,15 +262,15 @@ public partial class CrestMarkdown : CrestComponent
                     break;
                 case RenderTreeFrameType.Attribute:
                     builder.AddAttribute(frame.Sequence, frame.AttributeName, frame.AttributeValue);
-                    startIndex ++;
+                    startIndex++;
                     break;
                 case RenderTreeFrameType.ElementReferenceCapture:
                     builder.AddElementReferenceCapture(frame.Sequence, frame.ElementReferenceCaptureAction);
-                    startIndex ++;
+                    startIndex++;
                     break;
                 case RenderTreeFrameType.ComponentReferenceCapture:
                     builder.AddComponentReferenceCapture(frame.Sequence, frame.ComponentReferenceCaptureAction);
-                    startIndex ++;
+                    startIndex++;
                     break;
 #if NET8_0_OR_GREATER
                 case RenderTreeFrameType.ComponentRenderMode:
@@ -280,11 +280,11 @@ public partial class CrestMarkdown : CrestComponent
 #endif
                 case RenderTreeFrameType.Text:
                     builder.AddContent(frame.Sequence, frame.TextContent);
-                    startIndex ++;
+                    startIndex++;
                     break;
                 case RenderTreeFrameType.Markup:
                     builder.AddMarkupContent(frame.Sequence, frame.MarkupContent);
-                    startIndex ++;
+                    startIndex++;
                     break;
                 default:
                     throw new InvalidOperationException($"Unexpected frame type {frame.FrameType}");

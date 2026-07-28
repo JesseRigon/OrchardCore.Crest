@@ -68,7 +68,7 @@ namespace Crest.Components.Primitives
         public bool AllowNull { get; set; } = false;
 
         /// <inheritdoc />
-        protected override bool Validate(IRadzenFormComponent component)
+        protected override bool Validate(ICrestFormComponent component)
         {
             ArgumentNullException.ThrowIfNull(component);
 

@@ -23,19 +23,16 @@
                      BorderRadius="@TitleBarSettings.TenantAvatarBorderRadius"
                      Class="admin-titlebar__tenant-avatar" />
 
-        <CrestDropDown TItem="Tenant"
-                        TValue="string"
+        <CrestDropDown TValue="string"
                         Data="TenantOptions"
                         Value="@SelectedTenantName"
                         ValueChanged="SelectTenantByName"
-                        LabelProperty="@nameof(Tenant.Name)"
+                        TextProperty="@nameof(Tenant.Name)"
                         ValueProperty="@nameof(Tenant.Name)"
+                        ValueTemplate="TenantValueTemplate"
                         Template="TenantOptionTemplate"
-                        TriggerIcon="ChevronDownIcon"
-                        ShowValueLabel="true"
-                        AriaLabel="Select tenant"
-                        Class="admin-titlebar__tenant-selector"
-                        Style="--crest-dropdown-color: var(--crest-color-text-2, var(--crest-color-text-1, #1f2937)); --crest-dropdown-border-color: transparent; --crest-dropdown-popup-border-color: var(--crest-color-border-1, #e5e7eb); --crest-dropdown-popup-background: var(--crest-color-surface-1, #fff); --crest-dropdown-option-active-background: var(--crest-color-hover-surface-1, color-mix(in srgb, var(--crest-color-accent-1, #2f6f4e) 10%, transparent));" />
+                        class="admin-titlebar__tenant-selector"
+                        Style="color: var(--crest-color-text-2, var(--crest-color-text-1, #1f2937)); border-color: transparent;" />
     </RadzenStack>
 
     @if (DisplayManager?.Manifest?.AdminSettings.DisplayTitlesInTopbar == true && !string.IsNullOrWhiteSpace(CurrentTitle))
@@ -46,21 +43,18 @@
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem" class="admin-titlebar__right">
         @if (CultureOptions.Length > 1)
         {
-            <CrestDropDown TItem="CultureOption"
-                            TValue="string"
+            <CrestDropDown TValue="string"
                             Data="CultureOptions"
                             Value="@SelectedCulture"
                             ValueChanged="SelectCultureAsync"
-                            LabelProperty="@nameof(CultureOption.Label)"
+                            TextProperty="@nameof(CultureOption.Label)"
                             ValueProperty="@nameof(CultureOption.Value)"
+                            ValueTemplate="CultureValueTemplate"
                             Template="CultureOptionTemplate"
-                            TriggerIcon="ChevronDownIcon"
-                            ShowValueLabel="@TitleBarSettings.DisplayCultureLabel"
                             AllowFiltering="true"
                             FilterPlaceholder="Filter cultures"
-                            AriaLabel="Select administration culture"
-                            Class="admin-titlebar__culture-selector"
-                            Style="--crest-dropdown-color: var(--crest-color-accent-1, #2f6f4e); --crest-dropdown-border-color: transparent; --crest-dropdown-popup-border-color: var(--crest-color-border-1, #e5e7eb); --crest-dropdown-popup-background: var(--crest-color-surface-1, #fff); --crest-dropdown-option-active-background: var(--crest-color-hover-surface-1, color-mix(in srgb, var(--crest-color-accent-1, #2f6f4e) 10%, transparent));" />
+                            class="admin-titlebar__culture-selector"
+                            Style="color: var(--crest-color-accent-1, #2f6f4e); border-color: transparent;" />
         }
 
         @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
@@ -118,14 +112,15 @@
     private CrestAvatarShape TenantAvatarShape => Enum.TryParse<CrestAvatarShape>(TitleBarSettings.TenantAvatarShape, true, out var shape)
         ? shape
         : CrestAvatarShape.Circle;
-    private RenderFragment<CrestDropDownRenderContext<CultureOption>> CultureOptionTemplate => context => builder =>
+    // Trigger-surface rendering: shown for the currently selected value.
+    private RenderFragment<dynamic> CultureValueTemplate => item => builder =>
     {
-        var culture = context.Item;
+        var culture = (CultureOption)item;
         builder.OpenComponent<OrchardIcon>(0);
         builder.AddAttribute(1, nameof(OrchardIcon.IconKey), culture.Icon);
         builder.AddAttribute(2, nameof(OrchardIcon.Size), "1.1rem");
         builder.CloseComponent();
-        if (context.Surface == CrestDropDownSurface.Option)
+        if (TitleBarSettings.DisplayCultureLabel)
         {
             builder.OpenElement(3, "span");
             builder.AddAttribute(4, "class", "admin-titlebar__culture-option-label");
@@ -133,27 +128,47 @@
             builder.CloseElement();
         }
     };
-    private RenderFragment<CrestDropDownRenderContext<Tenant>> TenantOptionTemplate => context => builder =>
-    {
-        if (context.Surface == CrestDropDownSurface.Option && context.IsSelected)
-        {
-            builder.OpenComponent<OrchardIcon>(0);
-            builder.AddAttribute(1, nameof(OrchardIcon.IconKey), "iconify.mdi/current/default/check");
-            builder.AddAttribute(2, nameof(OrchardIcon.Size), "1rem");
-            builder.CloseComponent();
-        }
 
+    // Option-surface rendering: shown for each row in the open popup list.
+    private RenderFragment<dynamic> CultureOptionTemplate => item => builder =>
+    {
+        var culture = (CultureOption)item;
+        builder.OpenComponent<OrchardIcon>(0);
+        builder.AddAttribute(1, nameof(OrchardIcon.IconKey), culture.Icon);
+        builder.AddAttribute(2, nameof(OrchardIcon.Size), "1.1rem");
+        builder.CloseComponent();
         builder.OpenElement(3, "span");
-        builder.AddAttribute(4, "class", "admin-titlebar__tenant-option-label");
-        builder.AddContent(5, context.Item.Name);
+        builder.AddAttribute(4, "class", "admin-titlebar__culture-option-label");
+        builder.AddContent(5, culture.Label);
         builder.CloseElement();
     };
-    private RenderFragment ChevronDownIcon => builder =>
+
+    private RenderFragment<dynamic> TenantValueTemplate => item => builder =>
     {
-        builder.OpenComponent<OrchardIcon>(0);
-        builder.AddAttribute(1, nameof(OrchardIcon.IconKey), "iconify.mdi/current/default/chevron-down");
-        builder.AddAttribute(2, nameof(OrchardIcon.Size), "1rem");
-        builder.CloseComponent();
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", "admin-titlebar__tenant-option-label");
+        builder.AddContent(2, ((Tenant)item).Name);
+        builder.CloseElement();
+    };
+
+    private RenderFragment<dynamic> TenantOptionTemplate => item =>
+    {
+        var tenant = (Tenant)item;
+        return builder =>
+        {
+            if (IsSelectedTenant(tenant))
+            {
+                builder.OpenComponent<OrchardIcon>(0);
+                builder.AddAttribute(1, nameof(OrchardIcon.IconKey), "iconify.mdi/current/default/check");
+                builder.AddAttribute(2, nameof(OrchardIcon.Size), "1rem");
+                builder.CloseComponent();
+            }
+
+            builder.OpenElement(3, "span");
+            builder.AddAttribute(4, "class", "admin-titlebar__tenant-option-label");
+            builder.AddContent(5, tenant.Name);
+            builder.CloseElement();
+        };
     };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

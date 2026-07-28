@@ -43,15 +43,15 @@ namespace Crest.Components.Primitives
     /// </example>
     [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2026, Justification = TrimMessages.DataTypePreserved)]
     [CascadingTypeParameter(nameof(TValue))]
-    public partial class CrestCheckBoxList<TValue> : FormComponent<IEnumerable<TValue>>, IRadzenCheckBoxList
+    public partial class CrestCheckBoxList<TValue> : FormComponent<IEnumerable<TValue>>, ICrestCheckBoxList
     {
-        string ItemClass(IRadzenCheckBoxListItem item) => ClassList.Create("rz-chkbox-box")
+        string ItemClass(ICrestCheckBoxListItem item) => ClassList.Create("rz-chkbox-box")
                                                                           .Add("rz-state-active", IsSelected(item))
                                                                           .Add("rz-state-focused", IsFocused(item) && focused)
                                                                           .AddDisabled(Disabled || item.Disabled)
                                                                           .ToString();
 
-        string IconClass(IRadzenCheckBoxListItem item) => ClassList.Create("rz-chkbox-icon")
+        string IconClass(ICrestCheckBoxListItem item) => ClassList.Create("rz-chkbox-icon")
                                                                           .Add("notranslate rzi rzi-check", IsSelected(item))
                                                                           .ToString();
 
@@ -129,7 +129,7 @@ namespace Crest.Components.Primitives
                     item.SetReadOnly(readOnlyResult);
                 }
 
-                return (IRadzenCheckBoxListItem)item;
+                return (ICrestCheckBoxListItem)item;
             })).ToList();
         }
 
@@ -141,7 +141,7 @@ namespace Crest.Components.Primitives
             UpdateAllItems();
         }
 
-        List<IRadzenCheckBoxListItem> allItems = new();
+        List<ICrestCheckBoxListItem> allItems = new();
         /// <summary>
         /// Gets or sets a value indicating whether the user can select all values. Set to <c>false</c> by default.
         /// </summary>
@@ -181,7 +181,7 @@ namespace Crest.Components.Primitives
 
         bool? IsAllSelected()
         {
-            Func<IRadzenCheckBoxListItem, bool> predicate = IsSelected;
+            Func<ICrestCheckBoxListItem, bool> predicate = IsSelected;
             var all = allItems.All(predicate);
             var any = allItems.Any(predicate);
 
@@ -257,7 +257,7 @@ namespace Crest.Components.Primitives
         [Parameter]
         public RenderFragment? Items { get; set; }
 
-        List<IRadzenCheckBoxListItem> items = new List<IRadzenCheckBoxListItem>();
+        List<ICrestCheckBoxListItem> items = new List<ICrestCheckBoxListItem>();
 
         /// <summary>
         /// Adds the item.
@@ -265,14 +265,14 @@ namespace Crest.Components.Primitives
         /// <param name="item">The item.</param>
         public void AddItem(CrestCheckBoxListItem<TValue> item)
         {
-            AddItem((IRadzenCheckBoxListItem)item);
+            AddItem((ICrestCheckBoxListItem)item);
         }
 
         /// <summary>
         /// Adds the item.
         /// </summary>
         /// <param name="item">The item.</param>
-        public void AddItem(IRadzenCheckBoxListItem item)
+        public void AddItem(ICrestCheckBoxListItem item)
         {
             if (items.IndexOf(item) == -1)
             {
@@ -288,14 +288,14 @@ namespace Crest.Components.Primitives
         /// <param name="item">The item.</param>
         public void RemoveItem(CrestCheckBoxListItem<TValue> item)
         {
-            RemoveItem((IRadzenCheckBoxListItem)item);
+            RemoveItem((ICrestCheckBoxListItem)item);
         }
 
         /// <summary>
         /// Removes the item.
         /// </summary>
         /// <param name="item">The item.</param>
-        public void RemoveItem(IRadzenCheckBoxListItem item)
+        public void RemoveItem(ICrestCheckBoxListItem item)
         {
             if (items.Remove(item))
             {
@@ -312,7 +312,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns><c>true</c> if the specified item is selected; otherwise, <c>false</c>.</returns>
-        protected bool IsSelected(IRadzenCheckBoxListItem item)
+        protected bool IsSelected(ICrestCheckBoxListItem item)
         {
             ArgumentNullException.ThrowIfNull(item);
             return Value != null && Value.Cast<object?>().Contains(item.Value);
@@ -322,7 +322,7 @@ namespace Crest.Components.Primitives
         /// Selects the item.
         /// </summary>
         /// <param name="item">The item.</param>
-        protected async System.Threading.Tasks.Task SelectItem(IRadzenCheckBoxListItem item)
+        protected async System.Threading.Tasks.Task SelectItem(ICrestCheckBoxListItem item)
         {
             ArgumentNullException.ThrowIfNull(item);
             if (Disabled || item.Disabled || ReadOnly || item.ReadOnly)
@@ -351,7 +351,7 @@ namespace Crest.Components.Primitives
             StateHasChanged();
         }
 
-        async Task OnItemKeyDown(KeyboardEventArgs args, IRadzenCheckBoxListItem item)
+        async Task OnItemKeyDown(KeyboardEventArgs args, ICrestCheckBoxListItem item)
         {
             var key = args.Code != null ? args.Code : args.Key;
             if (key == "Enter" || key == "Space")
@@ -414,12 +414,12 @@ namespace Crest.Components.Primitives
             }
         }
 
-        bool HasInvisibleBefore(IRadzenCheckBoxListItem item)
+        bool HasInvisibleBefore(ICrestCheckBoxListItem item)
         {
             return allItems.Take(allItems.IndexOf(item)).Any(t => !t.Visible && !t.Disabled);
         }
 
-        bool IsFocused(IRadzenCheckBoxListItem item)
+        bool IsFocused(ICrestCheckBoxListItem item)
         {
             return allItems.IndexOf(item) == focusedIndex;
         }

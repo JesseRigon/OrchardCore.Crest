@@ -26,8 +26,8 @@
     <RadzenCard>
         <RadzenRow Gap="0.75rem">
             <RadzenColumn Size="12" SizeMD="5"><RadzenTextBox @bind-Value="SearchText" @oninput="OnSearchInput" Placeholder="Search content titles..." Style="width: 100%;" /></RadzenColumn>
-            <RadzenColumn Size="12" SizeMD="3"><RadzenDropDown @bind-Value="SelectedContentType" Data="ContentTypeOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></RadzenColumn>
-            <RadzenColumn Size="12" SizeMD="2"><RadzenDropDown @bind-Value="SelectedStatus" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="3"><CrestDropDown @bind-Value="SelectedContentType" Data="ContentTypeOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="2"><CrestDropDown @bind-Value="SelectedStatus" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></RadzenColumn>
             <RadzenColumn Size="12" SizeMD="2"><RadzenText Text="@($"{Result.Total:n0} items")" TextStyle="TextStyle.Caption" Style="line-height: 2.5rem;" /></RadzenColumn>
         </RadzenRow>
     </RadzenCard>
@@ -77,7 +77,7 @@
 
     @if (CreateDialogOpen)
     {
-        <div class="content-items-dialog-backdrop"><RadzenCard class="content-items-dialog"><RadzenStack Gap="1rem"><RadzenText TextStyle="TextStyle.H5" Text="Create content" /><RadzenDropDown @bind-Value="CreateContentType" Data="CreatableTypes" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /><RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CloseCreate" /><RadzenButton Text="Continue" Click="Create" Disabled="@string.IsNullOrWhiteSpace(CreateContentType)" /></RadzenStack></RadzenStack></RadzenCard></div>
+        <div class="content-items-dialog-backdrop"><RadzenCard class="content-items-dialog"><RadzenStack Gap="1rem"><RadzenText TextStyle="TextStyle.H5" Text="Create content" /><CrestDropDown @bind-Value="CreateContentType" Data="CreatableTypes" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /><RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CloseCreate" /><RadzenButton Text="Continue" Click="Create" Disabled="@string.IsNullOrWhiteSpace(CreateContentType)" /></RadzenStack></RadzenStack></RadzenCard></div>
     }
     @if (DeleteCandidate is not null)
     {

@@ -1,297 +1,238 @@
-@namespace Crest.Components.Inputs
-@using System.Linq.Expressions
-@using System.Reflection
+@using Crest.Components.Primitives
 @using Microsoft.AspNetCore.Components.Web
-@typeparam TItem
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Rendering
+@using Crest.Components.Primitives.Rendering
+@using Crest.Components.Display
+@using System.Linq
+@using Microsoft.JSInterop
+@namespace Crest.Components.Primitives
 @typeparam TValue
-
-@* Crest-owned dropdown primitive. Its interaction model was informed by CrestDropDown
-   (MIT), but it neither renders nor invokes the Crest dropdown component. *@
+@inherits DropDownBase<TValue>
 
 @if (Visible)
 {
-    <div @attributes="AdditionalAttributes"
-         class="@CssClass"
-         style="@Style"
-         role="combobox"
-         aria-haspopup="listbox"
-         aria-expanded="@_isOpen.ToString().ToLowerInvariant()"
-         aria-disabled="@IsDisabled.ToString().ToLowerInvariant()"
-         @onkeydown="HandleKeyDown"
-         @onfocusin="HandleFocusIn"
-         @onfocusout="HandleFocusOut">
-        <button type="button"
-                class="crest-dropdown__trigger"
-                disabled="@IsDisabled"
-                aria-label="@AriaLabel"
-                @attributes="InputAttributes"
-                @onclick="ToggleAsync">
-            <span class="crest-dropdown__value">
-                @if (Template is not null && SelectedEntry is not null)
-                {
-                    @Template(ToRenderContext(SelectedEntry, CrestDropDownSurface.Trigger))
-                }
-                else if (ShowValueLabel)
-                {
-                    @(SelectedEntry?.Label ?? Placeholder ?? string.Empty)
-                }
+    <div @ref="@Element" aria-label="@SelectedAriaLabel" @attributes="Attributes" class="@GetCssClass()"
+         role="combobox" aria-haspopup="listbox" aria-autocomplete="@(AllowFiltering ? "list" : "none")" aria-expanded="@(isPopupOpen.ToString().ToLowerInvariant())" aria-controls="@ListId" aria-activedescendant="@ActiveDescendantId" aria-disabled="@(Disabled.ToString().ToLowerInvariant())"
+         @onclick="@(args => OpenPopup("ArrowDown", false, true))" @onclick:preventDefault @onclick:stopPropagation style="@Style" tabindex="@(Disabled ? "-1" : $"{TabIndex}")"
+         @onkeydown="@((args) => OnKeyPress(args))" @onkeydown:preventDefault="@preventKeydown" id="@GetId()" @onfocus=@this.AsNonRenderingEventHandler(OnFocus)>
+        <div class="rz-helper-hidden-accessible">
+            <input disabled="@Disabled" aria-haspopup="listbox" aria-hidden="true" readonly="" type="text" tabindex="-1"
+                   name="@Name" value="@(internalValue != null ? internalValue : "")" id="@Name"
+                   aria-label="@(!Multiple && internalValue != null ? internalValue : EmptyAriaLabel)" @attributes="InputAttributes"/>
+        </div>
+
+        @if (ValueTemplate != null && (selectedItem != null || (ShowValueTemplateOnEmpty && !Multiple)))
+        {
+            <span class="rz-dropdown-label rz-inputtext" style="width:100%;" @onkeydown:stopPropagation="stopKeydownPropagation" @onkeydown="OnGuardKeyDown">
+                @ValueTemplate(selectedItem!)
             </span>
-            @if (TriggerIcon is not null)
-            {
-                <span class="crest-dropdown__chevron" aria-hidden="true">@TriggerIcon</span>
-            }
-        </button>
-
-        @if (AllowClear && HasValue && !IsDisabled)
-        {
-            <button type="button" class="crest-dropdown__clear" aria-label="@ClearAriaLabel" @onclick="ClearAsync">×</button>
         }
-
-        @if (_isOpen)
+        else if (Template != null && selectedItem != null)
         {
-            <div class="crest-dropdown__popup" role="presentation">
-                @if (HeaderTemplate is not null)
+            <span class="rz-dropdown-label rz-inputtext" @onkeydown:stopPropagation="stopKeydownPropagation" @onkeydown="OnGuardKeyDown">
+                @Template(selectedItem)
+            </span>
+        }
+        else if (selectedItem != null && !Multiple)
+        {
+            <span class="rz-dropdown-label rz-inputtext">
+                @GetItemOrValueFromProperty(selectedItem, TextProperty ?? string.Empty)
+            </span>
+        }
+        else if (Chips && selectedItems.Count > 0 && selectedItems.Count < MaxSelectedLabels)
+        {
+            var selectedItemsTitle = !string.IsNullOrEmpty(TextProperty)
+                ? string.Join(Separator, selectedItems.Select(i => GetItemOrValueFromProperty(i, TextProperty)))
+                : null;
+            <div class="rz-dropdown-chips-wrapper" title="@selectedItemsTitle">
+                @foreach (var item in selectedItems)
                 {
-                    <div class="crest-dropdown__header">@HeaderTemplate</div>
-                }
-                else if (AllowFiltering)
-                {
-                    <div class="crest-dropdown__filter">
-                        <input @ref="_filterInput"
-                               class="crest-dropdown__filter-input"
-                               type="search"
-                               value="@SearchText"
-                               placeholder="@FilterPlaceholder"
-                               aria-label="@SearchAriaLabel"
-                               @oninput="FilterAsync" />
+                    <div class="rz-chip rz-chip-base rz-variant-filled rz-shade-default">
+                        <span class="rz-chip-text" @onkeydown:stopPropagation="stopKeydownPropagation" @onkeydown="OnGuardKeyDown">
+                            @if(ValueTemplate != null)
+                            {
+                                @ValueTemplate(item)
+                            }
+                            else if(Template != null)
+                            {
+                                @Template(item)
+                            }
+                            else
+                            {
+                                @GetItemOrValueFromProperty(item, TextProperty ?? string.Empty)
+                            }
+                        </span>
+                        <button tabindex="-1"
+                                title="@(RemoveChipTitle + " " + GetItemOrValueFromProperty(item, TextProperty ?? ""))"
+                                aria-label="@(RemoveChipTitle + " " + GetItemOrValueFromProperty(item, TextProperty ?? ""))"
+                                type=button class="rz-button rz-button-xs rz-variant-text rz-base rz-shade-default rz-button-icon-only @(Disabled ?"rz-state-disabled":"")"
+                                @onclick:preventDefault @onclick:stopPropagation @onclick="() => OnChipRemove(item)">
+                            <CrestIcon IconKey="iconify.mdi/current/default/close" />
+                        </button>
                     </div>
                 }
-
-                @if (FilteredEntries.Count > 0)
+            </div>
+        }
+        else if (selectedItems.Count > 0)
+        {
+            var selectedItemsTitle = !string.IsNullOrEmpty(TextProperty)
+                ? string.Join(Separator, selectedItems.Select(i => GetItemOrValueFromProperty(i, TextProperty)))
+                : null;
+            <span class="rz-dropdown-label rz-inputtext" title="@selectedItemsTitle" @onkeydown:stopPropagation="stopKeydownPropagation" @onkeydown="OnGuardKeyDown">
+                @if (selectedItems.Count < MaxSelectedLabels)
                 {
-                    <ul class="crest-dropdown__options" role="listbox" data-crest-dropdown-options>
-                        @foreach (var entry in FilteredEntries)
+                    @if (Template == null && ValueTemplate == null)
+                    {
+                        @(string.Join(Separator, selectedItems.Select(i => GetItemOrValueFromProperty(i, TextProperty ?? ""))))
+                    }
+                    else
+                    {
+                        var last = selectedItems.LastOrDefault();
+
+                        foreach (var item in selectedItems)
                         {
-                            <li role="none">
-                                <div class="@GetOptionCssClass(entry)"
-                                     role="option"
-                                     tabindex="@(IsDisabled || entry.Disabled ? -1 : 0)"
-                                     aria-selected="@IsSelected(entry).ToString().ToLowerInvariant()"
-                                     aria-disabled="@((IsDisabled || entry.Disabled).ToString().ToLowerInvariant())"
-                                     @onclick="() => SelectOnItemClickAsync(entry)">
-                                    @if (Template is not null)
-                                    {
-                                        @Template(ToRenderContext(entry, CrestDropDownSurface.Option))
-                                    }
-                                    else
-                                    {
-                                        <span class="crest-dropdown__option-label">@entry.Label</span>
-                                    }
-                                </div>
-                            </li>
+                            if (ValueTemplate != null)
+                            {
+                                @ValueTemplate(item)
+                            }
+                            else if (Template != null)
+                            {
+                                @Template(item)
+                            }
+                            @(item != last ? Separator : "")
                         }
-                    </ul>
+                    }
                 }
                 else
                 {
-                    <div class="crest-dropdown__empty">@(EmptyTemplate ?? EmptyContent)</div>
+                    @($"{selectedItems.Count} {SelectedItemsText}")
                 }
+            </span>
+        }
+        else if (!string.IsNullOrEmpty(Placeholder))
+        {
+            <span class="rz-dropdown-label rz-inputtext rz-placeholder">
+                @Placeholder
+            </span>
+        }
+        else
+        {
+            <span class="rz-dropdown-label rz-inputtext">
+                &nbsp;
+            </span>
+        }
 
-                @if (FooterTemplate is not null)
+        <div class="rz-dropdown-trigger rz-corner-right">
+            <CrestIcon IconKey="iconify.mdi/current/default/chevron-down" class="rz-dropdown-trigger-icon" />
+        </div>
+
+        <div id="@PopupID" class="@PopupCssClass"
+             style="display:none; box-sizing: border-box">
+            @if(!Multiple && (AllowFiltering || HeaderTemplate != null))
+            {
+                @if (HeaderTemplate != null)
                 {
-                    <div class="crest-dropdown__footer">@FooterTemplate</div>
+                    @HeaderTemplate
+                }
+                else
+                {
+                    <div class="rz-dropdown-filter-container">
+                        <input aria-label="@SearchAriaLabel" id="@SearchID" @ref="@search" tabindex="@(Disabled ? "-1" : $"{TabIndex}")" placeholder="@(FilterPlaceholder ?? string.Empty)" class="rz-dropdown-filter rz-inputtext" autocomplete="@FilterAutoCompleteType" aria-autocomplete="list" type="text"
+                               role="combobox" aria-controls="@ListId" aria-haspopup="listbox" aria-expanded="@(isPopupOpen.ToString().ToLowerInvariant())"
+                               @onchange="@OnFilter" @onkeydown="@OnFilterKeyPress" @onkeydown:preventDefault="@preventFilterKeydown" value="@(searchText ?? string.Empty)"
+                               @oninput="@OnFilterInput" />
+                        <CrestIcon IconKey="iconify.mdi/current/default/magnify" class="rz-dropdown-filter-icon" />
+                    </div>
+                }
+            }
+            @if (Multiple && (AllowSelectAll || AllowFiltering || HeaderTemplate != null))
+            {
+                @if (HeaderTemplate != null)
+                {
+                    @HeaderTemplate
+                }
+                else
+                {
+                <div class="rz-multiselect-header rz-helper-clearfix" @onclick:preventDefault>
+                    @if(AllowSelectAll && Data != null && Data.Cast<object>().Any())
+                    {
+                    <div class="rz-chkbox" title="@(!AllowFiltering ? "" : SelectAllText)" @onclick="@SelectAll"
+                         role="checkbox" tabindex="@(Disabled || ReadOnly ? "-1" : "0")"
+                         aria-checked="@(IsAllSelected().ToString().ToLowerInvariant())"
+                         aria-disabled="@(Disabled || ReadOnly ? "true" : "false")"
+                         @onkeydown="OnSelectAllKeyDown">
+                        <div class="rz-helper-hidden-accessible">
+                            <input readonly="readonly" type="checkbox" id="@($"{(Name ?? UniqueID + "sa")}")" aria-label="@SelectAllText" aria-checked="@(IsAllSelected().ToString().ToLowerInvariant())">
+                        </div>
+                        <div class="@(IsAllSelected() ? "notranslate rz-chkbox-box rz-state-active" : "notranslate rz-chkbox-box")">
+                            @if (IsAllSelected())
+                            {
+                                <CrestIcon IconKey="iconify.mdi/current/default/check" class="rz-chkbox-icon" />
+                            }
+                        </div>
+                    </div>
+                    }
+                    @if (AllowSelectAll && !AllowFiltering && !string.IsNullOrEmpty(SelectAllText) && Data != null && Data.Cast<object>().Any())
+                    {
+                        <button type="button" class="rz-multiselect-selectall" disabled="@(Disabled || ReadOnly)" @onclick="@SelectAll">@SelectAllText</button>
+                    }
+                    @if (AllowFiltering)
+                    {
+                        <div class="rz-multiselect-filter-container">
+                            <input id="@SearchID" tabindex="@(Disabled ? "-1" : $"{TabIndex}")" class="rz-inputtext" role="combobox" type="text"
+                                   aria-controls="@ListId" aria-haspopup="listbox" aria-expanded="@(isPopupOpen.ToString().ToLowerInvariant())" aria-autocomplete="list"
+                                   aria-label="@SearchAriaLabel"
+                                   @ref="@search" @oninput="@OnFilterInput"
+                                   @onchange="@OnFilter" @onkeydown="@OnFilterKeyPress" @onkeydown:preventDefault="@preventFilterKeydown" value="@(searchText ?? string.Empty)" autocomplete="@FilterAutoCompleteType" />
+                            <CrestIcon IconKey="iconify.mdi/current/default/magnify" class="rz-multiselect-filter-icon" />
+                        </div>
+                    }
+                    @if (AllowClear && !ReadOnly && (!Multiple && HasValue || Multiple && selectedItems.Count > 0))
+                    {
+                        <button type="button" tabindex="-1" id="@(GetId() + "clear")" class="rz-multiselect-close" aria-label="@ClearAriaLabel"
+                                @onclick="@ClearAll" @onclick:stopPropagation="true">
+                            <CrestIcon IconKey="iconify.mdi/current/default/close" />
+                        </button>
+                    }
+                </div>
+                }
+            }
+            <div class="@(Multiple ? "rz-multiselect-items-wrapper" : "rz-dropdown-items-wrapper")" style="@PopupStyle">
+                @if (IsLoading && LoadingTemplate != null)
+                {
+                    @LoadingTemplate
+                }
+                else if (Data != null && Data.Cast<object>().Any())
+                {
+                    <ul id="@ListId" @ref="list" class="@(Multiple ? "rz-multiselect-items rz-multiselect-list" : "rz-dropdown-items rz-dropdown-list")"
+                        role="listbox" aria-multiselectable="@(Multiple ? "true" : "false")">
+                        @if (View != null)
+                        {
+                            @RenderItems()
+                        }
+                    </ul>
+                }
+                else if (!IsLoading)
+                {
+                    @EmptyTemplate
                 }
             </div>
+            @if(FooterTemplate != null)
+            {
+                @FooterTemplate
+            }
+        </div>
+        @if (AllowClear && !ReadOnly && (!Multiple && HasValue || Multiple && selectedItems.Count > 0))
+        {
+            <button type="button" tabindex="-1" class="rz-dropdown-clear-icon" aria-label="@ClearAriaLabel"
+                    @onclick="@ClearAll" @onclick:stopPropagation="true">
+                <CrestIcon IconKey="iconify.mdi/current/default/close" />
+            </button>
         }
     </div>
 }
 
 @code {
-    private sealed record Entry(TItem Item, TValue? Value, string Label, bool Disabled);
-
-    private readonly List<Entry> _entries = [];
-    private bool _isOpen;
-    private bool _hasFocus;
-    private ElementReference _filterInput;
-
-    [Parameter] public IEnumerable<TItem>? Data { get; set; }
-    [Parameter] public TValue? Value { get; set; }
-    [Parameter] public EventCallback<TValue?> ValueChanged { get; set; }
-    [Parameter] public Expression<Func<TValue?>>? ValueExpression { get; set; }
-    [Parameter] public EventCallback<TValue?> Change { get; set; }
-    [Parameter] public EventCallback<TItem> SelectedItemChanged { get; set; }
-
-    // These describe a data source only. An exterior label belongs to the caller.
-    [Parameter] public string? LabelProperty { get; set; }
-    [Parameter] public string? ValueProperty { get; set; }
-    [Parameter] public string? DisabledProperty { get; set; }
-    [Parameter] public string? Placeholder { get; set; }
-    [Parameter] public string? Name { get; set; }
-    [Parameter] public string? AriaLabel { get; set; }
-    [Parameter] public string ClearAriaLabel { get; set; } = "Clear selection";
-    [Parameter] public string SearchAriaLabel { get; set; } = "Filter options";
-    [Parameter] public string FilterPlaceholder { get; set; } = "Filter";
-    [Parameter] public string? SearchText { get; set; }
-    [Parameter] public EventCallback<string?> SearchTextChanged { get; set; }
-    [Parameter] public bool AllowClear { get; set; }
-    [Parameter] public bool AllowFiltering { get; set; }
-    [Parameter] public bool Disabled { get; set; }
-    [Parameter] public bool ReadOnly { get; set; }
-    [Parameter] public bool Visible { get; set; } = true;
-    [Parameter] public bool OpenOnFocus { get; set; }
-    [Parameter] public bool ClearSearchAfterSelection { get; set; }
-    [Parameter] public bool ShowValueLabel { get; set; } = true;
-    [Parameter] public bool SelectOnItemClick { get; set; } = true;
-    [Parameter] public int FilterDelay { get; set; } = 300;
-    [Parameter] public CrestDropDownFilterCaseSensitivity FilterCaseSensitivity { get; set; } = CrestDropDownFilterCaseSensitivity.CaseInsensitive;
-    [Parameter] public CrestDropDownFilterOperator FilterOperator { get; set; } = CrestDropDownFilterOperator.Contains;
-    [Parameter] public string? Class { get; set; }
-    [Parameter] public string? Style { get; set; }
-
-    // One caller-owned card template is rendered for both surfaces. The context tells
-    // it whether it is the selected trigger value or a selectable listbox option.
-    [Parameter] public RenderFragment<CrestDropDownRenderContext<TItem>>? Template { get; set; }
-    [Parameter] public RenderFragment? TriggerIcon { get; set; }
-    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
-    [Parameter] public RenderFragment? FooterTemplate { get; set; }
-    [Parameter] public RenderFragment? EmptyTemplate { get; set; }
-    [Parameter] public RenderFragment EmptyContent { get; set; } = builder => builder.AddContent(0, "No options found.");
-    [Parameter] public IReadOnlyDictionary<string, object>? InputAttributes { get; set; }
-    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
-
-    private bool IsDisabled => Disabled || ReadOnly;
-    private bool HasValue => Value is not null && !EqualityComparer<TValue?>.Default.Equals(Value, default);
-    private string CssClass => string.Join(' ', new[] { "crest-dropdown", _isOpen ? "crest-dropdown--open" : null, IsDisabled ? "crest-dropdown--disabled" : null, Class }.Where(value => !string.IsNullOrWhiteSpace(value)));
-    private Entry? SelectedEntry => _entries.FirstOrDefault(entry => EqualityComparer<TValue?>.Default.Equals(entry.Value, Value));
-    private IReadOnlyList<Entry> FilteredEntries => _entries.Where(MatchesFilter).ToArray();
-
-    protected override void OnParametersSet()
-    {
-        _entries.Clear();
-        if (Data is null) return;
-
-        foreach (var item in Data)
-        {
-            var rawValue = GetPropertyValue(item, ValueProperty) ?? item;
-            _entries.Add(new Entry(
-                item,
-                ConvertValue(rawValue),
-                GetPropertyValue(item, LabelProperty)?.ToString() ?? item?.ToString() ?? string.Empty,
-                GetPropertyValue(item, DisabledProperty) is true));
-        }
-    }
-
-    private async Task ToggleAsync()
-    {
-        if (IsDisabled) return;
-        _isOpen = !_isOpen;
-        if (_isOpen && AllowFiltering) await FocusFilterAsync();
-    }
-
-    private async Task HandleFocusIn()
-    {
-        _hasFocus = true;
-        if (OpenOnFocus && !_isOpen && !IsDisabled)
-        {
-            _isOpen = true;
-            if (AllowFiltering) await FocusFilterAsync();
-        }
-    }
-
-    private async Task HandleFocusOut()
-    {
-        _hasFocus = false;
-        await Task.Yield();
-        if (!_hasFocus) _isOpen = false;
-    }
-
-    private async Task HandleKeyDown(KeyboardEventArgs args)
-    {
-        if (IsDisabled) return;
-        if (args.Key is "Enter" or " " or "ArrowDown")
-        {
-            _isOpen = true;
-            if (AllowFiltering) await FocusFilterAsync();
-        }
-        else if (args.Key == "Escape") _isOpen = false;
-    }
-
-    private async Task FilterAsync(ChangeEventArgs args)
-    {
-        SearchText = args.Value?.ToString();
-        await SearchTextChanged.InvokeAsync(SearchText);
-    }
-
-    private async Task SelectOnItemClickAsync(Entry entry)
-    {
-        if (SelectOnItemClick) await SelectAsync(entry);
-    }
-
-    private async Task SelectAsync(Entry entry)
-    {
-        if (IsDisabled || entry.Disabled) return;
-        Value = entry.Value;
-        await ValueChanged.InvokeAsync(Value);
-        await Change.InvokeAsync(Value);
-        await SelectedItemChanged.InvokeAsync(entry.Item);
-        if (ClearSearchAfterSelection)
-        {
-            SearchText = null;
-            await SearchTextChanged.InvokeAsync(null);
-        }
-        _isOpen = false;
-    }
-
-    private async Task ClearAsync()
-    {
-        Value = default;
-        await ValueChanged.InvokeAsync(Value);
-        await Change.InvokeAsync(Value);
-        _isOpen = false;
-    }
-
-    private bool IsSelected(Entry entry) => EqualityComparer<TValue?>.Default.Equals(entry.Value, Value);
-    private CrestDropDownRenderContext<TItem> ToRenderContext(Entry entry, CrestDropDownSurface surface) =>
-        new(entry.Item, surface, IsSelected(entry), entry.Label);
-    private string GetOptionCssClass(Entry entry) => string.Join(' ', new[] { "crest-dropdown__option", IsSelected(entry) ? "crest-dropdown__option--selected" : null, entry.Disabled ? "crest-dropdown__option--disabled" : null }.Where(value => !string.IsNullOrWhiteSpace(value)));
-
-    private bool MatchesFilter(Entry entry)
-    {
-        if (string.IsNullOrWhiteSpace(SearchText)) return true;
-        var comparison = FilterCaseSensitivity == CrestDropDownFilterCaseSensitivity.CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        return FilterOperator switch
-        {
-            CrestDropDownFilterOperator.StartsWith => entry.Label.StartsWith(SearchText, comparison),
-            CrestDropDownFilterOperator.EndsWith => entry.Label.EndsWith(SearchText, comparison),
-            CrestDropDownFilterOperator.Equals => entry.Label.Equals(SearchText, comparison),
-            _ => entry.Label.Contains(SearchText, comparison),
-        };
-    }
-
-    private async Task FocusFilterAsync()
-    {
-        await Task.Yield();
-        await _filterInput.FocusAsync();
-    }
-
-    private static object? GetPropertyValue(object? item, string? property)
-    {
-        if (item is null || string.IsNullOrWhiteSpace(property)) return item;
-        object? current = item;
-        foreach (var segment in property.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            if (current is null) return null;
-            current = current.GetType().GetProperty(segment, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase)?.GetValue(current);
-        }
-        return current;
-    }
-
-    private static TValue? ConvertValue(object? raw)
-    {
-        if (raw is null) return default;
-        if (raw is TValue typed) return typed;
-        var target = Nullable.GetUnderlyingType(typeof(TValue)) ?? typeof(TValue);
-        if (target.IsEnum) return (TValue)Enum.Parse(target, raw.ToString() ?? string.Empty, true);
-        return (TValue?)Convert.ChangeType(raw, target, System.Globalization.CultureInfo.InvariantCulture);
-    }
+    internal string? ActiveDescendantId => isPopupOpen && selectedIndex >= 0 ? $"{ListId}-{selectedIndex}" : null;
 }

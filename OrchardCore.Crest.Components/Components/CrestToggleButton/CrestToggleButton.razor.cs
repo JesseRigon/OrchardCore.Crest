@@ -17,7 +17,7 @@ namespace Crest.Components.Primitives
     /// &lt;CrestToggleButton Click=@(args => Console.WriteLine("Button clicked")) Text="ToggleButton" /&gt;
     /// </code>
     /// </example>
-    public partial class CrestToggleButton : CrestButton, IRadzenFormComponent
+    public partial class CrestToggleButton : CrestButton, ICrestFormComponent
     {
         /// <summary>
         /// Specifies additional custom attributes that will be rendered by the input.
@@ -76,7 +76,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// The form
         /// </summary>
-        IRadzenForm? _form;
+        ICrestForm? _form;
 
         /// <summary>
         /// Gets or sets the edit context.
@@ -90,7 +90,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The form.</value>
         [CascadingParameter]
-        public IRadzenForm? Form
+        public ICrestForm? Form
         {
             get
             {

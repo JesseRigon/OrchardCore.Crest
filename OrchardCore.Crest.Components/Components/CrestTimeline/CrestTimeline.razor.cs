@@ -19,14 +19,14 @@ namespace Crest.Components.Primitives
     /// &lt;CrestTimeline&gt;
     ///     &lt;Items&gt;
     ///         &lt;CrestTimelineItem&gt;
-    ///             &lt;PointContent&gt;&lt;RadzenIcon Icon="check_circle" /&gt;&lt;/PointContent&gt;
+    ///             &lt;PointContent&gt;&lt;CrestIcon Icon="check_circle" /&gt;&lt;/PointContent&gt;
     ///             &lt;ChildContent&gt;
     ///                 &lt;CrestText TextStyle="TextStyle.H6"&gt;Order Placed&lt;/CrestText&gt;
     ///                 &lt;CrestText&gt;January 1, 2026&lt;/CrestText&gt;
     ///             &lt;/ChildContent&gt;
     ///         &lt;/CrestTimelineItem&gt;
     ///         &lt;CrestTimelineItem&gt;
-    ///             &lt;PointContent&gt;&lt;RadzenIcon Icon="local_shipping" /&gt;&lt;/PointContent&gt;
+    ///             &lt;PointContent&gt;&lt;CrestIcon Icon="local_shipping" /&gt;&lt;/PointContent&gt;
     ///             &lt;ChildContent&gt;
     ///                 &lt;CrestText TextStyle="TextStyle.H6"&gt;Shipped&lt;/CrestText&gt;
     ///                 &lt;CrestText&gt;January 2, 2026&lt;/CrestText&gt;

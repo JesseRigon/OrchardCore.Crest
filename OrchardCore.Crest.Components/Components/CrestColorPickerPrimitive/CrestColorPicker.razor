@@ -1,4 +1,6 @@
+@namespace Crest.Components
 @using System.Text.RegularExpressions
+@using Crest.Components.Overlay
 @using Crest.Components.Primitives
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Forms
@@ -21,7 +23,7 @@
         {
             <button aria-label="@ToggleAriaLabel" type="button" tabindex="-1" class="rz-colorpicker-trigger" disabled=@Disabled @onclick:preventDefault><i class="notranslate rzi" /></button>
         }
-        <RadzenPopup id="@($"{GetId()}-popup")" Lazy=@(PopupRenderMode == PopupRenderMode.OnDemand) @ref=@Popup
+        <CrestPopup id="@($"{GetId()}-popup")" Lazy=@(PopupRenderMode == PopupRenderMode.OnDemand) @ref=@Popup
                role="dialog" aria-label="@PopupAriaLabel"
                class="rz-colorpicker-popup" Close=@OnClosePopup Open=@OnPopupOpen>
             @if (ShowHSV)
@@ -100,28 +102,28 @@
                     }
                     else
                     {
-                        <RadzenColorPickerItem Value="ff2800" />
-                        <RadzenColorPickerItem Value="fe9300" />
-                        <RadzenColorPickerItem Value="fefb00" />
-                        <RadzenColorPickerItem Value="02f900" />
-                        <RadzenColorPickerItem Value="00fdff" />
-                        <RadzenColorPickerItem Value="0433ff" />
-                        <RadzenColorPickerItem Value="ff40ff" />
-                        <RadzenColorPickerItem Value="942292" />
-                        <RadzenColorPickerItem Value="aa7942" />
-                        <RadzenColorPickerItem Value="ffffff" />
-                        <RadzenColorPickerItem Value="000000" />
-                        <RadzenColorPickerItem Value="53d5fd" />
-                        <RadzenColorPickerItem Value="73a7fe" />
-                        <RadzenColorPickerItem Value="874efe" />
-                        <RadzenColorPickerItem Value="d357fe" />
-                        <RadzenColorPickerItem Value="ed719e" />
-                        <RadzenColorPickerItem Value="ff8c82" />
-                        <RadzenColorPickerItem Value="ffa57d" />
-                        <RadzenColorPickerItem Value="ffc677" />
-                        <RadzenColorPickerItem Value="fff995" />
-                        <RadzenColorPickerItem Value="ebf38f" />
-                        <RadzenColorPickerItem Value="b1dd8c" />
+                        <CrestColorPickerItem Value="ff2800" />
+                        <CrestColorPickerItem Value="fe9300" />
+                        <CrestColorPickerItem Value="fefb00" />
+                        <CrestColorPickerItem Value="02f900" />
+                        <CrestColorPickerItem Value="00fdff" />
+                        <CrestColorPickerItem Value="0433ff" />
+                        <CrestColorPickerItem Value="ff40ff" />
+                        <CrestColorPickerItem Value="942292" />
+                        <CrestColorPickerItem Value="aa7942" />
+                        <CrestColorPickerItem Value="ffffff" />
+                        <CrestColorPickerItem Value="000000" />
+                        <CrestColorPickerItem Value="53d5fd" />
+                        <CrestColorPickerItem Value="73a7fe" />
+                        <CrestColorPickerItem Value="874efe" />
+                        <CrestColorPickerItem Value="d357fe" />
+                        <CrestColorPickerItem Value="ed719e" />
+                        <CrestColorPickerItem Value="ff8c82" />
+                        <CrestColorPickerItem Value="ffa57d" />
+                        <CrestColorPickerItem Value="ffc677" />
+                        <CrestColorPickerItem Value="fff995" />
+                        <CrestColorPickerItem Value="ebf38f" />
+                        <CrestColorPickerItem Value="b1dd8c" />
                     }
                     </CascadingValue>
                 </div>
@@ -130,9 +132,9 @@
             @if (ShowButton)
             {
                 <div class="rz-colorpicker-button rz-colorpicker-section">
-                    <RadzenButton ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" Click=@OnClick Text=@ButtonText @onclick:preventDefault />
+                    <CrestButton ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" Click=@OnClick Text=@ButtonText @onclick:preventDefault />
                 </div>
             }
-        </RadzenPopup>
+        </CrestPopup>
     </div>
 }

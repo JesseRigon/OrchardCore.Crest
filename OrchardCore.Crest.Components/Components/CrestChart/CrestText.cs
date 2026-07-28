@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
+using Crest.Components.Display;
 using Crest.Components.Primitives.Rendering;
 
 namespace Crest.Components.Primitives
@@ -179,8 +180,8 @@ namespace Crest.Components.Primitives
                 builder.AddAttribute(3, "href", GetPath());
                 builder.AddAttribute(4, "class", "rz-link");
                 builder.AddElementReferenceCapture(6, capture => element = capture);
-                builder.OpenComponent<RadzenIcon>(7);
-                builder.AddAttribute(8, "Icon", "link");
+                builder.OpenComponent<CrestIcon>(7);
+                builder.AddAttribute(8, "IconKey", "iconify.mdi/current/default/link");
                 builder.CloseComponent();
                 builder.OpenElement(9, "span");
                 builder.AddAttribute(10, "class", "rz-sr-only");
@@ -231,7 +232,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The text alignment. Default is <see cref="TextAlign.Left"/>.</value>
         [Parameter]
-        public TextAlign TextAlign { get; set;} = TextAlign.Left;
+        public TextAlign TextAlign { get; set; } = TextAlign.Left;
 
         /// <summary>
         /// Gets or sets the HTML element tag to render.

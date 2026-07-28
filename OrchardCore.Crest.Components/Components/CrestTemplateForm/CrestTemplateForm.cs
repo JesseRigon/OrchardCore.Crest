@@ -30,7 +30,7 @@ namespace Crest.Components.Primitives
     /// </code>
     /// </example>
     [CascadingTypeParameter(nameof(TItem))]
-    public class CrestTemplateForm<TItem> : CrestComponent, IRadzenForm
+    public class CrestTemplateForm<TItem> : CrestComponent, ICrestForm
     {
         /// <summary>
         /// Returns the validity of the form.
@@ -202,10 +202,10 @@ namespace Crest.Components.Primitives
             }
         }
 
-        readonly List<IRadzenFormComponent> components = new List<IRadzenFormComponent>();
+        readonly List<ICrestFormComponent> components = new List<ICrestFormComponent>();
 
         /// <inheritdoc />
-        public void AddComponent(IRadzenFormComponent component)
+        public void AddComponent(ICrestFormComponent component)
         {
             if (components.IndexOf(component) == -1)
             {
@@ -214,13 +214,13 @@ namespace Crest.Components.Primitives
         }
 
         /// <inheritdoc />
-        public void RemoveComponent(IRadzenFormComponent component)
+        public void RemoveComponent(ICrestFormComponent component)
         {
             components.Remove(component);
         }
 
         /// <inheritdoc />
-        public IRadzenFormComponent FindComponent(string name)
+        public ICrestFormComponent FindComponent(string name)
         {
             return components.Where(component => component.Name == name).FirstOrDefault()!;
         }
@@ -272,7 +272,7 @@ namespace Crest.Components.Primitives
                 builder.AddAttribute(6, "class", GetCssClass());
                 builder.AddElementReferenceCapture(7, form => Element = form);
 
-                builder.OpenComponent<CascadingValue<IRadzenForm>>(8);
+                builder.OpenComponent<CascadingValue<ICrestForm>>(8);
                 builder.AddAttribute(9, "IsFixed", true);
                 builder.AddAttribute(10, "Value", this);
                 builder.AddAttribute(11, "ChildContent", new RenderFragment(contentBuilder =>
@@ -287,7 +287,7 @@ namespace Crest.Components.Primitives
                     contentBuilder.CloseComponent();
                 }));
 
-                builder.CloseComponent(); // CascadingValue<IRadzenForm>
+                builder.CloseComponent(); // CascadingValue<ICrestForm>
 
 
                 builder.CloseElement(); // form

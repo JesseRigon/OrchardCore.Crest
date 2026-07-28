@@ -28,7 +28,7 @@ namespace Crest.Components.Primitives
     /// &lt;CrestPanel AllowCollapse="true" @bind-Collapsed=@isCollapsed Expand=@OnExpand Collapse=@OnCollapse&gt;
     ///     &lt;HeaderTemplate&gt;
     ///         &lt;CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center"&gt;
-    ///             &lt;RadzenIcon Icon="info" /&gt;
+    ///             &lt;CrestIcon Icon="info" /&gt;
     ///             &lt;CrestText TextStyle="TextStyle.H6"&gt;Details&lt;/CrestText&gt;
     ///         &lt;/CrestStack&gt;
     ///     &lt;/HeaderTemplate&gt;
@@ -147,7 +147,7 @@ namespace Crest.Components.Primitives
         /// <value>The title attribute value of the expand button.</value>
         [Parameter]
         public string ExpandTitle { get => expandTitle ?? Localize(nameof(CrestStrings.Panel_ExpandTitle)); set => expandTitle = value; }
-        
+
         private string? collapseTitle;
 
         /// <summary>
@@ -163,14 +163,14 @@ namespace Crest.Components.Primitives
         /// <value>The aria-label attribute value of the expand button.</value>
         [Parameter]
         public string? ExpandAriaLabel { get; set; } = null;
-        
+
         /// <summary>
         /// Gets or sets the aria-label attribute of the collapse button.
         /// </summary>
         /// <value>The aria-label attribute value of the collapse button.</value>
         [Parameter]
         public string? CollapseAriaLabel { get; set; } = null;
-        
+
         async Task Toggle(MouseEventArgs args)
         {
             collapsed = !collapsed;

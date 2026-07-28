@@ -73,7 +73,7 @@ namespace Crest.Components.Primitives
         [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2070, Justification = TrimMessages.ModelTypePreserved)]
         [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2072, Justification = TrimMessages.ModelTypePreserved)]
         [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2080, Justification = TrimMessages.ModelTypePreserved)]
-        protected override bool Validate(IRadzenFormComponent component)
+        protected override bool Validate(ICrestFormComponent component)
         {
             ArgumentNullException.ThrowIfNull(component);
 

@@ -31,8 +31,8 @@
                 <div class="rz-dialog-title" id="@titleId">
                     @if (!string.IsNullOrEmpty(options?.Icon))
                     {
-                        <RadzenIcon Icon="@options.Icon" 
-                                    IconColor="@(string.IsNullOrEmpty(options.IconColor) ? null : options.IconColor)" 
+                        <CrestIcon IconKey="@options.Icon"
+                                    Color="@(string.IsNullOrEmpty(options.IconColor) ? null : options.IconColor)"
                                     Style="@options.IconStyle" />
                     }
                     @if (options?.TitleContent != null && Service != null)

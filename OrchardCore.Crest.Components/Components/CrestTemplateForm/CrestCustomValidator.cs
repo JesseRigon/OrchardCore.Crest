@@ -56,7 +56,7 @@ namespace Crest.Components.Primitives
         public Func<bool> Validator { get; set; } = () => true;
 
         /// <inheritdoc />
-        protected override bool Validate(IRadzenFormComponent component)
+        protected override bool Validate(ICrestFormComponent component)
         {
             return Validator();
         }

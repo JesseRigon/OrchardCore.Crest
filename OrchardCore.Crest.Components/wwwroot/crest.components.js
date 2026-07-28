@@ -48,6 +48,19 @@ window.crestComponents.positionPopup = (element, anchorElement, options) => {
     updatePopupWindowBinding(element, anchorElement, options, windowAware);
 };
 
+window.crestComponents.scrollIntoViewIfNeeded = (id) => {
+    const el = document.getElementById(id);
+    if (!el) {
+        return;
+    }
+
+    if (typeof el.scrollIntoViewIfNeeded === 'function') {
+        el.scrollIntoViewIfNeeded();
+    } else if (typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ block: 'nearest' });
+    }
+};
+
 window.crestComponents.disposePopup = (element) => {
     const binding = popupWindowBindings.get(element);
     if (!binding) {

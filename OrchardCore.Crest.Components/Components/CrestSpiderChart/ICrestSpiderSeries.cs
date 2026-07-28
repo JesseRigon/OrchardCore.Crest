@@ -6,7 +6,7 @@ namespace Crest.Components.Primitives
     /// <summary>
     /// Non-generic contract for spider series so <see cref="CrestSpiderChart"/> can be non-generic.
     /// </summary>
-    internal interface IRadzenSpiderSeries
+    internal interface ICrestSpiderSeries
     {
         int Index { get; set; }
         string Title { get; }

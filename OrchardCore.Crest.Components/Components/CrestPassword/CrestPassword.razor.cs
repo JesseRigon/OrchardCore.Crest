@@ -25,7 +25,7 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestTemplateForm&gt;
     /// </code>
     /// </example>
-    public partial class CrestPassword : FormComponentWithAutoComplete<string>, IRadzenFormComponent
+    public partial class CrestPassword : FormComponentWithAutoComplete<string>, ICrestFormComponent
     {
         /// <summary>
         /// Gets or sets whether the password input is read-only and cannot be edited.

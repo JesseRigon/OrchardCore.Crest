@@ -1,20 +1,26 @@
+@using Crest.Components.Overlay
 @inherits CrestComponent
 @using Microsoft.JSInterop
 @namespace Crest.Components.Primitives.Rendering
-<button tabindex="-1" type="button" aria-controls=@PopupId aria-expanded=@(open ? "true" : "false") aria-haspopup="listbox" title=@Title @ref=@Element class=@Class style=@Style @onclick=@Toggle @onmousedown:preventDefault @attributes=@Attributes disabled=@IsDisabled>
+<button tabindex="-1" type="button" aria-controls=@PopupId aria-expanded=@(open ? "true" : "false")
+        aria-haspopup="listbox" title=@Title @ref=@Element class=@Class style=@Style @onclick=@Toggle
+        @onmousedown:preventDefault @attributes=@Attributes disabled=@IsDisabled>
     <span class="rz-dropdown-label rz-inputtext">@(SelectedItem?.Text ?? Placeholder)</span>
     <div class="rz-dropdown-trigger rz-corner-right">
         <span class="notranslate rz-dropdown-trigger-icon rzi rzi-chevron-down"></span>
     </div>
 </button>
-<RadzenPopup id=@PopupId role="listbox" Open=@OnPopupOpen Close=@OnPopupClose @ref=Popup class="rz-dropdown-panel rz-input-sm rz-editor-dropdown-panel" Style=@($"display:none;{PopupStyle}") PreventDefault=true>
+<CrestPopup id=@PopupId role="listbox" Open=@OnPopupOpen Close=@OnPopupClose @ref=Popup
+            class="rz-dropdown-panel rz-input-sm rz-editor-dropdown-panel" Style=@($"display:none;{PopupStyle}")
+            PreventDefault=true>
     <CascadingValue Value=@this ChildContent=@ChildContent />
-</RadzenPopup>
+</CrestPopup>
 @code {
     [CascadingParameter]
     public CrestHtmlEditor? Editor { get; set; }
 
-    private bool IsDisabled => Editor?.Disabled == true || !EnabledModes.HasFlag(Editor?.GetMode() ?? HtmlEditorMode.Design);
+    private bool IsDisabled => Editor?.Disabled == true || !EnabledModes.HasFlag(Editor?.GetMode() ??
+HtmlEditorMode.Design);
 
     bool open = false;
 
@@ -34,7 +40,7 @@
 
     private string PopupId => $"{GetId()}-popup";
 
-    RadzenPopup? Popup { get; set; }
+    CrestPopup? Popup { get; set; }
 
     [Parameter]
     public string? Title { get; set; }

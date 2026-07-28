@@ -1,3 +1,4 @@
+using Crest.Components.Overlay;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -26,7 +27,7 @@ public partial class SheetEditor : ComponentBase, IAsyncDisposable
 
     private int caretPosition = -1;
 
-    private RadzenPopup? popup;
+    private CrestPopup? popup;
 
     private List<string> functions = [];
 

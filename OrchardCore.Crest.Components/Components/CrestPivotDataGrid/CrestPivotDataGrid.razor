@@ -1,3 +1,4 @@
+@using Crest.Components.Overlay
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Forms
 @using Crest.Components.Primitives
@@ -51,19 +52,19 @@
                     <CrestRow>
                         <CrestColumn SizeMD="3">
                             <CrestLabel Component="Rows" Text="@RowsText" />
-                            <RadzenDropDown Name="Rows" Data="@pivotFields" TextProperty="Title" ValueProperty="Property" @bind-Value="@selectedRows"
+                            <CrestDropDown Name="Rows" Data="@pivotFields" TextProperty="Title" ValueProperty="Property" @bind-Value="@selectedRows"
                                 Multiple="true" Style="width: 100%;" Change="@(args => UpdateFieldsFromSelected())" 
                                 AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" />
                         </CrestColumn>
                         <CrestColumn SizeMD="3">
                             <CrestLabel Component="Columns" Text="@ColumnsText" />
-                            <RadzenDropDown Name="Columns" Data="@pivotFields" TextProperty="Title" ValueProperty="Property" @bind-Value="@selectedColumns"
+                            <CrestDropDown Name="Columns" Data="@pivotFields" TextProperty="Title" ValueProperty="Property" @bind-Value="@selectedColumns"
                                             Multiple="true" Style="width: 100%;" Change="@(args => UpdateFieldsFromSelected())"
                                             AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" />
                         </CrestColumn>
                         <CrestColumn SizeMD="6">
                             <CrestLabel Component="Aggregates" Text="@AggregatesText" />
-                            <RadzenDropDown Name="Aggregates" Data="@pivotFields" TextProperty="Title" ValueProperty="Property" MaxSelectedLabels="2" Multiple="true" Change=@UpdateAggregates
+                            <CrestDropDown Name="Aggregates" Data="@pivotFields" TextProperty="Title" ValueProperty="Property" MaxSelectedLabels="2" Multiple="true" Change=@UpdateAggregates
                                 TValue="IEnumerable<string>" Style="width: 100%;" Value="@(selectedAggregates.Select(a => a.Property).Distinct())"
                                     AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" >
                                 <Template>
@@ -76,7 +77,7 @@
                                 <ValueTemplate>
                                     @string.Join(",", selectedAggregates.Select(a => $"{a.Property} ({Enum.GetName(a.Aggregate)})"))
                                 </ValueTemplate>
-                            </RadzenDropDown>
+                            </CrestDropDown>
                         </CrestColumn>
                     </CrestRow>
                     <CrestRow>
@@ -436,7 +437,7 @@
     {
         var prefix = currentFilterField is CrestPivotColumn<TItem> ? "col" : currentFilterField is CrestPivotRow<TItem> ? "row" : "agg";
         var filterIconRefKey = $"{prefix}{currentFilterField.GetFilterProperty()}";
-        <RadzenPopup @ref="filterPopup" id="@($"pivot-filter-{currentFilterField.Property}")" class="rz-overlaypanel"
+        <CrestPopup @ref="filterPopup" id="@($"pivot-filter-{currentFilterField.Property}")" class="rz-overlaypanel"
                role="dialog" aria-label="@FilterText"
                style="display:none;min-width:250px;" @onkeydown=@(args => OnFilterPopupKeyPressed(args, filterIconRefKey))>
             <div class="rz-overlaypanel-content">
@@ -448,7 +449,7 @@
                 {
                     <form id="@($"pivot-filter-{currentFilterField.Property}-form")" @onsubmit="@(args => ApplyFilter(filterIconRefKey))" class="rz-grid-filter">
                         <span class="rz-grid-filter-label">@FilterText</span>
-                        <RadzenDropDown InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", FilterOperatorAriaLabel + GetFilterOperatorText(currentFilterField.GetSecondFilterOperator()) }})"
+                        <CrestDropDown InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", FilterOperatorAriaLabel + GetFilterOperatorText(currentFilterField.GetSecondFilterOperator()) }})"
                                         @onclick:preventDefault="true" Data="@(GetFilterOperators(currentFilterField).Select(t => new DropDownItem<FilterOperator> { Text = GetFilterOperatorText(t), Value = t }))" TextProperty="Text" ValueProperty="Value" TValue="FilterOperator?" Value="@currentFilterField.GetFilterOperator()" Change="@(args => SetFilterOperator(currentFilterField, (FilterOperator)args))" />
                         @if (currentFilterField.FilterValueTemplate != null)
                         {
@@ -456,7 +457,7 @@
                         }
                         else if (PropertyAccess.IsNullableEnum(GetFilterPropertyType(currentFilterField)) || PropertyAccess.IsEnum(GetFilterPropertyType(currentFilterField)))
                         {
-                            <RadzenDropDown Disabled="@(!CanSetFilterValue(currentFilterField))" AllowClear="false" AllowFiltering="false" TValue="@object"
+                            <CrestDropDown Disabled="@(!CanSetFilterValue(currentFilterField))" AllowClear="false" AllowFiltering="false" TValue="@object"
                                             Value="@currentFilterField.GetFilterValue()" Multiple="false" Placeholder="@EnumFilterSelectText" TextProperty="Text" ValueProperty="Value" Data="@EnumExtensions.EnumAsKeyValuePair(Nullable.GetUnderlyingType(GetFilterPropertyType(currentFilterField)) ?? GetFilterPropertyType(currentFilterField), EnumFilterTranslationFunc)"
                                             Change="@(args => SetFilterValue(currentFilterField, args))"
                                             InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", currentFilterField.GetTitle() + FilterValueAriaLabel + currentFilterField.GetFilterValue() }})" />
@@ -480,17 +481,17 @@
                             <CrestTextBox Disabled="@(!CanSetFilterValue(currentFilterField))" id="@($"pivot-filter-{currentFilterField.Property}-sf")" aria-label="@(currentFilterField.GetTitle() + FilterValueAriaLabel + currentFilterField.GetFilterValue())" Value="@($"{currentFilterField.GetFilterValue()}")" Change="@(args => SetFilterValue(currentFilterField, args))" />
                         }
 
-                        <RadzenDropDown @onclick:preventDefault="true" TextProperty="Text" ValueProperty="Value" Style="width: 90px" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", currentFilterField.GetTitle() + LogicalOperatorAriaLabel + (currentFilterField.GetLogicalFilterOperator() == LogicalFilterOperator.And ? AndOperatorText : OrOperatorText) }})"
+                        <CrestDropDown @onclick:preventDefault="true" TextProperty="Text" ValueProperty="Value" Style="width: 90px" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", currentFilterField.GetTitle() + LogicalOperatorAriaLabel + (currentFilterField.GetLogicalFilterOperator() == LogicalFilterOperator.And ? AndOperatorText : OrOperatorText) }})"
                                         Data="@(Enum.GetValues(typeof(LogicalFilterOperator)).Cast<LogicalFilterOperator>().Select(t => new DropDownItem<LogicalFilterOperator> { Text = t == LogicalFilterOperator.And ? AndOperatorText : OrOperatorText, Value = t }))" TValue="LogicalFilterOperator?" Value="@currentFilterField.GetLogicalFilterOperator()" Change="@(args => SetLogicalFilterOperator(currentFilterField, (LogicalFilterOperator)args))" />
 
-                        <RadzenDropDown InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", SecondFilterOperatorAriaLabel + GetFilterOperatorText(currentFilterField.GetSecondFilterOperator()) }})" @onclick:preventDefault="true" Data="@(GetFilterOperators(currentFilterField).Select(t => new DropDownItem<FilterOperator> { Text = GetFilterOperatorText(t), Value = t }))" TextProperty="Text" ValueProperty="Value" TValue="FilterOperator?" Value="@currentFilterField.GetSecondFilterOperator()" Change="@(args => SetSecondFilterOperator(currentFilterField, (FilterOperator)args))" />
+                        <CrestDropDown InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", SecondFilterOperatorAriaLabel + GetFilterOperatorText(currentFilterField.GetSecondFilterOperator()) }})" @onclick:preventDefault="true" Data="@(GetFilterOperators(currentFilterField).Select(t => new DropDownItem<FilterOperator> { Text = GetFilterOperatorText(t), Value = t }))" TextProperty="Text" ValueProperty="Value" TValue="FilterOperator?" Value="@currentFilterField.GetSecondFilterOperator()" Change="@(args => SetSecondFilterOperator(currentFilterField, (FilterOperator)args))" />
                         @if (currentFilterField.SecondFilterValueTemplate != null)
                         {
                             @currentFilterField.SecondFilterValueTemplate(currentFilterField)
                         }
                         else if (PropertyAccess.IsNullableEnum(GetFilterPropertyType(currentFilterField)) || PropertyAccess.IsEnum(GetFilterPropertyType(currentFilterField)))
                         {
-                            <RadzenDropDown Disabled="@(!CanSetFilterValue(currentFilterField, false))" AllowClear="false" AllowFiltering="false" TValue="@object" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", currentFilterField.GetTitle() + SecondFilterValueAriaLabel }})"
+                            <CrestDropDown Disabled="@(!CanSetFilterValue(currentFilterField, false))" AllowClear="false" AllowFiltering="false" TValue="@object" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", currentFilterField.GetTitle() + SecondFilterValueAriaLabel }})"
                                             Value="@currentFilterField.GetSecondFilterValue()" Multiple="false" Placeholder="@EnumFilterSelectText" TextProperty="Text" ValueProperty="Value" Data="@EnumExtensions.EnumAsKeyValuePair(Nullable.GetUnderlyingType(GetFilterPropertyType(currentFilterField)) ?? GetFilterPropertyType(currentFilterField), EnumFilterTranslationFunc)"
                                             Change="@(args => SetFilterValue(currentFilterField, args, false))" />
                         }
@@ -519,6 +520,6 @@
                     </div>
                 }
             </div>
-        </RadzenPopup>
+        </CrestPopup>
     }
 }

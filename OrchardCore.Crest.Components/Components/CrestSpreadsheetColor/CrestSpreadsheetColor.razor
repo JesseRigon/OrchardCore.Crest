@@ -3,7 +3,9 @@
 @implements IDisposable
 
 @namespace Crest.Components.Primitives.Spreadsheet.Tools
-<RadzenColorPicker ToggleAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_TextColor))) title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_TextColor))) Value=@CurrentColor ValueChanged=@OnColorChangedAsync Icon="title" Disabled=@IsDisabled InputSize="InputSize.Small" ShowArrow="false" />
+<CrestColorPicker ToggleAriaLabel=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_TextColor)))
+                  title=@(Spreadsheet?.Localize(nameof(CrestStrings.Spreadsheet_TextColor))) Value=@CurrentColor
+                  ValueChanged=@OnColorChangedAsync Icon="title" Disabled=@IsDisabled InputSize="InputSize.Small" ShowArrow="false" />
 
 @code {
 #nullable enable
@@ -69,4 +71,4 @@
     {
         selectionBinding.Dispose();
     }
-} 
+}

@@ -1,3 +1,13 @@
+// Reference only — not compiled or built. This is the full catalog of --rz-* custom
+// properties across every theme-able component, kept so CrestThemeEngine's
+// AllowedCrestVariables allowlist and the DesignSystem page's theme editor can be
+// checked for completeness against everything that's actually theme-able.
+//
+// Adapted from Radzen.Blazor (MIT License, Copyright (c) 2018-2026 Radzen Ltd).
+// The $-prefixed SASS variables here are unresolved (their maps lived in the theme
+// files this was extracted from) — read this for the *names* of available
+// properties, not as a compilable stylesheet.
+
 :root {
 
   /* Theme Colors */

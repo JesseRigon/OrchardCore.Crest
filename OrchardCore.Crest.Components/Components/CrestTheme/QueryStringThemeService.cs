@@ -174,7 +174,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Adds the <see cref="QueryStringThemeService" /> to the service collection.
         /// </summary>
-        public static IServiceCollection AddRadzenQueryStringThemeService(this IServiceCollection services)
+        public static IServiceCollection AddCrestQueryStringThemeService(this IServiceCollection services)
         {
             services.AddOptions<QueryStringThemeServiceOptions>();
             services.AddScoped<QueryStringThemeService>();
@@ -185,7 +185,7 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// Adds the <see cref="QueryStringThemeService" /> to the service collection with the specified condiguration.
         /// </summary>
-        public static IServiceCollection AddRadzenQueryStringThemeService(this IServiceCollection services, Action<QueryStringThemeServiceOptions> configure)
+        public static IServiceCollection AddCrestQueryStringThemeService(this IServiceCollection services, Action<QueryStringThemeServiceOptions> configure)
         {
             services.Configure(configure);
             services.AddScoped<QueryStringThemeService>();

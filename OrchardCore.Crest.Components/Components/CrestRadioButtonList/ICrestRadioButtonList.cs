@@ -8,19 +8,19 @@ namespace Crest.Components.Primitives;
 /// Represents the common <see cref="CrestRadioButtonList{TValue}" /> API used by
 /// its items. Injected as a cascading property in <see cref="CrestRadioButtonListItem{TValue}" />.
 /// </summary>
-public interface IRadzenRadioButtonList
+public interface ICrestRadioButtonList
 {
     /// <summary>
     /// Adds the specified item to the list.
     /// </summary>
     /// <param name="item">The item to add.</param>
-    void AddItem(IRadzenRadioButtonListItem item);
+    void AddItem(ICrestRadioButtonListItem item);
 
     /// <summary>
     /// Removes the specified item from the list.
     /// </summary>
     /// <param name="item">The item.</param>
-    void RemoveItem(IRadzenRadioButtonListItem item);
+    void RemoveItem(ICrestRadioButtonListItem item);
 
     /// <summary>
     /// Refreshes this instance.
@@ -33,7 +33,7 @@ public interface IRadzenRadioButtonList
 /// <see cref="CrestRadioButtonList{TValue}" /> regardless of the item value type. Allows items whose
 /// declared value type differs from the list value type (e.g. <c>bool</c> items in a <c>bool?</c> list).
 /// </summary>
-public interface IRadzenRadioButtonListItem
+public interface ICrestRadioButtonListItem
 {
     /// <summary>
     /// Gets the text.

@@ -51,7 +51,7 @@ namespace Crest.Components.Primitives
         public string? Pattern { get; set; }
 
         /// <inheritdoc />
-        protected override bool Validate(IRadzenFormComponent component)
+        protected override bool Validate(ICrestFormComponent component)
         {
             ArgumentNullException.ThrowIfNull(component);
             ArgumentNullException.ThrowIfNull(Pattern);

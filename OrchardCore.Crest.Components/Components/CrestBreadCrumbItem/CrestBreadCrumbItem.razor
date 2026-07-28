@@ -19,7 +19,8 @@
                 <a href="@Path" class="rz-link">
                     @if (!string.IsNullOrWhiteSpace(Icon))
                     {
-                        <i class="notranslate rzi" style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)" aria-hidden="true">@Icon</i>
+                        <i class="notranslate rzi" style="@(!string.IsNullOrEmpty(IconColor) ? $"color:{IconColor}" : null)"
+                           aria-hidden="true">@Icon</i>
                     }
                     <span class="rz-link-text">@Text</span>
                 </a>
@@ -28,7 +29,7 @@
             {
                 @if (!string.IsNullOrWhiteSpace(Icon))
                 {
-                    <RadzenIcon Icon="@Icon" IconColor="@IconColor" />
+                    <CrestIcon IconKey="@Icon" Color="@IconColor" />
                 }
                 <span class="rz-label" aria-current="page">@Text</span>
             }

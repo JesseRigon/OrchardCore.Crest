@@ -1,3 +1,4 @@
+@using Crest.Components.Overlay
 @typeparam TItem
 @using Microsoft.JSInterop
 @using Crest.Components.Primitives.Rendering
@@ -73,7 +74,7 @@
                     @Grid.FilterIcon
                 </button>
 
-                <RadzenPopup Lazy=@(Grid.FilterPopupRenderMode == PopupRenderMode.OnDemand) @ref=popup id="@($"{Column.GetColumnPopupID()}")" class="rz-overlaypanel"
+                <CrestPopup Lazy=@(Grid.FilterPopupRenderMode == PopupRenderMode.OnDemand) @ref=popup id="@($"{Column.GetColumnPopupID()}")" class="rz-overlaypanel"
                 role="dialog" aria-label="@Grid.FilterText"
                 style="display:none;min-width:250px;" @onkeydown="OnFilterPopupKeyPressed">
                     <div class="rz-overlaypanel-content">
@@ -87,7 +88,7 @@
                                 @if (filterMode == FilterMode.Advanced)
                                 {
                                     <span class="rz-grid-filter-label">@Grid.FilterText</span>
-                                    <RadzenDropDown InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Grid.FilterOperatorAriaLabel + Column.GetFilterOperatorText(Column.GetSecondFilterOperator()) }})"
+                                    <CrestDropDown InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Grid.FilterOperatorAriaLabel + Column.GetFilterOperatorText(Column.GetSecondFilterOperator()) }})"
                                     @onclick:preventDefault="true" Data="@(Column.GetFilterOperators().Select(t => new DropDownItem<FilterOperator> { Text = Column.GetFilterOperatorText(t), Value = t }))" TextProperty="Text" ValueProperty="Value" TValue="FilterOperator" Value="@Column.GetFilterOperator()" Change="@(args => Column.SetFilterOperator((FilterOperator)args))" />
                                     @if (Column.FilterValueTemplate != null)
                                     {
@@ -95,7 +96,7 @@
                                     } 
                                     else if (Column.FilterPropertyType != null && (PropertyAccess.IsNullableEnum(Column.FilterPropertyType) || PropertyAccess.IsEnum(Column.FilterPropertyType)))
                                     {
-                                        <RadzenDropDown Disabled="@(!Column.CanSetFilterValue())" AllowClear="false" AllowFiltering="false" TValue="@object"
+                                        <CrestDropDown Disabled="@(!Column.CanSetFilterValue())" AllowClear="false" AllowFiltering="false" TValue="@object"
                                         Value=@Column.GetFilterValue() Multiple="false" Placeholder="@Grid.EnumFilterSelectText" TextProperty="Text" ValueProperty="Value" Data=@EnumExtensions.EnumAsKeyValuePair(Nullable.GetUnderlyingType(Column.FilterPropertyType) ?? Column.FilterPropertyType, Grid.EnumFilterTranslationFunc)
                                         Change="@(args => Column.SetFilterValue(args))"
                                         InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Column.Title + Grid.FilterValueAriaLabel  + Column.GetFilterValue() }})" />
@@ -120,17 +121,17 @@
                                         <CrestTextBox Disabled="@(!Column.CanSetFilterValue())" id="@($"{Column.GetColumnPopupID()}-sf")" aria-label=@(Column.Title + Grid.FilterValueAriaLabel + Column.GetFilterValue()) Value="@($"{Column.GetFilterValue()}")" Change="@(args => Column.SetFilterValue(args))" />
                                     }
 
-                                    <RadzenDropDown @onclick:preventDefault="true" TextProperty="Text" ValueProperty="Value" Style="width: 90px" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Column.Title + Grid.LogicalOperatorAriaLabel + (Column.LogicalFilterOperator == LogicalFilterOperator.And ? Grid.AndOperatorText : Grid.OrOperatorText) }})"
+                                    <CrestDropDown @onclick:preventDefault="true" TextProperty="Text" ValueProperty="Value" Style="width: 90px" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Column.Title + Grid.LogicalOperatorAriaLabel + (Column.LogicalFilterOperator == LogicalFilterOperator.And ? Grid.AndOperatorText : Grid.OrOperatorText) }})"
                                     Data="@(Enum.GetValues(typeof(LogicalFilterOperator)).Cast<LogicalFilterOperator>().Select(t => new DropDownItem<LogicalFilterOperator> { Text = t == LogicalFilterOperator.And ? Grid.AndOperatorText : Grid.OrOperatorText, Value = t }))" TValue="LogicalFilterOperator" Value="@Column.LogicalFilterOperator" Change="@(args => Column.SetLogicalFilterOperator((LogicalFilterOperator)args))" />
 
-                                    <RadzenDropDown InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Grid.SecondFilterOperatorAriaLabel + Column.GetFilterOperatorText(Column.GetSecondFilterOperator()) }})" @onclick:preventDefault="true" Data="@(Column.GetFilterOperators().Select(t => new DropDownItem<FilterOperator> { Text = Column.GetFilterOperatorText(t), Value = t }))" TextProperty="Text" ValueProperty="Value" TValue="FilterOperator" Value="@Column.GetSecondFilterOperator()" Change="@(args => Column.SetSecondFilterOperator((FilterOperator)args))" />
+                                    <CrestDropDown InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Grid.SecondFilterOperatorAriaLabel + Column.GetFilterOperatorText(Column.GetSecondFilterOperator()) }})" @onclick:preventDefault="true" Data="@(Column.GetFilterOperators().Select(t => new DropDownItem<FilterOperator> { Text = Column.GetFilterOperatorText(t), Value = t }))" TextProperty="Text" ValueProperty="Value" TValue="FilterOperator" Value="@Column.GetSecondFilterOperator()" Change="@(args => Column.SetSecondFilterOperator((FilterOperator)args))" />
                                     @if (Column.SecondFilterValueTemplate != null)
                                     {
                                         @Column.SecondFilterValueTemplate(Column)
                                     } 
                                     else if (Column.FilterPropertyType != null && (PropertyAccess.IsNullableEnum(Column.FilterPropertyType) || PropertyAccess.IsEnum(Column.FilterPropertyType)))
                                     {
-                                        <RadzenDropDown Disabled="@(!Column.CanSetFilterValue(false))" AllowClear="false" AllowFiltering="false" TValue="@object" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Column.Title + Grid.SecondFilterValueAriaLabel }})"
+                                        <CrestDropDown Disabled="@(!Column.CanSetFilterValue(false))" AllowClear="false" AllowFiltering="false" TValue="@object" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", Column.Title + Grid.SecondFilterValueAriaLabel }})"
                                         Value=@Column.GetSecondFilterValue() Multiple="false" Placeholder="@Grid.EnumFilterSelectText" TextProperty="Text" ValueProperty="Value" Data=@EnumExtensions.EnumAsKeyValuePair(Nullable.GetUnderlyingType(Column.FilterPropertyType) ?? Column.FilterPropertyType, Grid.EnumFilterTranslationFunc)
                                         Change="@(args => Column.SetFilterValue(args,false))" />
                                     }
@@ -203,7 +204,7 @@
                             }
                         </div>
                     }
-                </RadzenPopup>
+                </CrestPopup>
             }
         </div>
         @if (Grid.allColumns.Any(c => c.Parent != null) && Grid.AllowFiltering && Column.Filterable && (filterMode == FilterMode.Simple || filterMode == FilterMode.SimpleWithMenu))
@@ -223,7 +224,7 @@ else
     }
 }
 @code {
-    RadzenPopup? popup;
+    CrestPopup? popup;
     ElementReference filterButton;
 
     int filterValuesCount;

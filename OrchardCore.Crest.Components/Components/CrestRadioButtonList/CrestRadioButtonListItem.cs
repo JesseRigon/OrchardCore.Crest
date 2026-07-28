@@ -9,7 +9,7 @@ namespace Crest.Components.Primitives
     /// CrestRadioButtonListItem component.
     /// </summary>
     /// <typeparam name="TValue">The type of the value.</typeparam>
-    public class CrestRadioButtonListItem<TValue> : CrestComponent, IRadzenRadioButtonListItem
+    public class CrestRadioButtonListItem<TValue> : CrestComponent, ICrestRadioButtonListItem
     {
         /// <summary>
         /// Specifies additional custom attributes that will be rendered by the input.
@@ -66,14 +66,14 @@ namespace Crest.Components.Primitives
         [Parameter]
         public virtual bool Disabled { get; set; }
 
-        private IRadzenRadioButtonList? list;
+        private ICrestRadioButtonList? list;
 
         /// <summary>
         /// Gets or sets the list.
         /// </summary>
         /// <value>The list.</value>
         [CascadingParameter]
-        public IRadzenRadioButtonList? List
+        public ICrestRadioButtonList? List
         {
             get
             {
@@ -89,19 +89,19 @@ namespace Crest.Components.Primitives
             }
         }
 
-        object? IRadzenRadioButtonListItem.Value => Value;
+        object? ICrestRadioButtonListItem.Value => Value;
 
-        RenderFragment? IRadzenRadioButtonListItem.Template => Template?.Invoke(this);
+        RenderFragment? ICrestRadioButtonListItem.Template => Template?.Invoke(this);
 
-        ElementReference IRadzenRadioButtonListItem.Element
+        ElementReference ICrestRadioButtonListItem.Element
         {
             get => Element;
             set => Element = value;
         }
 
-        string? IRadzenRadioButtonListItem.GetItemId() => GetItemId();
+        string? ICrestRadioButtonListItem.GetItemId() => GetItemId();
 
-        string IRadzenRadioButtonListItem.GetItemCssClass() => GetItemCssClass();
+        string ICrestRadioButtonListItem.GetItemCssClass() => GetItemCssClass();
 
         /// <summary>
         /// Disposes this instance.

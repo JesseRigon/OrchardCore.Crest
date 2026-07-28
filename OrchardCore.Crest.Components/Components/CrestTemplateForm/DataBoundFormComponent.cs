@@ -15,16 +15,16 @@ namespace Crest.Components.Primitives
     /// <summary>
     /// Class DataBoundFormComponent.
     /// Implements the <see cref="Crest.Components.Primitives.CrestComponent" />
-    /// Implements the <see cref="Crest.Components.Primitives.IRadzenFormComponent" />
+    /// Implements the <see cref="Crest.Components.Primitives.ICrestFormComponent" />
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <seealso cref="Crest.Components.Primitives.CrestComponent" />
-    /// <seealso cref="Crest.Components.Primitives.IRadzenFormComponent" />
+    /// <seealso cref="Crest.Components.Primitives.ICrestFormComponent" />
     [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2026, Justification = TrimMessages.DataTypePreserved)]
     [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2067, Justification = TrimMessages.DataTypePreserved)]
     [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2070, Justification = TrimMessages.DataTypePreserved)]
     [UnconditionalSuppressMessage(TrimMessages.Trimming, TrimMessages.IL2072, Justification = TrimMessages.DataTypePreserved)]
-    public class DataBoundFormComponent<T> : CrestComponent, IRadzenFormComponent
+    public class DataBoundFormComponent<T> : CrestComponent, ICrestFormComponent
     {
         /// <summary>
         /// Gets or sets the index of the tab.
@@ -99,14 +99,14 @@ namespace Crest.Components.Primitives
         /// <summary>
         /// The form
         /// </summary>
-        IRadzenForm? form;
+        ICrestForm? form;
 
         /// <summary>
         /// Gets or sets the form.
         /// </summary>
         /// <value>The form.</value>
         [CascadingParameter]
-        public IRadzenForm? Form
+        public ICrestForm? Form
         {
             get
             {

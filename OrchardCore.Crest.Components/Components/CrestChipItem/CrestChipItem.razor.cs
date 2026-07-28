@@ -50,13 +50,13 @@ namespace Crest.Components.Primitives
         [Parameter]
         public RenderFragment<CrestChipItem>? Template { get; set; }
 
-        IRadzenChipList? chipList;
+        ICrestChipList? chipList;
 
         /// <summary>
         /// Gets or sets the cascading parent chip list.
         /// </summary>
         [CascadingParameter]
-        public IRadzenChipList? ChipList
+        public ICrestChipList? ChipList
         {
             get
             {
