@@ -57,3 +57,7 @@ Localization/
 *.sqlite
 *.sqlite3
 *.db
+
+# Playwright screenshot-diff output — base/ is the committed reference set,
+# new/ is wiped and regenerated on every test run.
+tests/playwright/output/new/
