@@ -1,17 +1,28 @@
+/* Three-row app shell: titlebar (natural/auto height, whatever that turns out to be),
+   the sidebar+content row (fills exactly whatever's left), and — later — a footer row.
+   Nothing here hardcodes the titlebar's height; the dashboard row is sized purely by
+   flex-grow against the actual rendered titlebar, so it's correct regardless of how
+   tall AdminTitleBar ends up (its own CSS only sets a min-height, not a fixed height). */
 .admin-shell {
-    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
     background: var(--crest-color-surface-2, #f7f8f6);
 }
 
 .admin-dashboard {
+    position: relative;
     display: flex;
-    min-height: calc(100vh - 4rem);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .admin-dashboard__main {
     flex: 1 1 auto;
     min-width: 0;
     padding: 2rem;
+    overflow-y: auto;
 }
 
 .admin-dashboard__backdrop {
@@ -19,19 +30,18 @@
 }
 
 @media (max-width: 1024px) {
-    .admin-dashboard {
-        min-height: calc(100vh - 3.5rem);
-    }
-
     .admin-dashboard__main {
         width: 100%;
         padding: 1rem;
     }
 
     .admin-dashboard__backdrop {
+        /* Positioned relative to .admin-dashboard (already sized to exactly the
+           remaining space under the titlebar via flex), not the viewport — no
+           hardcoded titlebar-height offset needed. */
         display: block;
-        position: fixed;
-        inset: 3.5rem 0 0 0;
+        position: absolute;
+        inset: 0;
         z-index: 18;
         border: 0;
         background: rgba(15, 23, 42, 0.35);

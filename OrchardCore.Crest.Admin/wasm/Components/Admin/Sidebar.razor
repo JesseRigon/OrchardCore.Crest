@@ -1,0 +1,17 @@
+@* Wraps the sidebar region of the admin shell: today just PrimaryNavMenu, later also a
+   secondary nav menu alongside it. Owns the mobile slide-in/out drawer behavior; the
+   nav menus inside it are unaware of whether they're being shown as a drawer or a
+   normal desktop column. *@
+<div class="@SidebarClass" data-testid="admin-sidebar">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool IsMobileOpen { get; set; }
+
+    private string SidebarClass => "admin-sidebar" + (IsMobileOpen ? " admin-sidebar--mobile-open" : string.Empty);
+}

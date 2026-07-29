@@ -54,7 +54,17 @@
                                         <CrestText TextStyle="TextStyle.H6" Text="Menus" />
                                         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                                             <CrestTextBox @bind-Value="MenuSearch" Placeholder="Search menus..." Style="width: 100%;" />
-                                            <CrestButton Icon="add" ButtonStyle="ButtonStyle.Primary" Click="CreateMenuAsync" Disabled="@IsBusy" title="Add menu" />
+                                            <div class="admin-menu-actions">
+                                                <CrestButton Icon="add" ButtonStyle="ButtonStyle.Primary" Click="ToggleCreateMenuPopover" Disabled="@IsBusy" title="Add menu" />
+                                                @if (IsCreateMenuOpen)
+                                                {
+                                                    <div class="admin-menu-actions__popover" role="menu">
+                                                        <CrestButton Text="Admin Menu" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.Admin))" />
+                                                        <CrestButton Text="Local Menu" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.Local))" />
+                                                        <CrestButton Text="User Profile Menu" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.User))" />
+                                                    </div>
+                                                }
+                                            </div>
                                         </CrestStack>
                                         @if (FilteredMenus.Length == 0)
                                         {
@@ -74,8 +84,12 @@
                                                         }
                                                         else
                                                         {
-                                                            <CrestButton Text="@(menu.IsDefault ? $"{menu.Name} (built-in)" : menu.Name)" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
+                                                            <CrestButton Text="@(menu.IsDefault ? $"{menu.Name} (Built In)" : $"{menu.Name}{PlacementSuffix(menu)}")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
                                                             <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="Rename menu" />
+                                                            @if (CanConvert(menu))
+                                                            {
+                                                                <CrestButton Size="ButtonSize.Small" Icon="swap_horiz" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ConvertMenuAsync(menu))" Disabled="@IsBusy" title="@(menu.Placement == CrestMenuPlacement.Admin ? "Convert to Local Menu" : "Convert to Admin Menu")" />
+                                                            }
                                                             <CrestButton Size="ButtonSize.Small" Icon="@(menu.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@(menu.Enabled ? "Hide menu" : "Show menu")" />
                                                             <CrestButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="Duplicate menu" />
                                                             <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="Delete menu" />
@@ -141,7 +155,7 @@
                                                     @if (SelectedMenu.IsDefault)
                                                     {
                                                         <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                                                            Primary Navigation is the generated Orchard admin menu plus Crest layout overrides. Drag items anywhere; hide/show only affects this tenant's primary navigation. Add node creates lightweight placeholder groups only.
+                                                            Sidebar (Built In) is the generated Orchard admin menu plus Crest layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar. Add node creates lightweight placeholder groups only.
                                                         </CrestAlert>
                                                     }
                                                     @if (EditingModel is not null && EditingNodeId is null)
@@ -190,6 +204,13 @@
         new("vh", "vh"),
         new("vw", "vw"),
     ];
+    // More positions are expected later (other anchor corners, responsive-size-specific
+    // choices) — this list is intentionally not exhaustive.
+    private static readonly CollapseIconPositionOption[] CollapseIconPositionOptions =
+    [
+        new(Crest.Admin.Api.PrimaryNavMenuCollapseIconPosition.OutsideBottomRight, "Outside, bottom-right"),
+        new(Crest.Admin.Api.PrimaryNavMenuCollapseIconPosition.InsideBottomLeft, "Inside, bottom-left"),
+    ];
 
     private readonly DragDropManager DragDrop = new();
     private readonly HashSet<string> CollapsedNodeIds = [];
@@ -224,6 +245,7 @@
     private string? RenamingNodeId { get; set; }
     private string? RenameText { get; set; }
     private bool IsAddMenuOpen { get; set; }
+    private bool IsCreateMenuOpen { get; set; }
     private bool IsPrimaryNavMenuSettingsOpen { get; set; }
     private AdminPrimaryNavMenuSettings PrimaryNavMenuSettingsModel { get; set; } = CreateDefaultPrimaryNavMenuSettings();
     private decimal PrimaryNavMenuExpansionMilliseconds
@@ -393,9 +415,33 @@
         ShouldInitializeTree = true;
     }
 
-    private async Task CreateMenuAsync()
+    private void ToggleCreateMenuPopover()
     {
-        var baseName = "New Admin Menu";
+        IsCreateMenuOpen = !IsCreateMenuOpen;
+    }
+
+    private static string PlacementBaseName(CrestMenuPlacement placement) => placement switch
+    {
+        CrestMenuPlacement.Local => "New Local Menu",
+        CrestMenuPlacement.User => "New User Profile Menu",
+        _ => "New Admin Menu",
+    };
+
+    private static string PlacementSuffix(AdminMenuSummary menu) => menu.Placement switch
+    {
+        CrestMenuPlacement.Local => " (Local)",
+        CrestMenuPlacement.User => " (User Profile)",
+        _ => string.Empty,
+    };
+
+    // Admin and Local menus share the same underlying storage/rendering and can be
+    // converted into each other. A User Profile Menu is stable once created.
+    private static bool CanConvert(AdminMenuSummary menu) => !menu.IsDefault && menu.Placement != CrestMenuPlacement.User;
+
+    private async Task CreateMenuAsync(CrestMenuPlacement placement)
+    {
+        IsCreateMenuOpen = false;
+        var baseName = PlacementBaseName(placement);
         var name = baseName;
         var index = 2;
         while (State.Menus.Any(menu => menu.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
@@ -403,12 +449,23 @@
             name = $"{baseName} {index++}";
         }
 
-        var menu = await Api.Crest.Rest.AdminMenus.CreateMenuAsync(new(name, true));
+        var menu = await Api.Crest.Rest.AdminMenus.CreateMenuAsync(new(name, true, placement));
         if (menu is not null)
         {
             State = new([.. State.Menus, menu]);
             SelectedMenuId = menu.Id;
             Notifications.Notify(NotificationSeverity.Success, "Admin menu created", name);
+        }
+    }
+
+    private async Task ConvertMenuAsync(AdminMenuSummary menu)
+    {
+        var targetPlacement = menu.Placement == CrestMenuPlacement.Admin ? CrestMenuPlacement.Local : CrestMenuPlacement.Admin;
+        var converted = await Api.Crest.Rest.AdminMenus.ConvertMenuAsync(menu.Id, new(targetPlacement));
+        if (converted is not null)
+        {
+            State = new([.. State.Menus.Select(m => m.Id == converted.Id ? converted : m)]);
+            Notifications.Notify(NotificationSeverity.Success, "Menu converted", converted.Name);
         }
     }
 
@@ -825,6 +882,11 @@
             </CrestStack>
 
             <div class="admin-menu-settings__field">
+                <CrestLabel Text="Collapse/expand toggle position" />
+                <CrestDropDown Data="@CollapseIconPositionOptions" @bind-Value="PrimaryNavMenuSettingsModel.CollapseIconPosition" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
+            </div>
+
+            <div class="admin-menu-settings__field">
                 <CrestLabel Text="Expansion speed (ms)" />
                 <CrestInputNumericMath Value="@PrimaryNavMenuExpansionMilliseconds"
                                        ValueChanged="@SetPrimaryNavMenuExpansionMilliseconds"
@@ -963,7 +1025,7 @@
                     </CrestColumn>
                     <CrestColumn Size="12" SizeMD="6">
                         <CrestLabel Text="Url" />
-                        <CrestTextBox @bind-Value="model.Url" Disabled="@(SelectedMenu?.IsDefault == true || model.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? "Primary Navigation placeholders do not link" : "/Admin/MyPage")" Style="width: 100%;" />
+                        <CrestTextBox @bind-Value="model.Url" Disabled="@(SelectedMenu?.IsDefault == true || model.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? "Sidebar (Built In) placeholders do not link" : "/Admin/MyPage")" Style="width: 100%;" />
                     </CrestColumn>
                 </CrestRow>
 
@@ -1180,6 +1242,7 @@
             ? settings.TierBaseSizes.ToList()
             : settings.TierBaseRems?.Select(value => $"{value:0.###}rem").ToList() ?? ["1rem", "0.95rem", "0.9rem"],
         TierBaseRems = settings.TierBaseRems?.ToList() ?? [1.0, 0.95, 0.9],
+        CollapseIconPosition = settings.CollapseIconPosition,
     };
 
     private static AdminPrimaryNavMenuSettings CreateDefaultPrimaryNavMenuSettings() => new();
@@ -1397,6 +1460,7 @@
 
     private sealed record NodeTypeOption(string Value, string Text);
     private sealed record ParentOption(string Value, string Text);
+    private sealed record CollapseIconPositionOption(Crest.Admin.Api.PrimaryNavMenuCollapseIconPosition Value, string Label);
     private sealed record MenuEntry(int Order, int Kind, AdminMenuNodeSummary? Node, AdminMenuSeparatorSummary? Separator);
 
     private sealed class AdminMenuNodeFormModel

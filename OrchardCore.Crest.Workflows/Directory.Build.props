@@ -1,0 +1,49 @@
+<Project>
+    <PropertyGroup>
+        <Authors>Elsa Workflows Community</Authors>
+        <Copyright>2024</Copyright>
+
+        <PackageProjectUrl>https://github.com/JesseRigon/OrchardCore.Crest.git</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/JesseRigon/OrchardCore.Crest.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageIcon>icon.png</PackageIcon>
+
+        <!-- For NuGet browsers that currently don't support <PackageIcon> yet -->
+        <PackageIconUrl>https://github.com/JesseRigon/OrchardCore.Crest.git/blob/main/icon.png?raw=true</PackageIconUrl>
+
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <AnalysisModeDocumentation>Default</AnalysisModeDocumentation>
+        <AnalysisLevelDocumentation>latest</AnalysisLevelDocumentation>
+
+        <NuGetAudit>enable</NuGetAudit>
+        <NuGetAuditMode>all</NuGetAuditMode>
+
+        <!-- https://github.com/dotnet/sourcelink -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    </PropertyGroup>
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);CS0162;CS1591</NoWarn>
+        <!-- IL trimming warnings -->
+        <NoWarn>$(NoWarn);IL2026;IL2046;IL2057;IL2067;IL2070;IL2072;IL2075;IL2087;IL2091</NoWarn>
+    </PropertyGroup>
+    <ItemGroup Label="Files">
+        <None Include="..\..\..\icon.png" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+    <PropertyGroup>
+        <ElsaVersion>3.6.0-preview.3834</ElsaVersion>
+        <ElsaStudioVersion>3.6.0-preview.1275</ElsaStudioVersion>
+        <ElsaExtensionsVersion>3.6.0-preview.172</ElsaExtensionsVersion>
+        <OrchardVersion>3.0.0-preview-18758</OrchardVersion>
+        <MicrosoftVersion>9.0.10</MicrosoftVersion>
+    </PropertyGroup>
+</Project>

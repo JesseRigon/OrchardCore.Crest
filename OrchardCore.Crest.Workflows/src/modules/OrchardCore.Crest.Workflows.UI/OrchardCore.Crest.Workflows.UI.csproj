@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+        <IsPackable>true</IsPackable>
+        <PackageId>OrchardCore.Crest.Workflows.UI</PackageId>
+        <PackageTags>OrchardCore;Crest;Workflows;UI</PackageTags>
+        <Description>Provides UI-related workflow activities for Orchard Core. Includes activities for displaying notifications and interacting with the user interface.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations"/>
+        <PackageReference Include="OrchardCore.DisplayManagement" />
+        <PackageReference Include="OrchardCore.Module.Targets"/>
+    </ItemGroup>
+
+    <ItemGroup Label="Elsa">
+        <PackageReference Include="Elsa"/>
+    </ItemGroup>
+
+</Project>

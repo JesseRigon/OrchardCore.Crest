@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <PackageId>OrchardCore.Crest.Workflows.Timers</PackageId>
+        <PackageTags>OrchardCore;Crest;Workflows;Timers</PackageTags>
+        <Description>Provides timer services and scheduling activities for Elsa workflows in Orchard Core. Includes Quartz.NET-based scheduling for clustered deployments.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations"/>
+        <PackageReference Include="ncrontab"/>
+        <PackageReference Include="OrchardCore.Module.Targets"/>
+        <PackageReference Include="Quartz"/>
+    </ItemGroup>
+
+    <ItemGroup Label="Elsa">
+        <PackageReference Include="Elsa.Scheduling"/>
+        <PackageReference Include="Elsa.Scheduling.Quartz"/>
+        <PackageReference Include="Elsa"/>
+    </ItemGroup>
+
+</Project>

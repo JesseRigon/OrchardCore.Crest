@@ -19,7 +19,9 @@ else if (DisplayManager.IsAuthenticated)
         <div class="admin-shell">
             <AdminTitleBar />
             <div class="@DashboardClass">
-                <PrimaryNavMenu IsMobileOpen="@IsPrimaryNavMenuOpen" />
+                <Sidebar IsMobileOpen="@IsPrimaryNavMenuOpen">
+                    <PrimaryNavMenu />
+                </Sidebar>
                 @if (IsPrimaryNavMenuOpen)
                 {
                     <button type="button" class="admin-dashboard__backdrop" aria-label="Close navigation menu" @onclick="ClosePrimaryNavMenu"></button>

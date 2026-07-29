@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <IsPackable>true</IsPackable>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+        <PackageId>OrchardCore.Crest.Workflows.Designer</PackageId>
+        <PackageTags>OrchardCore;Crest;Workflows;Designer</PackageTags>
+        <Description>Shared components for the Elsa Studio visual workflow designer. Provides core UI components and workflow design functionality for Orchard Core integration.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Elsa.Studio.Core" />
+        <PackageReference Include="Elsa.Studio.Workflows.Core" />
+        <PackageReference Include="Elsa.Studio.Workflows" />
+        <PackageReference Include="Elsa.Studio.Shell" />
+    </ItemGroup>
+
+</Project>

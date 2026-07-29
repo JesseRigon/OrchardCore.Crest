@@ -7,6 +7,14 @@ public sealed record DisplayMenu(string Name, DisplayMenuItem[] Items, DisplayMe
 
 public sealed record DisplayMenuSeparator(string Key, string? ParentKey, int Order);
 
+// Available options are expected to grow (more anchor corners, responsive-size-specific
+// choices) — keep this an open enum rather than a bool.
+public enum PrimaryNavMenuCollapseIconPosition
+{
+    OutsideBottomRight,
+    InsideBottomLeft,
+}
+
 public sealed class DisplayPrimaryNavMenuSettings
 {
     public bool Collapsible { get; init; } = true;
@@ -15,6 +23,7 @@ public sealed class DisplayPrimaryNavMenuSettings
     public string[] TierBackgrounds { get; init; } = ["transparent", "transparent", "color-mix(in srgb, var(--crest-color-surface-1) 88%, var(--crest-color-text-1) 12%)", "transparent"];
     public bool[] TierSeparators { get; init; } = [true, false, false];
     public string[] TierBaseSizes { get; init; } = ["1rem", "0.95rem", "0.9rem"];
+    public PrimaryNavMenuCollapseIconPosition CollapseIconPosition { get; init; } = PrimaryNavMenuCollapseIconPosition.OutsideBottomRight;
 
     public static DisplayPrimaryNavMenuSettings Default { get; } = new();
 }

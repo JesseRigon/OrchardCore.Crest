@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Crest.Controllers;
 using OrchardCore.Data.Documents;
 using OrchardCore.Documents;
@@ -9,7 +10,7 @@ public sealed class CrestAdminMenuLayoutService(
     ICrestAdminMenuLayoutInvalidator invalidator)
 {
     public const string DefaultMenuId = "__crest_default_admin_menu";
-    public const string DefaultMenuName = "Primary Navigation";
+    public const string DefaultMenuName = "Sidebar";
     public const string LockedNewItemKey = "new";
 
     public async Task<CrestAdminMenuLayoutDocument> GetAsync() => await documents.GetOrCreateImmutableAsync();
@@ -547,6 +548,15 @@ public sealed class CrestAdminMenuLayoutFile
     public List<CrestAdminMenuSeparator> Separators { get; set; } = [];
 }
 
+// Available options are expected to grow (more anchor corners, responsive-size-specific
+// choices) — keep this an open enum rather than a bool.
+[JsonConverter(typeof(JsonStringEnumConverter<PrimaryNavMenuCollapseIconPosition>))]
+public enum PrimaryNavMenuCollapseIconPosition
+{
+    OutsideBottomRight,
+    InsideBottomLeft,
+}
+
 public sealed class CrestPrimaryNavMenuSettings
 {
     public bool Collapsible { get; set; } = true;
@@ -556,6 +566,7 @@ public sealed class CrestPrimaryNavMenuSettings
     public List<string> TierBackgrounds { get; set; } = ["transparent", "transparent", "var(--rz-base-100, color-mix(in srgb, var(--rz-base-background-color) 88%, var(--rz-text-color) 12%))", "transparent"];
     public List<string> TierBaseSizes { get; set; } = ["1rem", "0.95rem", "0.9rem"];
     public List<double> TierBaseRems { get; set; } = [1.0, 0.95, 0.9];
+    public PrimaryNavMenuCollapseIconPosition CollapseIconPosition { get; set; } = PrimaryNavMenuCollapseIconPosition.OutsideBottomRight;
 
     public static CrestPrimaryNavMenuSettings Default => new();
 
@@ -571,6 +582,7 @@ public sealed class CrestPrimaryNavMenuSettings
             TierBackgrounds = source.TierBackgrounds?.ToList() ?? [],
             TierBaseSizes = source.TierBaseSizes?.ToList() ?? [],
             TierBaseRems = source.TierBaseRems?.ToList() ?? [],
+            CollapseIconPosition = Enum.IsDefined(source.CollapseIconPosition) ? source.CollapseIconPosition : Default.CollapseIconPosition,
         };
 
         normalized.ExpansionDurationMilliseconds = Math.Clamp(normalized.ExpansionDurationMilliseconds, 100, 2000);

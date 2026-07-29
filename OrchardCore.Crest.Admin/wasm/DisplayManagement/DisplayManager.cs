@@ -327,6 +327,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
                 : NormalizeDoubles(settings.TierBaseRems, [1.0, 0.95, 0.9], 3)
                     .Select(value => $"{Math.Clamp(value, 0.5, 2.0):0.###}rem")
                     .ToArray(),
+            CollapseIconPosition = (Crest.Admin.DisplayManagement.PrimaryNavMenuCollapseIconPosition)(int)settings.CollapseIconPosition,
         };
 
     private static DisplayMenuSeparator ToDisplayMenuSeparator(NavigationSeparator separator) => new(

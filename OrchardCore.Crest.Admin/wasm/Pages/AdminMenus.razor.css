@@ -21,15 +21,25 @@
     min-width: 0;
 }
 
-.admin-menu-list-item .rz-button,
-.admin-menu-list-item .rz-button-text {
+/* ::deep is required: CrestButton renders its own <button> in a different CSS-isolation
+   scope, so a plain selector here never matched it — the buttons were falling back to
+   Radzen's own rz-light/rz-variant-text default (a near-white text color meant for use
+   on dark surfaces), unreadable against this light menu list background. */
+.admin-menu-list-item ::deep .rz-button,
+.admin-menu-list-item ::deep .rz-button-text {
     color: var(--crest-color-text-1, #1f2937) !important;
 }
 
-.admin-menu-list-item--selected .rz-button,
-.admin-menu-list-item--selected .rz-button-text {
+.admin-menu-list-item--selected ::deep .rz-button,
+.admin-menu-list-item--selected ::deep .rz-button-text {
     color: var(--crest-color-accent-1, #2f6f4e) !important;
     font-weight: 600;
+}
+
+/* The delete button stays red/danger-colored regardless of selection state. */
+.admin-menu-list-item ::deep .rz-button.rz-danger,
+.admin-menu-list-item ::deep .rz-button.rz-danger .rz-button-text {
+    color: var(--rz-danger, #dc2626) !important;
 }
 
 .admin-menu-tree__list {

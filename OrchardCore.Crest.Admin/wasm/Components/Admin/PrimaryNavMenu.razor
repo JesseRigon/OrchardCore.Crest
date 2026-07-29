@@ -91,6 +91,17 @@
             }
 
         }
+        @if (IsPrimaryNavMenuCollapsible && CollapseIconIsInsideNav)
+        {
+            <button type="button"
+                    class="primary-nav-menu__mode-toggle-row"
+                    aria-label="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                    aria-pressed="@IsPinnedExpanded"
+                    title="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                    @onclick="TogglePinnedExpanded">
+                @RenderChromeIcon(ChevronRightIcon, $"primary-nav-menu__mode-toggle-icon{(IsPinnedExpanded ? " primary-nav-menu__mode-toggle-icon--collapse" : null)}", IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")
+            </button>
+        }
     </div>
     </Crest.Components.Layout.CrestPrimaryNavMenu>
     @if (IsQuickAddVisible)
@@ -129,7 +140,7 @@
                             CompactTransitionDuration="@ExpansionDuration" />
         </div>
     }
-    @if (IsPrimaryNavMenuCollapsible)
+    @if (IsPrimaryNavMenuCollapsible && !CollapseIconIsInsideNav)
     {
         <button type="button"
                 class="primary-nav-menu__mode-toggle"
@@ -164,8 +175,12 @@
     [CascadingParameter]
     public DisplayManager? DisplayManager { get; set; }
 
-    [Parameter]
-    public bool IsMobileOpen { get; set; }
+    // When CollapseIconPosition is InsideBottomLeft, the collapse/expand toggle renders
+    // as its own fixed-to-bottom row inside the nav (like a menu item row, left-aligned
+    // like the icon rail above it, with an opaque background so scrolled items don't
+    // show through underneath it) instead of the default floating button outside the
+    // nav's right edge.
+    private bool CollapseIconIsInsideNav => PrimaryNavMenuSettings.CollapseIconPosition == PrimaryNavMenuCollapseIconPosition.InsideBottomLeft;
 
     private readonly HashSet<string> ExpandedItemKeys = [];
     private DisplayMenu? LastMenu;
@@ -224,7 +239,7 @@
         : IsHoverReady
             ? "primary-nav-menu primary-nav-menu--compact primary-nav-menu--expanded primary-nav-menu--hover-ready"
             : "primary-nav-menu primary-nav-menu--compact")
-        + (IsMobileOpen ? " primary-nav-menu--mobile-open" : string.Empty);
+        + (CollapseIconIsInsideNav ? " primary-nav-menu--toggle-inside" : string.Empty);
     private bool IsMenuCollapsed => IsPrimaryNavMenuCollapsible && !IsPinnedExpanded && !IsHoverReady;
 
     private MenuRenderModel? CurrentMenuModel

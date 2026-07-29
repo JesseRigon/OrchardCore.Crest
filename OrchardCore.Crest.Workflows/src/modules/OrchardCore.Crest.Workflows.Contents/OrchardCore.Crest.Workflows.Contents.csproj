@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+        <IsPackable>true</IsPackable>
+        <PackageId>OrchardCore.Crest.Workflows.Contents</PackageId>
+        <PackageTags>OrchardCore;Crest;Workflows;Contents</PackageTags>
+        <Description>Provides Elsa workflow activities for Orchard Core content management. Includes activities for creating, updating, publishing, and deleting content items, as well as content event triggers.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations"/>
+        <PackageReference Include="OrchardCore.Contents"/>
+        <PackageReference Include="OrchardCore.Module.Targets"/>
+        <PackageReference Include="OrchardCore.ContentManagement"/>
+        <PackageReference Include="OrchardCore.Taxonomies.Core" />
+        <PackageReference Include="OrchardCore.Title" />
+    </ItemGroup>
+
+    <ItemGroup Label="Elsa">
+        <PackageReference Include="Elsa.Expressions.JavaScript"/>
+        <PackageReference Include="Elsa.Workflows.Core"/>
+        <PackageReference Include="Elsa.Workflows.Management"/>
+        <PackageReference Include="Elsa.Workflows.Runtime"/>
+        <PackageReference Include="Elsa"/>
+    </ItemGroup>
+
+    <!--    <ItemGroup Label="Elsa">-->
+    <!--        <ProjectReference Include="..\..\..\..\elsa-core\main\src\modules\Elsa.Workflows.Core\Elsa.Workflows.Core.csproj" />-->
+    <!--        <ProjectReference Include="..\..\..\..\elsa-core\main\src\modules\Elsa.Workflows.Management\Elsa.Workflows.Management.csproj" />-->
+    <!--        <ProjectReference Include="..\..\..\..\elsa-core\main\src\modules\Elsa.Workflows.Runtime\Elsa.Workflows.Runtime.csproj" />-->
+    <!--        <ProjectReference Include="..\..\..\..\elsa-core\main\src\modules\Elsa\Elsa.csproj" />-->
+    <!--    </ItemGroup>-->
+
+</Project>

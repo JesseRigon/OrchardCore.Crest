@@ -18,6 +18,7 @@ public sealed class AdminMenusController(
     IAdminMenuService adminMenuService,
     INavigationManager navigationManager,
     CrestAdminMenuLayoutService layoutService,
+    CrestMenuPlacementService menuPlacementService,
     CrestPrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
     CrestAdminSettingsNormalizer adminSettingsNormalizer,
     CrestIconController iconController) : ControllerBase
@@ -32,7 +33,8 @@ public sealed class AdminMenusController(
 
         var list = await adminMenuService.GetAdminMenuListAsync();
         var defaultMenu = await GetDefaultMenuSummaryAsync();
-        return Ok(new AdminMenusState([defaultMenu, .. list.AdminMenu.Select(AdminMenuSummary.From)]));
+        var placements = await menuPlacementService.GetAllAsync();
+        return Ok(new AdminMenusState([defaultMenu, .. list.AdminMenu.Select(menu => WithPlacement(AdminMenuSummary.From(menu), placements))]));
     }
 
     [HttpGet("{menuId}")]
@@ -50,8 +52,13 @@ public sealed class AdminMenusController(
 
         var list = await adminMenuService.GetAdminMenuListAsync();
         var menu = adminMenuService.GetAdminMenuById(list, menuId);
+        if (menu is null)
+        {
+            return NotFound();
+        }
 
-        return menu is null ? NotFound() : Ok(AdminMenuSummary.From(menu));
+        var entry = await menuPlacementService.GetAsync(menuId);
+        return Ok(WithPlacement(AdminMenuSummary.From(menu), entry));
     }
 
     [HttpPost]
@@ -68,9 +75,72 @@ public sealed class AdminMenusController(
             return BadRequest("Menu name is required.");
         }
 
-        var menu = new AdminMenu { Name = name, Enabled = model.Enabled };
+        // OrchardCore's own admin-menu coordinator unconditionally injects every enabled
+        // custom menu into the "admin" sidebar tree — it has no concept of placement. Menus
+        // that aren't Admin-placed stay Enabled=false here forever so that coordinator never
+        // picks them up; CrestMenuPlacementEntry.Enabled is the "real" visible/hidden flag
+        // for those, independent of this one.
+        var placement = model.Placement;
+        var menu = new AdminMenu { Name = name, Enabled = placement == CrestMenuPlacement.Admin && model.Enabled };
         await adminMenuService.SaveAsync(menu);
-        return Ok(AdminMenuSummary.From(menu));
+
+        if (placement != CrestMenuPlacement.Admin)
+        {
+            await menuPlacementService.SetAsync(menu.Id, placement, model.Enabled);
+        }
+
+        return Ok(WithPlacement(AdminMenuSummary.From(menu), placement, model.Enabled));
+    }
+
+    [HttpPost("{menuId}/convert")]
+    public async Task<ActionResult<AdminMenuSummary>> ConvertMenuAsync(string menuId, ConvertMenuModel model)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        {
+            return BadRequest("The Sidebar (Built In) menu cannot be converted.");
+        }
+
+        if (model.Placement == CrestMenuPlacement.User)
+        {
+            return BadRequest("Menus cannot be converted to a User Profile Menu — create a new one instead.");
+        }
+
+        var list = await adminMenuService.GetAdminMenuListAsync();
+        var menu = adminMenuService.GetAdminMenuById(list, menuId);
+        if (menu is null)
+        {
+            return NotFound();
+        }
+
+        var currentEntry = await menuPlacementService.GetAsync(menuId);
+        if (currentEntry.Placement == CrestMenuPlacement.User)
+        {
+            return BadRequest("A User Profile Menu cannot be converted to another type.");
+        }
+
+        if (currentEntry.Placement == model.Placement)
+        {
+            return Ok(WithPlacement(AdminMenuSummary.From(menu), currentEntry));
+        }
+
+        var enabled = currentEntry.Enabled;
+        if (model.Placement == CrestMenuPlacement.Admin)
+        {
+            menu.Enabled = enabled;
+            await adminMenuService.SaveAsync(menu);
+            await menuPlacementService.RemoveAsync(menuId);
+            return Ok(WithPlacement(AdminMenuSummary.From(menu), CrestMenuPlacement.Admin, enabled));
+        }
+
+        menu.Enabled = false;
+        await adminMenuService.SaveAsync(menu);
+        await menuPlacementService.SetAsync(menuId, model.Placement, enabled);
+        return Ok(WithPlacement(AdminMenuSummary.From(menu), model.Placement, enabled));
     }
 
     [HttpPost("{menuId}/rename")]
@@ -129,9 +199,19 @@ public sealed class AdminMenusController(
             return NotFound();
         }
 
-        menu.Enabled = !menu.Enabled;
-        await adminMenuService.SaveAsync(menu);
-        return Ok(AdminMenuSummary.From(menu));
+        var entry = await menuPlacementService.GetAsync(menuId);
+        if (entry.Placement == CrestMenuPlacement.Admin)
+        {
+            menu.Enabled = !menu.Enabled;
+            await adminMenuService.SaveAsync(menu);
+            return Ok(WithPlacement(AdminMenuSummary.From(menu), entry));
+        }
+
+        // AdminMenu.Enabled stays false for non-Admin placements (see CreateMenuAsync) —
+        // the placement entry's own Enabled is the real visible/hidden flag here.
+        var enabled = !entry.Enabled;
+        await menuPlacementService.SetAsync(menuId, entry.Placement, enabled);
+        return Ok(WithPlacement(AdminMenuSummary.From(menu), entry.Placement, enabled));
     }
 
     [HttpPost("{menuId}/duplicate")]
@@ -154,6 +234,7 @@ public sealed class AdminMenusController(
             return NotFound();
         }
 
+        var sourceEntry = await menuPlacementService.GetAsync(menuId);
         var copy = new AdminMenu
         {
             Name = $"{source.Name} Copy",
@@ -166,7 +247,12 @@ public sealed class AdminMenusController(
         }
 
         await adminMenuService.SaveAsync(copy);
-        return Ok(AdminMenuSummary.From(copy));
+        if (sourceEntry.Placement != CrestMenuPlacement.Admin)
+        {
+            await menuPlacementService.SetAsync(copy.Id, sourceEntry.Placement, sourceEntry.Enabled);
+        }
+
+        return Ok(WithPlacement(AdminMenuSummary.From(copy), sourceEntry));
     }
 
     [HttpDelete("{menuId}")]
@@ -190,6 +276,7 @@ public sealed class AdminMenusController(
         }
 
         await adminMenuService.DeleteAsync(menu);
+        await menuPlacementService.RemoveAsync(menuId);
         return NoContent();
     }
 
@@ -579,6 +666,15 @@ public sealed class AdminMenusController(
         return adminMenuService.GetAdminMenuById(list, menuId);
     }
 
+    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, CrestMenuPlacementEntry entry) =>
+        WithPlacement(summary, entry.Placement, entry.Enabled);
+
+    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, IReadOnlyDictionary<string, CrestMenuPlacementEntry> placements) =>
+        placements.TryGetValue(summary.Id, out var entry) ? WithPlacement(summary, entry) : summary;
+
+    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, CrestMenuPlacement placement, bool enabled) =>
+        placement == CrestMenuPlacement.Admin ? summary : summary with { Placement = placement, Enabled = enabled };
+
     private static AdminNode CloneNode(AdminNode node, string menuName)
     {
         var clone = node switch
@@ -776,7 +872,8 @@ public sealed record AdminMenuSummary(
     AdminMenuSeparatorSummary[] Separators,
     CrestPrimaryNavMenuSettings PrimaryNavMenuSettings,
     IconPack? Icons,
-    AdminMenuNodeSummary[] Nodes)
+    AdminMenuNodeSummary[] Nodes,
+    CrestMenuPlacement Placement = CrestMenuPlacement.Admin)
 {
     public static AdminMenuSummary From(AdminMenu menu) => new(
         menu.Id,
@@ -928,7 +1025,9 @@ public sealed record AdminMenuNodeSummary(
     }
 }
 
-public sealed record AdminMenuEditModel(string? Name, bool Enabled);
+public sealed record AdminMenuEditModel(string? Name, bool Enabled, CrestMenuPlacement Placement = CrestMenuPlacement.Admin);
+
+public sealed record ConvertMenuModel(CrestMenuPlacement Placement);
 
 public sealed record AdminMenuNodeEditModel(
     string Type,

@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace Crest.Admin.Api;
@@ -192,6 +193,7 @@ public interface IAdminMenusApi
     Task<AdminMenuSummary?> GetAsync(string menuId);
     Task<AdminMenuSummary?> CreateMenuAsync(AdminMenuEditModel model);
     Task<AdminMenuSummary?> RenameMenuAsync(string menuId, AdminMenuEditModel model);
+    Task<AdminMenuSummary?> ConvertMenuAsync(string menuId, ConvertMenuModel model);
     Task<AdminMenuSummary?> ToggleMenuAsync(string menuId);
     Task<AdminMenuSummary?> DuplicateMenuAsync(string menuId);
     Task<bool> DeleteMenuAsync(string menuId);
@@ -936,6 +938,15 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
     }
 
+    public async Task<AdminMenuSummary?> ConvertMenuAsync(string menuId, ConvertMenuModel model)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/convert")
+        {
+            Content = JsonContent.Create(model),
+        }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
     public async Task<AdminMenuSummary?> ToggleMenuAsync(string menuId)
     {
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/toggle")));
@@ -1432,7 +1443,33 @@ public sealed record AdminMenusState(AdminMenuSummary[] Menus)
     public static AdminMenusState Empty { get; } = new([]);
 }
 
-public sealed record AdminMenuSummary(string Id, string Name, bool Enabled, bool IsDefault, AdminMenuSeparatorSummary[] Separators, AdminPrimaryNavMenuSettings PrimaryNavMenuSettings, Crest.Icons.IconPack? Icons, AdminMenuNodeSummary[] Nodes);
+// Vanilla OrchardCore's own AdminMenu has no concept of placement — every custom menu it
+// stores gets injected into the "admin" sidebar tree unconditionally. Placement is a
+// Crest-owned classification (tracked server-side in CrestMenuPlacementDocument) layered on
+// top: Admin behaves exactly as it always has; Local and User are excluded from the
+// sidebar (AdminMenu.Enabled forced false server-side) and tracked independently. Admin and
+// Local are convertible into each other; User is stable once created. More placements may
+// exist later, filtered by the current screen/responsive size.
+[JsonConverter(typeof(JsonStringEnumConverter<CrestMenuPlacement>))]
+public enum CrestMenuPlacement
+{
+    Admin,
+    Local,
+    User,
+}
+
+public sealed record ConvertMenuModel(CrestMenuPlacement Placement);
+
+public sealed record AdminMenuSummary(string Id, string Name, bool Enabled, bool IsDefault, AdminMenuSeparatorSummary[] Separators, AdminPrimaryNavMenuSettings PrimaryNavMenuSettings, Crest.Icons.IconPack? Icons, AdminMenuNodeSummary[] Nodes, CrestMenuPlacement Placement = CrestMenuPlacement.Admin);
+
+// Available options are expected to grow (more anchor corners, responsive-size-specific
+// choices) — keep this an open enum rather than a bool.
+[JsonConverter(typeof(JsonStringEnumConverter<PrimaryNavMenuCollapseIconPosition>))]
+public enum PrimaryNavMenuCollapseIconPosition
+{
+    OutsideBottomRight,
+    InsideBottomLeft,
+}
 
 public sealed class AdminPrimaryNavMenuSettings
 {
@@ -1443,11 +1480,12 @@ public sealed class AdminPrimaryNavMenuSettings
     public List<string> TierBackgrounds { get; set; } = ["transparent", "transparent", "color-mix(in srgb, var(--crest-color-surface-1) 88%, var(--crest-color-text-1) 12%)", "transparent"];
     public List<string> TierBaseSizes { get; set; } = ["1rem", "0.95rem", "0.9rem"];
     public List<double> TierBaseRems { get; set; } = [1.0, 0.95, 0.9];
+    public PrimaryNavMenuCollapseIconPosition CollapseIconPosition { get; set; } = PrimaryNavMenuCollapseIconPosition.OutsideBottomRight;
 }
 
 public sealed record AdminMenuSeparatorSummary(string Id, string? ParentId, int Depth, int Order);
 
-public sealed record AdminMenuEditModel(string? Name, bool Enabled);
+public sealed record AdminMenuEditModel(string? Name, bool Enabled, CrestMenuPlacement Placement = CrestMenuPlacement.Admin);
 
 public sealed record AdminMenuNodeSummary(
     string Id,

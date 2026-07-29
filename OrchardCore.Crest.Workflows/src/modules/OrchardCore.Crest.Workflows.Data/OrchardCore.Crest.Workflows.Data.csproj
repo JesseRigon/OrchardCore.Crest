@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <PackageId>OrchardCore.Crest.Workflows.Data</PackageId>
+        <PackageTags>OrchardCore;Crest;Workflows;Data</PackageTags>
+        <Description>Provides Elsa workflow activities for data processing operations. Includes CSV file handling and data transformation activities.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations"/>
+        <PackageReference Include="OrchardCore.Module.Targets"/>
+    </ItemGroup>
+
+    <ItemGroup Label="Elsa">
+        <PackageReference Include="Elsa.Data.Csv"/>
+        <PackageReference Include="Elsa"/>
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>true</IsPackable>
+    <PackageId>OrchardCore.Crest.Workflows.Designer.BlazorServer</PackageId>
+    <PackageTags>OrchardCore;Crest;Workflows;Designer;BlazorServer</PackageTags>
+    <Description>Blazor Server implementation of the Elsa Studio workflow designer for Orchard Core. Provides server-side rendering of the visual workflow designer.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Elsa.Studio.Core.BlazorServer" />
+    <PackageReference Include="Elsa.Studio.Login.BlazorServer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrchardCore.Crest.Workflows.Designer\OrchardCore.Crest.Workflows.Designer.csproj" />
+  </ItemGroup>
+
+</Project>

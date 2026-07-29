@@ -1,24 +1,33 @@
+/* A normal flex item inside the Sidebar wrapper — reserves the sidebar's width and,
+   since Sidebar's row is itself height-bounded by the app shell's flex layout (not a
+   hardcoded titlebar height), naturally gets the correct remaining height too. No
+   fixed/sticky positioning against the viewport at all: .primary-nav-menu__content
+   fills this box via position:absolute + inset:0 and scrolls internally. That's what
+   keeps it directly under the titlebar regardless of the titlebar's actual height, and
+   independent of page scroll.
+   Overflow is intentionally NOT hidden here — Sidebar (the parent) already leaves this
+   visible, and this element must too, or it would clip the same things Sidebar exists
+   to avoid clipping (the collapse/expand toggle, the hover-expanded compact overlay). */
 .primary-nav-menu {
-    position: sticky;
-    top: 4rem;
+    position: relative;
     z-index: 15;
-    align-self: flex-start;
     width: 18rem;
     min-width: 18rem;
-    min-height: calc(100vh - 4rem);
-    border-right: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb);
-    background: var(--crest-color-surface-3, #fff);
 }
 
 .primary-nav-menu__content {
-    position: relative;
+    position: absolute;
+    inset: 0;
+    z-index: 15;
     display: flex !important;
     flex-direction: column;
     gap: 0.75rem;
     padding: 0.5rem 0 0;
-    height: calc(100vh - 4rem);
-    min-height: calc(100vh - 4rem);
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+    border-right: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb);
+    background: var(--crest-color-surface-3, #fff);
 }
 
 .primary-nav-menu__filter-row {
@@ -176,12 +185,20 @@
     overflow: auto;
 }
 
-.primary-nav-menu__menu {
+/* ::deep is required here: CrestPanelMenu (which receives Class="primary-nav-menu__menu")
+   is a child component in a different .razor.css scope, so a plain selector never matches
+   its rendered root — without ::deep this rule silently never applied, and the item list
+   never got its own scrollbar (it just got clipped by .primary-nav-menu__content's
+   overflow:hidden instead of scrolling). */
+::deep .primary-nav-menu__menu {
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
     margin: 0;
-    padding: 0;
+    /* Bottom padding lives on the scrollable content itself, not the fixed-height
+       container — it only becomes visible once scrolled all the way down, rather than
+       just permanently shrinking the visible list area. */
+    padding: 0 0 2rem;
     overflow-x: hidden;
     overflow-y: auto;
     overflow-anchor: none;
@@ -190,8 +207,46 @@
     -ms-overflow-style: none;
 }
 
-.primary-nav-menu__menu::-webkit-scrollbar {
+::deep .primary-nav-menu__menu::-webkit-scrollbar {
     display: none;
+}
+
+/* Leaves enough room for the fixed toggle row to overlay without permanently hiding the
+   last real item's text behind it. */
+.primary-nav-menu--toggle-inside ::deep .primary-nav-menu__menu {
+    padding-bottom: var(--crest-panel-menu-item-height, 2.5rem);
+}
+
+/* The in-nav variant of the collapse/expand toggle: a full-width row, styled like a menu
+   item row, pinned to the bottom of .primary-nav-menu__content (its nearest positioned
+   ancestor) instead of scrolling with the item list above it. Its own background is
+   opaque on purpose — .primary-nav-menu__menu's items scroll underneath this row, and
+   without an opaque background they'd show through. */
+.primary-nav-menu__mode-toggle-row {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 16;
+    display: flex;
+    align-items: center;
+    /* Left-aligned to match the icon rail of the menu item rows above it, not centered. */
+    justify-content: flex-start;
+    padding-left: calc((var(--crest-panel-menu-icon-rail-width, 4rem) - 1.25rem) / 2);
+    height: var(--crest-panel-menu-item-height, 2.5rem);
+    min-height: var(--crest-panel-menu-item-height, 2.5rem);
+    border: 0;
+    border-top: var(--crest-border-size-xs, 1px) solid var(--crest-color-border-1, #e5e7eb);
+    color: var(--crest-color-text-muted, #64748b);
+    background: var(--crest-color-surface-3, #fff);
+    cursor: pointer;
+}
+
+.primary-nav-menu__mode-toggle-row:hover,
+.primary-nav-menu__mode-toggle-row:focus-visible {
+    color: var(--crest-color-accent-1, #2f6f4e);
+    background: var(--crest-color-hover-surface-1, color-mix(in srgb, var(--crest-color-accent-1, #2f6f4e) 8%, transparent));
+    outline: none;
 }
 
 .primary-nav-menu__mode-toggle {
@@ -250,9 +305,7 @@
     }
 
     .primary-nav-menu--compact .primary-nav-menu__content {
-        position: absolute;
-        top: 0;
-        left: 0;
+        /* position/top/left inherited from the base rule (fixed, viewport-anchored) */
         width: 4rem;
         padding: 0;
     }
@@ -454,24 +507,12 @@
 
 
 @media (max-width: 1024px) {
+    /* Sidebar itself now owns the mobile slide-in/out drawer (position, transform,
+       transition, box-shadow) — PrimaryNavMenu just needs to fill whatever box Sidebar
+       gives it, full width instead of the desktop-fixed 18rem. */
     .primary-nav-menu {
-        position: fixed;
-        top: 3.5rem;
-        bottom: 0;
-        left: 0;
-        z-index: 19;
-        min-height: 0;
-        transform: translateX(-100%);
-        transition: transform 160ms ease;
-        box-shadow: var(--crest-shadow-md, 0 1rem 2rem rgba(15, 23, 42, 0.18));
+        width: 100%;
+        min-width: 0;
+        height: 100%;
     }
-
-    .primary-nav-menu--mobile-open {
-        transform: translateX(0);
-    }
-
-    .primary-nav-menu__content {
-        min-height: calc(100vh - 3.5rem);
-    }
-
 }

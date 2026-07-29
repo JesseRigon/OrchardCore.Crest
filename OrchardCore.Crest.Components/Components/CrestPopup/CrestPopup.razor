@@ -163,7 +163,10 @@
     {
         IsAnchorPositioned ? $"left: {AnchorX + OffsetX}px;" : null,
         IsAnchorPositioned ? $"top: {AnchorY + OffsetY}px;" : null,
-        !IsAnchorPositioned && !Lazy ? "display: none;" : null,
+        // Anchor-positioned mode has no other mechanism to hide itself while closed (unlike
+        // imperative-mode consumers, which pass their own initial "display:none;" via Style) —
+        // without this, the empty wrapper div renders as a visible box on every page.
+        !IsOpen ? "display: none;" : null,
         string.IsNullOrWhiteSpace(ZIndex) ? null : $"--crest-popup-z-index: {ZIndex};",
         Style,
     }.Where(value => !string.IsNullOrWhiteSpace(value)));
