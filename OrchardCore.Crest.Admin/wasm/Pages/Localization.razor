@@ -108,6 +108,24 @@
             </CrestStack>
         </CrestCard>
 
+        <CrestCard>
+            <CrestStack Gap="0.75rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="Admin default culture" />
+                <CrestText TextStyle="TextStyle.Body2" Text="Optional. Only applies to the admin area — a signed-in user's own language preference or an explicit session choice still takes priority here. Leave unset to use the default culture above everywhere, including the admin area." />
+                <CrestDropDown TValue="string"
+                                Data="AdminDefaultCultureOptions"
+                                Value="@Model.AdminDefaultCulture"
+                                ValueChanged="SelectAdminDefaultCultureAsync"
+                                TextProperty="@nameof(CrestCulture.Label)"
+                                ValueProperty="@nameof(CrestCulture.Value)"
+                                Placeholder="No admin-specific override"
+                                AllowClear="true"
+                                AllowFiltering="true"
+                                FilterPlaceholder="Filter supported cultures"
+                                class="localization-page__culture-dropdown" />
+            </CrestStack>
+        </CrestCard>
+
         <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
             <CrestButton Text="Save" Icon="save" Disabled="@(IsSaving || SupportedCultureOptions.Length == 0)" Click="SaveAsync" />
         </CrestStack>
@@ -131,6 +149,11 @@
         .Select(ToCulture)
         .OrderBy(culture => culture.Label, StringComparer.OrdinalIgnoreCase)
         .ToArray() ?? [];
+
+    // Same set as SupportedCultureOptions - the admin default, when set, must be one of the
+    // tenant's own supported cultures (enforced again server-side on save). "No override"
+    // is represented by a null Model.AdminDefaultCulture, via the dropdown's AllowClear.
+    private CrestCulture[] AdminDefaultCultureOptions => SupportedCultureOptions;
 
     private CrestCulture[] AvailableCultureOptions => Model?.AvailableCultures
         .Where(culture => !Model.SupportedCultures.Contains(culture.Value, StringComparer.OrdinalIgnoreCase))
@@ -164,6 +187,15 @@
         if (Model is not null && !string.IsNullOrWhiteSpace(value))
         {
             Model.DefaultCulture = value;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task SelectAdminDefaultCultureAsync(string? value)
+    {
+        if (Model is not null)
+        {
+            Model.AdminDefaultCulture = string.IsNullOrWhiteSpace(value) ? null : value;
         }
         return Task.CompletedTask;
     }
@@ -242,6 +274,15 @@
         if (!Model.SupportedCultures.Contains(Model.DefaultCulture, StringComparer.OrdinalIgnoreCase))
         {
             Model.DefaultCulture = Model.SupportedCultures[0];
+        }
+
+        // Unlike DefaultCulture, AdminDefaultCulture is optional - if the culture it pointed
+        // at was just removed from the supported list, clear it back to "no override" rather
+        // than reassigning it to some other culture the admin didn't choose.
+        if (!string.IsNullOrWhiteSpace(Model.AdminDefaultCulture) &&
+            !Model.SupportedCultures.Contains(Model.AdminDefaultCulture, StringComparer.OrdinalIgnoreCase))
+        {
+            Model.AdminDefaultCulture = null;
         }
     }
 

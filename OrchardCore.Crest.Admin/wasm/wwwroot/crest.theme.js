@@ -138,14 +138,19 @@ window.crestTheme = (() => {
 
   const sessionCultureKey = 'crest-admin-session-culture';
 
-  // A session-only cookie (no Max-Age) dies when the browser closes, which loses the
-  // user's temporary culture switch across a full restart even though they never asked
-  // to save it as their stored default (see plans/user-localization.md's "Culture
-  // picker: save-as-default + session persistence" section). This mirrors the value
-  // into localStorage, same pattern as crest-theme-mode/crest-admin-local-users, purely
-  // so a fresh tab can rehydrate the choice before the server round-trip resolves the
-  // (now year-long) cookie - it is still just the session override, never promoted to
-  // the user's stored default without the explicit "Save as default" action.
+  // Culture resolution happens entirely client-side (DisplayManager.RefreshManifestAsync -
+  // see plans/user-localization.md's "Resolution architecture" section). setAdminCulture is
+  // called with the fully-resolved culture on every resolution (not only when the user
+  // explicitly picks one), and writes a tenant-wide cookie (CrestCultureCookie server-side,
+  // NOT AdminCookieCultureProvider's admin-path-scoped one) so both the WASM app's own API
+  // calls and any legacy same-origin iframed Orchard page see the same answer. Mirrored
+  // into localStorage, same pattern as crest-theme-mode/crest-admin-local-users, so a fresh
+  // tab can rehydrate the resolved culture before the first server round-trip completes.
+  // NOTE: because the cookie is per-origin (not per-tab), it only reflects whichever tab
+  // wrote it most recently - see getSessionCultureOverride below for the actual per-tab
+  // source of truth, and plans/user-localization.md's "Per-tab and per-user override
+  // scoping" section for why re-resolving immediately before every culture-sensitive
+  // request (not only on manifest refresh) is still an open follow-up (phase 15).
   function setAdminCulture(cookieName, cookiePath, culture) {
     if (!cookieName || !culture) return;
     const path = cookiePath || '/';
@@ -164,5 +169,56 @@ window.crestTheme = (() => {
     }
   }
 
-  return { apply, toggleMode, isDarkMode, rememberSignedInUser, getKnownUsers, setAdminCulture, getSessionCulture };
+  // The session OVERRIDE is rung 1 of the resolution chain: only set when the user
+  // explicitly picks a culture from the titlebar dropdown, and must never be conflated
+  // with a value that only ended up in the cookie because it won some other rung (stored
+  // default, browser locale, tenant default).
+  //
+  // Storage: sessionStorage, not localStorage - sessionStorage is genuinely per-tab (a
+  // fresh, empty, non-inherited store per tab/window), which localStorage is not (shared
+  // across every tab of the same origin). This is required so a user can have the admin
+  // portal open in Spanish in one tab and the front-end site in English in another, using
+  // the same override mechanism, simultaneously.
+  //
+  // Keying: per user name, not a flat key - the portal supports switching between multiple
+  // signed-in identities in the same browser (known-users list / "Sign in as another
+  // user"). Without per-user keying, switching from user A to user B in the same tab would
+  // incorrectly hand B user A's override. Each identity's override is independent; there is
+  // deliberately no "current user" tracked here - the caller (DisplayManager, which knows
+  // who is actually authenticated for this request) always passes the user name in.
+  function overrideKey(userName) {
+    return `crest-culture-override:${userName || ''}`;
+  }
+
+  function setSessionCultureOverride(userName, culture) {
+    if (!culture) return;
+    try {
+      sessionStorage.setItem(overrideKey(userName), culture);
+    } catch {}
+  }
+
+  function getSessionCultureOverride(userName) {
+    try {
+      return sessionStorage.getItem(overrideKey(userName));
+    } catch {
+      return null;
+    }
+  }
+
+  function clearSessionCultureOverride(userName) {
+    try {
+      sessionStorage.removeItem(overrideKey(userName));
+    } catch {}
+  }
+
+  function getBrowserLocale() {
+    return navigator.language || null;
+  }
+
+  return {
+    apply, toggleMode, isDarkMode, rememberSignedInUser, getKnownUsers,
+    setAdminCulture, getSessionCulture,
+    setSessionCultureOverride, getSessionCultureOverride, clearSessionCultureOverride,
+    getBrowserLocale,
+  };
 })();

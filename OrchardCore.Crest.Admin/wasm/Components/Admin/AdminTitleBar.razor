@@ -138,7 +138,7 @@
     private string ThemeToggleIcon { get; set; } = "iconify.mdi/current/default/weather-night";
     private string? LastRememberedUserContext { get; set; }
     private CultureOption[] CultureOptions => DisplayManager?.Manifest?.CultureSelector.Cultures ?? [];
-    private string? SelectedCulture => DisplayManager?.Manifest?.CultureSelector.CurrentCulture;
+    private string? SelectedCulture => DisplayManager?.ResolvedCulture;
     private bool IsSavingDefaultCulture { get; set; }
     private CrestTitleBarSettingsDto TitleBarSettings => DisplayManager?.Manifest?.TitleBarSettings ?? CrestTitleBarSettingsDto.Default;
     private CrestAvatarShape TenantAvatarShape => Enum.TryParse<CrestAvatarShape>(TitleBarSettings.TenantAvatarShape, true, out var shape)
@@ -325,11 +325,17 @@
     {
         var selector = DisplayManager?.Manifest?.CultureSelector;
         if (selector is null || string.IsNullOrWhiteSpace(culture) ||
-            string.Equals(culture, selector.CurrentCulture, StringComparison.OrdinalIgnoreCase))
+            string.Equals(culture, SelectedCulture, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
+        // Rung 1 of the resolution chain (plans/user-localization.md's "Resolution
+        // architecture"): record this as the explicit session override so it wins on every
+        // future resolution this browser session, then write the resolved cookie immediately
+        // so the reload below (and any legacy same-origin iframe page) picks it up right away
+        // rather than waiting for the next manifest refresh to re-derive it.
+        await Js.InvokeVoidAsync("crestTheme.setSessionCultureOverride", DisplayManager?.User.UserName, culture);
         await Js.InvokeVoidAsync("crestTheme.setAdminCulture", selector.CookieName, selector.CookiePath, culture);
         Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }

@@ -24,6 +24,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     public SiteSettings? Site { get; private set; }
     public DisplayMenu? AdminMenu { get; private set; }
     public DisplayMenu? ProfileMenu { get; private set; }
+    public string? ResolvedCulture { get; private set; }
     public ContentType[] ContentTypes { get; private set; } = [];
     public Role[] Roles { get; private set; } = [];
     public ContentItem? CurrentContentItem { get; private set; }
@@ -223,29 +224,81 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
             ProfileMenu = ToDisplayMenu(Manifest?.ProfileMenu ?? await api.Crest.Rest.Navigation.GetProfileMenuAsync());
 
             var cultureSelector = Manifest?.CultureSelector;
-            var currentCulture = cultureSelector?.CurrentCulture;
-            if (!string.IsNullOrWhiteSpace(currentCulture))
+            if (cultureSelector is not null)
             {
-                await apiLocalizer.LoadAsync(System.Globalization.CultureInfo.GetCultureInfo(currentCulture));
+                var resolved = await ResolveCultureAsync(cultureSelector);
+                ResolvedCulture = resolved;
+                await apiLocalizer.LoadAsync(System.Globalization.CultureInfo.GetCultureInfo(resolved));
 
-                // The session cookie always wins once present (CrestRequestCultureProviderOrdering
-                // forces AdminCookieCultureProvider first server-side), but it has to actually
-                // exist for that to matter. When it's absent, CurrentCulture already reflects the
-                // server's own fallback (stored user default, else tenant default - see
-                // AppController.CultureSelector.FromAsync) - seed the cookie from that value so
-                // every future request is unambiguous, without waiting for the user to explicitly
-                // pick a culture in the dropdown. Not a "save as default" action - crestTheme's
-                // usual session-only semantics still apply from here on.
-                if (cultureSelector is { HasSessionCookie: false })
-                {
-                    await js.InvokeVoidAsync("crestTheme.setAdminCulture", cultureSelector.CookieName, cultureSelector.CookiePath, currentCulture);
-                }
+                // Write the fully-resolved value on every refresh, not just when a cookie is
+                // missing - the client is the sole source of truth for this decision (see
+                // plans/user-localization.md's "Resolution architecture" section), so the
+                // server-side cookie must always reflect exactly what was just resolved here,
+                // never something left over from a previous, possibly-stale resolution.
+                await js.InvokeVoidAsync("crestTheme.setAdminCulture", cultureSelector.CookieName, cultureSelector.CookiePath, resolved);
             }
         }
         finally
         {
             _manifestLock.Release();
         }
+    }
+
+    // Client-side priority chain (plans/user-localization.md's "Resolution architecture"):
+    // 1. session override (explicit titlebar pick, this browser only, never persisted)
+    // 2. user's stored default (UserLocalizationSettings.Culture, via the manifest)
+    // 3. admin default culture, only consulted when the current route is under the admin
+    //    path prefix (CrestLocalizationSettings.AdminDefaultCulture - a Crest-owned tenant
+    //    setting, distinct from the general tenant default)
+    // 4. browser locale (navigator.language), only if the tenant actually supports it
+    // 5. tenant default culture
+    // Every candidate is validated against the tenant's supported-culture list before
+    // being accepted, so a stale/foreign value from any source can never "win" and get
+    // written back into the cookie.
+    private async Task<string> ResolveCultureAsync(CultureSelector cultureSelector)
+    {
+        var supported = new HashSet<string>(cultureSelector.Cultures.Select(culture => culture.Value), StringComparer.OrdinalIgnoreCase);
+
+        // Keyed by user name (sessionStorage, per-tab) - see crest.theme.js's
+        // setSessionCultureOverride/getSessionCultureOverride and plans/user-localization.md's
+        // "Per-tab and per-user override scoping" section. Switching signed-in identity in
+        // this tab looks up that identity's own override, never carries the previous user's.
+        var sessionOverride = await js.InvokeAsync<string?>("crestTheme.getSessionCultureOverride", User.UserName);
+        if (!string.IsNullOrWhiteSpace(sessionOverride) && supported.Contains(sessionOverride))
+        {
+            return sessionOverride;
+        }
+
+        if (!string.IsNullOrWhiteSpace(cultureSelector.UserDefaultCulture) && supported.Contains(cultureSelector.UserDefaultCulture))
+        {
+            return cultureSelector.UserDefaultCulture;
+        }
+
+        if (!string.IsNullOrWhiteSpace(cultureSelector.AdminDefaultCulture) && supported.Contains(cultureSelector.AdminDefaultCulture) && IsUnderAdminPath())
+        {
+            return cultureSelector.AdminDefaultCulture;
+        }
+
+        var browserLocale = await js.InvokeAsync<string?>("crestTheme.getBrowserLocale");
+        if (!string.IsNullOrWhiteSpace(browserLocale) && supported.Contains(browserLocale))
+        {
+            return browserLocale;
+        }
+
+        return cultureSelector.TenantDefaultCulture;
+    }
+
+    private bool IsUnderAdminPath()
+    {
+        var basePath = Manifest?.Admin.BasePath;
+        if (string.IsNullOrWhiteSpace(basePath))
+        {
+            return false;
+        }
+
+        var path = new Uri(navigation.Uri).AbsolutePath;
+        return path.Equals(basePath, StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith(basePath + "/", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task StartPermissionRefreshAsync()
@@ -343,6 +396,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         Site = null;
         AdminMenu = null;
         ProfileMenu = null;
+        ResolvedCulture = null;
         ContentTypes = [];
         Roles = [];
         CurrentContentItem = null;

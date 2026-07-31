@@ -1094,8 +1094,9 @@ public sealed record Tenant(
 public sealed record AdminDescriptor(string BasePath);
 
 public sealed record CultureSelector(
-    string CurrentCulture,
-    bool HasSessionCookie,
+    string? UserDefaultCulture,
+    string TenantDefaultCulture,
+    string? AdminDefaultCulture,
     CultureOption[] Cultures,
     string CookieName,
     string CookiePath);
@@ -1305,6 +1306,7 @@ public sealed class CrestLocalization
     public string DefaultCulture { get; set; } = "";
     public string[] SupportedCultures { get; set; } = [];
     public bool FallBackToParentCulture { get; set; }
+    public string? AdminDefaultCulture { get; set; }
     public CrestCulture[] AvailableCultures { get; set; } = [];
 }
 

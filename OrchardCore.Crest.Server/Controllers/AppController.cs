@@ -2,6 +2,7 @@ using Crest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrchardCore.Admin;
@@ -13,10 +14,12 @@ using OrchardCore.Entities;
 using OrchardCore.Environment.Shell.Scope;
 using OrchardCore.Navigation;
 using OrchardCore.Settings;
+using OrchardCore.Users;
+using OrchardCore.Users.Localization.Models;
+using OrchardCore.Users.Models;
 using OrchardCore.Users.Services;
 using OrchardCore.Localization;
 using OrchardCore.Localization.Services;
-using Microsoft.AspNetCore.Localization;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -42,6 +45,7 @@ public sealed class AppController(
     CrestIconController iconController,
     CrestRouteAuthorizationService routeAuthorization,
     CrestProfileMenuService profileMenuService,
+    UserManager<IUser> userManager,
     IServiceProvider serviceProvider) : ControllerBase
 {
     [HttpGet("manifest")]
@@ -56,7 +60,9 @@ public sealed class AppController(
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
         var tenants = await GetAvailableTenantsAsync();
         var adminItems = await navigationManager.BuildMenuAsync("admin", ControllerContext);
-        var cultureSelector = await CultureSelector.FromAsync(HttpContext, shellSettings, serviceProvider.GetService<ILocalizationService>());
+        var userDefaultCulture = await GetUserDefaultCultureAsync();
+        var adminDefaultCulture = site.As<CrestLocalizationSettings>().AdminDefaultCulture;
+        var cultureSelector = await CultureSelector.FromAsync(HttpContext, shellSettings, serviceProvider.GetService<ILocalizationService>(), userDefaultCulture, adminDefaultCulture);
         var profileMenu = await profileMenuService.BuildAsync(User, HttpContext.RequestAborted);
         var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
@@ -87,6 +93,17 @@ public sealed class AppController(
             await routeAuthorization.GetAuthorizedRoutesAsync(User),
             cultureSelector,
             profileMenu));
+    }
+
+    private async Task<string?> GetUserDefaultCultureAsync()
+    {
+        if (await userManager.GetUserAsync(User) is not User user)
+        {
+            return null;
+        }
+
+        user.TryGet<UserLocalizationSettings>(out var settings);
+        return settings?.Culture;
     }
 
     private async Task<Tenant[]> GetAvailableTenantsAsync()
@@ -157,42 +174,48 @@ public sealed record AppManifest(
     NavigationMenu ProfileMenu);
 
 public sealed record CultureSelector(
-    string CurrentCulture,
-    bool HasSessionCookie,
+    string? UserDefaultCulture,
+    string TenantDefaultCulture,
+    // Rung 3 - see CrestLocalizationSettings.AdminDefaultCulture (LocalizationController.cs).
+    // Null means no admin-specific override is configured for this tenant.
+    string? AdminDefaultCulture,
     CultureOption[] Cultures,
     string CookieName,
     string CookiePath)
 {
-    // CrestRequestCultureProviderOrdering forces AdminCookieCultureProvider to always be
-    // checked first, so whenever the session cookie is present, IRequestCultureFeature
-    // already reflects it and CurrentCulture below is exactly right. HasSessionCookie
-    // tells the client (DisplayManager.RefreshManifestAsync) whether that's actually the
-    // case or whether IRequestCultureFeature instead fell through to
-    // UserLocalizationRequestCultureProvider/the tenant default - in the latter case the
-    // client seeds the cookie from CurrentCulture so future requests (and any other
-    // provider ordering surprises) become moot. See plans/user-localization.md.
+    // The server does NOT resolve culture - it has no way to. The session override (rung 1
+    // of the priority chain) lives only in the browser's sessionStorage, which the server
+    // can never see; only the client can weigh it against everything else. This type is
+    // deliberately just raw inputs - the tenant's supported cultures + default, and the
+    // signed-in user's stored default (if any) - for DisplayManager.ResolveCultureAsync to
+    // resolve from. See plans/user-localization.md's "Resolution architecture" section.
+    // (Earlier revisions of this type also carried a server-computed CurrentCulture field -
+    // removed, since its mere presence invited reading it as an authoritative answer even
+    // though nothing ever consumed it that way.)
     public static async Task<CultureSelector> FromAsync(
         HttpContext httpContext,
         ShellSettings shellSettings,
-        ILocalizationService? localizationService)
+        ILocalizationService? localizationService,
+        string? userDefaultCulture,
+        string? adminDefaultCulture)
     {
-        var current = httpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.UICulture
-            ?? CultureInfo.CurrentUICulture;
         var supportedCultures = localizationService is null
-            ? [current.Name]
+            ? []
             : await localizationService.GetSupportedCulturesAsync();
-        var cookieName = AdminCookieCultureProvider.MakeCookieName(shellSettings);
-        var hasSessionCookie = httpContext.Request.Cookies.ContainsKey(cookieName);
+        var tenantDefaultCulture = localizationService is null
+            ? CultureInfo.CurrentUICulture.Name
+            : await localizationService.GetDefaultCultureAsync();
 
         return new CultureSelector(
-            current.Name,
-            hasSessionCookie,
+            userDefaultCulture,
+            tenantDefaultCulture,
+            adminDefaultCulture,
             supportedCultures
                 .Select(CultureInfo.GetCultureInfo)
                 .Select(culture => new CultureOption(culture.Name, culture.NativeName, GetIcon(culture)))
                 .ToArray(),
-            cookieName,
-            AdminCookieCultureProvider.MakeCookiePath(httpContext));
+            CrestCultureCookie.MakeCookieName(shellSettings),
+            CrestCultureCookie.MakeCookiePath(httpContext));
     }
 
     private static string GetIcon(CultureInfo culture)

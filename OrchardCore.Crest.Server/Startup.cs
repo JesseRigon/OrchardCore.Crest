@@ -59,6 +59,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<CrestIconController>();
         services.AddRecipeExecutionStep<Recipes.CrestAdminMenuLayoutStep>();
         services.Configure<BlazorAdminThemeOptions>(options => { });
+        services.AddCrestCultureCookieProvider();
     }
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)

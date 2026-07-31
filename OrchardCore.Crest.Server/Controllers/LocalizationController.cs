@@ -170,6 +170,20 @@ public sealed class CrestLocalizationController(
             defaultCulture = cultures[0];
         }
 
+        // AdminDefaultCulture (rung 3 of the client resolution chain - see
+        // plans/user-localization.md's "Resolution architecture") is optional and, when
+        // set, must still be one of the tenant's supported cultures - it is not a way to
+        // force an unsupported culture onto the admin area.
+        string? adminDefaultCulture = null;
+        if (!string.IsNullOrWhiteSpace(request.AdminDefaultCulture))
+        {
+            adminDefaultCulture = NormalizeCultureName(request.AdminDefaultCulture);
+            if (!cultures.Contains(adminDefaultCulture, StringComparer.OrdinalIgnoreCase))
+            {
+                return BadRequest("Admin default culture must be one of the supported cultures.");
+            }
+        }
+
         var site = await sites.LoadSiteSettingsAsync();
         site.Alter<LocalizationSettings>(settings =>
         {
@@ -177,29 +191,34 @@ public sealed class CrestLocalizationController(
             settings.DefaultCulture = defaultCulture;
             settings.FallBackToParentCulture = request.FallBackToParentCulture;
         });
+        site.Alter<CrestLocalizationSettings>(settings => settings.AdminDefaultCulture = adminDefaultCulture);
         await sites.UpdateSiteSettingsAsync(site);
 
         // This is Orchard's required lifecycle step: RequestLocalizationOptions are
         // rebuilt from the tenant's LocalizationSettings after the tenant reloads.
         releases.RequestRelease();
 
-        return Ok(await CreateDtoAsync(cultures, defaultCulture, request.FallBackToParentCulture));
+        return Ok(await CreateDtoAsync(cultures, defaultCulture, request.FallBackToParentCulture, adminDefaultCulture));
     }
 
     private async Task<CrestLocalization> CreateDtoAsync(
         string[]? cultures = null,
         string? defaultCulture = null,
-        bool? fallBackToParentCulture = null)
+        bool? fallBackToParentCulture = null,
+        string? adminDefaultCulture = null)
     {
         var settings = await sites.GetSettingsAsync<LocalizationSettings>();
+        var crestSettings = await sites.GetSettingsAsync<CrestLocalizationSettings>();
         cultures ??= await localizationService.GetSupportedCulturesAsync();
         defaultCulture ??= await localizationService.GetDefaultCultureAsync();
         fallBackToParentCulture ??= settings.FallBackToParentCulture;
+        adminDefaultCulture ??= crestSettings.AdminDefaultCulture;
 
         return new CrestLocalization(
             defaultCulture,
             cultures,
             fallBackToParentCulture.Value,
+            adminDefaultCulture,
             localizationService.GetAllCulturesAndAliases()
                 .GroupBy(culture => culture.Name, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.First())
@@ -225,7 +244,20 @@ public sealed record CrestLocalization(
     string DefaultCulture,
     string[] SupportedCultures,
     bool FallBackToParentCulture,
+    // Rung 3 of the client resolution chain (plans/user-localization.md's "Resolution
+    // architecture") - a tenant-level default distinct from DefaultCulture above, only
+    // consulted by the client when the current route is under the admin path prefix. Null
+    // means "no admin-specific override" - the client falls through to rung 4/5 as if this
+    // setting didn't exist.
+    string? AdminDefaultCulture,
     CrestCulture[] AvailableCultures);
+
+// Crest-owned, separate from OrchardCore's own LocalizationSettings - AdminDefaultCulture
+// is a Crest concept upstream OrchardCore has no equivalent for.
+public sealed class CrestLocalizationSettings
+{
+    public string? AdminDefaultCulture { get; set; }
+}
 
 // Culture is null when the user has no stored default (falls through to the next
 // resolution step — see plans/user-localization.md's resolution order).
