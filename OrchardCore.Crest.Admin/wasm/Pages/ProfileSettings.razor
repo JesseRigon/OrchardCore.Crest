@@ -1,0 +1,102 @@
+@page "/Admin/Profile/Settings"
+@using Crest.Admin.Api
+@using Crest.Admin.DisplayManagement
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+
+<CrestStack Gap="1rem" class="profile-settings-page" data-testid="profile-settings-page">
+    <div>
+        <CrestText TextStyle="TextStyle.H4" Text="Settings" />
+        <CrestText TextStyle="TextStyle.Body2" Text="Preferences for your own account. These never affect other users or tenant-wide settings." />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
+    }
+
+    <CrestCard>
+        <CrestStack Gap="0.75rem">
+            <CrestText TextStyle="TextStyle.Subtitle1" Text="Localization" />
+            <CrestText TextStyle="TextStyle.Body2" Text="Your default language. This is used whenever you sign in, unless you switch languages temporarily from the culture picker in the title bar." />
+
+            @if (IsLoading)
+            {
+                <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+            }
+            else
+            {
+                <CrestDropDown TValue="string"
+                                Data="CultureOptions"
+                                Value="@SelectedCulture"
+                                ValueChanged="SelectCultureAsync"
+                                TextProperty="@nameof(CultureOption.Label)"
+                                ValueProperty="@nameof(CultureOption.Value)"
+                                Placeholder="Use the tenant default"
+                                AllowFiltering="true"
+                                FilterPlaceholder="Filter cultures"
+                                class="profile-settings-page__culture-dropdown" />
+                <CrestText TextStyle="TextStyle.Caption" Text="Leave unset to follow the tenant's default culture." />
+            }
+        </CrestStack>
+    </CrestCard>
+</CrestStack>
+
+@code {
+    [CascadingParameter] public DisplayManager? DisplayManager { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SelectedCulture { get; set; }
+
+    private CultureOption[] CultureOptions => DisplayManager?.Manifest?.CultureSelector.Cultures ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var current = await Api.Crest.Rest.Localization.GetMyCultureAsync();
+            SelectedCulture = current?.Culture;
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task SelectCultureAsync(string? value)
+    {
+        if (IsSaving)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            var saved = await Api.Crest.Rest.Localization.SetMyCultureAsync(new CrestUserCulture(value));
+            if (saved is null)
+            {
+                throw new InvalidOperationException("Unable to save your default culture.");
+            }
+
+            SelectedCulture = saved.Culture;
+            Notifications.Notify(NotificationSeverity.Success, "Settings", "Your default language was saved.");
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+}

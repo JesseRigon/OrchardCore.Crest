@@ -1,0 +1,28 @@
+@page "/Admin/Profile"
+@using Crest.Admin.DisplayManagement
+@inject NavigationManager Navigation
+
+<CrestStack Gap="1rem" class="profile-page" data-testid="profile-page">
+    <div>
+        <CrestText TextStyle="TextStyle.H4" Text="@UserName" />
+        <CrestText TextStyle="TextStyle.Body2" Text="Your account." />
+    </div>
+
+    <CrestCard>
+        <CrestStack Gap="0.5rem">
+            <CrestText TextStyle="TextStyle.Subtitle1" Text="Account" />
+            <div class="profile-page__field">
+                <CrestText TextStyle="TextStyle.Caption" Text="Username" />
+                <CrestText TextStyle="TextStyle.Body1" Text="@UserName" />
+            </div>
+        </CrestStack>
+    </CrestCard>
+
+    <CrestButton Text="Settings" Icon="settings" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("/Admin/Profile/Settings"))" />
+</CrestStack>
+
+@code {
+    [CascadingParameter] public DisplayManager? DisplayManager { get; set; }
+
+    private string UserName => DisplayManager?.User.UserName ?? "User";
+}

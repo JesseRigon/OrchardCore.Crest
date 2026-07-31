@@ -20,6 +20,7 @@
 @inject NotificationService Notifications
 @inject DisplayManager DisplayManager
 @inject ClientIconRegistry ClientIcons
+@inject Crest.Admin.Theme.CrestApiLocalizer T
 
     <CascadingValue Value="DragDrop">
         <CrestStack Gap="1rem">
@@ -42,7 +43,7 @@
                     {
                         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
                             <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                            <CrestText Text="Loading admin menus..." />
+                            <CrestText Text="@T.T("AdminMenus_Loading", "Loading admin menus...")" />
                         </CrestStack>
                     }
                     else
@@ -68,7 +69,7 @@
                                         </CrestStack>
                                         @if (FilteredMenus.Length == 0)
                                         {
-                                            <CrestText Text="No admin menus found." />
+                                            <CrestText Text="@T.T("AdminMenus_NoneFound", "No admin menus found.")" />
                                         }
                                         else
                                         {
@@ -106,7 +107,7 @@
                                 @if (SelectedMenu is null)
                                 {
                                     <CrestCard>
-                                        <CrestText Text="Select an admin menu to edit its nodes." />
+                                        <CrestText Text="@T.T("AdminMenus_SelectPrompt", "Select an admin menu to edit its nodes.")" />
                                     </CrestCard>
                                 }
                                 else
@@ -379,15 +380,15 @@
             var result = await Api.Crest.Rest.AdminMenus.ExportLayoutAsync();
             if (result is null)
             {
-                Notifications.Notify(NotificationSeverity.Error, "Primary navigation export failed", "The development export endpoint was not available or rejected the request.");
+                Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_ExportFailedTitle", "Primary navigation export failed"), T.T("AdminMenus_ExportUnavailable", "The development export endpoint was not available or rejected the request."));
                 return;
             }
 
-            Notifications.Notify(NotificationSeverity.Success, "Primary navigation exported", $"{result.File} saved with {result.ItemCount} layout items, {result.CustomItemCount} custom items, and {result.SeparatorCount} separators.");
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_ExportedTitle", "Primary navigation exported"), string.Format(T.T("AdminMenus_ExportedMessageFormat", "{0} saved with {1} layout items, {2} custom items, and {3} separators."), result.File, result.ItemCount, result.CustomItemCount, result.SeparatorCount));
         }
         catch (Exception ex)
         {
-            Notifications.Notify(NotificationSeverity.Error, "Primary navigation export failed", ex.Message);
+            Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_ExportFailedTitle", "Primary navigation export failed"), ex.Message);
         }
         finally
         {
@@ -454,7 +455,7 @@
         {
             State = new([.. State.Menus, menu]);
             SelectedMenuId = menu.Id;
-            Notifications.Notify(NotificationSeverity.Success, "Admin menu created", name);
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_CreatedTitle", "Admin menu created"), name);
         }
     }
 
@@ -465,7 +466,7 @@
         if (converted is not null)
         {
             State = new([.. State.Menus.Select(m => m.Id == converted.Id ? converted : m)]);
-            Notifications.Notify(NotificationSeverity.Success, "Menu converted", converted.Name);
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_ConvertedTitle", "Menu converted"), converted.Name);
         }
     }
 
@@ -529,12 +530,12 @@
             State = new(State.Menus.Select(existing => existing.Id == updated.Id ? updated : existing).ToArray());
             SelectedMenuId = updated.Id;
             CancelMenuRename();
-            Notifications.Notify(NotificationSeverity.Success, "Admin menu renamed", updated.Name);
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_RenamedTitle", "Admin menu renamed"), updated.Name);
             await DisplayManager.RefreshAdminMenuAsync();
         }
         else
         {
-            Notifications.Notify(NotificationSeverity.Error, "Admin menu rename failed", "The server could not update the menu name.");
+            Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_RenameFailedTitle", "Admin menu rename failed"), T.T("AdminMenus_RenameFailedMessage", "The server could not update the menu name."));
         }
 
         IsBusy = false;
@@ -546,7 +547,7 @@
         if (updated is not null)
         {
             State = new(State.Menus.Select(existing => existing.Id == updated.Id ? updated : existing).ToArray());
-            Notifications.Notify(NotificationSeverity.Success, updated.Enabled ? "Admin menu shown" : "Admin menu hidden", updated.Name);
+            Notifications.Notify(NotificationSeverity.Success, updated.Enabled ? T.T("AdminMenus_ShownTitle", "Admin menu shown") : T.T("AdminMenus_HiddenTitle", "Admin menu hidden"), updated.Name);
             await DisplayManager.RefreshAdminMenuAsync();
         }
     }
@@ -558,7 +559,7 @@
         {
             State = new([.. State.Menus, copy]);
             SelectedMenuId = copy.Id;
-            Notifications.Notify(NotificationSeverity.Success, "Admin menu duplicated", copy.Name);
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_DuplicatedTitle", "Admin menu duplicated"), copy.Name);
         }
     }
 
@@ -568,7 +569,7 @@
         {
             State = new(State.Menus.Where(existing => existing.Id != menu.Id).ToArray());
             SelectedMenuId = State.Menus.FirstOrDefault()?.Id;
-            Notifications.Notify(NotificationSeverity.Success, "Admin menu deleted", menu.Name);
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_DeletedTitle", "Admin menu deleted"), menu.Name);
             await DisplayManager.RefreshAdminMenuAsync();
         }
     }
@@ -1021,7 +1022,7 @@
                     <CrestColumn Size="12" SizeMD="6">
                         <CrestLabel Text="Text" />
                         <CrestTextBox @bind-Value="model.Text" Name="Text" Style="width: 100%;" />
-                        <CrestRequiredValidator Component="Text" Text="Text is required" />
+                        <CrestRequiredValidator Component="Text" />
                     </CrestColumn>
                     <CrestColumn Size="12" SizeMD="6">
                         <CrestLabel Text="Url" />
@@ -1101,7 +1102,7 @@
         if (result is not null)
         {
             CancelRename();
-            Notifications.Notify(NotificationSeverity.Success, "Primary navigation item renamed", "The primary navigation display text was updated.");
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_ItemRenamedTitle", "Primary navigation item renamed"), T.T("AdminMenus_ItemRenamedMessage", "The primary navigation display text was updated."));
         }
 
         IsBusy = false;
@@ -1126,7 +1127,7 @@
         if (!editingNewBranch && IsNewBranchNode(model.ParentNodeId))
         {
             CancelEdit();
-            Notifications.Notify(NotificationSeverity.Warning, "Admin menu item fixed", "The New menu branch has a fixed structure. Text and icon overrides are allowed, but layout changes are not.");
+            Notifications.Notify(NotificationSeverity.Warning, T.T("AdminMenus_ItemFixedTitle", "Admin menu item fixed"), T.T("AdminMenus_ItemFixedMessage", "The New menu branch has a fixed structure. Text and icon overrides are allowed, but layout changes are not."));
             return;
         }
 
@@ -1146,7 +1147,7 @@
         if (result is not null)
         {
             CancelEdit();
-            Notifications.Notify(NotificationSeverity.Success, "Admin menu saved", "The admin menu node was saved.");
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_NodeSavedTitle", "Admin menu saved"), T.T("AdminMenus_NodeSavedMessage", "The admin menu node was saved."));
         }
 
         IsBusy = false;
@@ -1186,7 +1187,7 @@
     {
         if (menu is null)
         {
-            Notifications.Notify(NotificationSeverity.Error, "Admin menu update failed", "The server could not update the admin menu.");
+            Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_UpdateFailedTitle", "Admin menu update failed"), T.T("AdminMenus_UpdateFailedMessage", "The server could not update the admin menu."));
             return;
         }
 
@@ -1220,7 +1221,7 @@
         if (result is not null)
         {
             IsPrimaryNavMenuSettingsOpen = false;
-            Notifications.Notify(NotificationSeverity.Success, "Primary navigation settings saved", "The primary navigation settings were updated.");
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_SettingsSavedTitle", "Primary navigation settings saved"), T.T("AdminMenus_SettingsSavedMessage", "The primary navigation settings were updated."));
         }
 
         IsBusy = false;
@@ -1400,7 +1401,7 @@
     private void ShowTierLimitError()
     {
         ErrorMessage = $"Admin menus support a maximum of {MaxMenuTiers} tiers. Move the item to a higher level before saving.";
-        Notifications.Notify(NotificationSeverity.Error, "Admin menu depth limit", ErrorMessage);
+        Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_DepthLimitTitle", "Admin menu depth limit"), ErrorMessage);
     }
 
     private static string NodeTypeLabel(string type) => type switch

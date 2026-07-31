@@ -41,6 +41,7 @@ public sealed class AppController(
     CrestTitleBarSettingsStore titleBarSettingsStore,
     CrestIconController iconController,
     CrestRouteAuthorizationService routeAuthorization,
+    CrestProfileMenuService profileMenuService,
     IServiceProvider serviceProvider) : ControllerBase
 {
     [HttpGet("manifest")]
@@ -56,6 +57,7 @@ public sealed class AppController(
         var tenants = await GetAvailableTenantsAsync();
         var adminItems = await navigationManager.BuildMenuAsync("admin", ControllerContext);
         var cultureSelector = await CultureSelector.FromAsync(HttpContext, shellSettings, serviceProvider.GetService<ILocalizationService>());
+        var profileMenu = await profileMenuService.BuildAsync(User, HttpContext.RequestAborted);
         var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
             .ToArray()));
@@ -83,7 +85,8 @@ public sealed class AppController(
             featureIds.Select(id => Feature.From(id, featureInfos.GetValueOrDefault(id))).ToArray(),
             adminMenu,
             await routeAuthorization.GetAuthorizedRoutesAsync(User),
-            cultureSelector));
+            cultureSelector,
+            profileMenu));
     }
 
     private async Task<Tenant[]> GetAvailableTenantsAsync()
@@ -150,14 +153,24 @@ public sealed record AppManifest(
     Feature[] Features,
     NavigationMenu AdminMenu,
     CrestRouteAccess[] AuthorizedRoutes,
-    CultureSelector CultureSelector);
+    CultureSelector CultureSelector,
+    NavigationMenu ProfileMenu);
 
 public sealed record CultureSelector(
     string CurrentCulture,
+    bool HasSessionCookie,
     CultureOption[] Cultures,
     string CookieName,
     string CookiePath)
 {
+    // CrestRequestCultureProviderOrdering forces AdminCookieCultureProvider to always be
+    // checked first, so whenever the session cookie is present, IRequestCultureFeature
+    // already reflects it and CurrentCulture below is exactly right. HasSessionCookie
+    // tells the client (DisplayManager.RefreshManifestAsync) whether that's actually the
+    // case or whether IRequestCultureFeature instead fell through to
+    // UserLocalizationRequestCultureProvider/the tenant default - in the latter case the
+    // client seeds the cookie from CurrentCulture so future requests (and any other
+    // provider ordering surprises) become moot. See plans/user-localization.md.
     public static async Task<CultureSelector> FromAsync(
         HttpContext httpContext,
         ShellSettings shellSettings,
@@ -168,14 +181,17 @@ public sealed record CultureSelector(
         var supportedCultures = localizationService is null
             ? [current.Name]
             : await localizationService.GetSupportedCulturesAsync();
+        var cookieName = AdminCookieCultureProvider.MakeCookieName(shellSettings);
+        var hasSessionCookie = httpContext.Request.Cookies.ContainsKey(cookieName);
 
         return new CultureSelector(
             current.Name,
+            hasSessionCookie,
             supportedCultures
                 .Select(CultureInfo.GetCultureInfo)
                 .Select(culture => new CultureOption(culture.Name, culture.NativeName, GetIcon(culture)))
                 .ToArray(),
-            AdminCookieCultureProvider.MakeCookieName(shellSettings),
+            cookieName,
             AdminCookieCultureProvider.MakeCookiePath(httpContext));
     }
 

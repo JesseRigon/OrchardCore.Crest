@@ -21,23 +21,16 @@
   <ItemGroup>
     <!-- Runtime assets are exposed from this project's canonical wwwroot. -->
     <EmbeddedResource Include="Components\Resources\Spreadsheet\theme1.xml" />
+    <!-- English-only compiled default (see plans/user-localization.md "Client string
+         localization for .Admin"). Real translations come from OrchardCore's .po
+         pipeline via Crest.Admin.Theme.CrestApiLocalizer at runtime - satellite .resx
+         files per language were removed 2026-07-31: they shipped as separate compiled
+         .resources.dll assemblies in the WASM bundle regardless of which cultures a
+         given tenant actually supports, grew unboundedly as languages were added, and
+         weren't editable without a recompile/redeploy. Do not add new
+         CrestStrings.{culture}.resx files - add .po translation content instead. -->
     <EmbeddedResource Update="Utilities\CrestStrings.resx">
       <ManifestResourceName>Crest.Components.Primitives.CrestStrings</ManifestResourceName>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Utilities\CrestStrings.de.resx">
-      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.de</ManifestResourceName>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Utilities\CrestStrings.es.resx">
-      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.es</ManifestResourceName>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Utilities\CrestStrings.fr.resx">
-      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.fr</ManifestResourceName>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Utilities\CrestStrings.it.resx">
-      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.it</ManifestResourceName>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Utilities\CrestStrings.ja.resx">
-      <ManifestResourceName>Crest.Components.Primitives.CrestStrings.ja</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
 

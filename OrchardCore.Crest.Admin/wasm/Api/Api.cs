@@ -74,6 +74,7 @@ public interface ITitleBarSettingsApi
 public interface INavigationApi
 {
     Task<NavigationMenu> GetAdminMenuAsync();
+    Task<NavigationMenu> GetProfileMenuAsync();
     Task<NavigationMenu> GetMenuAsync(string menuName);
 }
 
@@ -167,7 +168,7 @@ public interface ISecurityHeadersApi { Task<CrestSecurityHeaders?> GetAsync(); T
 public interface ILoginSettingsApi { Task<CrestLoginSettings?> GetAsync(); Task<CrestLoginSettings?> SaveAsync(CrestLoginSettings value); }
 public interface IUsersApi { Task<CrestUserList> ListAsync(string? search = null, string? status = null); Task<CrestUser?> GetAsync(string id); Task<CrestUser?> CreateAsync(CrestUserWrite value); Task<CrestUser?> SaveAsync(string id, CrestUserWrite value); Task<CrestUser?> SetEnabledAsync(string id, bool enabled); Task<bool> DeleteAsync(string id); }
 public interface IRecipesApi { Task<CrestRecipe[]> ListAsync(); Task<bool> ExecuteAsync(CrestRecipeKey value); }
-public interface ILocalizationApi { Task<CrestLocalization?> GetAsync(); Task<CrestLocalization?> SaveAsync(CrestLocalization value); }
+public interface ILocalizationApi { Task<CrestLocalization?> GetAsync(); Task<CrestLocalization?> SaveAsync(CrestLocalization value); Task<CrestUserCulture?> GetMyCultureAsync(); Task<CrestUserCulture?> SetMyCultureAsync(CrestUserCulture value); Task<Dictionary<string, string>?> GetStringsAsync(string culture); }
 public interface IIndexesApi { Task<CrestIndex[]> ListAsync(); Task<CrestIndex?> RebuildAsync(string id); }
 public interface IQueriesApi { Task<CrestQueryCatalog> ListAsync(string? search = null); Task<CrestQuery?> CreateAsync(CrestQueryWrite value); Task<CrestQuery?> SaveAsync(string name, CrestQueryWrite value); Task<bool> DeleteAsync(string name); Task<bool> DeleteManyAsync(string[] names); }
 public interface ITenantsApi { Task<CrestTenantCatalog> ListAsync(string? search = null, string? category = null, string? state = null, string? orderBy = null); Task<CrestTenant?> EnableAsync(string name); Task<CrestTenant?> DisableAsync(string name); Task<bool> ReloadAsync(string name); Task<CrestTenant[]> BulkAsync(string action, string[] names); Task<bool> RemoveAsync(string name); }
@@ -406,6 +407,14 @@ public sealed class NavigationApi(HttpClient http) : INavigationApi
             : NavigationMenu.Empty("admin");
     }
 
+    public async Task<NavigationMenu> GetProfileMenuAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/crest/navigation/profile")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<NavigationMenu>() ?? NavigationMenu.Empty("profile")
+            : NavigationMenu.Empty("profile");
+    }
+
     public async Task<NavigationMenu> GetMenuAsync(string menuName)
     {
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, $"api/crest/navigation/menus/{Uri.EscapeDataString(menuName)}")));
@@ -589,7 +598,7 @@ public sealed class SecurityHeadersApi(HttpClient http) : ISecurityHeadersApi { 
 public sealed class LoginSettingsApi(HttpClient http) : ILoginSettingsApi { public async Task<CrestLoginSettings?> GetAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/settings/login")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLoginSettings>():null;}public async Task<CrestLoginSettings?> SaveAsync(CrestLoginSettings x){using var q=C(new(HttpMethod.Put,"api/crest/settings/login"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLoginSettings>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
 public sealed class UsersApi(HttpClient http) : IUsersApi { public async Task<CrestUserList> ListAsync(string? search=null,string? status=null){var q=string.Join('&',new[]{string.IsNullOrWhiteSpace(search)?null:$"search={Uri.EscapeDataString(search)}",string.IsNullOrWhiteSpace(status)?null:$"status={Uri.EscapeDataString(status)}"}.Where(x=>x is not null));using var r=await http.SendAsync(C(new(HttpMethod.Get,$"api/crest/users{(q.Length>0?"?"+q:"")}")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUserList>()??new(0,[]):new(0,[]);} public async Task<CrestUser?> GetAsync(string id){using var r=await http.SendAsync(C(new(HttpMethod.Get,$"api/crest/users/{Uri.EscapeDataString(id)}")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUser>():null;} public Task<CrestUser?> CreateAsync(CrestUserWrite x)=>Write(new(HttpMethod.Post,"api/crest/users"),x); public Task<CrestUser?> SaveAsync(string id,CrestUserWrite x)=>Write(new(HttpMethod.Put,$"api/crest/users/{Uri.EscapeDataString(id)}"),x); public async Task<CrestUser?> SetEnabledAsync(string id,bool enabled)=>await Write(new(HttpMethod.Post,$"api/crest/users/{Uri.EscapeDataString(id)}/enabled"),new CrestUserEnabled(enabled)); public async Task<bool> DeleteAsync(string id){using var r=await http.SendAsync(C(new(HttpMethod.Delete,$"api/crest/users/{Uri.EscapeDataString(id)}")));return r.IsSuccessStatusCode;} async Task<CrestUser?> Write(HttpRequestMessage q,object x){using(q){q.Content=JsonContent.Create(x);using var r=await http.SendAsync(C(q));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUser>():null;}} static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
 public sealed class RecipesApi(HttpClient http) : IRecipesApi { public async Task<CrestRecipe[]> ListAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/recipes")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestRecipe[]>()??[]:[];} public async Task<bool> ExecuteAsync(CrestRecipeKey x){using var q=C(new(HttpMethod.Post,"api/crest/recipes/execute"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode;} static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
-public sealed class LocalizationApi(HttpClient http) : ILocalizationApi { public async Task<CrestLocalization?> GetAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/localization")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLocalization>():null;} public async Task<CrestLocalization?> SaveAsync(CrestLocalization x){using var q=C(new(HttpMethod.Put,"api/crest/localization"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLocalization>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
+public sealed class LocalizationApi(HttpClient http) : ILocalizationApi { public async Task<CrestLocalization?> GetAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/localization")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLocalization>():null;} public async Task<CrestLocalization?> SaveAsync(CrestLocalization x){using var q=C(new(HttpMethod.Put,"api/crest/localization"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLocalization>():null;} public async Task<CrestUserCulture?> GetMyCultureAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/localization/me")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUserCulture>():null;} public async Task<CrestUserCulture?> SetMyCultureAsync(CrestUserCulture x){using var q=C(new(HttpMethod.Put,"api/crest/localization/me"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUserCulture>():null;} public async Task<Dictionary<string,string>?> GetStringsAsync(string culture){using var r=await http.SendAsync(C(new(HttpMethod.Get,$"api/crest/localization/strings?culture={Uri.EscapeDataString(culture)}")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<Dictionary<string,string>>():null;} static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
 public sealed class IndexesApi(HttpClient http) : IIndexesApi { public async Task<CrestIndex[]> ListAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/indexes")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestIndex[]>()??[]:[];}public async Task<CrestIndex?> RebuildAsync(string id){using var r=await http.SendAsync(C(new(HttpMethod.Post,$"api/crest/indexes/{Uri.EscapeDataString(id)}/rebuild")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestIndex>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
 public sealed class QueriesApi(HttpClient http) : IQueriesApi
 {
@@ -1069,7 +1078,8 @@ public sealed record AppManifest(
     Feature[] Features,
     NavigationMenu AdminMenu,
     CrestRouteAccess[] AuthorizedRoutes,
-    CultureSelector CultureSelector);
+    CultureSelector CultureSelector,
+    NavigationMenu? ProfileMenu = null);
 
 public sealed record CrestRouteAccess(string Template);
 
@@ -1085,6 +1095,7 @@ public sealed record AdminDescriptor(string BasePath);
 
 public sealed record CultureSelector(
     string CurrentCulture,
+    bool HasSessionCookie,
     CultureOption[] Cultures,
     string CookieName,
     string CookiePath);
@@ -1298,6 +1309,7 @@ public sealed class CrestLocalization
 }
 
 public sealed record CrestCulture(string Value, string Label, string NativeLabel);
+public sealed record CrestUserCulture(string? Culture);
 public sealed record CrestIndex(string Id,string? Name,string? Provider,string? IndexName,string? Type,string? CreatedUtc);
 public sealed record CrestQueryCatalog(CrestQuery[] Queries, string[] Sources)
 {

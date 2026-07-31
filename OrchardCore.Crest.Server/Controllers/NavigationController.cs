@@ -17,6 +17,22 @@ public sealed class NavigationController(
     [HttpGet("admin")]
     public Task<ActionResult<NavigationMenu>> GetAdminMenu() => GetMenu("admin");
 
+    // Resolves the tenant's single CrestMenuPlacement.User AdminMenu document into a
+    // NavigationMenu. See CrestProfileMenuService for why this can't go through
+    // INavigationManager.BuildMenuAsync the way "admin" does.
+    [HttpGet("profile")]
+    public async Task<ActionResult<NavigationMenu>> GetProfileMenuAsync()
+    {
+        var access = await requestAccess.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel);
+        if (access is null)
+        {
+            return Forbid();
+        }
+
+        var profileMenuService = access.GetRequiredService<CrestProfileMenuService>();
+        return Ok(await profileMenuService.BuildAsync(User, HttpContext.RequestAborted));
+    }
+
     [HttpGet("menus/{menuName}")]
     public async Task<ActionResult<NavigationMenu>> GetMenu(string menuName)
     {

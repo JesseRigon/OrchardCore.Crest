@@ -97,6 +97,35 @@
     background: transparent;
 }
 
+/* Known-users list (tier 3, see plans/user-localization.md "User Profile Menu"). Row
+   height is fixed (not min-height) so this multiplier is exact, not approximate — do not
+   change one without the other. */
+::deep .admin-titlebar__known-users {
+    --admin-titlebar-known-user-row-height: 2.5rem;
+    padding: 0;
+}
+
+::deep .admin-titlebar__known-users-list {
+    /* DELIBERATELY 4.5 rows, not 4 or 5: this is a discoverability signal, not a space
+       constraint. At exactly N whole rows, a list that happens to contain N users looks
+       indistinguishable from one that has more hidden below the fold - nothing tells the
+       user it's scrollable. Clipping the (N+1)th row in half is a visible "there's more"
+       affordance: the user sees a cut-off card and immediately understands to scroll,
+       without needing a scrollbar to already be visible/hovered. If you resize this,
+       keep the fractional row - whole numbers reintroduce the ambiguity this was built
+       to avoid. */
+    max-height: calc(var(--admin-titlebar-known-user-row-height) * 4.5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-y: auto;
+}
+
+::deep .admin-titlebar__known-users-list .rz-navigation-item-link {
+    box-sizing: border-box;
+    height: var(--admin-titlebar-known-user-row-height);
+}
+
 .admin-titlebar__icon-button {
     display: inline-grid;
     place-items: center;

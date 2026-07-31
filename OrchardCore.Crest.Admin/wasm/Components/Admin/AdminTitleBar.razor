@@ -10,6 +10,8 @@
 @inject NavigationManager Navigation
 @inject CrestRoutingOptions Routing
 @inject IJSRuntime Js
+@inject IApi Api
+@inject NotificationService Notifications
 
 <header class="admin-titlebar">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-titlebar__left">
@@ -51,6 +53,7 @@
                             ValueProperty="@nameof(CultureOption.Value)"
                             ValueTemplate="CultureValueTemplate"
                             Template="CultureOptionTemplate"
+                            FooterTemplate="CultureFooterTemplate"
                             AllowFiltering="true"
                             FilterPlaceholder="Filter cultures"
                             class="admin-titlebar__culture-selector"
@@ -64,7 +67,16 @@
             </button>
         }
 
-        <CrestProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="Open user menu">
+        @* Three tiers, always in this order: (1) the native, admin-editable
+           CrestMenuPlacement.User AdminMenu, gated purely by each node's own OrchardCore
+           permission (no per-user/role targeting beyond that); (2) a hardcoded,
+           permission-gated slot, currently empty but always present so future built-in
+           items (e.g. impersonation/support tools) have a defined place to land; (3) the
+           hardcoded tenant/browser-session slot — the known-signed-in-users list (browser
+           localStorage, so this can never be a server-defined nav item), "Sign in as
+           another user", then Logout. See plans/user-localization.md's "User Profile
+           Menu" section. *@
+        <CrestProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="Open user menu" Click="OnProfileMenuItemClickedAsync">
             <Template>
                 <CrestAvatar FallbackText="@UserInitials"
                              AriaLabel="@UserName"
@@ -74,15 +86,33 @@
                              Class="admin-titlebar__avatar" />
             </Template>
             <ChildContent>
-                <CrestProfileMenuItem Text="@UserName" Path="/Admin/Profile" />
-                <CrestProfileMenuItem Text="Admin dashboard" Path="/Admin" />
-                <CrestProfileMenuItem Text="Open site" Path="/" />
-                <CrestProfileMenuItem Text="Sign in as another user" Click="SignInAsAnotherUserAsync" class="admin-titlebar__profile-separator" />
-                @foreach (var user in OtherKnownUsers)
+                @* Tier 1: native CrestMenuPlacement.User menu, editable via Admin Menus. *@
+                @if (ProfileMenuItems.Length > 0)
                 {
-                    <CrestProfileMenuItem Text="@UserLabel(user)" Click="@(() => SignInAsUserAsync(user))" />
+                    @foreach (var item in ProfileMenuItems)
+                    {
+                        <CrestProfileMenuItem Text="@item.Text" Path="@item.Link" />
+                    }
+                    <li class="admin-titlebar__profile-separator" aria-hidden="true"></li>
                 }
-                <CrestProfileMenuItem Text="Logout" Click="LogoutAsync" class="admin-titlebar__profile-separator" />
+
+                @* Tier 2: hardcoded, permission-gated slot — always present, currently empty. *@
+
+                @* Tier 3: hardcoded tenant/browser-session slot. *@
+                @if (OtherKnownUsers.Any())
+                {
+                    <li class="admin-titlebar__known-users" role="presentation">
+                        <ul class="admin-titlebar__known-users-list">
+                            @foreach (var user in OtherKnownUsers)
+                            {
+                                <CrestProfileMenuItem Text="@UserLabel(user)" Value="@($"switch-user:{user.UserName}")" />
+                            }
+                        </ul>
+                    </li>
+                }
+                <CrestProfileMenuItem Text="Sign in as another user" Value="switch-user" />
+                <CrestProfileMenuItem Text="Settings" Path="/Admin/Profile/Settings" />
+                <CrestProfileMenuItem Text="Logout" Value="logout" class="admin-titlebar__profile-separator" />
             </ChildContent>
         </CrestProfileMenu>
     </CrestStack>
@@ -99,6 +129,7 @@
     private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? "Tenant";
     private string UserName => DisplayManager?.User.UserName ?? "User";
     private string? CurrentTitle => FindCurrentTitle(DisplayManager?.AdminMenu?.Items);
+    private DisplayMenuItem[] ProfileMenuItems => DisplayManager?.ProfileMenu?.Items ?? [];
     private string TenantInitial => string.IsNullOrWhiteSpace(SelectedTenantName) ? "?" : SelectedTenantName[..1].ToUpperInvariant();
     private string UserInitials => GetInitials(UserName);
     private LocalUser[] KnownUsers { get; set; } = [];
@@ -108,6 +139,7 @@
     private string? LastRememberedUserContext { get; set; }
     private CultureOption[] CultureOptions => DisplayManager?.Manifest?.CultureSelector.Cultures ?? [];
     private string? SelectedCulture => DisplayManager?.Manifest?.CultureSelector.CurrentCulture;
+    private bool IsSavingDefaultCulture { get; set; }
     private CrestTitleBarSettingsDto TitleBarSettings => DisplayManager?.Manifest?.TitleBarSettings ?? CrestTitleBarSettingsDto.Default;
     private CrestAvatarShape TenantAvatarShape => Enum.TryParse<CrestAvatarShape>(TitleBarSettings.TenantAvatarShape, true, out var shape)
         ? shape
@@ -140,6 +172,26 @@
         builder.OpenElement(3, "span");
         builder.AddAttribute(4, "class", "admin-titlebar__culture-option-label");
         builder.AddContent(5, culture.Label);
+        builder.CloseElement();
+    };
+
+    // Picking a culture from the list above only changes the current session (today's
+    // behavior, unchanged). This is a separate, explicit second action that persists the
+    // *currently selected* culture as the user's stored default, via the same self-service
+    // endpoint the Settings page's localization section uses — see
+    // plans/user-localization.md's "Culture picker: save-as-default" section.
+    private RenderFragment CultureFooterTemplate => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "admin-titlebar__culture-footer");
+        builder.OpenComponent<CrestButton>(2);
+        builder.AddAttribute(3, nameof(CrestButton.Text), "Save as default");
+        builder.AddAttribute(4, nameof(CrestButton.Icon), "bookmark");
+        builder.AddAttribute(5, nameof(CrestButton.ButtonStyle), ButtonStyle.Light);
+        builder.AddAttribute(6, nameof(CrestButton.Size), ButtonSize.Small);
+        builder.AddAttribute(7, nameof(CrestButton.Disabled), IsSavingDefaultCulture || string.IsNullOrWhiteSpace(SelectedCulture));
+        builder.AddAttribute(8, nameof(CrestButton.Click), EventCallback.Factory.Create(this, SaveDefaultCultureAsync));
+        builder.CloseComponent();
         builder.CloseElement();
     };
 
@@ -280,6 +332,54 @@
 
         await Js.InvokeVoidAsync("crestTheme.setAdminCulture", selector.CookieName, selector.CookiePath, culture);
         Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+
+    private async Task SaveDefaultCultureAsync()
+    {
+        if (IsSavingDefaultCulture || string.IsNullOrWhiteSpace(SelectedCulture))
+        {
+            return;
+        }
+
+        IsSavingDefaultCulture = true;
+        try
+        {
+            var saved = await Api.Crest.Rest.Localization.SetMyCultureAsync(new CrestUserCulture(SelectedCulture));
+            Notifications.Notify(
+                saved is null ? NotificationSeverity.Error : NotificationSeverity.Success,
+                "Default language",
+                saved is null ? "Unable to save your default language." : "Saved as your default language.");
+        }
+        finally
+        {
+            IsSavingDefaultCulture = false;
+        }
+    }
+
+    // CrestProfileMenuItem has no Click parameter of its own — clicks only surface
+    // through the parent CrestProfileMenu's single Click EventCallback, dispatched with
+    // the clicked item as the argument. This switches on Value to route tier-1 action
+    // items to their real handler.
+    private async Task OnProfileMenuItemClickedAsync(Crest.Components.Primitives.CrestProfileMenuItem item)
+    {
+        switch (item.Value)
+        {
+            case "logout":
+                await LogoutAsync();
+                break;
+            case "switch-user":
+                await SignInAsAnotherUserAsync();
+                break;
+            case { } value when value.StartsWith("switch-user:", StringComparison.Ordinal):
+                var userName = value["switch-user:".Length..];
+                var user = OtherKnownUsers.FirstOrDefault(candidate => candidate.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase));
+                if (user is not null)
+                {
+                    await SignInAsUserAsync(user);
+                }
+
+                break;
+        }
     }
 
     private async Task SignInAsAnotherUserAsync()

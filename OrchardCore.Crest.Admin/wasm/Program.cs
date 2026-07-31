@@ -26,6 +26,8 @@ builder.Services.AddScoped<IApi, global::Crest.Admin.Api.Api>();
 builder.Services.AddScoped<DisplayManager>();
 builder.Services.AddScoped<CrestRoutingOptions>();
 builder.Services.AddScoped<CrestThemeEngine>();
+builder.Services.AddScoped<Crest.Admin.Theme.CrestApiLocalizer>();
+builder.Services.AddScoped<ILocalizer>(sp => sp.GetRequiredService<Crest.Admin.Theme.CrestApiLocalizer>());
 builder.Services.AddCrestIconClient();
 builder.Services.AddCrestComponents();
 

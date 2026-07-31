@@ -136,11 +136,33 @@ window.crestTheme = (() => {
     return isDarkTheme();
   }
 
+  const sessionCultureKey = 'crest-admin-session-culture';
+
+  // A session-only cookie (no Max-Age) dies when the browser closes, which loses the
+  // user's temporary culture switch across a full restart even though they never asked
+  // to save it as their stored default (see plans/user-localization.md's "Culture
+  // picker: save-as-default + session persistence" section). This mirrors the value
+  // into localStorage, same pattern as crest-theme-mode/crest-admin-local-users, purely
+  // so a fresh tab can rehydrate the choice before the server round-trip resolves the
+  // (now year-long) cookie - it is still just the session override, never promoted to
+  // the user's stored default without the explicit "Save as default" action.
   function setAdminCulture(cookieName, cookiePath, culture) {
     if (!cookieName || !culture) return;
     const path = cookiePath || '/';
-    document.cookie = `${encodeURIComponent(cookieName)}=c=${encodeURIComponent(culture)}|uic=${encodeURIComponent(culture)}; path=${path}; SameSite=Lax`;
+    const maxAgeSeconds = 60 * 60 * 24 * 365;
+    document.cookie = `${encodeURIComponent(cookieName)}=c=${encodeURIComponent(culture)}|uic=${encodeURIComponent(culture)}; path=${path}; max-age=${maxAgeSeconds}; SameSite=Lax`;
+    try {
+      localStorage.setItem(sessionCultureKey, culture);
+    } catch {}
   }
 
-  return { apply, toggleMode, isDarkMode, rememberSignedInUser, getKnownUsers, setAdminCulture };
+  function getSessionCulture() {
+    try {
+      return localStorage.getItem(sessionCultureKey);
+    } catch {
+      return null;
+    }
+  }
+
+  return { apply, toggleMode, isDarkMode, rememberSignedInUser, getKnownUsers, setAdminCulture, getSessionCulture };
 })();

@@ -4,11 +4,12 @@ using Crest.Icons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 using System.Reflection;
 
 namespace Crest.Admin.DisplayManagement;
 
-public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, ClientIconRegistry iconRegistry, NavigationManager navigation)
+public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, ClientIconRegistry iconRegistry, NavigationManager navigation, CrestApiLocalizer apiLocalizer, IJSRuntime js)
 {
     private readonly Lazy<IReadOnlyDictionary<string, Type>> _shapeBindings = new(BuildShapeBindings);
     private readonly SemaphoreSlim _manifestLock = new(1, 1);
@@ -22,6 +23,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     public AppManifest? Manifest { get; private set; }
     public SiteSettings? Site { get; private set; }
     public DisplayMenu? AdminMenu { get; private set; }
+    public DisplayMenu? ProfileMenu { get; private set; }
     public ContentType[] ContentTypes { get; private set; } = [];
     public Role[] Roles { get; private set; } = [];
     public ContentItem? CurrentContentItem { get; private set; }
@@ -133,6 +135,23 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         });
     }
 
+    public async Task RefreshProfileMenuAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var menu = await api.Crest.Rest.Navigation.GetProfileMenuAsync();
+            iconRegistry.Register(menu.Icons);
+            if (Manifest is not null)
+            {
+                Manifest = Manifest with { ProfileMenu = menu };
+            }
+
+            ProfileMenu = ToDisplayMenu(menu);
+            ErrorMessage = null;
+            return true;
+        });
+    }
+
     public async Task<CrestThemeSettings?> UpdateThemeAsync(CrestThemeSettings settings)
     {
         return await RunAsync(async () =>
@@ -201,6 +220,27 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
             iconRegistry.Register(Manifest?.AdminMenu.Icons);
             Site = Manifest?.Site ?? await api.Crest.Rest.Site.GetAsync();
             AdminMenu = ToDisplayMenu(Manifest?.AdminMenu ?? await api.Crest.Rest.Navigation.GetAdminMenuAsync());
+            ProfileMenu = ToDisplayMenu(Manifest?.ProfileMenu ?? await api.Crest.Rest.Navigation.GetProfileMenuAsync());
+
+            var cultureSelector = Manifest?.CultureSelector;
+            var currentCulture = cultureSelector?.CurrentCulture;
+            if (!string.IsNullOrWhiteSpace(currentCulture))
+            {
+                await apiLocalizer.LoadAsync(System.Globalization.CultureInfo.GetCultureInfo(currentCulture));
+
+                // The session cookie always wins once present (CrestRequestCultureProviderOrdering
+                // forces AdminCookieCultureProvider first server-side), but it has to actually
+                // exist for that to matter. When it's absent, CurrentCulture already reflects the
+                // server's own fallback (stored user default, else tenant default - see
+                // AppController.CultureSelector.FromAsync) - seed the cookie from that value so
+                // every future request is unambiguous, without waiting for the user to explicitly
+                // pick a culture in the dropdown. Not a "save as default" action - crestTheme's
+                // usual session-only semantics still apply from here on.
+                if (cultureSelector is { HasSessionCookie: false })
+                {
+                    await js.InvokeVoidAsync("crestTheme.setAdminCulture", cultureSelector.CookieName, cultureSelector.CookiePath, currentCulture);
+                }
+            }
         }
         finally
         {
@@ -302,6 +342,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         Manifest = null;
         Site = null;
         AdminMenu = null;
+        ProfileMenu = null;
         ContentTypes = [];
         Roles = [];
         CurrentContentItem = null;
