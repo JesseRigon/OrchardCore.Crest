@@ -22,6 +22,7 @@
     <PackageVersion Include="OrchardCore.Users" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.Users.Abstractions" Version="3.0.0" />
     <PackageVersion Include="Radzen.Blazor" Version="11.0.4" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />

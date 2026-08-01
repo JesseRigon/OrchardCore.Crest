@@ -1,0 +1,17 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: de\n"
+
+# Hand-written test/seed content for the Crest.Admin.Client context - see es.po in this
+# same directory for the full explanation.
+#: OrchardCore.Crest.Admin/wasm/Pages/AdminMenus.razor
+msgctxt "Crest.Admin.Client"
+msgid "AdminMenus_Loading"
+msgstr "Admin-Menüs werden geladen..."
+
+#: OrchardCore.Crest.Admin/wasm/Pages/AdminMenus.razor
+msgctxt "Crest.Admin.Client"
+msgid "AdminMenus_NoneFound"
+msgstr "Keine Admin-Menüs gefunden."

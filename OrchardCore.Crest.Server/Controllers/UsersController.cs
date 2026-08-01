@@ -3,31 +3,43 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Crest.Services;
 using OrchardCore.Users;
+using OrchardCore.Users.Indexes;
 using OrchardCore.Users.Models;
 using OrchardCore.Users.Services;
+using YesSql;
 
 namespace Crest.Controllers;
 
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/users")]
-public sealed class CrestUsersController(UserManager<IUser> userManager, IUserService users, IAuthorizationService authorization, ICrestPermissionInvalidator permissions) : ControllerBase
+public sealed class CrestUsersController(UserManager<IUser> userManager, IUserService users, IAuthorizationService authorization, ICrestPermissionInvalidator permissions, ISession session) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<CrestUserList>> ListAsync([FromQuery] string? search, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         if (!await authorization.AuthorizeAsync(User, UsersPermissions.ListUsers, new User())) return Forbid();
-        var all = userManager.Users.Cast<User>();
+
+        // userManager.Users (IQueryableUserStore<TUser>) is unusable here - stock
+        // OrchardCore's UserStore never implements that interface, so the property
+        // throws NotSupportedException regardless of tenant/data provider. Query the
+        // YesSql UserIndex directly instead (same pattern as OrchardCore.Users'
+        // own AdminController), then materialize the matching User documents.
+        var query = session.Query<User, UserIndex>();
+        if (string.Equals(status, "enabled", StringComparison.OrdinalIgnoreCase)) query = query.Where(index => index.IsEnabled);
+        if (string.Equals(status, "disabled", StringComparison.OrdinalIgnoreCase)) query = query.Where(index => !index.IsEnabled);
+
+        var allUsers = await query.ListAsync();
+        IEnumerable<User> matching = allUsers;
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
-            all = all.Where(user => (user.UserName ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase) || (user.Email ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase));
+            matching = matching.Where(user => (user.UserName ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase) || (user.Email ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase));
         }
-        if (string.Equals(status, "enabled", StringComparison.OrdinalIgnoreCase)) all = all.Where(user => user.IsEnabled);
-        if (string.Equals(status, "disabled", StringComparison.OrdinalIgnoreCase)) all = all.Where(user => !user.IsEnabled);
-        var matching = all.OrderBy(user => user.UserName).ToArray();
+
+        var ordered = matching.OrderBy(user => user.UserName, StringComparer.OrdinalIgnoreCase).ToArray();
         page = Math.Max(1, page); pageSize = Math.Clamp(pageSize, 1, 100);
-        return Ok(new CrestUserList(matching.Length, matching.Skip((page - 1) * pageSize).Take(pageSize).Select(CrestUser.From).ToArray()));
+        return Ok(new CrestUserList(ordered.Length, ordered.Skip((page - 1) * pageSize).Take(pageSize).Select(CrestUser.From).ToArray()));
     }
 
     [HttpGet("{id}")]

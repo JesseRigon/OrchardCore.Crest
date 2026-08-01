@@ -15,6 +15,11 @@
     <None Remove="Themes\**" />
     <RazorGenerate Remove="Themes\**" />
     <RazorComponent Remove="Themes\**" />
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OrchardCore.Crest.Components.Tests" />
   </ItemGroup>
 
   <!-- Full MIT-licensed component source now owned and compiled by Crest. -->

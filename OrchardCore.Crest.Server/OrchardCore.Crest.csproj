@@ -22,6 +22,7 @@
     <None Remove="Themes\**" />
     <RazorGenerate Remove="Themes\**" />
     <RazorComponent Remove="Themes\**" />
+    <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

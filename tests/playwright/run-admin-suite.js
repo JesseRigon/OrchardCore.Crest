@@ -70,6 +70,10 @@ function buildSharedAdminChecks() {
     { name: 'primary-nav-flyout-popup-placement', fn: require('./checks/primary-nav/flyout-popup-placement') },
     { name: 'primary-nav-quickadd-autoclose', fn: require('./checks/primary-nav/quickadd-autoclose') },
     { name: 'legacy-frame-workflows', fn: require('./checks/legacy-frame-workflows') },
+    { name: 'localization-sequential-settings', fn: require('./checks/localization-sequential-settings') },
+    { name: 'localization-tab-scoping', fn: require('./checks/localization-tab-scoping') },
+    { name: 'localization-new-tab-inheritance', fn: require('./checks/localization-new-tab-inheritance') },
+    { name: 'localization-multi-user-switch', fn: require('./checks/localization-multi-user-switch') },
   ];
 }
 

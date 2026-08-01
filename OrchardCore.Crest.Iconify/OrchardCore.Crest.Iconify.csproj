@@ -13,5 +13,6 @@
     <Content Remove="icons\Sources\IconifyCache\**" />
     <EmbeddedResource Remove="icons\Sources\IconifyCache\**" />
     <None Remove="icons\Sources\IconifyCache\**" />
+    <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
 </Project>

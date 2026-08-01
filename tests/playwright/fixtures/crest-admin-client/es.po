@@ -1,0 +1,23 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
+
+# Hand-written test/seed content for the Crest.Admin.Client context (WASM .Admin's
+# CrestApiLocalizer, served via GET api/crest/localization/strings - see
+# plans/user-localization.md's "Client string localization for .Admin"). Backs
+# localization-sequential-settings.js's exercise of the full resolution chain, and gives
+# real editorial content for keys already converted in AdminMenus.razor (the
+# proof-of-concept file for the T.T(key, fallback) pattern). Mirrored under
+# modules/OrchardCore.Crest/tests/playwright/fixtures/crest-admin-client/ for the test
+# suite's own reference copy - see that directory's README.
+#: OrchardCore.Crest.Admin/wasm/Pages/AdminMenus.razor
+msgctxt "Crest.Admin.Client"
+msgid "AdminMenus_Loading"
+msgstr "Cargando menús de administración..."
+
+#: OrchardCore.Crest.Admin/wasm/Pages/AdminMenus.razor
+msgctxt "Crest.Admin.Client"
+msgid "AdminMenus_NoneFound"
+msgstr "No se encontraron menús de administración."

@@ -257,13 +257,25 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     // written back into the cookie.
     private async Task<string> ResolveCultureAsync(CultureSelector cultureSelector)
     {
-        var supported = new HashSet<string>(cultureSelector.Cultures.Select(culture => culture.Value), StringComparer.OrdinalIgnoreCase);
-
         // Keyed by user name (sessionStorage, per-tab) - see crest.theme.js's
         // setSessionCultureOverride/getSessionCultureOverride and plans/user-localization.md's
         // "Per-tab and per-user override scoping" section. Switching signed-in identity in
         // this tab looks up that identity's own override, never carries the previous user's.
         var sessionOverride = await js.InvokeAsync<string?>("crestTheme.getSessionCultureOverride", User.UserName);
+        var browserLocale = await js.InvokeAsync<string?>("crestTheme.getBrowserLocale");
+
+        return ResolveCulture(cultureSelector, sessionOverride, browserLocale, IsUnderAdminPath());
+    }
+
+    // Pure priority-chain logic (plans/user-localization.md's "Resolution architecture"),
+    // isolated from JS interop/NavigationManager so it's directly unit-testable:
+    // 1. session override, 2. user's stored default, 3. admin default culture (admin-path
+    // only), 4. browser locale, 5. tenant default. Every candidate must be one of the
+    // tenant's supported cultures or it's skipped, never allowed to "win".
+    internal static string ResolveCulture(CultureSelector cultureSelector, string? sessionOverride, string? browserLocale, bool isUnderAdminPath)
+    {
+        var supported = new HashSet<string>(cultureSelector.Cultures.Select(culture => culture.Value), StringComparer.OrdinalIgnoreCase);
+
         if (!string.IsNullOrWhiteSpace(sessionOverride) && supported.Contains(sessionOverride))
         {
             return sessionOverride;
@@ -274,12 +286,11 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
             return cultureSelector.UserDefaultCulture;
         }
 
-        if (!string.IsNullOrWhiteSpace(cultureSelector.AdminDefaultCulture) && supported.Contains(cultureSelector.AdminDefaultCulture) && IsUnderAdminPath())
+        if (!string.IsNullOrWhiteSpace(cultureSelector.AdminDefaultCulture) && supported.Contains(cultureSelector.AdminDefaultCulture) && isUnderAdminPath)
         {
             return cultureSelector.AdminDefaultCulture;
         }
 
-        var browserLocale = await js.InvokeAsync<string?>("crestTheme.getBrowserLocale");
         if (!string.IsNullOrWhiteSpace(browserLocale) && supported.Contains(browserLocale))
         {
             return browserLocale;
@@ -288,15 +299,16 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         return cultureSelector.TenantDefaultCulture;
     }
 
-    private bool IsUnderAdminPath()
+    private bool IsUnderAdminPath() => IsUnderAdminPath(Manifest?.Admin.BasePath, navigation.Uri);
+
+    internal static bool IsUnderAdminPath(string? basePath, string uri)
     {
-        var basePath = Manifest?.Admin.BasePath;
         if (string.IsNullOrWhiteSpace(basePath))
         {
             return false;
         }
 
-        var path = new Uri(navigation.Uri).AbsolutePath;
+        var path = new Uri(uri).AbsolutePath;
         return path.Equals(basePath, StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith(basePath + "/", StringComparison.OrdinalIgnoreCase);
     }

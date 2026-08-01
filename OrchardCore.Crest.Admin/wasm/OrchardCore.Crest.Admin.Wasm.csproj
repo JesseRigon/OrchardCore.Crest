@@ -22,6 +22,11 @@
     <!-- SDK default items discover C#, Razor components, colocated .razor.css, and wwwroot assets. -->
     <Watch Include="**\*.cs;**\*.razor;wwwroot\**\*" Exclude="bin\**;obj\**;**\bin\**;**\obj\**" />
     <Watch Remove="bin\**;obj\**;**\bin\**;**\obj\**" />
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OrchardCore.Crest.Admin.Tests" />
   </ItemGroup>
 
   <ItemGroup>

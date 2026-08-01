@@ -10,7 +10,8 @@ const { loginAsClient } = require('./harness/auth');
 // they don't.
 function buildSharedClientChecks() {
   return [
-    // e.g. { name: 'homepage-screenshot', fn: require('./checks/homepage-screenshot') },
+    { name: 'localization-anonymous', fn: require('./checks/localization-anonymous') },
+    { name: 'localization-smoke-site', fn: require('./checks/localization-smoke-site') },
   ];
 }
 

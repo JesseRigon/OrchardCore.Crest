@@ -16,3 +16,15 @@
 {% endzone %}
 
 {{ Model.Content | shape_render }}
+
+{% comment %}
+  Localization smoke test (plans/user-localization-testing.md): renders a recognizable,
+  translated string through OrchardCore's stock Liquid "t" filter/.po pipeline so the
+  Playwright check localization-smoke-site.js can confirm translated text actually
+  reaches the front-end for the tenant's currently-resolved culture, not just that the
+  admin's dynamic Crest.Admin.Client strings resolve (that pipeline is WASM-admin-only
+  and doesn't reach this server-rendered theme - see plans/user-localization.md's
+  "Client string localization for .Admin" section). Remove if a real page needs this
+  block's markup real estate.
+{% endcomment %}
+<div data-testid="localization-smoke" style="display:none">{{ "Welcome" | t }}</div>
