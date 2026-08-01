@@ -10,7 +10,7 @@ const { createInstance } = require('../harness/instance');
 // (window.open) rather than a specific Crest link, since the claim being verified is
 // about browser storage-cloning semantics, not any one link's wiring.
 async function pickCulture(page, label) {
-  const trigger = page.locator('.admin-titlebar__culture-selector .crest-dropdown__trigger');
+  const trigger = page.locator('.admin-titlebar__culture-selector');
   await trigger.click();
   await page.locator('[role="option"]', { hasText: label }).first().click();
   await page.waitForTimeout(300);
@@ -18,7 +18,7 @@ async function pickCulture(page, label) {
 
 async function resolvedCulture(page) {
   const hook = page.locator('[data-testid="resolved-culture"]');
-  await hook.waitFor({ timeout: 10000 }).catch(() => {});
+  await hook.waitFor({ state: 'attached', timeout: 15000 }).catch(() => {});
   return hook.textContent().catch(() => null);
 }
 
@@ -30,7 +30,7 @@ module.exports = async function run(page, ctx) {
   try {
     await loginAsUser(source.page, ctx.baseUrl, testUser);
     await source.page.goto(`${ctx.baseUrl}/Admin`, { waitUntil: 'networkidle' });
-    await pickCulture(source.page, 'French');
+    await pickCulture(source.page, 'français');
 
     const [newPage] = await Promise.all([
       source.context.waitForEvent('page'),

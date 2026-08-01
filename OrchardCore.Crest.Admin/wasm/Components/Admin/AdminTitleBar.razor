@@ -195,7 +195,7 @@
         builder.AddAttribute(5, nameof(CrestButton.ButtonStyle), ButtonStyle.Light);
         builder.AddAttribute(6, nameof(CrestButton.Size), ButtonSize.Small);
         builder.AddAttribute(7, nameof(CrestButton.Disabled), IsSavingDefaultCulture || string.IsNullOrWhiteSpace(SelectedCulture));
-        builder.AddAttribute(8, nameof(CrestButton.Click), EventCallback.Factory.Create(this, SaveDefaultCultureAsync));
+        builder.AddAttribute(8, nameof(CrestButton.Click), EventCallback.Factory.Create<MouseEventArgs>(this, SaveDefaultCultureAsync));
         builder.CloseComponent();
         builder.CloseElement();
     };

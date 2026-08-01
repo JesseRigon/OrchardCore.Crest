@@ -657,7 +657,7 @@ public sealed class AdminMenusController(
             .Select(NavigationItem.From)
             .ToArray());
 
-        return menu;
+        return await layoutService.MigrateLegacyKeysAsync(menu);
     }
 
     private async Task<AdminMenu?> LoadMenuForUpdateAsync(string menuId)

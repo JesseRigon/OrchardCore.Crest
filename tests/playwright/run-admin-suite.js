@@ -69,6 +69,7 @@ function buildSharedAdminChecks() {
     { name: 'primary-nav-compact-mode', fn: require('./checks/primary-nav/compact-mode') },
     { name: 'primary-nav-flyout-popup-placement', fn: require('./checks/primary-nav/flyout-popup-placement') },
     { name: 'primary-nav-quickadd-autoclose', fn: require('./checks/primary-nav/quickadd-autoclose') },
+    { name: 'primary-nav-culture-override-persistence', fn: require('./checks/primary-nav/culture-override-persistence') },
     { name: 'legacy-frame-workflows', fn: require('./checks/legacy-frame-workflows') },
     { name: 'localization-sequential-settings', fn: require('./checks/localization-sequential-settings') },
     { name: 'localization-tab-scoping', fn: require('./checks/localization-tab-scoping') },

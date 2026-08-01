@@ -9,7 +9,7 @@ const { createInstance } = require('../harness/instance');
 // must be able to hold two different session overrides simultaneously without either
 // one clobbering the other.
 async function pickCulture(page, label) {
-  const trigger = page.locator('.admin-titlebar__culture-selector .crest-dropdown__trigger');
+  const trigger = page.locator('.admin-titlebar__culture-selector');
   await trigger.click();
   await page.locator('[role="option"]', { hasText: label }).first().click();
   await page.waitForTimeout(300);
@@ -17,7 +17,7 @@ async function pickCulture(page, label) {
 
 async function resolvedCulture(page) {
   const hook = page.locator('[data-testid="resolved-culture"]');
-  await hook.waitFor({ timeout: 10000 }).catch(() => {});
+  await hook.waitFor({ state: 'attached', timeout: 15000 }).catch(() => {});
   return hook.textContent().catch(() => null);
 }
 
@@ -34,8 +34,8 @@ module.exports = async function run(page, ctx) {
     await tabA.page.goto(`${ctx.baseUrl}/Admin`, { waitUntil: 'networkidle' });
     await tabB.page.goto(`${ctx.baseUrl}/Admin`, { waitUntil: 'networkidle' });
 
-    await pickCulture(tabA.page, 'French');
-    await pickCulture(tabB.page, 'German');
+    await pickCulture(tabA.page, 'français');
+    await pickCulture(tabB.page, 'Deutsch');
 
     // Re-navigate (not just re-check in place) so each tab's own resolution runs again
     // against its own sessionStorage, the way a fresh page load would.

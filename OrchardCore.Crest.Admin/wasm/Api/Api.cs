@@ -1199,16 +1199,18 @@ public sealed record NavigationItem(
     string? Position,
     NavigationIcon? Icon,
     string[] Classes,
-    NavigationItem[] Items)
+    NavigationItem[] Items,
+    string? Path = null)
 {
-    public string Key => !string.IsNullOrWhiteSpace(Id) ? Id : StableKey(Text, Link);
+    // Must mirror NavigationController.NavigationItem.Key exactly (server and client
+    // compute the same key independently from the same wire payload) - Text is
+    // translated and must never be part of the match key, Path is a culture-invariant
+    // resource-key structural fingerprint the server computes and sends alongside Text.
+    public string Key => !string.IsNullOrWhiteSpace(Id) ? Id : (Link ?? StableKey(Path ?? Text));
     public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
 
-    private static string StableKey(string text, string? link)
-    {
-        var input = $"{text}|{link}";
-        return "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
-    }
+    private static string StableKey(string input) =>
+        "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
 }
 
 public sealed record ContentType(

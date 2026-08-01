@@ -63,6 +63,7 @@ async function loginAsUser(page, baseUrl, { username, password }) {
     await page.fill('#UserName', username);
     await page.fill('#Password', password);
     await clickLoginButton(page);
+    await page.waitForURL(/\/admin/i, { timeout: 15000 }).catch(() => {});
     await page.waitForLoadState('networkidle').catch(() => {});
   }
 }

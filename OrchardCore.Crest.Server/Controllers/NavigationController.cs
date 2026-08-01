@@ -65,6 +65,7 @@ public sealed class NavigationController(
 
         if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
         {
+            menu = await layoutService.MigrateLegacyKeysAsync(menu);
             menu = await layoutService.ApplyAsync(menu);
             menu = menu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
         }
@@ -91,29 +92,45 @@ public sealed record NavigationItem(
     string? Position,
     NavigationIcon? Icon,
     string[] Classes,
-    NavigationItem[] Items)
+    NavigationItem[] Items,
+    string? Path = null)
 {
-    public string Key => !string.IsNullOrWhiteSpace(Id) ? Id : StableKey(Text, Link);
+    // Menu labels (Text) are translated and must never be part of the match key - the
+    // same item resolves to different Text per admin culture. Id is the only field
+    // authors set explicitly for this purpose; Href/Url (a route) is culture-invariant
+    // too. Path is a resource-key (LocalizedString.Name, never the translated Value)
+    // structural fingerprint used only when neither Id nor a link is present, e.g. the
+    // parent-only category nodes ("Configuration", "Settings") that stock OrchardCore
+    // providers emit with no .Id(...) and no link.
+    // If Crest is ever merged upstream into OrchardCore core, part of that merge should
+    // auto-assign a stable Id to every admin MenuItem that doesn't declare one (instead
+    // of leaving Id optional), and this Key fallback chain should be replaced with a
+    // straight MenuItem.Id lookup.
+    public string Key => !string.IsNullOrWhiteSpace(Id) ? Id : (Link ?? StableKey(Path ?? Text));
     public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
 
-    public static NavigationItem From(MenuItem item) => new(
-        item.Text.Value,
-        item.Id,
-        item.Href,
-        item.Url,
-        item.Target,
-        item.Position,
-        null,
-        item.Classes.ToArray(),
-        item.Items.OrderBy(child => child.Position, NavigationPositionComparer.Instance)
-            .Select(From)
-            .ToArray());
+    public static NavigationItem From(MenuItem item) => From(item, null, 0);
 
-    private static string StableKey(string text, string? link)
+    private static NavigationItem From(MenuItem item, string? parentPath, int index)
     {
-        var input = $"{text}|{link}";
-        return "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
+        var path = $"{parentPath}/{item.Text.Name}#{index}";
+        return new(
+            item.Text.Value,
+            item.Id,
+            item.Href,
+            item.Url,
+            item.Target,
+            item.Position,
+            null,
+            item.Classes.ToArray(),
+            item.Items.OrderBy(child => child.Position, NavigationPositionComparer.Instance)
+                .Select((child, childIndex) => From(child, path, childIndex))
+                .ToArray(),
+            path);
     }
+
+    private static string StableKey(string input) =>
+        "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
 }
 
 internal sealed class NavigationPositionComparer : IComparer<string?>

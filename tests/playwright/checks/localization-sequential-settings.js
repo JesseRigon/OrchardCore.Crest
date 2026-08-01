@@ -43,9 +43,15 @@ async function getJson(page, baseUrl, path) {
 }
 
 async function resolvedCultureFor(page, baseUrl, adminPath) {
+  // A settings PUT just prior (enable cultures, admin default) triggers a tenant
+  // reload (IShellReleaseManager.RequestRelease) - the next navigation can take several
+  // seconds beyond normal page load while the tenant restarts, so the hook wait here
+  // needs real headroom, not just enough for a warm Blazor re-render.
   await page.goto(`${baseUrl}${adminPath}`, { waitUntil: 'networkidle' });
   const hook = page.locator('[data-testid="resolved-culture"]');
-  const found = await hook.waitFor({ timeout: 10000 }).then(() => true).catch(() => false);
+  // The hook is deliberately `hidden` (AdminTitleBar.razor) - waitFor()'s default state
+  // is 'visible', which a hidden element can never satisfy. Wait for 'attached' instead.
+  const found = await hook.waitFor({ state: 'attached', timeout: 15000 }).then(() => true).catch(() => false);
   if (!found) return null;
   return hook.textContent();
 }
@@ -89,11 +95,9 @@ module.exports = async function run(page, ctx) {
     // Stage 4: session override = de, via the titlebar culture picker (rung 1 - purely
     // client-side, no API - see plans/user-localization.md's "Per-tab and per-user
     // override scoping"). de must win over the stored es default from stage 3.
-    const trigger = userPage.locator('.admin-titlebar__culture-selector .crest-dropdown__trigger');
+    const trigger = userPage.locator('.admin-titlebar__culture-selector');
     await trigger.click();
-    await userPage.locator('[role="option"]', { hasText: 'German' }).first().click().catch(async () => {
-      await userPage.getByText('de-DE', { exact: false }).first().click();
-    });
+    await userPage.locator('[role="option"]', { hasText: 'Deutsch' }).first().click();
     await userPage.waitForTimeout(300);
     const user4 = await resolvedCultureFor(userPage, ctx.baseUrl, '/Admin');
     results.push({ name: 'stage4-session-override-de', pass: user4 === 'de-DE', message: `resolved=${user4}` });

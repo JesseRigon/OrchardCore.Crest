@@ -21,7 +21,7 @@ async function welcomeTextFor(baseUrl, locale) {
     // Content-Page.liquid directly); if the smoke hook isn't there, this check reports
     // 'not found' rather than guessing at content navigation.
     const hook = page.locator('[data-testid="localization-smoke"]');
-    const found = await hook.waitFor({ timeout: 5000 }).then(() => true).catch(() => false);
+    const found = await hook.waitFor({ state: 'attached', timeout: 5000 }).then(() => true).catch(() => false);
     if (!found) return { found: false, text: null };
     return { found: true, text: await hook.textContent() };
   } finally {
