@@ -1,17 +1,18 @@
-@page "/Admin/ContentTypes/ListParts"
+@page "/ContentTypes/ListParts"
 @using Crest.Admin.Api
 @using Crest.Components.Model
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" data-testid="content-parts-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="Content Parts" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Browse reusable Orchard parts, their fields, and the content types that attach them." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("ContentParts_Heading", "Content Parts")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("ContentParts_Description", "Browse reusable Orchard parts, their fields, and the content types that attach them.")" />
         </CrestStack>
-        <CrestButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+        <CrestButton Text="@T.T("ContentParts_Refresh", "Refresh")" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
     </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -22,17 +23,17 @@
     <CrestRow Gap="1rem">
         <CrestColumn Size="12" SizeLG="4">
             <CrestModelList TItem="ContentPartUsage"
-                            Title="Content parts"
+                            Title="@T.T("ContentParts_ListTitle", "Content parts")"
                             Items="@PartUsages"
                             SelectedKey="@SelectedPartName"
                             KeySelector="@(part => part.Name)"
                             TextSelector="@(part => part.Name)"
-                            DescriptionSelector="@(part => $"{part.Fields.Length} fields · {part.ContentTypes.Length} types")"
+                            DescriptionSelector="@(part => string.Format(T.T("ContentParts_FieldsTypesFormat", "{0} fields · {1} types"), part.Fields.Length, part.ContentTypes.Length))"
                             SearchPredicate="MatchesSearch"
                             Select="SelectPartAsync"
                             ShowCreate="false"
                             IsBusy="@IsLoading"
-                            EmptyText="No content parts are attached to the available types." />
+                            EmptyText="@T.T("ContentParts_EmptyList", "No content parts are attached to the available types.")" />
         </CrestColumn>
         <CrestColumn Size="12" SizeLG="8">
             @if (IsLoading)
@@ -41,7 +42,7 @@
             }
             else if (SelectedPart is null)
             {
-                <CrestCard><CrestText Text="Select a content part to inspect its field and type usage." /></CrestCard>
+                <CrestCard><CrestText Text="@T.T("ContentParts_SelectPrompt", "Select a content part to inspect its field and type usage.")" /></CrestCard>
             }
             else
             {
@@ -52,10 +53,10 @@
                             <CrestText TextStyle="TextStyle.Body2" Text="@TypeUsageText(SelectedPart)" />
                         </CrestStack>
 
-                        <CrestFieldset Text="Fields" AllowCollapse="true" Collapsed="false">
+                        <CrestFieldset Text="@T.T("ContentParts_FieldsFieldset", "Fields")" AllowCollapse="true" Collapsed="false">
                             @if (SelectedPart.Fields.Length == 0)
                             {
-                                <CrestText Text="No fields are defined on this part." />
+                                <CrestText Text="@T.T("ContentParts_NoFields", "No fields are defined on this part.")" />
                             }
                             else
                             {
@@ -71,7 +72,7 @@
                             }
                         </CrestFieldset>
 
-                        <CrestFieldset Text="Used by content types" AllowCollapse="true" Collapsed="false">
+                        <CrestFieldset Text="@T.T("ContentParts_UsedByFieldset", "Used by content types")" AllowCollapse="true" Collapsed="false">
                             <CrestStack Orientation="Orientation.Horizontal" Gap="0.45rem" Wrap="FlexWrap.Wrap">
                                 @foreach (var contentType in SelectedPart.ContentTypes.Order(StringComparer.OrdinalIgnoreCase))
                                 {
@@ -137,8 +138,10 @@
         || part.Fields.Any(field => field.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
         || part.ContentTypes.Any(contentType => contentType.Contains(term, StringComparison.OrdinalIgnoreCase));
 
-    private static string TypeUsageText(ContentPartUsage part) =>
-        $"Attached to {part.ContentTypes.Length} content type{(part.ContentTypes.Length == 1 ? string.Empty : "s")}.";
+    private string TypeUsageText(ContentPartUsage part) =>
+        part.ContentTypes.Length == 1
+            ? string.Format(T.T("ContentParts_AttachedToSingularFormat", "Attached to {0} content type."), part.ContentTypes.Length)
+            : string.Format(T.T("ContentParts_AttachedToPluralFormat", "Attached to {0} content types."), part.ContentTypes.Length);
 
     private sealed record ContentPartUsage(string Name, ContentPartField[] Fields, string[] ContentTypes);
 }

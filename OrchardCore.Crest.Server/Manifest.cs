@@ -14,7 +14,7 @@ using OrchardCore.Modules.Manifest;
     Name = "Crest Server",
     Description = "Provides Crest tenant APIs for authentication, theme settings, and app configuration.",
     Category = "OrchardCore.Crest",
-    Dependencies = ["OrchardCore.Menu", "OrchardCore.Settings", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.LegacyFrame", "OrchardCore.Crest.Icons"],
+    Dependencies = ["OrchardCore.Admin", "OrchardCore.Menu", "OrchardCore.Settings", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.LegacyFrame", "OrchardCore.Crest.Icons"],
     IsAlwaysEnabled = true
 )]
 

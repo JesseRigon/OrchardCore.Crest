@@ -1,20 +1,21 @@
-@page "/Admin/Tenants"
+@page "/Tenants"
 @using Crest.Admin.Api
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NavigationManager Navigation
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" data-testid="tenants-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="Tenants" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Manage tenants from the default Orchard tenant." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Tenants_Heading", "Tenants")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Tenants_Description", "Manage tenants from the default Orchard tenant.")" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-            <CrestButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
-            <CrestButton Text="Add tenant" Icon="add" Click="CreateTenant" Disabled="@IsBusy" />
+            <CrestButton Text="@T.T("Tenants_Refresh", "Refresh")" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+            <CrestButton Text="@T.T("Tenants_AddTenant", "Add tenant")" Icon="add" Click="CreateTenant" Disabled="@IsBusy" />
         </CrestStack>
     </CrestStack>
 
@@ -25,11 +26,11 @@
 
     <CrestCard>
         <CrestRow AlignItems="AlignItems.End" Gap="0.75rem">
-            <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="Search" Style="width: 100%;"><CrestTextBox @bind-Value="Search" Placeholder="Search name, host, or prefix" Style="width: 100%;" /></CrestFormField></CrestColumn>
-            <CrestColumn Size="12" SizeMD="2"><CrestFormField Text="Category" Style="width: 100%;"><CrestDropDown @bind-Value="Category" Data="CategoryOptions" AllowClear="true" Style="width: 100%;" /></CrestFormField></CrestColumn>
-            <CrestColumn Size="12" SizeMD="2"><CrestFormField Text="State" Style="width: 100%;"><CrestDropDown @bind-Value="State" Data="StateOptions" AllowClear="true" Style="width: 100%;" /></CrestFormField></CrestColumn>
-            <CrestColumn Size="12" SizeMD="2"><CrestFormField Text="Sort" Style="width: 100%;"><CrestDropDown @bind-Value="OrderBy" Data="OrderOptions" Style="width: 100%;" /></CrestFormField></CrestColumn>
-            <CrestColumn Size="12" SizeMD="2"><CrestButton Text="Apply" Icon="filter_alt" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" /></CrestColumn>
+            <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T.T("Tenants_SearchLabel", "Search")" Style="width: 100%;"><CrestTextBox @bind-Value="Search" Placeholder="@T.T("Tenants_SearchPlaceholder", "Search name, host, or prefix")" Style="width: 100%;" /></CrestFormField></CrestColumn>
+            <CrestColumn Size="12" SizeMD="2"><CrestFormField Text="@T.T("Tenants_CategoryLabel", "Category")" Style="width: 100%;"><CrestDropDown @bind-Value="Category" Data="CategoryOptions" AllowClear="true" Style="width: 100%;" /></CrestFormField></CrestColumn>
+            <CrestColumn Size="12" SizeMD="2"><CrestFormField Text="@T.T("Tenants_StateLabel", "State")" Style="width: 100%;"><CrestDropDown @bind-Value="State" Data="StateOptions" AllowClear="true" Style="width: 100%;" /></CrestFormField></CrestColumn>
+            <CrestColumn Size="12" SizeMD="2"><CrestFormField Text="@T.T("Tenants_SortLabel", "Sort")" Style="width: 100%;"><CrestDropDown @bind-Value="OrderBy" Data="OrderOptions" Style="width: 100%;" /></CrestFormField></CrestColumn>
+            <CrestColumn Size="12" SizeMD="2"><CrestButton Text="@T.T("Tenants_Apply", "Apply")" Icon="filter_alt" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" /></CrestColumn>
         </CrestRow>
     </CrestCard>
 
@@ -38,14 +39,14 @@
         <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                 <span>@ConfirmMessage</span>
-                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem"><CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelConfirm" Disabled="@IsBusy" /><CrestButton Text="Confirm" ButtonStyle="ButtonStyle.Danger" Click="RunConfirmedActionAsync" Disabled="@IsBusy" /></CrestStack>
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem"><CrestButton Text="@T.T("Tenants_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelConfirm" Disabled="@IsBusy" /><CrestButton Text="@T.T("Tenants_Confirm", "Confirm")" ButtonStyle="ButtonStyle.Danger" Click="RunConfirmedActionAsync" Disabled="@IsBusy" /></CrestStack>
             </CrestStack>
         </CrestAlert>
     }
 
     <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-        <CrestButton Text="@($"Enable selected ({SelectedNames.Count})")" Icon="play_arrow" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmBulk("Enable"))" Disabled="@(SelectedNames.Count == 0 || IsBusy)" />
-        <CrestButton Text="@($"Disable selected ({SelectedNames.Count})")" Icon="pause" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmBulk("Disable"))" Disabled="@(SelectedNames.Count == 0 || IsBusy)" />
+        <CrestButton Text="@string.Format(T.T("Tenants_EnableSelectedFormat", "Enable selected ({0})"), SelectedNames.Count)" Icon="play_arrow" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmBulk("Enable"))" Disabled="@(SelectedNames.Count == 0 || IsBusy)" />
+        <CrestButton Text="@string.Format(T.T("Tenants_DisableSelectedFormat", "Disable selected ({0})"), SelectedNames.Count)" Icon="pause" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmBulk("Disable"))" Disabled="@(SelectedNames.Count == 0 || IsBusy)" />
     </CrestStack>
 
     <CrestCard>
@@ -55,18 +56,18 @@
         }
         else if (Catalog.Tenants.Length == 0)
         {
-            <CrestText TextStyle="TextStyle.Body2" Text="No tenants match this filter." />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Tenants_NoneFound", "No tenants match this filter.")" />
         }
         else
         {
             <CrestDataGrid Data="@Catalog.Tenants" TItem="CrestTenant" AllowPaging="true" PageSize="20">
                 <Columns>
                     <CrestDataGridColumn TItem="CrestTenant" Width="3.5rem" Sortable="false" Filterable="false"><HeaderTemplate><CrestCheckBox Value="@(Catalog.Tenants.Length > 0 && Catalog.Tenants.All(tenant => SelectedNames.Contains(tenant.Name)))" Change="@((bool value) => ToggleAll(value))" Name="select-all-tenants" /></HeaderTemplate><Template Context="tenant"><CrestCheckBox Value="@SelectedNames.Contains(tenant.Name)" Change="@((bool value) => Toggle(tenant.Name, value))" Name="@($"tenant-{tenant.Name}")" Disabled="@tenant.IsDefault" /></Template></CrestDataGridColumn>
-                    <CrestDataGridColumn TItem="CrestTenant" Property="Name" Title="Name"><Template Context="tenant"><CrestStack Gap="0.15rem"><CrestText TextStyle="TextStyle.Subtitle2" Text="@tenant.Name" />@if (tenant.IsDefault) { <CrestText TextStyle="TextStyle.Caption" Text="Default tenant" /> }</CrestStack></Template></CrestDataGridColumn>
-                    <CrestDataGridColumn TItem="CrestTenant" Property="State" Title="State" />
-                    <CrestDataGridColumn TItem="CrestTenant" Property="Category" Title="Category"><Template Context="tenant">@(string.IsNullOrWhiteSpace(tenant.Category) ? "—" : tenant.Category)</Template></CrestDataGridColumn>
-                    <CrestDataGridColumn TItem="CrestTenant" Title="Host / prefix"><Template Context="tenant"><CrestStack Gap="0.1rem">@if (!string.IsNullOrWhiteSpace(tenant.RequestUrlHost)) { <CrestText TextStyle="TextStyle.Caption" Text="@tenant.RequestUrlHost" /> } @if (!string.IsNullOrWhiteSpace(tenant.RequestUrlPrefix)) { <CrestText TextStyle="TextStyle.Caption" Text="@tenant.RequestUrlPrefix" /> }</CrestStack></Template></CrestDataGridColumn>
-                    <CrestDataGridColumn TItem="CrestTenant" Title="Actions" Width="14rem"><Template Context="tenant"><CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem"><CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => EditTenant(tenant.Name))" title="Edit" />@if (tenant.State == "Running" && !tenant.IsDefault) { <CrestButton Icon="pause" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmSingle("Disable", tenant.Name))" title="Disable" /> } @if (tenant.State == "Disabled") { <CrestButton Icon="play_arrow" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmSingle("Enable", tenant.Name))" title="Enable" /> }<CrestButton Icon="refresh" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ReloadAsync(tenant.Name))" title="Reload" />@if (Catalog.TenantRemovalAllowed && tenant.IsRemovable) { <CrestButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => ConfirmSingle("Remove", tenant.Name))" title="Remove" /> }</CrestStack></Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestTenant" Property="Name" Title="@T.T("Tenants_NameColumn", "Name")"><Template Context="tenant"><CrestStack Gap="0.15rem"><CrestText TextStyle="TextStyle.Subtitle2" Text="@tenant.Name" />@if (tenant.IsDefault) { <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Tenants_DefaultTenantLabel", "Default tenant")" /> }</CrestStack></Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestTenant" Property="State" Title="@T.T("Tenants_StateColumn", "State")" />
+                    <CrestDataGridColumn TItem="CrestTenant" Property="Category" Title="@T.T("Tenants_CategoryColumn", "Category")"><Template Context="tenant">@(string.IsNullOrWhiteSpace(tenant.Category) ? "—" : tenant.Category)</Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestTenant" Title="@T.T("Tenants_HostPrefixColumn", "Host / prefix")"><Template Context="tenant"><CrestStack Gap="0.1rem">@if (!string.IsNullOrWhiteSpace(tenant.RequestUrlHost)) { <CrestText TextStyle="TextStyle.Caption" Text="@tenant.RequestUrlHost" /> } @if (!string.IsNullOrWhiteSpace(tenant.RequestUrlPrefix)) { <CrestText TextStyle="TextStyle.Caption" Text="@tenant.RequestUrlPrefix" /> }</CrestStack></Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestTenant" Title="@T.T("Tenants_ActionsColumn", "Actions")" Width="14rem"><Template Context="tenant"><CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem"><CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => EditTenant(tenant.Name))" title="@T.T("Tenants_EditTitle", "Edit")" />@if (tenant.State == "Running" && !tenant.IsDefault) { <CrestButton Icon="pause" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmSingle("Disable", tenant.Name))" title="@T.T("Tenants_DisableTitle", "Disable")" /> } @if (tenant.State == "Disabled") { <CrestButton Icon="play_arrow" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmSingle("Enable", tenant.Name))" title="@T.T("Tenants_EnableTitle", "Enable")" /> }<CrestButton Icon="refresh" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ReloadAsync(tenant.Name))" title="@T.T("Tenants_ReloadTitle", "Reload")" />@if (Catalog.TenantRemovalAllowed && tenant.IsRemovable) { <CrestButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => ConfirmSingle("Remove", tenant.Name))" title="@T.T("Tenants_RemoveTitle", "Remove")" /> }</CrestStack></Template></CrestDataGridColumn>
                 </Columns>
             </CrestDataGrid>
         }
@@ -86,7 +87,9 @@
     private string? ErrorMessage { get; set; }
     private string? ConfirmAction { get; set; }
     private string[] ConfirmNames { get; set; } = [];
-    private string ConfirmMessage => ConfirmAction == "Remove" ? $"Remove tenant {ConfirmNames.FirstOrDefault()}? This cannot be undone." : $"{ConfirmAction} {ConfirmNames.Length} tenant{(ConfirmNames.Length == 1 ? string.Empty : "s")}?";
+    private string ConfirmMessage => ConfirmAction == "Remove"
+        ? string.Format(T.T("Tenants_RemoveConfirmFormat", "Remove tenant {0}? This cannot be undone."), ConfirmNames.FirstOrDefault())
+        : string.Format(T.T("Tenants_BulkConfirmFormat", "{0} {1} tenant{2}?"), ConfirmAction, ConfirmNames.Length, ConfirmNames.Length == 1 ? string.Empty : "s");
     private IEnumerable<string> CategoryOptions => Catalog.Categories;
     private static readonly string[] StateOptions = ["Running", "Disabled", "Uninitialized"];
     private static readonly string[] OrderOptions = ["Name", "State"];
@@ -102,8 +105,8 @@
         finally { IsLoading = false; }
     }
 
-    private void CreateTenant() => Navigation.NavigateTo("/Admin/Tenants/Create");
-    private void EditTenant(string name) => Navigation.NavigateTo($"/Admin/Tenants/Edit/{Uri.EscapeDataString(name)}");
+    private void CreateTenant() => Navigation.NavigateTo("Tenants/Create");
+    private void EditTenant(string name) => Navigation.NavigateTo($"Tenants/Edit/{Uri.EscapeDataString(name)}");
     private void Toggle(string name, bool selected) { if (selected) SelectedNames.Add(name); else SelectedNames.Remove(name); }
     private void ToggleAll(bool selected) { if (selected) foreach (var tenant in Catalog.Tenants.Where(tenant => !tenant.IsDefault)) SelectedNames.Add(tenant.Name); else SelectedNames.Clear(); }
     private void ConfirmSingle(string action, string name) { ConfirmAction = action; ConfirmNames = [name]; }
@@ -115,8 +118,8 @@
         IsSaving = true;
         try
         {
-            if (await Api.Crest.Rest.Tenants.ReloadAsync(name)) Notifications.Notify(NotificationSeverity.Success, "Tenant reloaded", $"{name} was reloaded.");
-            else Notifications.Notify(NotificationSeverity.Error, "Tenant reload failed", $"{name} could not be reloaded.");
+            if (await Api.Crest.Rest.Tenants.ReloadAsync(name)) Notifications.Notify(NotificationSeverity.Success, T.T("Tenants_ReloadedTitle", "Tenant reloaded"), string.Format(T.T("Tenants_ReloadedMessageFormat", "{0} was reloaded."), name));
+            else Notifications.Notify(NotificationSeverity.Error, T.T("Tenants_ReloadFailedTitle", "Tenant reload failed"), string.Format(T.T("Tenants_ReloadFailedMessageFormat", "{0} could not be reloaded."), name));
         }
         finally { IsSaving = false; }
     }
@@ -137,12 +140,12 @@
             };
             if (success)
             {
-                Notifications.Notify(NotificationSeverity.Success, $"Tenant{(ConfirmNames.Length == 1 ? string.Empty : "s")} {ConfirmAction.ToLowerInvariant()}d", "The tenant state was updated.");
+                Notifications.Notify(NotificationSeverity.Success, string.Format(T.T("Tenants_ActionSucceededTitleFormat", "Tenant{0} {1}d"), ConfirmNames.Length == 1 ? string.Empty : "s", ConfirmAction.ToLowerInvariant()), T.T("Tenants_ActionSucceededMessage", "The tenant state was updated."));
                 foreach (var name in ConfirmNames) SelectedNames.Remove(name);
                 CancelConfirm();
                 await LoadAsync();
             }
-            else Notifications.Notify(NotificationSeverity.Error, "Tenant action failed", "Orchard did not accept the requested tenant action.");
+            else Notifications.Notify(NotificationSeverity.Error, T.T("Tenants_ActionFailedTitle", "Tenant action failed"), T.T("Tenants_ActionFailedMessage", "Orchard did not accept the requested tenant action."));
         }
         finally { IsSaving = false; }
     }

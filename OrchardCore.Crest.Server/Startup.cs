@@ -4,6 +4,7 @@ using Crest.Iconify;
 using Crest.Icons;
 using Crest.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using OrchardCore.DisplayManagement.Theming;
 using OrchardCore.Modules;
 using OrchardCore.Navigation;
@@ -59,6 +60,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<CrestIconController>();
         services.AddRecipeExecutionStep<Recipes.CrestAdminMenuLayoutStep>();
         services.Configure<BlazorAdminThemeOptions>(options => { });
+        services.AddTransient<IPostConfigureOptions<BlazorAdminThemeOptions>, BlazorAdminThemeOptionsConfiguration>();
         services.AddCrestCultureCookieProvider();
     }
 

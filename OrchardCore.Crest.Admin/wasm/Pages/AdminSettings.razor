@@ -1,4 +1,4 @@
-@page "/Admin/Settings/admin"
+@page "/Settings/admin"
 @using Crest.Admin.Api
 @using Crest.Admin.Components.Shared
 @using Crest.Admin.DisplayManagement
@@ -7,14 +7,15 @@
 @inject IApi Api
 @inject NotificationService Notifications
 @inject DisplayManager DisplayManager
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="Admin Settings" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Manage Orchard admin UI options and route access planning." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("AdminSettings_Heading", "Admin Settings")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("AdminSettings_Description", "Manage Orchard admin UI options and route access planning.")" />
         </CrestStack>
-        <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
+        <CrestButton Text="@T.T("AdminSettings_Refresh", "Refresh")" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
     </CrestStack>
 
     <CrestCard>
@@ -26,46 +27,46 @@
         {
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
                 <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                <CrestText Text="Loading settings..." />
+                <CrestText Text="@T.T("AdminSettings_Loading", "Loading settings...")" />
             </CrestStack>
         }
         else
         {
-            <CrestMainContentTabs @bind-SelectedIndex="SelectedTabIndex" aria-label="Admin settings sections">
-                <CrestTabsItem Text="Admin" Icon="admin_panel_settings">
+            <CrestMainContentTabs @bind-SelectedIndex="SelectedTabIndex" aria-label="@T.T("AdminSettings_TabsAriaLabel", "Admin settings sections")">
+                <CrestTabsItem Text="@T.T("AdminSettings_AdminTab", "Admin")" Icon="admin_panel_settings">
                     <CrestTemplateForm TItem="AdminSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
                         <CrestStack Gap="1rem">
-                            <CrestText TextStyle="TextStyle.H5" Text="Admin" />
-                            <SettingsSwitch Label="Enable theme toggler" Hint="Whether or not to display a theme toggler." @bind-Value="Model.DisplayThemeToggler" />
-                            <SettingsSwitch Label="Enable Admin Menu filter" Hint="Whether a quick search to filter the admin menu is displayed." @bind-Value="Model.DisplayMenuFilter" />
-                            <SettingsSwitch Label="Display titles in top bar" Hint="Whether the titles are displayed in the top bar." @bind-Value="Model.DisplayTitlesInTopbar" />
-                            <CrestFieldset Text="Title bar">
+                            <CrestText TextStyle="TextStyle.H5" Text="@T.T("AdminSettings_AdminTab", "Admin")" />
+                            <SettingsSwitch Label="@T.T("AdminSettings_ThemeTogglerLabel", "Enable theme toggler")" Hint="@T.T("AdminSettings_ThemeTogglerHint", "Whether or not to display a theme toggler.")" @bind-Value="Model.DisplayThemeToggler" />
+                            <SettingsSwitch Label="@T.T("AdminSettings_MenuFilterLabel", "Enable Admin Menu filter")" Hint="@T.T("AdminSettings_MenuFilterHint", "Whether a quick search to filter the admin menu is displayed.")" @bind-Value="Model.DisplayMenuFilter" />
+                            <SettingsSwitch Label="@T.T("AdminSettings_TitlesInTopbarLabel", "Display titles in top bar")" Hint="@T.T("AdminSettings_TitlesInTopbarHint", "Whether the titles are displayed in the top bar.")" @bind-Value="Model.DisplayTitlesInTopbar" />
+                            <CrestFieldset Text="@T.T("AdminSettings_TitleBarFieldset", "Title bar")">
                                 <CrestStack Gap="0.75rem">
-                                    <SettingsSwitch Label="Display culture label" Hint="Show the culture name beside its flag. The default is the flag icon only." @bind-Value="TitleBarModel.DisplayCultureLabel" />
-                                    <CrestDropDown Data="@AvatarShapes" @bind-Value="TitleBarModel.TenantAvatarShape" TextProperty="Label" ValueProperty="Value" Placeholder="Tenant avatar shape" Style="width: 100%;" />
-                                    <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarImageUrl" Placeholder="Tenant avatar image URL (optional)" Style="width: 100%;" />
+                                    <SettingsSwitch Label="@T.T("AdminSettings_CultureLabelLabel", "Display culture label")" Hint="@T.T("AdminSettings_CultureLabelHint", "Show the culture name beside its flag. The default is the flag icon only.")" @bind-Value="TitleBarModel.DisplayCultureLabel" />
+                                    <CrestDropDown Data="@AvatarShapes" @bind-Value="TitleBarModel.TenantAvatarShape" TextProperty="Label" ValueProperty="Value" Placeholder="@T.T("AdminSettings_AvatarShapePlaceholder", "Tenant avatar shape")" Style="width: 100%;" />
+                                    <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarImageUrl" Placeholder="@T.T("AdminSettings_AvatarImageUrlPlaceholder", "Tenant avatar image URL (optional)")" Style="width: 100%;" />
                                     @if (string.Equals(TitleBarModel.TenantAvatarShape, "Custom", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarClipPath" Placeholder="CSS/SVG clip-path, for example polygon(...) or url(#clip)" Style="width: 100%;" />
-                                        <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarBorderRadius" Placeholder="Optional border radius" Style="width: 100%;" />
+                                        <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarClipPath" Placeholder="@T.T("AdminSettings_ClipPathPlaceholder", "CSS/SVG clip-path, for example polygon(...) or url(#clip)")" Style="width: 100%;" />
+                                        <CrestTextBox @bind-Value="TitleBarModel.TenantAvatarBorderRadius" Placeholder="@T.T("AdminSettings_BorderRadiusPlaceholder", "Optional border radius")" Style="width: 100%;" />
                                     }
                                 </CrestStack>
                             </CrestFieldset>
                             <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                                <CrestButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                                <CrestButton Text="@T.T("AdminSettings_SaveSettings", "Save settings")" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
                             </CrestStack>
                         </CrestStack>
                     </CrestTemplateForm>
                 </CrestTabsItem>
-                <CrestTabsItem Text="Site Map" Icon="account_tree">
+                <CrestTabsItem Text="@T.T("AdminSettings_SiteMapTab", "Site Map")" Icon="account_tree">
                     <CrestStack Gap="1rem">
                         <CrestStack Gap="0.25rem">
-                            <CrestText TextStyle="TextStyle.H5" Text="Site Map" />
-                            <CrestText TextStyle="TextStyle.Body2" Text="Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up." />
+                            <CrestText TextStyle="TextStyle.H5" Text="@T.T("AdminSettings_SiteMapTab", "Site Map")" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("AdminSettings_SiteMapDescription", "Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up.")" />
                         </CrestStack>
                         @if (RouteNodes.Length == 0)
                         {
-                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">No routes were discovered for the admin site map.</CrestAlert>
+                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("AdminSettings_NoRoutesFound", "No routes were discovered for the admin site map.")</CrestAlert>
                         }
                         else
                         {
@@ -115,7 +116,7 @@
             Model = AdminSettingsModel.From(await Api.Crest.Rest.AdminSettings.GetAsync());
             TitleBarModel = TitleBarSettingsModel.From(await Api.Crest.Rest.TitleBarSettings.GetAsync());
             var manifest = await Api.Crest.Rest.App.GetManifestAsync();
-            RouteNodes = manifest?.AdminMenu.Items.Select((item, index) => RouteNode.From(item, null, 0, index)).ToArray() ?? [];
+            RouteNodes = manifest?.AdminMenu.Items.Select((item, index) => RouteNode.From(T, item, null, 0, index)).ToArray() ?? [];
         }
         catch (Exception ex) { ErrorMessage = ex.Message; }
         finally { IsLoading = false; }
@@ -133,7 +134,7 @@
                 Model = AdminSettingsModel.From(saved);
                 TitleBarModel = TitleBarSettingsModel.From(titleBarSaved);
                 await DisplayManager.RefreshAdminStateAsync();
-                Notifications.Notify(NotificationSeverity.Success, "Settings saved", "Admin settings were updated.");
+                Notifications.Notify(NotificationSeverity.Success, T.T("AdminSettings_SavedTitle", "Settings saved"), T.T("AdminSettings_SavedMessage", "Admin settings were updated."));
             }
         }
         finally { IsSaving = false; }
@@ -143,10 +144,10 @@
         <div class="admin-menu-node">
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
-                    <span class="admin-menu-node__handle" title="Drag to move"><CrestIcon IconKey="iconify.mdi/current/default/drag" /></span>
+                    <span class="admin-menu-node__handle" title="@T.T("AdminSettings_DragToMoveTitle", "Drag to move")"><CrestIcon IconKey="iconify.mdi/current/default/drag" /></span>
                     @if (node.Items.Length > 0)
                     {
-                        <CrestButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" title="Expand/collapse coming soon" />
+                        <CrestButton Size="ButtonSize.Small" Icon="expand_more" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Disabled="true" title="@T.T("AdminSettings_ExpandCollapseComingSoonTitle", "Expand/collapse coming soon")" />
                     }
                     else
                     {
@@ -158,9 +159,9 @@
                     </CrestStack>
                 </CrestStack>
                 <CrestStack Orientation="Orientation.Horizontal" Gap="0.35rem">
-                    <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Disabled="true" title="Edit route permissions coming soon" />
-                    <CrestButton Size="ButtonSize.Small" Icon="visibility_off" ButtonStyle="ButtonStyle.Light" Disabled="true" title="Toggle route access coming soon" />
-                    <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Disabled="true" title="Delete route override coming soon" />
+                    <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Disabled="true" title="@T.T("AdminSettings_EditRoutePermissionsComingSoonTitle", "Edit route permissions coming soon")" />
+                    <CrestButton Size="ButtonSize.Small" Icon="visibility_off" ButtonStyle="ButtonStyle.Light" Disabled="true" title="@T.T("AdminSettings_ToggleRouteAccessComingSoonTitle", "Toggle route access coming soon")" />
+                    <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Disabled="true" title="@T.T("AdminSettings_DeleteRouteOverrideComingSoonTitle", "Delete route override coming soon")" />
                 </CrestStack>
             </CrestStack>
         </div>
@@ -215,15 +216,15 @@
 
     private sealed record RouteNode(string Id, string Text, string Meta, RouteNode[] Items)
     {
-        public static RouteNode From(NavigationItem item, string? parentId, int depth, int order)
+        public static RouteNode From(Crest.Components.Theme.CrestApiLocalizer t, NavigationItem item, string? parentId, int depth, int order)
         {
             var id = item.Key;
             var metaValues = new List<string>();
             if (!string.IsNullOrWhiteSpace(item.Link)) metaValues.Add(item.Link!);
-            if (item.Classes.Length > 0) metaValues.Add($"Classes: {string.Join(" ", item.Classes)}");
-            if (!string.IsNullOrWhiteSpace(parentId)) metaValues.Add($"Parent: {parentId}");
+            if (item.Classes.Length > 0) metaValues.Add(string.Format(t.T("AdminSettings_ClassesFormat", "Classes: {0}"), string.Join(" ", item.Classes)));
+            if (!string.IsNullOrWhiteSpace(parentId)) metaValues.Add(string.Format(t.T("AdminSettings_ParentFormat", "Parent: {0}"), parentId));
 
-            return new(id, item.Text, metaValues.Count == 0 ? $"Route group • depth {depth} • order {order}" : string.Join(" • ", metaValues), item.Items.Select((child, index) => From(child, id, depth + 1, index)).ToArray());
+            return new(id, item.Text, metaValues.Count == 0 ? string.Format(t.T("AdminSettings_RouteGroupFormat", "Route group • depth {0} • order {1}"), depth, order) : string.Join(" • ", metaValues), item.Items.Select((child, index) => From(t, child, id, depth + 1, index)).ToArray());
         }
     }
 }

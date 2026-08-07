@@ -1,41 +1,42 @@
-@page "/Admin/Settings/userLogin"
+@page "/Settings/userLogin"
 @using Crest.Admin.Api
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" data-testid="login-settings-page">
-    <CrestText TextStyle="TextStyle.H4" Text="User Login Settings" />
+    <CrestText TextStyle="TextStyle.H4" Text="@T.T("LoginSettings_Heading", "User Login Settings")" />
     @if (Model is null)
     {
         <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
     }
     else
     {
-        <CrestFieldset Text="General">
-            <CrestCheckBox @bind-Value="Model.AllowRememberMe" Name="allow-remember-me" /><label for="allow-remember-me"> Allow user to be remembered during login</label><br />
-            <CrestCheckBox @bind-Value="Model.AllowChangingUsername" Name="allow-changing-username" /><label for="allow-changing-username"> Allow user to change their username</label><br />
-            <CrestCheckBox @bind-Value="Model.AllowChangingEmail" Name="allow-changing-email" /><label for="allow-changing-email"> Allow user to change their email address</label><br />
-            <CrestCheckBox @bind-Value="Model.AllowChangingPhoneNumber" Name="allow-changing-phone" /><label for="allow-changing-phone"> Allow user to change their phone number</label><br />
-            <CrestCheckBox @bind-Value="Model.UseSiteTheme" Name="use-site-theme" /><label for="use-site-theme"> Use site theme for login page</label><br />
-            <CrestCheckBox @bind-Value="Model.DisableLocalLogin" Name="disable-local-login" /><label for="disable-local-login"> Disable local password login</label>
+        <CrestFieldset Text="@T.T("LoginSettings_GeneralFieldset", "General")">
+            <CrestCheckBox @bind-Value="Model.AllowRememberMe" Name="allow-remember-me" /><label for="allow-remember-me"> @T.T("LoginSettings_AllowRememberMeLabel", "Allow user to be remembered during login")</label><br />
+            <CrestCheckBox @bind-Value="Model.AllowChangingUsername" Name="allow-changing-username" /><label for="allow-changing-username"> @T.T("LoginSettings_AllowChangingUsernameLabel", "Allow user to change their username")</label><br />
+            <CrestCheckBox @bind-Value="Model.AllowChangingEmail" Name="allow-changing-email" /><label for="allow-changing-email"> @T.T("LoginSettings_AllowChangingEmailLabel", "Allow user to change their email address")</label><br />
+            <CrestCheckBox @bind-Value="Model.AllowChangingPhoneNumber" Name="allow-changing-phone" /><label for="allow-changing-phone"> @T.T("LoginSettings_AllowChangingPhoneLabel", "Allow user to change their phone number")</label><br />
+            <CrestCheckBox @bind-Value="Model.UseSiteTheme" Name="use-site-theme" /><label for="use-site-theme"> @T.T("LoginSettings_UseSiteThemeLabel", "Use site theme for login page")</label><br />
+            <CrestCheckBox @bind-Value="Model.DisableLocalLogin" Name="disable-local-login" /><label for="disable-local-login"> @T.T("LoginSettings_DisableLocalLoginLabel", "Disable local password login")</label>
         </CrestFieldset>
-        <CrestFieldset Text="Two-Factor Authentication">
-            <CrestCheckBox @bind-Value="Model.AllowRememberClientTwoFactorAuthentication" Name="remember-two-factor" /><label for="remember-two-factor"> Allow users to remember client</label><br />
-            <CrestCheckBox @bind-Value="Model.RequireTwoFactorAuthentication" Name="require-two-factor" /><label for="require-two-factor"> Require two-factor authentication</label><br />
-            <CrestLabel Text="Number of recovery codes to generate" Component="recovery-codes" />
+        <CrestFieldset Text="@T.T("LoginSettings_TwoFactorFieldset", "Two-Factor Authentication")">
+            <CrestCheckBox @bind-Value="Model.AllowRememberClientTwoFactorAuthentication" Name="remember-two-factor" /><label for="remember-two-factor"> @T.T("LoginSettings_AllowRememberClientLabel", "Allow users to remember client")</label><br />
+            <CrestCheckBox @bind-Value="Model.RequireTwoFactorAuthentication" Name="require-two-factor" /><label for="require-two-factor"> @T.T("LoginSettings_RequireTwoFactorLabel", "Require two-factor authentication")</label><br />
+            <CrestLabel Text="@T.T("LoginSettings_RecoveryCodesLabel", "Number of recovery codes to generate")" Component="recovery-codes" />
             <CrestNumeric @bind-Value="Model.NumberOfRecoveryCodesToGenerate" Name="recovery-codes" Min="1" /><br />
-            <CrestCheckBox @bind-Value="Model.UseSiteThemeForTwoFactorAuthentication" Name="two-factor-site-theme" /><label for="two-factor-site-theme"> Use site theme for two-factor authentication pages</label>
+            <CrestCheckBox @bind-Value="Model.UseSiteThemeForTwoFactorAuthentication" Name="two-factor-site-theme" /><label for="two-factor-site-theme"> @T.T("LoginSettings_UseSiteThemeTwoFactorLabel", "Use site theme for two-factor authentication pages")</label>
         </CrestFieldset>
-        <CrestFieldset Text="External Login">
-            <CrestCheckBox @bind-Value="Model.UseExternalProviderIfOnlyOneDefined" Name="use-external-provider" /><label for="use-external-provider"> Use external provider for login</label><br />
-            <CrestCheckBox @bind-Value="Model.UseScriptToSyncProperties" Name="sync-external-properties" /><label for="sync-external-properties"> Use a script to sync user properties from external provider claims</label>
+        <CrestFieldset Text="@T.T("LoginSettings_ExternalLoginFieldset", "External Login")">
+            <CrestCheckBox @bind-Value="Model.UseExternalProviderIfOnlyOneDefined" Name="use-external-provider" /><label for="use-external-provider"> @T.T("LoginSettings_UseExternalProviderLabel", "Use external provider for login")</label><br />
+            <CrestCheckBox @bind-Value="Model.UseScriptToSyncProperties" Name="sync-external-properties" /><label for="sync-external-properties"> @T.T("LoginSettings_SyncExternalPropertiesLabel", "Use a script to sync user properties from external provider claims")</label>
             @if (Model.UseScriptToSyncProperties)
             {
-                <CrestTextArea @bind-Value="Model.SyncPropertiesScript" Rows="16" Style="width:100%; margin-top: .75rem" Placeholder="External login synchronization script" />
+                <CrestTextArea @bind-Value="Model.SyncPropertiesScript" Rows="16" Style="width:100%; margin-top: .75rem" Placeholder="@T.T("LoginSettings_SyncScriptPlaceholder", "External login synchronization script")" />
             }
         </CrestFieldset>
-        <CrestButton Text="Save" Icon="save" Click="SaveAsync" />
+        <CrestButton Text="@T.T("LoginSettings_SaveButton", "Save")" Icon="save" Click="SaveAsync" />
         @if (!string.IsNullOrWhiteSpace(Error)) { <CrestText TextStyle="TextStyle.Body2" Style="color: var(--rz-danger)">@Error</CrestText> }
     }
 </CrestStack>
@@ -51,7 +52,7 @@
         if (Model is null) return;
         Error = null;
         var saved = await Api.Crest.Rest.LoginSettings.SaveAsync(Model);
-        if (saved is null) Error = "The login settings could not be saved.";
+        if (saved is null) Error = T.T("LoginSettings_SaveFailedError", "The login settings could not be saved.");
         else Model = saved;
     }
 }

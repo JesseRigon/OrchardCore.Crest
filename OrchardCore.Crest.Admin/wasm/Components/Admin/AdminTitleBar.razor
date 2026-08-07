@@ -12,6 +12,7 @@
 @inject IJSRuntime Js
 @inject IApi Api
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <header class="admin-titlebar">
     @* Test-only hook (Playwright localization checks - plans/user-localization-testing.md):
@@ -22,7 +23,7 @@
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-titlebar__left">
         <CrestAvatar ImageUrl="@TitleBarSettings.TenantAvatarImageUrl"
                      FallbackText="@TenantInitial"
-                     AriaLabel="@($"{SelectedTenantName} tenant")"
+                     AriaLabel="@string.Format(T.T("AdminTitleBar_TenantAvatarAriaLabelFormat", "{0} tenant"), SelectedTenantName)"
                      BackgroundColor="var(--crest-color-accent-1, #2f6f4e)"
                      ForegroundColor="var(--crest-color-on-accent-1, #fff)"
                      Shape="@TenantAvatarShape"
@@ -60,14 +61,14 @@
                             Template="CultureOptionTemplate"
                             FooterTemplate="CultureFooterTemplate"
                             AllowFiltering="true"
-                            FilterPlaceholder="Filter cultures"
+                            FilterPlaceholder="@T.T("AdminTitleBar_FilterCulturesPlaceholder", "Filter cultures")"
                             class="admin-titlebar__culture-selector"
                             Style="color: var(--crest-color-accent-1, #2f6f4e); border-color: transparent;" />
         }
 
         @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
         {
-            <button type="button" class="admin-titlebar__icon-button" @onclick="ToggleThemeAsync" title="Toggle dark/light mode" aria-label="Toggle dark/light mode">
+            <button type="button" class="admin-titlebar__icon-button" @onclick="ToggleThemeAsync" title="@T.T("AdminTitleBar_ToggleThemeTitle", "Toggle dark/light mode")" aria-label="@T.T("AdminTitleBar_ToggleThemeTitle", "Toggle dark/light mode")">
                 <OrchardIcon IconKey="@ThemeToggleIcon" Size="1.25rem" />
             </button>
         }
@@ -81,7 +82,7 @@
            localStorage, so this can never be a server-defined nav item), "Sign in as
            another user", then Logout. See plans/user-localization.md's "User Profile
            Menu" section. *@
-        <CrestProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="Open user menu" Click="OnProfileMenuItemClickedAsync">
+        <CrestProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="@T.T("AdminTitleBar_OpenUserMenuAriaLabel", "Open user menu")" Click="OnProfileMenuItemClickedAsync">
             <Template>
                 <CrestAvatar FallbackText="@UserInitials"
                              AriaLabel="@UserName"
@@ -115,9 +116,9 @@
                         </ul>
                     </li>
                 }
-                <CrestProfileMenuItem Text="Sign in as another user" Value="switch-user" />
-                <CrestProfileMenuItem Text="Settings" Path="/Admin/Profile/Settings" />
-                <CrestProfileMenuItem Text="Logout" Value="logout" class="admin-titlebar__profile-separator" />
+                <CrestProfileMenuItem Text="@T.T("AdminTitleBar_SignInAsAnotherUser", "Sign in as another user")" Value="switch-user" />
+                <CrestProfileMenuItem Text="@T.T("AdminTitleBar_Settings", "Settings")" Path="Profile/Settings" />
+                <CrestProfileMenuItem Text="@T.T("AdminTitleBar_Logout", "Logout")" Value="logout" class="admin-titlebar__profile-separator" />
             </ChildContent>
         </CrestProfileMenu>
     </CrestStack>
@@ -131,8 +132,8 @@
         ? tenants
         : DisplayManager?.Manifest?.Tenant is { } tenant ? [tenant] : [];
 
-    private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? "Tenant";
-    private string UserName => DisplayManager?.User.UserName ?? "User";
+    private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? T.T("AdminTitleBar_TenantFallback", "Tenant");
+    private string UserName => DisplayManager?.User.UserName ?? T.T("AdminTitleBar_UserFallback", "User");
     private string? CurrentTitle => FindCurrentTitle(DisplayManager?.AdminMenu?.Items);
     private DisplayMenuItem[] ProfileMenuItems => DisplayManager?.ProfileMenu?.Items ?? [];
     private string TenantInitial => string.IsNullOrWhiteSpace(SelectedTenantName) ? "?" : SelectedTenantName[..1].ToUpperInvariant();
@@ -190,7 +191,7 @@
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "admin-titlebar__culture-footer");
         builder.OpenComponent<CrestButton>(2);
-        builder.AddAttribute(3, nameof(CrestButton.Text), "Save as default");
+        builder.AddAttribute(3, nameof(CrestButton.Text), T.T("AdminTitleBar_SaveAsDefault", "Save as default"));
         builder.AddAttribute(4, nameof(CrestButton.Icon), "bookmark");
         builder.AddAttribute(5, nameof(CrestButton.ButtonStyle), ButtonStyle.Light);
         builder.AddAttribute(6, nameof(CrestButton.Size), ButtonSize.Small);
@@ -358,8 +359,8 @@
             var saved = await Api.Crest.Rest.Localization.SetMyCultureAsync(new CrestUserCulture(SelectedCulture));
             Notifications.Notify(
                 saved is null ? NotificationSeverity.Error : NotificationSeverity.Success,
-                "Default language",
-                saved is null ? "Unable to save your default language." : "Saved as your default language.");
+                T.T("AdminTitleBar_DefaultLanguageTitle", "Default language"),
+                saved is null ? T.T("AdminTitleBar_DefaultLanguageSaveFailed", "Unable to save your default language.") : T.T("AdminTitleBar_DefaultLanguageSaved", "Saved as your default language."));
         }
         finally
         {
@@ -421,12 +422,26 @@
         }
 
         await DisplayManager.LogoutAsync();
-        Navigation.NavigateTo(Routing.LoginPath);
+        // Crossing from the admin shell (base href = AdminPath) to the login shell
+        // (base href = LoginPath) requires a full reload so the browser re-fetches
+        // index.html with the correct <base> tag - see BlazorAdminThemeMiddleware's
+        // TryServeIndexHtmlAsync. A same-document SPA navigation would leave the
+        // already-loaded Router trying to match Routing.LoginPath against the admin
+        // shell's route table and fail.
+        Navigation.NavigateTo(Routing.LoginPath, forceLoad: true);
     }
 
-    private static string BuildLoginPath(string? tenantPrefix, string? userName)
+    // tenantPrefix identifies a *different* tenant than the one this shell was
+    // built for, so its real, configured LoginPath is unknowable client-side
+    // without an API call - "/login" (Orchard/Crest's shared stock default) is the
+    // best available fallback for that cross-tenant case. When switching within the
+    // current tenant (tenantPrefix is null/empty), Routing.LoginPath is used instead
+    // since it reflects this tenant's actual, possibly-customized LoginPath.
+    private string BuildLoginPath(string? tenantPrefix, string? userName)
     {
-        var path = string.IsNullOrWhiteSpace(tenantPrefix) ? "/login" : $"/{tenantPrefix.Trim('/')}/login";
+        var path = string.IsNullOrWhiteSpace(tenantPrefix)
+            ? Routing.LoginPath
+            : $"/{tenantPrefix.Trim('/')}/login";
         var query = new List<string> { "switchUser=1" };
         if (!string.IsNullOrWhiteSpace(userName))
         {

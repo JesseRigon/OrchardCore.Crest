@@ -1,0 +1,13 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: de\n"
+
+# Hand-written test fixture for localization-smoke-site.js
+# (plans/user-localization-testing.md) - confirms the front-end theme's stock Liquid "t"
+# filter pipeline round-trips a real translated string for the tenant's resolved culture.
+# Mirrored under modules/OrchardCore.Crest/tests/playwright/fixtures/localization-smoke/
+# for the test suite's own reference copy - see that directory's README.
+msgid "Welcome"
+msgstr "Willkommen"

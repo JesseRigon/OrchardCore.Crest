@@ -1,4 +1,4 @@
-@page "/Admin/DesignSystem"
+@page "/DesignSystem"
 @using Crest.Admin.Api
 @using Crest.Admin.Components.Admin
 @using Crest.Admin.DisplayManagement
@@ -6,15 +6,16 @@
 @using Crest.Components.Primitives
 @inject DisplayManager DisplayManager
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
     <CrestStack Gap="1rem">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="Design System" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Edit Orchard Crest UI Framework primitive design tokens for the active tenant without switching or creating Orchard themes." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("DesignSystem_Heading", "Design System")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("DesignSystem_Subheading", "Edit Orchard Crest UI Framework primitive design tokens for the active tenant without switching or creating Orchard themes.")" />
         </CrestStack>
 
         <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-            These settings are tenant site settings for now. They override Crest primitive design tokens at runtime while the selected Orchard theme remains the same.
+            @T.T("DesignSystem_TenantSettingsHint", "These settings are tenant site settings for now. They override Crest primitive design tokens at runtime while the selected Orchard theme remains the same.")
         </CrestAlert>
 
         <CrestCard>
@@ -22,46 +23,46 @@
                 <CrestStack Gap="1rem">
                     <CrestRow Gap="1rem">
                         <CrestColumn Size="12" SizeMD="6">
-                            <CrestLabel Text="Crest base theme" />
+                            <CrestLabel Text="@T.T("DesignSystem_BaseThemeLabel", "Crest base theme")" />
                             <CrestDropDown TValue="string" Data="@RadzenThemes" @bind-Value="Model.RadzenTheme" Style="width: 100%;" />
                         </CrestColumn>
                         <CrestColumn Size="12" SizeMD="6">
-                            <CrestLabel Text="Border radius" />
+                            <CrestLabel Text="@T.T("DesignSystem_BorderRadiusLabel", "Border radius")" />
                             <CrestTextBox @bind-Value="Model.Radius" Placeholder="6px" Style="width: 100%;" />
                         </CrestColumn>
                     </CrestRow>
 
                     <CrestRow Gap="1rem">
                         <CrestColumn Size="12" SizeMD="3">
-                            <CrestLabel Text="Accent 1" />
+                            <CrestLabel Text="@T.T("DesignSystem_Accent1Label", "Accent 1")" />
                             <CrestColorPicker @bind-Value="Model.Primary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
                         </CrestColumn>
                         <CrestColumn Size="12" SizeMD="3">
-                            <CrestLabel Text="Accent 2" />
+                            <CrestLabel Text="@T.T("DesignSystem_Accent2Label", "Accent 2")" />
                             <CrestColorPicker @bind-Value="Model.Secondary" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
                         </CrestColumn>
                         <CrestColumn Size="12" SizeMD="3">
-                            <CrestLabel Text="Surface 1" />
+                            <CrestLabel Text="@T.T("DesignSystem_Surface1Label", "Surface 1")" />
                             <CrestColorPicker @bind-Value="Model.Surface" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
                         </CrestColumn>
                         <CrestColumn Size="12" SizeMD="3">
-                            <CrestLabel Text="Surface 2" />
+                            <CrestLabel Text="@T.T("DesignSystem_Surface2Label", "Surface 2")" />
                             <CrestColorPicker @bind-Value="Model.Background" Style="width: 100%;" ShowRGBA="false" ShowColors="true" />
                         </CrestColumn>
                     </CrestRow>
 
                     <div class="design-system-preview">
-                        <CrestText TextStyle="TextStyle.H6" Text="Preview" />
+                        <CrestText TextStyle="TextStyle.H6" Text="@T.T("DesignSystem_PreviewHeading", "Preview")" />
                         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Style="flex-wrap: wrap;">
-                            <CrestButton Text="Primary Action" ButtonStyle="ButtonStyle.Primary" />
-                            <CrestButton Text="Secondary Action" ButtonStyle="ButtonStyle.Secondary" />
-                            <CrestButton Text="Light Action" ButtonStyle="ButtonStyle.Light" />
+                            <CrestButton Text="@T.T("DesignSystem_PrimaryActionButton", "Primary Action")" ButtonStyle="ButtonStyle.Primary" />
+                            <CrestButton Text="@T.T("DesignSystem_SecondaryActionButton", "Secondary Action")" ButtonStyle="ButtonStyle.Secondary" />
+                            <CrestButton Text="@T.T("DesignSystem_LightActionButton", "Light Action")" ButtonStyle="ButtonStyle.Light" />
                         </CrestStack>
                     </div>
 
                     <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                        <CrestButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@DisplayManager.IsBusy" />
-                        <CrestButton Text="Reset defaults" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@DisplayManager.IsBusy" />
+                        <CrestButton Text="@T.T("DesignSystem_Save", "Save")" Icon="save" ButtonType="ButtonType.Submit" Disabled="@DisplayManager.IsBusy" />
+                        <CrestButton Text="@T.T("DesignSystem_ResetDefaults", "Reset defaults")" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@DisplayManager.IsBusy" />
                     </CrestStack>
                 </CrestStack>
             </CrestTemplateForm>
@@ -94,11 +95,11 @@
         if (saved is not null)
         {
             Model = DesignSystemModel.From(saved);
-            Notifications.Notify(NotificationSeverity.Success, "Design system saved", "The tenant design tokens were updated.");
+            Notifications.Notify(NotificationSeverity.Success, T.T("DesignSystem_SavedTitle", "Design system saved"), T.T("DesignSystem_SavedMessage", "The tenant design tokens were updated."));
         }
         else
         {
-            Notifications.Notify(NotificationSeverity.Error, "Design system save failed", "The server could not save the design tokens.");
+            Notifications.Notify(NotificationSeverity.Error, T.T("DesignSystem_SaveFailedTitle", "Design system save failed"), T.T("DesignSystem_SaveFailedMessage", "The server could not save the design tokens."));
         }
     }
 

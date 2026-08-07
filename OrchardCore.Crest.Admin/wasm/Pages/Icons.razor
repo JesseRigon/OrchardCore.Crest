@@ -1,5 +1,5 @@
-@page "/Admin/Design/Icons"
-@page "/Admin/Icons"
+@page "/Design/Icons"
+@page "/Icons"
 @using Crest.Admin.Api
 @using Crest.Admin.Components.Shared
 @using Crest.Icons.Components
@@ -7,14 +7,15 @@
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="Icons" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Manage server-side icon providers used by the icon selector, admin menus, and icon packs." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Icons_Title", "Icons")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Icons_Description", "Manage server-side icon providers used by the icon selector, admin menus, and icon packs.")" />
         </CrestStack>
-        <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="LoadAsync" Disabled="@IsBusy" />
+        <CrestButton Text="@T.T("Icons_Refresh", "Refresh")" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="LoadAsync" Disabled="@IsBusy" />
     </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -26,7 +27,7 @@
     {
         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
             <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-            <CrestText Text="Loading icon provider settings..." />
+            <CrestText Text="@T.T("Icons_Loading", "Loading icon provider settings...")" />
         </CrestStack>
     }
     else
@@ -37,39 +38,39 @@
                     <CrestTemplateForm TItem="IconifyProviderModel" Data="@Model" Submit="@(_ => SaveAsync())">
                         <CrestStack Gap="1rem">
                             <CrestStack Gap="0.25rem">
-                                <CrestText TextStyle="TextStyle.H5" Text="Iconify" />
-                                <CrestText TextStyle="TextStyle.Body2" Text="Default example provider. Uses the Iconify API contract and can point at the public API or a self-hosted compatible server." />
+                                <CrestText TextStyle="TextStyle.H5" Text="@T.T("Icons_IconifyHeading", "Iconify")" />
+                                <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Icons_IconifyDescription", "Default example provider. Uses the Iconify API contract and can point at the public API or a self-hosted compatible server.")" />
                             </CrestStack>
 
-                            <SettingsSwitch Label="Enable Iconify provider" Hint="When enabled, Iconify appears in icon search and can resolve selected Iconify icon keys for response icon packs." @bind-Value="Model.Enabled" />
+                            <SettingsSwitch Label="@T.T("Icons_EnableIconifyLabel", "Enable Iconify provider")" Hint="@T.T("Icons_EnableIconifyHint", "When enabled, Iconify appears in icon search and can resolve selected Iconify icon keys for response icon packs.")" @bind-Value="Model.Enabled" />
 
-                            <CrestFormField Text="API base URL" Style="width: 100%;">
+                            <CrestFormField Text="@T.T("Icons_ApiBaseUrlLabel", "API base URL")" Style="width: 100%;">
                                 <CrestTextBox @bind-Value="Model.BaseUrl" Placeholder="https://api.iconify.design" Style="width: 100%;" />
                             </CrestFormField>
 
-                            <CrestFormField Text="API key" Style="width: 100%;">
-                                <CrestPassword @bind-Value="Model.ApiKey" Placeholder="Optional" Style="width: 100%;" />
+                            <CrestFormField Text="@T.T("Icons_ApiKeyLabel", "API key")" Style="width: 100%;">
+                                <CrestPassword @bind-Value="Model.ApiKey" Placeholder="@T.T("Icons_OptionalPlaceholder", "Optional")" Style="width: 100%;" />
                             </CrestFormField>
 
-                            <CrestFormField Text="API key header" Style="width: 100%;">
+                            <CrestFormField Text="@T.T("Icons_ApiKeyHeaderLabel", "API key header")" Style="width: 100%;">
                                 <CrestTextBox @bind-Value="Model.ApiKeyHeader" Placeholder="Authorization" Style="width: 100%;" />
                             </CrestFormField>
 
-                            <CrestFormField Text="Allowed prefixes" Style="width: 100%;">
-                                <CrestTextBox @bind-Value="Model.Prefixes" Placeholder="Optional comma-separated list, for example mdi, lucide, material-symbols" Style="width: 100%;" />
+                            <CrestFormField Text="@T.T("Icons_AllowedPrefixesLabel", "Allowed prefixes")" Style="width: 100%;">
+                                <CrestTextBox @bind-Value="Model.Prefixes" Placeholder="@T.T("Icons_PrefixesPlaceholder", "Optional comma-separated list, for example mdi, lucide, material-symbols")" Style="width: 100%;" />
                             </CrestFormField>
-                            <CrestText TextStyle="TextStyle.Caption" Text="Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API." />
+                            <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Icons_PrefixesCaption", "Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API.")" />
 
                             @if (IsCustomIconifyServer)
                             {
                                 <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
-                                    Custom Iconify servers are remote-only and are not cached by Orchard Crest UI Framework.
+                                    @T.T("Icons_CustomServerWarning", "Custom Iconify servers are remote-only and are not cached by Orchard Crest UI Framework.")
                                 </CrestAlert>
                             }
 
                             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
-                                <CrestButton Text="Save provider settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
-                                <CrestButton Text="Reset Iconify defaults" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@IsSaving" />
+                                <CrestButton Text="@T.T("Icons_SaveProviderSettings", "Save provider settings")" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                                <CrestButton Text="@T.T("Icons_ResetIconifyDefaults", "Reset Iconify defaults")" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@IsSaving" />
                             </CrestStack>
                         </CrestStack>
                     </CrestTemplateForm>
@@ -80,42 +81,42 @@
                 <CrestCard>
                     <CrestStack Gap="1rem">
                         <CrestStack Gap="0.25rem">
-                            <CrestText TextStyle="TextStyle.H5" Text="Public Iconify local cache" />
-                            <CrestText TextStyle="TextStyle.Body2" Text="Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache." />
+                            <CrestText TextStyle="TextStyle.H5" Text="@T.T("Icons_LocalCacheHeading", "Public Iconify local cache")" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Icons_LocalCacheDescription", "Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache.")" />
                         </CrestStack>
 
                         <CrestRow>
                             <CrestColumn Size="6">
-                                <CrestText TextStyle="TextStyle.Caption" Text="Status" />
-                                <CrestText Text="@(LocalMirror.IsAvailable ? "Available" : "Remote fallback")" />
+                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Icons_StatusLabel", "Status")" />
+                                <CrestText Text="@(LocalMirror.IsAvailable ? T.T("Icons_Available", "Available") : T.T("Icons_RemoteFallback", "Remote fallback"))" />
                             </CrestColumn>
                             <CrestColumn Size="6">
-                                <CrestText TextStyle="TextStyle.Caption" Text="Version" />
-                                <CrestText Text="@(LocalMirror.Version ?? "Not initialized")" />
+                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Icons_VersionLabel", "Version")" />
+                                <CrestText Text="@(LocalMirror.Version ?? T.T("Icons_NotInitialized", "Not initialized"))" />
                             </CrestColumn>
                             <CrestColumn Size="6">
-                                <CrestText TextStyle="TextStyle.Caption" Text="Prefixes" />
+                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Icons_PrefixesLabel", "Prefixes")" />
                                 <CrestText Text="@LocalMirror.PrefixCount.ToString("n0")" />
                             </CrestColumn>
                             <CrestColumn Size="6">
-                                <CrestText TextStyle="TextStyle.Caption" Text="Icons" />
+                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Icons_IconsLabel", "Icons")" />
                                 <CrestText Text="@LocalMirror.IconCount.ToString("n0")" />
                             </CrestColumn>
                         </CrestRow>
 
-                        <CrestText TextStyle="TextStyle.Caption" Text="@($"Root: {(string.IsNullOrWhiteSpace(LocalMirror.RootPath) ? "not configured" : LocalMirror.RootPath)}")" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@string.Format(T.T("Icons_RootFormat", "Root: {0}"), string.IsNullOrWhiteSpace(LocalMirror.RootPath) ? T.T("Icons_NotConfigured", "not configured") : LocalMirror.RootPath)" />
                         @if (LocalMirror.LastSyncUtc is not null)
                         {
-                            <CrestText TextStyle="TextStyle.Caption" Text="@($"Source commit: {LocalMirror.LastSyncUtc:u}")" />
+                            <CrestText TextStyle="TextStyle.Caption" Text="@string.Format(T.T("Icons_SourceCommitFormat", "Source commit: {0:u}"), LocalMirror.LastSyncUtc)" />
                         }
                         @if (!string.IsNullOrWhiteSpace(LocalMirror.LastError))
                         {
                             <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
-                                Last cache error: @LocalMirror.LastError
+                                @string.Format(T.T("Icons_LastCacheErrorFormat", "Last cache error: {0}"), LocalMirror.LastError)
                             </CrestAlert>
                         }
 
-                        <CrestText TextStyle="TextStyle.Caption" Text="The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server." />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Icons_InstallCacheHint", "The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server.")" />
                     </CrestStack>
                 </CrestCard>
             </CrestColumn>
@@ -124,8 +125,8 @@
                 <CrestCard>
                     <CrestStack Gap="1rem">
                         <CrestStack Gap="0.25rem">
-                            <CrestText TextStyle="TextStyle.H5" Text="Provider search preview" />
-                            <CrestText TextStyle="TextStyle.Body2" Text="This uses the same icon selector component as menu editors. Selecting an icon stores the normalized icon key." />
+                            <CrestText TextStyle="TextStyle.H5" Text="@T.T("Icons_PreviewHeading", "Provider search preview")" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Icons_PreviewDescription", "This uses the same icon selector component as menu editors. Selecting an icon stores the normalized icon key.")" />
                         </CrestStack>
 
                         <IconSelector @bind-Value="SelectedIcon" />
@@ -133,7 +134,7 @@
                         @if (!string.IsNullOrWhiteSpace(SelectedIcon))
                         {
                             <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                                Selected icon: @SelectedIcon
+                                @string.Format(T.T("Icons_SelectedIconFormat", "Selected icon: {0}"), SelectedIcon)
                             </CrestAlert>
                         }
                     </CrestStack>
@@ -190,12 +191,12 @@
             var saved = await Api.Crest.Rest.Icons.UpdateProvidersAsync(new CrestIconProvidersSettings(Model.ToSettings()));
             if (saved is null)
             {
-                Notifications.Notify(NotificationSeverity.Error, "Icon providers not saved", "The server rejected the provider settings.");
+                Notifications.Notify(NotificationSeverity.Error, T.T("Icons_NotSavedTitle", "Icon providers not saved"), T.T("Icons_NotSavedMessage", "The server rejected the provider settings."));
                 return;
             }
 
             Model = IconifyProviderModel.From(saved.Iconify);
-            Notifications.Notify(NotificationSeverity.Success, "Icon providers saved", "The Iconify provider settings were updated.");
+            Notifications.Notify(NotificationSeverity.Success, T.T("Icons_SavedTitle", "Icon providers saved"), T.T("Icons_SavedMessage", "The Iconify provider settings were updated."));
         }
         catch (Exception ex)
         {

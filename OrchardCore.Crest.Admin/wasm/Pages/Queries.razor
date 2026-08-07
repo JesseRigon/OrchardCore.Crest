@@ -1,4 +1,4 @@
-@page "/Admin/Queries/Index"
+@page "/Queries/Index"
 @using System.Text.Json
 @using System.Text.Json.Nodes
 @using Crest.Admin.Api
@@ -6,17 +6,18 @@
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" data-testid="queries-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="Queries" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Manage queries through the query sources enabled for this tenant." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Queries_Heading", "Queries")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Queries_Description", "Manage queries through the query sources enabled for this tenant.")" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-            <CrestButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
-            <CrestButton Text="@($"Delete selected ({SelectedQueryNames.Count})")" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="ConfirmDeleteSelected" Disabled="@(SelectedQueryNames.Count == 0 || IsBusy)" />
-            <CrestButton Text="New query" Icon="add" Click="NewQuery" Disabled="@(Catalog.Sources.Length == 0 || IsBusy)" />
+            <CrestButton Text="@T.T("Queries_Refresh", "Refresh")" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+            <CrestButton Text="@string.Format(T.T("Queries_DeleteSelectedFormat", "Delete selected ({0})"), SelectedQueryNames.Count)" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="ConfirmDeleteSelected" Disabled="@(SelectedQueryNames.Count == 0 || IsBusy)" />
+            <CrestButton Text="@T.T("Queries_NewQuery", "New query")" Icon="add" Click="NewQuery" Disabled="@(Catalog.Sources.Length == 0 || IsBusy)" />
         </CrestStack>
     </CrestStack>
 
@@ -27,8 +28,8 @@
 
     <CrestCard>
         <CrestRow AlignItems="AlignItems.End" Gap="0.75rem">
-            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Search" Style="width: 100%;"><CrestTextBox @bind-Value="Search" Placeholder="Search query names" Style="width: 100%;" /></CrestFormField></CrestColumn>
-            <CrestColumn Size="12" SizeMD="3"><CrestButton Text="Search" Icon="search" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" /></CrestColumn>
+            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("Queries_SearchLabel", "Search")" Style="width: 100%;"><CrestTextBox @bind-Value="Search" Placeholder="@T.T("Queries_SearchPlaceholder", "Search query names")" Style="width: 100%;" /></CrestFormField></CrestColumn>
+            <CrestColumn Size="12" SizeMD="3"><CrestButton Text="@T.T("Queries_SearchButton", "Search")" Icon="search" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" /></CrestColumn>
         </CrestRow>
     </CrestCard>
 
@@ -36,24 +37,24 @@
     {
         <CrestCard data-testid="query-editor">
             <CrestStack Gap="1rem">
-                <CrestText TextStyle="TextStyle.H5" Text="@(EditingName is null ? "New query" : $"Edit {EditingName}")" />
+                <CrestText TextStyle="TextStyle.H5" Text="@(EditingName is null ? T.T("Queries_NewQuery", "New query") : string.Format(T.T("Queries_EditFormat", "Edit {0}"), EditingName))" />
                 <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                    The source and metadata are provider-neutral. Provider modules may store any metadata shape in the JSON object below.
+                    @T.T("Queries_ProviderNeutralHint", "The source and metadata are provider-neutral. Provider modules may store any metadata shape in the JSON object below.")
                 </CrestAlert>
                 @if (!string.IsNullOrWhiteSpace(EditorError))
                 {
                     <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@EditorError</CrestAlert>
                 }
                 <CrestRow Gap="1rem">
-                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Name" Style="width: 100%;"><CrestTextBox @bind-Value="DraftName" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Source" Style="width: 100%;"><CrestDropDown @bind-Value="DraftSource" Data="@Catalog.Sources" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                    <CrestColumn Size="12"><CrestFormField Text="Result schema (optional)" Style="width: 100%;"><CrestTextBox @bind-Value="DraftSchema" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("Queries_NameLabel", "Name")" Style="width: 100%;"><CrestTextBox @bind-Value="DraftName" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("Queries_SourceLabel", "Source")" Style="width: 100%;"><CrestDropDown @bind-Value="DraftSource" Data="@Catalog.Sources" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12"><CrestFormField Text="@T.T("Queries_ResultSchemaLabel", "Result schema (optional)")" Style="width: 100%;"><CrestTextBox @bind-Value="DraftSchema" Style="width: 100%;" /></CrestFormField></CrestColumn>
                 </CrestRow>
-                <CrestCheckBox @bind-Value="DraftReturnContentItems" Name="return-content-items" /> <span>Return content items</span>
-                <CrestFormField Text="Provider metadata (JSON object)" Style="width: 100%;"><CrestTextArea @bind-Value="DraftProperties" Rows="14" Style="width: 100%; font-family: var(--rz-code-font-family, monospace);" /></CrestFormField>
+                <CrestCheckBox @bind-Value="DraftReturnContentItems" Name="return-content-items" /> <span>@T.T("Queries_ReturnContentItemsLabel", "Return content items")</span>
+                <CrestFormField Text="@T.T("Queries_ProviderMetadataLabel", "Provider metadata (JSON object)")" Style="width: 100%;"><CrestTextArea @bind-Value="DraftProperties" Rows="14" Style="width: 100%; font-family: var(--rz-code-font-family, monospace);" /></CrestFormField>
                 <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                    <CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" Disabled="@IsBusy" />
-                    <CrestButton Text="Save" Icon="save" Click="SaveAsync" Disabled="@IsBusy" />
+                    <CrestButton Text="@T.T("Queries_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" Disabled="@IsBusy" />
+                    <CrestButton Text="@T.T("Queries_Save", "Save")" Icon="save" Click="SaveAsync" Disabled="@IsBusy" />
                 </CrestStack>
             </CrestStack>
         </CrestCard>
@@ -63,8 +64,8 @@
     {
         <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-                <span>Delete @(DeletingNames.Length == 1 ? $"query {DeletingNames[0]}" : $"{DeletingNames.Length} selected queries")? This cannot be undone.</span>
-                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem"><CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><CrestButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></CrestStack>
+                <span>@(DeletingNames.Length == 1 ? string.Format(T.T("Queries_DeleteConfirmSingleFormat", "Delete query {0}? This cannot be undone."), DeletingNames[0]) : string.Format(T.T("Queries_DeleteConfirmMultipleFormat", "Delete {0} selected queries? This cannot be undone."), DeletingNames.Length))</span>
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem"><CrestButton Text="@T.T("Queries_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><CrestButton Text="@T.T("Queries_Delete", "Delete")" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></CrestStack>
             </CrestStack>
         </CrestAlert>
     }
@@ -76,18 +77,18 @@
         }
         else if (Catalog.Queries.Length == 0)
         {
-            <CrestText TextStyle="TextStyle.Body2" Text="No queries match this filter." />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Queries_NoneFound", "No queries match this filter.")" />
         }
         else
         {
             <CrestDataGrid Data="@Catalog.Queries" TItem="CrestQuery" AllowPaging="true" PageSize="20">
                 <Columns>
                     <CrestDataGridColumn TItem="CrestQuery" Width="3.5rem" Sortable="false" Filterable="false"><HeaderTemplate><CrestCheckBox Value="@(Catalog.Queries.Length > 0 && Catalog.Queries.All(query => SelectedQueryNames.Contains(query.Name)))" Change="@((bool value) => ToggleAll(value))" Name="select-all-queries" /></HeaderTemplate><Template Context="query"><CrestCheckBox Value="@SelectedQueryNames.Contains(query.Name)" Change="@((bool value) => ToggleSelection(query.Name, value))" Name="@($"query-{query.Name}")" /></Template></CrestDataGridColumn>
-                    <CrestDataGridColumn TItem="CrestQuery" Property="Name" Title="Name" />
-                    <CrestDataGridColumn TItem="CrestQuery" Property="Source" Title="Source" />
-                    <CrestDataGridColumn TItem="CrestQuery" Property="Schema" Title="Schema"><Template Context="query">@(string.IsNullOrWhiteSpace(query.Schema) ? "—" : query.Schema)</Template></CrestDataGridColumn>
-                    <CrestDataGridColumn TItem="CrestQuery" Title="Result"><Template Context="query">@(query.ReturnContentItems ? "Content items" : "Documents")</Template></CrestDataGridColumn>
-                    <CrestDataGridColumn TItem="CrestQuery" Title="Actions" Width="10rem"><Template Context="query"><CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem"><CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(query))" title="Edit" /><CrestButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => ConfirmDelete(query.Name))" title="Delete" /></CrestStack></Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestQuery" Property="Name" Title="@T.T("Queries_NameColumn", "Name")" />
+                    <CrestDataGridColumn TItem="CrestQuery" Property="Source" Title="@T.T("Queries_SourceColumn", "Source")" />
+                    <CrestDataGridColumn TItem="CrestQuery" Property="Schema" Title="@T.T("Queries_SchemaColumn", "Schema")"><Template Context="query">@(string.IsNullOrWhiteSpace(query.Schema) ? "—" : query.Schema)</Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestQuery" Title="@T.T("Queries_ResultColumn", "Result")"><Template Context="query">@(query.ReturnContentItems ? T.T("Queries_ContentItemsLabel", "Content items") : T.T("Queries_DocumentsLabel", "Documents"))</Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestQuery" Title="@T.T("Queries_ActionsColumn", "Actions")" Width="10rem"><Template Context="query"><CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem"><CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(query))" title="@T.T("Queries_EditTitle", "Edit")" /><CrestButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => ConfirmDelete(query.Name))" title="@T.T("Queries_DeleteTitle", "Delete")" /></CrestStack></Template></CrestDataGridColumn>
                 </Columns>
             </CrestDataGrid>
         }
@@ -164,8 +165,8 @@
 
     private async Task SaveAsync()
     {
-        if (string.IsNullOrWhiteSpace(DraftName) || string.IsNullOrWhiteSpace(DraftSource)) { EditorError = "A query name and source are required."; return; }
-        if (JsonNode.Parse(DraftProperties) is not JsonObject properties) { EditorError = "Provider metadata must be a JSON object."; return; }
+        if (string.IsNullOrWhiteSpace(DraftName) || string.IsNullOrWhiteSpace(DraftSource)) { EditorError = T.T("Queries_NameSourceRequired", "A query name and source are required."); return; }
+        if (JsonNode.Parse(DraftProperties) is not JsonObject properties) { EditorError = T.T("Queries_MetadataMustBeObject", "Provider metadata must be a JSON object."); return; }
 
         IsSaving = true;
         EditorError = null;
@@ -173,12 +174,12 @@
         {
             var write = new CrestQueryWrite(DraftName, DraftSource, DraftSchema, DraftReturnContentItems, properties);
             var saved = EditingName is null ? await Api.Crest.Rest.Queries.CreateAsync(write) : await Api.Crest.Rest.Queries.SaveAsync(EditingName, write);
-            if (saved is null) { EditorError = "The query could not be saved. Check the provider metadata and try again."; return; }
-            Notifications.Notify(NotificationSeverity.Success, "Query saved", $"{saved.Name} was saved.");
+            if (saved is null) { EditorError = T.T("Queries_SaveFailed", "The query could not be saved. Check the provider metadata and try again."); return; }
+            Notifications.Notify(NotificationSeverity.Success, T.T("Queries_SavedTitle", "Query saved"), string.Format(T.T("Queries_SavedMessageFormat", "{0} was saved."), saved.Name));
             Editing = false;
             await LoadAsync();
         }
-        catch (JsonException) { EditorError = "Provider metadata must contain valid JSON."; }
+        catch (JsonException) { EditorError = T.T("Queries_MetadataInvalidJson", "Provider metadata must contain valid JSON."); }
         catch (Exception exception) { EditorError = exception.Message; }
         finally { IsSaving = false; }
     }
@@ -194,7 +195,7 @@
                 : await Api.Crest.Rest.Queries.DeleteManyAsync(DeletingNames);
             if (deleted)
             {
-                Notifications.Notify(NotificationSeverity.Success, "Queries deleted", DeletingNames.Length == 1 ? "1 query deleted." : $"{DeletingNames.Length} queries deleted.");
+                Notifications.Notify(NotificationSeverity.Success, T.T("Queries_DeletedTitle", "Queries deleted"), DeletingNames.Length == 1 ? T.T("Queries_DeletedSingleMessage", "1 query deleted.") : string.Format(T.T("Queries_DeletedMultipleMessageFormat", "{0} queries deleted."), DeletingNames.Length));
                 foreach (var name in DeletingNames) SelectedQueryNames.Remove(name);
                 DeletingNames = [];
                 await LoadAsync();

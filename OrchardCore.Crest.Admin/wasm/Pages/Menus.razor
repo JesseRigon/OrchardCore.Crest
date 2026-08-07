@@ -1,22 +1,23 @@
-@page "/Admin/Menus"
-@page "/Admin/Menu"
-@page "/Admin/Menu/List"
-@page "/Admin/Contents/ContentItems/Menu"
+@page "/Menus"
+@page "/Menu"
+@page "/Menu/List"
+@page "/Contents/ContentItems/Menu"
 @using Crest.Admin.Api
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="Menus" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Manage standard Orchard site menus and nested menu items." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Menus_Title", "Menus")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Menus_Description", "Manage standard Orchard site menus and nested menu items.")" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-            <CrestButton Text="New menu" Icon="add" Click="StartCreateMenu" Disabled="@IsBusy" />
-            <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
+            <CrestButton Text="@T.T("Menus_NewMenu", "New menu")" Icon="add" Click="StartCreateMenu" Disabled="@IsBusy" />
+            <CrestButton Text="@T.T("Menus_Refresh", "Refresh")" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
         </CrestStack>
     </CrestStack>
 
@@ -29,7 +30,7 @@
     {
         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
             <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-            <CrestText Text="Loading menus..." />
+            <CrestText Text="@T.T("Menus_Loading", "Loading menus...")" />
         </CrestStack>
     }
     else
@@ -38,11 +39,11 @@
             <CrestColumn Size="12" SizeLG="4">
                 <CrestCard>
                     <CrestStack Gap="0.75rem">
-                        <CrestText TextStyle="TextStyle.H6" Text="Menus" />
-                        <CrestTextBox @bind-Value="MenuSearch" Placeholder="Search menus..." Style="width: 100%;" />
+                        <CrestText TextStyle="TextStyle.H6" Text="@T.T("Menus_MenusHeading", "Menus")" />
+                        <CrestTextBox @bind-Value="MenuSearch" Placeholder="@T.T("Menus_SearchPlaceholder", "Search menus...")" Style="width: 100%;" />
                         @if (FilteredMenus.Length == 0)
                         {
-                            <CrestText Text="No standard menus found." />
+                            <CrestText Text="@T.T("Menus_NoneFound", "No standard menus found.")" />
                         }
                         else
                         {
@@ -51,11 +52,11 @@
                                 {
                                     <div class="admin-menu-list-item @(menu.Id == SelectedMenuId ? "admin-menu-list-item--selected" : null) @(!menu.Published ? "admin-menu-list-item--disabled" : null)">
                                         <CrestButton Text="@menu.Name" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
-                                        <CrestBadge Text="@(menu.Published ? "Published" : "Draft")" BadgeStyle="@(menu.Published ? BadgeStyle.Success : BadgeStyle.Warning)" />
-                                        <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@IsBusy" title="Rename menu" />
-                                        <CrestButton Size="ButtonSize.Small" Icon="@(menu.Published ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@IsBusy" title="Publish/unpublish menu" />
-                                        <CrestButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@IsBusy" title="Duplicate menu" />
-                                        <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@IsBusy" title="Delete menu" />
+                                        <CrestBadge Text="@(menu.Published ? T.T("Menus_PublishedBadge", "Published") : T.T("Menus_DraftBadge", "Draft"))" BadgeStyle="@(menu.Published ? BadgeStyle.Success : BadgeStyle.Warning)" />
+                                        <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@IsBusy" title="@T.T("Menus_RenameMenuTitle", "Rename menu")" />
+                                        <CrestButton Size="ButtonSize.Small" Icon="@(menu.Published ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@IsBusy" title="@T.T("Menus_TogglePublishTitle", "Publish/unpublish menu")" />
+                                        <CrestButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@IsBusy" title="@T.T("Menus_DuplicateMenuTitle", "Duplicate menu")" />
+                                        <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@IsBusy" title="@T.T("Menus_DeleteMenuTitle", "Delete menu")" />
                                     </div>
                                 }
                             </CrestStack>
@@ -67,7 +68,7 @@
             <CrestColumn Size="12" SizeLG="8">
                 @if (SelectedMenu is null)
                 {
-                    <CrestCard><CrestText Text="Select a standard menu to edit its items." /></CrestCard>
+                    <CrestCard><CrestText Text="@T.T("Menus_SelectPrompt", "Select a standard menu to edit its items.")" /></CrestCard>
                 }
                 else
                 {
@@ -76,14 +77,14 @@
                             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                                 <CrestStack Gap="0.2rem">
                                     <CrestText TextStyle="TextStyle.H5" Text="@SelectedMenu.Name" />
-                                    <CrestText TextStyle="TextStyle.Caption" Text="Standard Orchard menu items. Link and HTML menu items are editable here; content-picker menu items should still be edited in the legacy Orchard editor for now." />
+                                    <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Menus_StandardMenuItemsHint", "Standard Orchard menu items. Link and HTML menu items are editable here; content-picker menu items should still be edited in the legacy Orchard editor for now.")" />
                                 </CrestStack>
-                                <CrestButton Text="Add menu item" Icon="add" Click="StartCreateNode" Disabled="@(IsBusy || AvailableNodeTypes.Length == 0)" />
+                                <CrestButton Text="@T.T("Menus_AddMenuItem", "Add menu item")" Icon="add" Click="StartCreateNode" Disabled="@(IsBusy || AvailableNodeTypes.Length == 0)" />
                             </CrestStack>
 
                             @if (SelectedMenu.Nodes.Length == 0)
                             {
-                                <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">This menu does not have any items yet.</CrestAlert>
+                                <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("Menus_NoItemsYet", "This menu does not have any items yet.")</CrestAlert>
                             }
                             else
                             {
@@ -108,10 +109,10 @@
                 <CrestTemplateForm TItem="MenuFormModel" Data="@MenuDialogModel" Submit="@(_ => SaveMenuDialogAsync())">
                     <CrestStack Gap="1rem">
                         <CrestText TextStyle="TextStyle.H5" Text="@MenuDialogTitle" />
-                        <CrestFormField Text="Menu name" Style="width: 100%;"><CrestTextBox @bind-Value="MenuDialogModel.Name" Style="width: 100%;" /></CrestFormField>
+                        <CrestFormField Text="@T.T("Menus_MenuNameLabel", "Menu name")" Style="width: 100%;"><CrestTextBox @bind-Value="MenuDialogModel.Name" Style="width: 100%;" /></CrestFormField>
                         <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                            <CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelMenuDialog" />
-                            <CrestButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                            <CrestButton Text="@T.T("Menus_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelMenuDialog" />
+                            <CrestButton Text="@T.T("Menus_Save", "Save")" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
                         </CrestStack>
                     </CrestStack>
                 </CrestTemplateForm>
@@ -127,20 +128,20 @@
                     <CrestStack Gap="1rem">
                         <CrestText TextStyle="TextStyle.H5" Text="@NodeDialogTitle" />
                         <CrestRow Gap="1rem">
-                            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Type" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.Type" Data="AvailableNodeTypes" TextProperty="DisplayName" ValueProperty="Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Parent" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.ParentNodeId" Data="ParentOptions" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="Root" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                            <CrestColumn Size="12"><CrestFormField Text="Text" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Text" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                            <CrestColumn Size="12" SizeMD="8"><CrestFormField Text="URL" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Url" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                            <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="Target" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Target" Placeholder="_blank" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("Menus_TypeLabel", "Type")" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.Type" Data="AvailableNodeTypes" TextProperty="DisplayName" ValueProperty="Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("Menus_ParentLabel", "Parent")" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.ParentNodeId" Data="ParentOptions" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="@T.T("Menus_RootPlaceholder", "Root")" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12"><CrestFormField Text="@T.T("Menus_TextLabel", "Text")" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Text" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12" SizeMD="8"><CrestFormField Text="@T.T("Menus_UrlLabel", "URL")" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Url" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T.T("Menus_TargetLabel", "Target")" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Target" Placeholder="_blank" Style="width: 100%;" /></CrestFormField></CrestColumn>
                             @if (string.Equals(NodeDialogModel.Type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase))
                             {
-                                <CrestColumn Size="12"><CrestFormField Text="HTML" Style="width: 100%;"><CrestTextArea @bind-Value="NodeDialogModel.Html" Rows="5" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12"><CrestFormField Text="@T.T("Menus_HtmlLabel", "HTML")" Style="width: 100%;"><CrestTextArea @bind-Value="NodeDialogModel.Html" Rows="5" Style="width: 100%;" /></CrestFormField></CrestColumn>
                             }
-                            <CrestColumn Size="12"><CrestFormField Text="Permission names" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.PermissionNamesText" Placeholder="Comma-separated permission names" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            <CrestColumn Size="12"><CrestFormField Text="@T.T("Menus_PermissionNamesLabel", "Permission names")" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.PermissionNamesText" Placeholder="@T.T("Menus_PermissionNamesPlaceholder", "Comma-separated permission names")" Style="width: 100%;" /></CrestFormField></CrestColumn>
                         </CrestRow>
                         <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                            <CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="CancelNodeDialog" />
-                            <CrestButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                            <CrestButton Text="@T.T("Menus_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelNodeDialog" />
+                            <CrestButton Text="@T.T("Menus_Save", "Save")" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
                         </CrestStack>
                     </CrestStack>
                 </CrestTemplateForm>
@@ -178,8 +179,8 @@
     private string NodeDialogTitle { get; set; } = "Menu item";
 
     private StandardMenuSummary? SelectedMenu => State.Menus.FirstOrDefault(menu => menu.Id == SelectedMenuId);
-    private StandardMenuNodeType[] AvailableNodeTypes => State.AvailableNodeTypes.Length == 0 ? [new("LinkMenuItem", "Link Menu Item"), new("HtmlMenuItem", "HTML Menu Item")] : State.AvailableNodeTypes;
-    private ParentOption[] ParentOptions => SelectedMenu is null ? [] : [new(null, "Root"), .. FlattenNodes(SelectedMenu.Nodes).Where(node => node.Id != EditingNodeId).Select(node => new ParentOption(node.Id, $"{new string('—', node.Depth)} {node.Text}"))];
+    private StandardMenuNodeType[] AvailableNodeTypes => State.AvailableNodeTypes.Length == 0 ? [new("LinkMenuItem", T.T("Menus_LinkMenuItemLabel", "Link Menu Item")), new("HtmlMenuItem", T.T("Menus_HtmlMenuItemLabel", "HTML Menu Item"))] : State.AvailableNodeTypes;
+    private ParentOption[] ParentOptions => SelectedMenu is null ? [] : [new(null, T.T("Menus_RootPlaceholder", "Root")), .. FlattenNodes(SelectedMenu.Nodes).Where(node => node.Id != EditingNodeId).Select(node => new ParentOption(node.Id, $"{new string('—', node.Depth)} {node.Text}"))];
 
     private StandardMenuSummary[] FilteredMenus => State.Menus
         .Where(menu => string.IsNullOrWhiteSpace(MenuSearch) || menu.Name.Contains(MenuSearch, StringComparison.OrdinalIgnoreCase))
@@ -202,8 +203,8 @@
     }
 
     private void SelectMenu(string menuId) => SelectedMenuId = menuId;
-    private void StartCreateMenu() { EditingMenuId = null; MenuDialogTitle = "Create menu"; MenuDialogModel = new(); }
-    private void StartMenuRename(StandardMenuSummary menu) { EditingMenuId = menu.Id; MenuDialogTitle = $"Rename menu: {menu.Name}"; MenuDialogModel = new() { Name = menu.Name, Published = menu.Published }; }
+    private void StartCreateMenu() { EditingMenuId = null; MenuDialogTitle = T.T("Menus_CreateMenuTitle", "Create menu"); MenuDialogModel = new(); }
+    private void StartMenuRename(StandardMenuSummary menu) { EditingMenuId = menu.Id; MenuDialogTitle = string.Format(T.T("Menus_RenameMenuFormat", "Rename menu: {0}"), menu.Name); MenuDialogModel = new() { Name = menu.Name, Published = menu.Published }; }
     private void CancelMenuDialog() { EditingMenuId = null; MenuDialogModel = null; }
 
     private async Task SaveMenuDialogAsync()
@@ -226,14 +227,14 @@
         {
             State = State with { Menus = State.Menus.Where(existing => existing.Id != menu.Id).ToArray() };
             SelectedMenuId = State.Menus.FirstOrDefault()?.Id;
-            Notifications.Notify(NotificationSeverity.Success, "Menu deleted", menu.Name);
+            Notifications.Notify(NotificationSeverity.Success, T.T("Menus_DeletedTitle", "Menu deleted"), menu.Name);
         }
     }
 
     private void StartCreateNode()
     {
         EditingNodeId = null;
-        NodeDialogTitle = "Add menu item";
+        NodeDialogTitle = T.T("Menus_AddMenuItem", "Add menu item");
         NodeDialogModel = new() { Type = AvailableNodeTypes.FirstOrDefault()?.Type ?? "LinkMenuItem" };
     }
 

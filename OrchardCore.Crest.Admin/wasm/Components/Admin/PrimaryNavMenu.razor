@@ -10,6 +10,7 @@
 @using Crest.Components.Primitives
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject Crest.Components.Theme.CrestApiLocalizer T
 @implements IDisposable
 
 <div class="@PrimaryNavMenuClass"
@@ -21,11 +22,11 @@
     <div class="primary-nav-menu__content">
         @if (DisplayManager is null)
         {
-            <CrestText TextStyle="TextStyle.Body2" Text="Display manager is unavailable." />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("PrimaryNavMenu_DisplayManagerUnavailable", "Display manager is unavailable.")" />
         }
         else if (Menu is null)
         {
-            <CrestText TextStyle="TextStyle.Body2" Text="Loading admin menu..." />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("PrimaryNavMenu_LoadingAdminMenu", "Loading admin menu...")" />
         }
         else
         {
@@ -40,7 +41,7 @@
                     }
 
                     <span class="crest-panel-menu__text-rail primary-nav-menu__filter-input-rail">
-                        <CrestTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="Search Menu" Style="width: 100%;" />
+                        <CrestTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="@T.T("PrimaryNavMenu_SearchMenuPlaceholder", "Search Menu")" Style="width: 100%;" />
                     </span>
 
                     @if (HasQuickAddItems)
@@ -60,13 +61,13 @@
                         </span>
                         <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
                     </span>
-                    @RenderChromeIcon(QuickAddSource?.Icon, "primary-nav-menu__quickadd-add-icon", $"Open {QuickAddTitle}")
+                    @RenderChromeIcon(QuickAddSource?.Icon, "primary-nav-menu__quickadd-add-icon", string.Format(T.T("PrimaryNavMenu_OpenQuickAddFormat", "Open {0}"), QuickAddTitle))
                 </button>
             }
 
             <CrestPanelMenu Items="VisiblePanelMenuItems"
                             Class="primary-nav-menu__menu"
-                            AriaLabel="Admin navigation"
+                            AriaLabel="@T.T("PrimaryNavMenu_AdminNavigationAriaLabel", "Admin navigation")"
                             ExpandedItemKeys="ExpandedItemKeys"
                             ExpansionVersion="ExpansionVersion"
                             ExpandedChanged="SetExpanded"
@@ -87,7 +88,7 @@
 
             @if (VisibleMenuItems.Length == 0)
             {
-                <CrestText TextStyle="TextStyle.Body2" Text="No admin menu items returned." />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T.T("PrimaryNavMenu_NoItemsReturned", "No admin menu items returned.")" />
             }
 
         }
@@ -95,11 +96,11 @@
         {
             <button type="button"
                     class="primary-nav-menu__mode-toggle-row"
-                    aria-label="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                    aria-label="@NavToggleLabel"
                     aria-pressed="@IsPinnedExpanded"
-                    title="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                    title="@NavToggleLabel"
                     @onclick="TogglePinnedExpanded">
-                @RenderChromeIcon(ChevronRightIcon, $"primary-nav-menu__mode-toggle-icon{(IsPinnedExpanded ? " primary-nav-menu__mode-toggle-icon--collapse" : null)}", IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")
+                @RenderChromeIcon(ChevronRightIcon, $"primary-nav-menu__mode-toggle-icon{(IsPinnedExpanded ? " primary-nav-menu__mode-toggle-icon--collapse" : null)}", NavToggleLabel)
             </button>
         }
     </div>
@@ -114,13 +115,13 @@
                     </span>
                     <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
                 </span>
-                <button type="button" class="primary-nav-menu__quickadd-button primary-nav-menu__quickadd-close-button" @onclick="CloseQuickAdd" title="@($"Close {QuickAddTitle}")" aria-label="@($"Close {QuickAddTitle}")">
-                    @RenderChromeIcon(CloseIcon, "primary-nav-menu__quickadd-close-icon", $"Close {QuickAddTitle}")
+                <button type="button" class="primary-nav-menu__quickadd-button primary-nav-menu__quickadd-close-button" @onclick="CloseQuickAdd" title="@CloseQuickAddLabel" aria-label="@CloseQuickAddLabel">
+                    @RenderChromeIcon(CloseIcon, "primary-nav-menu__quickadd-close-icon", CloseQuickAddLabel)
                 </button>
             </div>
             <CrestPanelMenu Items="QuickAddPanelMenuItems"
                             Class="primary-nav-menu__menu primary-nav-menu__quickadd-menu"
-                            AriaLabel="Quick Add"
+                            AriaLabel="@T.T("PrimaryNavMenu_QuickAddAriaLabel", "Quick Add")"
                             ExpandedItemKeys="ExpandedItemKeys"
                             ExpansionVersion="ExpansionVersion"
                             ExpandedChanged="SetExpanded"
@@ -144,11 +145,11 @@
     {
         <button type="button"
                 class="primary-nav-menu__mode-toggle"
-                aria-label="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                aria-label="@NavToggleLabel"
                 aria-pressed="@IsPinnedExpanded"
-                title="@(IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")"
+                title="@NavToggleLabel"
                 @onclick="TogglePinnedExpanded">
-            @RenderChromeIcon(ChevronRightIcon, $"primary-nav-menu__mode-toggle-icon{(IsPinnedExpanded ? " primary-nav-menu__mode-toggle-icon--collapse" : null)}", IsPinnedExpanded ? "Collapse navigation" : "Keep navigation expanded")
+            @RenderChromeIcon(ChevronRightIcon, $"primary-nav-menu__mode-toggle-icon{(IsPinnedExpanded ? " primary-nav-menu__mode-toggle-icon--collapse" : null)}", NavToggleLabel)
         </button>
     }
     <CrestPopup IsOpen="@(ActiveFlyoutItem is not null)"
@@ -200,7 +201,9 @@
     private DisplayMenuItem? QuickAddSource => CurrentMenuModel?.QuickAddSource;
     private DisplayMenuItem[] QuickAddItems => CurrentMenuModel?.QuickAddItems ?? [];
     private bool HasQuickAddItems => QuickAddItems.Length > 0;
-    private string QuickAddTitle => string.IsNullOrWhiteSpace(QuickAddSource?.Text) ? "Quick Add" : QuickAddSource.Text;
+    private string QuickAddTitle => string.IsNullOrWhiteSpace(QuickAddSource?.Text) ? T.T("PrimaryNavMenu_QuickAddAriaLabel", "Quick Add") : QuickAddSource.Text;
+    private string NavToggleLabel => IsPinnedExpanded ? T.T("PrimaryNavMenu_CollapseNavigation", "Collapse navigation") : T.T("PrimaryNavMenu_KeepNavigationExpanded", "Keep navigation expanded");
+    private string CloseQuickAddLabel => string.Format(T.T("PrimaryNavMenu_CloseQuickAddFormat", "Close {0}"), QuickAddTitle);
     private DisplayMenuItem[] PrimaryNavMenuMenuItems => CurrentMenuModel?.PrimaryNavMenuItems ?? [];
     private DisplayMenuItem[] VisibleMenuItems => CurrentMenuModel?.VisibleMenuItems ?? [];
     private CrestPanelMenuItem[] VisiblePanelMenuItems => CurrentMenuModel?.VisiblePanelMenuItems ?? [];
@@ -667,25 +670,11 @@
         }
 
         var link = NormalizePathOnly(item.Link!);
-        if (PathMatches(current, link))
-        {
-            return link.Length;
-        }
-
-        var currentWithoutAdmin = StripAdminPrefix(current);
-        var linkWithoutAdmin = StripAdminPrefix(link);
-        return PathMatches(currentWithoutAdmin, linkWithoutAdmin)
-            ? linkWithoutAdmin.Length
-            : -1;
+        return PathMatches(current, link) ? link.Length : -1;
     }
 
     private static bool PathMatches(string current, string link) =>
         current.Equals(link, StringComparison.OrdinalIgnoreCase) || current.StartsWith(link.TrimEnd('/') + '/', StringComparison.OrdinalIgnoreCase);
-
-    private static string StripAdminPrefix(string path) =>
-        path.StartsWith("/Admin/", StringComparison.OrdinalIgnoreCase)
-            ? path[6..]
-            : string.Equals(path, "/Admin", StringComparison.OrdinalIgnoreCase) ? "/" : path;
 
     private static string NormalizePathOnly(string value)
     {

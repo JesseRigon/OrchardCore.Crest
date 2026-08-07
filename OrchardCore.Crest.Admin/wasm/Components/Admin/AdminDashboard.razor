@@ -2,46 +2,47 @@
 @using Crest.Admin.DisplayManagement
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem">
             <CrestTabs>
                 <Tabs>
-            <CrestTabsItem Text="App">
+            <CrestTabsItem Text="@T.T("AdminDashboard_AppTab", "App")">
                 @if (DisplayManager?.Manifest is null)
                 {
-                    <CrestText Text="Loading app manifest..." />
+                    <CrestText Text="@T.T("AdminDashboard_LoadingManifest", "Loading app manifest...")" />
                 }
                 else
                 {
                     <CrestStack Gap="0.75rem">
                         <CrestText TextStyle="TextStyle.H6" Text="@DisplayManager.Manifest.Site.SiteName" />
-                        <CrestText Text="@($"Tenant: {DisplayManager.Manifest.Tenant.Name} · State: {DisplayManager.Manifest.Tenant.State} · Admin: {DisplayManager.Manifest.Admin.BasePath}")" />
-                        <CrestText TextStyle="TextStyle.Caption" Text="@($"Feature hash: {DisplayManager.Manifest.FeatureHash}")" />
-                        <CrestText Text="@($"Enabled features: {DisplayManager.Manifest.Features.Length}")" />
-                        <CrestText Text="@($"Roles: {DisplayManager.Roles.Length}")" />
+                        <CrestText Text="@string.Format(T.T("AdminDashboard_TenantStateAdminFormat", "Tenant: {0} · State: {1} · Admin: {2}"), DisplayManager.Manifest.Tenant.Name, DisplayManager.Manifest.Tenant.State, DisplayManager.Manifest.Admin.BasePath)" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@string.Format(T.T("AdminDashboard_FeatureHashFormat", "Feature hash: {0}"), DisplayManager.Manifest.FeatureHash)" />
+                        <CrestText Text="@string.Format(T.T("AdminDashboard_EnabledFeaturesFormat", "Enabled features: {0}"), DisplayManager.Manifest.Features.Length)" />
+                        <CrestText Text="@string.Format(T.T("AdminDashboard_RolesFormat", "Roles: {0}"), DisplayManager.Roles.Length)" />
                     </CrestStack>
                 }
             </CrestTabsItem>
 
-            <CrestTabsItem Text="Site">
+            <CrestTabsItem Text="@T.T("AdminDashboard_SiteTab", "Site")">
                 @if (Site is null)
                 {
-                    <CrestText Text="Loading site settings..." />
+                    <CrestText Text="@T.T("AdminDashboard_LoadingSiteSettings", "Loading site settings...")" />
                 }
                 else
                 {
                     <CrestStack Gap="1rem" Style="max-width: 48rem;">
-                        <CrestTextBox @bind-Value="Site.SiteName" Placeholder="Site name" />
-                        <CrestTextBox @bind-Value="Site.PageTitleFormat" Placeholder="Page title format" />
-                        <CrestTextBox @bind-Value="Site.BaseUrl" Placeholder="Base URL" />
-                        <CrestTextBox @bind-Value="Site.TimeZoneId" Placeholder="Time zone ID" />
-                        <CrestTextBox @bind-Value="Site.Calendar" Placeholder="Calendar" />
-                        <CrestNumeric @bind-Value="Site.PageSize" Placeholder="Page size" />
-                        <CrestNumeric @bind-Value="Site.MaxPageSize" Placeholder="Max page size" />
-                        <CrestNumeric @bind-Value="Site.MaxPagedCount" Placeholder="Max paged count" />
+                        <CrestTextBox @bind-Value="Site.SiteName" Placeholder="@T.T("AdminDashboard_SiteNamePlaceholder", "Site name")" />
+                        <CrestTextBox @bind-Value="Site.PageTitleFormat" Placeholder="@T.T("AdminDashboard_PageTitleFormatPlaceholder", "Page title format")" />
+                        <CrestTextBox @bind-Value="Site.BaseUrl" Placeholder="@T.T("AdminDashboard_BaseUrlPlaceholder", "Base URL")" />
+                        <CrestTextBox @bind-Value="Site.TimeZoneId" Placeholder="@T.T("AdminDashboard_TimeZoneIdPlaceholder", "Time zone ID")" />
+                        <CrestTextBox @bind-Value="Site.Calendar" Placeholder="@T.T("AdminDashboard_CalendarPlaceholder", "Calendar")" />
+                        <CrestNumeric @bind-Value="Site.PageSize" Placeholder="@T.T("AdminDashboard_PageSizePlaceholder", "Page size")" />
+                        <CrestNumeric @bind-Value="Site.MaxPageSize" Placeholder="@T.T("AdminDashboard_MaxPageSizePlaceholder", "Max page size")" />
+                        <CrestNumeric @bind-Value="Site.MaxPagedCount" Placeholder="@T.T("AdminDashboard_MaxPagedCountPlaceholder", "Max paged count")" />
                         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                            <CrestButton Text="Save site settings" Click="SaveSiteAsync" Disabled="@IsLoading" />
-                            <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+                            <CrestButton Text="@T.T("AdminDashboard_SaveSiteSettings", "Save site settings")" Click="SaveSiteAsync" Disabled="@IsLoading" />
+                            <CrestButton Text="@T.T("AdminDashboard_Refresh", "Refresh")" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
                         </CrestStack>
                         @if (!string.IsNullOrWhiteSpace(Status))
                         {
@@ -51,11 +52,11 @@
                 }
             </CrestTabsItem>
 
-            <CrestTabsItem Text="Content">
+            <CrestTabsItem Text="@T.T("AdminDashboard_ContentTab", "Content")">
                 <CrestStack Gap="1rem">
                     <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                        <CrestTextBox @bind-Value="ContentHandle" Placeholder="alias:main-menu" Style="min-width: 18rem;" />
-                        <CrestButton Text="Load by handle" Click="LoadContentItemAsync" Disabled="@IsLoading" />
+                        <CrestTextBox @bind-Value="ContentHandle" Placeholder="@T.T("AdminDashboard_ContentHandlePlaceholder", "alias:main-menu")" Style="min-width: 18rem;" />
+                        <CrestButton Text="@T.T("AdminDashboard_LoadByHandle", "Load by handle")" Click="LoadContentItemAsync" Disabled="@IsLoading" />
                     </CrestStack>
 
                     @if (DisplayManager?.CurrentContentItem is not null)
@@ -66,17 +67,17 @@
                         </CrestCard>
                     }
 
-                    <CrestText TextStyle="TextStyle.H6" Text="Content types" />
+                    <CrestText TextStyle="TextStyle.H6" Text="@T.T("AdminDashboard_ContentTypesHeading", "Content types")" />
                     @if (DisplayManager?.ContentTypes.Length is null or 0)
                     {
-                        <CrestText Text="No content types returned." />
+                        <CrestText Text="@T.T("AdminDashboard_NoContentTypes", "No content types returned.")" />
                     }
                     else
                     {
                         <ul>
                             @foreach (var contentType in DisplayManager.ContentTypes)
                             {
-                                <li>@contentType.DisplayName (@contentType.Name) · @contentType.Parts.Length parts</li>
+                                <li>@contentType.DisplayName (@contentType.Name) · @contentType.Parts.Length @T.T("AdminDashboard_PartsSuffix", "parts")</li>
                             }
                         </ul>
                     }

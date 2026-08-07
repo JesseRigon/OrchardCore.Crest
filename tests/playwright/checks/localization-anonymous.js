@@ -6,10 +6,13 @@ const { createInstance } = require('../harness/instance');
 // Accept-Language header provider + the tenant's LocalizationSettings.DefaultCulture
 // fallback), not DisplayManager.ResolveCultureAsync's client-side chain - the
 // WASM-resolved chain only exists inside .Admin, which an anonymous front-end visitor
-// never loads. This is intentionally the right mechanism to test here: it's what
-// actually serves anonymous front-end traffic, and plans/user-localization.md's
-// "Architectural constraint" section requires stock OrchardCore localization to keep
-// working correctly on its own for exactly this kind of request.
+// never loads.
+//
+// CrestCultureCookie.cs's provider list is [CrestCookie, AcceptLanguage] via
+// IPostConfigureOptions (deterministic - see that file's comment for why a plain
+// IConfigureOptions Insert(0, ...) raced with stock OrchardCore.Localization's own
+// AdminCookieCultureProvider and made Accept-Language win unpredictably). A first-ever
+// anonymous visitor has no Crest cookie yet, so Accept-Language is the real fallback:
 //   - a browser locale the tenant DOES support (es-ES) should resolve to es-ES.
 //   - a browser locale the tenant does NOT support (ja-JP) should fall back to the
 //     tenant default (en-US).

@@ -2,10 +2,11 @@
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inherits ShapeTemplate
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="0.25rem">
-    <CrestText TextStyle="TextStyle.H6" Text="Crest Admin" />
-    <CrestText Text="@($"Signed in as {UserName}")" />
+    <CrestText TextStyle="TextStyle.H6" Text="@T.T("AdminStatus_Title", "Crest Admin")" />
+    <CrestText Text="@string.Format(T.T("AdminStatus_SignedInAsFormat", "Signed in as {0}"), UserName)" />
 </CrestStack>
 
 @code {

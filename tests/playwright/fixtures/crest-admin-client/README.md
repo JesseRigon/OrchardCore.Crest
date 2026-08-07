@@ -9,10 +9,13 @@ resolves each extension's own `Localization/` folder using its `SubPath`, and th
 server module's extension id is `OrchardCore.Crest` (see `Manifest.cs`), so this is the
 correct autoscan location — no global `/Localization/{culture}/*.po` entry is needed.
 
-Two keys are seeded (`AdminMenus_Loading`, `AdminMenus_NoneFound`), matching real keys
-already converted to the `T.T(key, fallback)` pattern in `AdminMenus.razor` (the
-proof-of-concept file for that conversion — see `plans/user-localization.md` phase 5/6).
-Extend both this directory and the theme's copy together if more keys need test coverage.
+Seeded with `AdminMenus_Loading`/`AdminMenus_NoneFound` (the original `AdminMenus.razor`
+proof-of-concept keys) plus a representative sample added 2026-08-07 spanning Login,
+Profile, Menus, Indexes, Templates, and AdminStatus — enough to live-verify the full
+`.po` → API → `CrestApiLocalizer` → rendered UI pipeline for phase 6's file-by-file
+conversion (see `plans/user-localization.md` phase 6) without hand-translating every
+converted key. Extend both this directory and the server's copy together if more keys
+need test coverage.
 
 Keep both copies in sync by hand; there's no build step that generates one from the
 other.

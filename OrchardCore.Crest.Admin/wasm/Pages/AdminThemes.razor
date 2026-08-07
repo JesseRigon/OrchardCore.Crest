@@ -1,18 +1,19 @@
-@page "/Admin/Themes"
+@page "/Themes"
 @using Crest.Admin.Api
 @using Crest.Admin.Components.Admin
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
     <CrestStack Gap="1rem">
                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                     <CrestStack Gap="0.25rem">
-                        <CrestText TextStyle="TextStyle.H4" Text="Themes" />
-                        <CrestText TextStyle="TextStyle.Body2" Text="Select the current site and admin themes, and enable or disable available Orchard themes." />
+                        <CrestText TextStyle="TextStyle.H4" Text="@T.T("AdminThemes_Title", "Themes")" />
+                        <CrestText TextStyle="TextStyle.Body2" Text="@T.T("AdminThemes_Description", "Select the current site and admin themes, and enable or disable available Orchard themes.")" />
                     </CrestStack>
-                    <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+                    <CrestButton Text="@T.T("AdminThemes_Refresh", "Refresh")" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
                 </CrestStack>
 
                 @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -26,26 +27,26 @@
                 {
                     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
                         <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                        <CrestText Text="Loading themes..." />
+                        <CrestText Text="@T.T("AdminThemes_Loading", "Loading themes...")" />
                     </CrestStack>
                 }
                 else if (State.Themes.Length == 0)
                 {
                     <CrestCard>
-                        <CrestText Text="There are no themes installed." />
+                        <CrestText Text="@T.T("AdminThemes_NoneInstalled", "There are no themes installed.")" />
                     </CrestCard>
                 }
                 else
                 {
                     <CrestStack Gap="0.75rem">
-                        <CrestText TextStyle="TextStyle.H6" Text="Current themes" />
+                        <CrestText TextStyle="TextStyle.H6" Text="@T.T("AdminThemes_CurrentThemesHeading", "Current themes")" />
                         <div class="theme-grid current-theme-grid">
                             @if (State.CurrentSiteTheme is { } currentSiteTheme)
                             {
                                 <CrestCard class="theme-card theme-card--current">
-                                    <CrestText TextStyle="TextStyle.Caption" Text="Current site theme" class="theme-card__slot" />
+                                    <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_CurrentSiteThemeSlot", "Current site theme")" class="theme-card__slot" />
                                     <div class="theme-card__preview">
-                                        <img src="@currentSiteTheme.PreviewImageUrl" alt="@($"{currentSiteTheme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentSiteTheme.Id))" hidden="@PreviewFailed(currentSiteTheme.Id)" />
+                                        <img src="@currentSiteTheme.PreviewImageUrl" alt="@(string.Format(T.T("AdminThemes_PreviewAltFormat", "{0} preview"), currentSiteTheme.Name))" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentSiteTheme.Id))" hidden="@PreviewFailed(currentSiteTheme.Id)" />
                                         @if (PreviewFailed(currentSiteTheme.Id))
                                         {
                                             <div class="theme-card__placeholder">
@@ -59,9 +60,9 @@
                                         <CrestStack Gap="0.35rem">
                                             <CrestText TextStyle="TextStyle.H6" Text="@currentSiteTheme.Name" />
                                             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                <CrestText TextStyle="TextStyle.Caption" Text="Site theme" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <CrestText TextStyle="TextStyle.Caption" Text="Current site" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <CrestText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_SiteThemeBadge", "Site theme")" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_CurrentSiteBadge", "Current site")" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_EnabledBadge", "Enabled")" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
                                             </CrestStack>
                                         </CrestStack>
 
@@ -71,17 +72,17 @@
                                         }
 
                                         <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentSiteTheme)" />
-                                        <CrestButton Text="Reset site theme" ButtonStyle="ButtonStyle.Light" Click="ResetSiteThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
+                                        <CrestButton Text="@T.T("AdminThemes_ResetSiteTheme", "Reset site theme")" ButtonStyle="ButtonStyle.Light" Click="ResetSiteThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
                                     </CrestStack>
                                 </CrestCard>
                             }
                             else
                             {
                                 <CrestCard class="theme-card theme-card--empty">
-                                    <CrestText TextStyle="TextStyle.Caption" Text="Current site theme" class="theme-card__slot" />
+                                    <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_CurrentSiteThemeSlot", "Current site theme")" class="theme-card__slot" />
                                     <div class="theme-card__placeholder theme-card__placeholder--empty">
                                         <CrestIcon IconKey="iconify.mdi/current/default/web-off" />
-                                        <span>No site theme selected</span>
+                                        <span>@T.T("AdminThemes_NoSiteThemeSelected", "No site theme selected")</span>
                                     </div>
                                 </CrestCard>
                             }
@@ -89,9 +90,9 @@
                             @if (State.CurrentAdminTheme is { } currentAdminTheme)
                             {
                                 <CrestCard class="theme-card theme-card--current">
-                                    <CrestText TextStyle="TextStyle.Caption" Text="Current admin theme" class="theme-card__slot" />
+                                    <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_CurrentAdminThemeSlot", "Current admin theme")" class="theme-card__slot" />
                                     <div class="theme-card__preview">
-                                        <img src="@currentAdminTheme.PreviewImageUrl" alt="@($"{currentAdminTheme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentAdminTheme.Id))" hidden="@PreviewFailed(currentAdminTheme.Id)" />
+                                        <img src="@currentAdminTheme.PreviewImageUrl" alt="@(string.Format(T.T("AdminThemes_PreviewAltFormat", "{0} preview"), currentAdminTheme.Name))" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentAdminTheme.Id))" hidden="@PreviewFailed(currentAdminTheme.Id)" />
                                         @if (PreviewFailed(currentAdminTheme.Id))
                                         {
                                             <div class="theme-card__placeholder">
@@ -105,9 +106,9 @@
                                         <CrestStack Gap="0.35rem">
                                             <CrestText TextStyle="TextStyle.H6" Text="@currentAdminTheme.Name" />
                                             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                <CrestText TextStyle="TextStyle.Caption" Text="Admin theme" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <CrestText TextStyle="TextStyle.Caption" Text="Current admin" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <CrestText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_AdminThemeBadge", "Admin theme")" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_CurrentAdminBadge", "Current admin")" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_EnabledBadge", "Enabled")" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
                                             </CrestStack>
                                         </CrestStack>
 
@@ -117,17 +118,17 @@
                                         }
 
                                         <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentAdminTheme)" />
-                                        <CrestButton Text="Reset admin theme" ButtonStyle="ButtonStyle.Light" Click="ResetAdminThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
+                                        <CrestButton Text="@T.T("AdminThemes_ResetAdminTheme", "Reset admin theme")" ButtonStyle="ButtonStyle.Light" Click="ResetAdminThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
                                     </CrestStack>
                                 </CrestCard>
                             }
                             else
                             {
                                 <CrestCard class="theme-card theme-card--empty">
-                                    <CrestText TextStyle="TextStyle.Caption" Text="Current admin theme" class="theme-card__slot" />
+                                    <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_CurrentAdminThemeSlot", "Current admin theme")" class="theme-card__slot" />
                                     <div class="theme-card__placeholder theme-card__placeholder--empty">
                                         <CrestIcon IconKey="iconify.mdi/current/default/shield-account" />
-                                        <span>No admin theme selected</span>
+                                        <span>@T.T("AdminThemes_NoAdminThemeSelected", "No admin theme selected")</span>
                                     </div>
                                 </CrestCard>
                             }
@@ -135,11 +136,11 @@
                     </CrestStack>
 
                     <CrestStack Gap="0.75rem">
-                        <CrestText TextStyle="TextStyle.H6" Text="Available alternatives" />
+                        <CrestText TextStyle="TextStyle.H6" Text="@T.T("AdminThemes_AvailableAlternativesHeading", "Available alternatives")" />
                         @if (!AlternateThemes.Any())
                         {
                             <CrestCard>
-                                <CrestText Text="There are no alternate themes installed." />
+                                <CrestText Text="@T.T("AdminThemes_NoAlternatesInstalled", "There are no alternate themes installed.")" />
                             </CrestCard>
                         }
                         else
@@ -149,7 +150,7 @@
                                 {
                                     <CrestCard class="theme-card">
                                         <div class="theme-card__preview">
-                                            <img src="@theme.PreviewImageUrl" alt="@($"{theme.Name} preview")" loading="lazy" @onerror="@(() => MarkPreviewFailed(theme.Id))" hidden="@PreviewFailed(theme.Id)" />
+                                            <img src="@theme.PreviewImageUrl" alt="@(string.Format(T.T("AdminThemes_PreviewAltFormat", "{0} preview"), theme.Name))" loading="lazy" @onerror="@(() => MarkPreviewFailed(theme.Id))" hidden="@PreviewFailed(theme.Id)" />
                                             @if (PreviewFailed(theme.Id))
                                             {
                                                 <div class="theme-card__placeholder">
@@ -163,14 +164,14 @@
                                             <CrestStack Gap="0.35rem">
                                                 <CrestText TextStyle="TextStyle.H6" Text="@theme.Name" />
                                                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                    <CrestText TextStyle="TextStyle.Caption" Text="@(theme.IsAdmin ? "Admin theme" : "Site theme")" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                    <CrestText TextStyle="TextStyle.Caption" Text="@(theme.IsAdmin ? T.T("AdminThemes_AdminThemeBadge", "Admin theme") : T.T("AdminThemes_SiteThemeBadge", "Site theme"))" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
                                                     @if (theme.Enabled)
                                                     {
-                                                        <CrestText TextStyle="TextStyle.Caption" Text="Enabled" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                        <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_EnabledBadge", "Enabled")" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
                                                     }
                                                     else
                                                     {
-                                                        <CrestText TextStyle="TextStyle.Caption" Text="Disabled" Style="background: var(--rz-warning); color: var(--rz-on-warning); border-radius: 999px; padding: 0.15rem 0.5rem;" />
+                                                        <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminThemes_DisabledBadge", "Disabled")" Style="background: var(--rz-warning); color: var(--rz-on-warning); border-radius: 999px; padding: 0.15rem 0.5rem;" />
                                                     }
                                                 </CrestStack>
                                             </CrestStack>
@@ -183,14 +184,14 @@
                                             <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(theme)" />
 
                                             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap; margin-top: auto;">
-                                                <CrestButton Text="@(theme.IsAdmin ? "Use as admin" : "Use as site")" ButtonStyle="ButtonStyle.Primary" Click="@(() => SetCurrentAsync(theme))" Disabled="@IsBusy" />
+                                                <CrestButton Text="@(theme.IsAdmin ? T.T("AdminThemes_UseAsAdmin", "Use as admin") : T.T("AdminThemes_UseAsSite", "Use as site"))" ButtonStyle="ButtonStyle.Primary" Click="@(() => SetCurrentAsync(theme))" Disabled="@IsBusy" />
                                                 @if (theme.Enabled)
                                                 {
-                                                    <CrestButton Text="Disable" ButtonStyle="ButtonStyle.Light" Click="@(() => DisableAsync(theme))" Disabled="@IsBusy" />
+                                                    <CrestButton Text="@T.T("AdminThemes_Disable", "Disable")" ButtonStyle="ButtonStyle.Light" Click="@(() => DisableAsync(theme))" Disabled="@IsBusy" />
                                                 }
                                                 else
                                                 {
-                                                    <CrestButton Text="Enable" ButtonStyle="ButtonStyle.Secondary" Click="@(() => EnableAsync(theme))" Disabled="@IsBusy" />
+                                                    <CrestButton Text="@T.T("AdminThemes_Enable", "Enable")" ButtonStyle="ButtonStyle.Secondary" Click="@(() => EnableAsync(theme))" Disabled="@IsBusy" />
                                                 }
                                             </CrestStack>
                                         </CrestStack>
@@ -314,7 +315,7 @@
         }
         catch (Exception exception)
         {
-            ErrorMessage = $"Unable to load themes: {exception.Message}";
+            ErrorMessage = string.Format(T.T("AdminThemes_UnableToLoadFormat", "Unable to load themes: {0}"), exception.Message);
         }
         finally
         {
@@ -324,23 +325,23 @@
 
     private async Task SetCurrentAsync(ThemeSummary theme) => await ExecuteAsync(
         () => Api.Crest.Rest.Themes.SetCurrentAsync(theme.Id),
-        $"{theme.Name} is now the current {(theme.IsAdmin ? "admin" : "site")} theme.");
+        string.Format(T.T("AdminThemes_NowCurrentFormat", "{0} is now the current {1} theme."), theme.Name, theme.IsAdmin ? T.T("AdminThemes_AdminWord", "admin") : T.T("AdminThemes_SiteWord", "site")));
 
     private async Task EnableAsync(ThemeSummary theme) => await ExecuteAsync(
         () => Api.Crest.Rest.Themes.EnableAsync(theme.Id),
-        $"{theme.Name} was enabled.");
+        string.Format(T.T("AdminThemes_WasEnabledFormat", "{0} was enabled."), theme.Name));
 
     private async Task DisableAsync(ThemeSummary theme) => await ExecuteAsync(
         () => Api.Crest.Rest.Themes.DisableAsync(theme.Id),
-        $"{theme.Name} was disabled.");
+        string.Format(T.T("AdminThemes_WasDisabledFormat", "{0} was disabled."), theme.Name));
 
     private async Task ResetSiteThemeAsync() => await ExecuteAsync(
         () => Api.Crest.Rest.Themes.ResetSiteThemeAsync(),
-        "The site theme was reset.");
+        T.T("AdminThemes_SiteThemeReset", "The site theme was reset."));
 
     private async Task ResetAdminThemeAsync() => await ExecuteAsync(
         () => Api.Crest.Rest.Themes.ResetAdminThemeAsync(),
-        "The admin theme was reset.");
+        T.T("AdminThemes_AdminThemeReset", "The admin theme was reset."));
 
     private async Task ExecuteAsync(Func<Task<bool>> action, string successMessage)
     {
@@ -351,19 +352,19 @@
         {
             if (await action())
             {
-                Notifications.Notify(NotificationSeverity.Success, "Themes", successMessage);
+                Notifications.Notify(NotificationSeverity.Success, T.T("AdminThemes_NotificationTitle", "Themes"), successMessage);
                 State = await Api.Crest.Rest.Themes.ListAsync();
             }
             else
             {
-                ErrorMessage = "The theme action did not complete successfully.";
-                Notifications.Notify(NotificationSeverity.Error, "Themes", ErrorMessage);
+                ErrorMessage = T.T("AdminThemes_ActionFailed", "The theme action did not complete successfully.");
+                Notifications.Notify(NotificationSeverity.Error, T.T("AdminThemes_NotificationTitle", "Themes"), ErrorMessage);
             }
         }
         catch (Exception exception)
         {
             ErrorMessage = exception.Message;
-            Notifications.Notify(NotificationSeverity.Error, "Themes", ErrorMessage);
+            Notifications.Notify(NotificationSeverity.Error, T.T("AdminThemes_NotificationTitle", "Themes"), ErrorMessage);
         }
         finally
         {
@@ -379,13 +380,13 @@
         string.Equals(themeId, State.CurrentSiteThemeId, StringComparison.OrdinalIgnoreCase) ||
         string.Equals(themeId, State.CurrentAdminThemeId, StringComparison.OrdinalIgnoreCase);
 
-    private static string ThemeMeta(ThemeSummary theme)
+    private string ThemeMeta(ThemeSummary theme)
     {
         var parts = new List<string> { theme.Id };
 
         if (!string.IsNullOrWhiteSpace(theme.Version))
         {
-            parts.Add($"v{theme.Version}");
+            parts.Add(string.Format(T.T("AdminThemes_VersionFormat", "v{0}"), theme.Version));
         }
 
         if (!string.IsNullOrWhiteSpace(theme.Author))

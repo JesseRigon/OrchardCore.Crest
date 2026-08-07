@@ -1,15 +1,31 @@
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using OrchardCore.Admin;
 using OrchardCore.Navigation;
 using OrchardCore.Settings;
 
 namespace Crest;
 
-public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocalizer) : AdminNavigationProvider
+// Stock OrchardCore admin menu providers use .Action(...), which MVC's
+// IUrlHelper/LinkGenerator resolves against the tenant's real, configured
+// AdminOptions.AdminUrlPrefix automatically - e.g. AdminUrlPrefix "backoffice"
+// replaces the literal word "Admin" in every URL (see
+// AdminAreaControllerRouteMapper upstream), it isn't layered on top of it. Design
+// System/Icons have no MVC controller action to route to (Blazor-only pages), so
+// .Url(...) is the only option - building it from the real AdminOptions.AdminUrlPrefix
+// keeps these two links correct under a custom prefix, matching the same
+// "{realAdminPrefix}/DesignSystem" shape stock links get. DesignSystem.razor/
+// Icons.razor's own "@page" directives carry no "/Admin" segment either - Blazor's
+// Router resolves them relative to <base href>, already rewritten to the real
+// prefix by BlazorAdminThemeMiddleware.TryServeIndexHtmlAsync.
+public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocalizer, IOptions<AdminOptions> adminOptions) : AdminNavigationProvider
 {
     private readonly IStringLocalizer S = stringLocalizer;
 
     protected override ValueTask BuildAsync(NavigationBuilder builder)
     {
+        var adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
+
         builder.Add(S["Design"], NavigationConstants.AdminMenuDesignPosition, design => design
             .AddClass("design")
             .Id("design")
@@ -17,7 +33,7 @@ public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocali
                 .AddClass("design-system")
                 .AddClass("icon-class-@iconify:mdi:palette")
                 .Id("design-system")
-                .Url("/Admin/DesignSystem")
+                .Url($"{adminPath}/DesignSystem")
                 .Permission(SettingsPermissions.ManageSettings)
                 .LocalNav()
             )
@@ -25,7 +41,7 @@ public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocali
                 .AddClass("icons")
                 .AddClass("icon-class-@iconify:mdi:shape")
                 .Id("icons")
-                .Url("/Admin/Design/Icons")
+                .Url($"{adminPath}/Design/Icons")
                 .Permission(SettingsPermissions.ManageSettings)
                 .LocalNav()
             ), priority: 1);

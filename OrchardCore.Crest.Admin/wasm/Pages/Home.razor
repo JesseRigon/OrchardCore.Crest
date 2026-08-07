@@ -1,11 +1,60 @@
 @page "/"
-@using Crest.Admin.Components.Site
+@using Crest.Admin.DisplayManagement
+@using Crest.Admin.Options
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
+@inject DisplayManager DisplayManager
+@inject CrestRoutingOptions Routing
+@inject NavigationManager Navigation
 
-<SiteContainer>
-    <CrestStack Gap="1rem" Style="padding: 2rem;">
-        <CrestText TextStyle="TextStyle.H3" Text="OrchardCore.Crest" />
-        <CrestText Text="Public site shell" />
-    </CrestStack>
-</SiteContainer>
+@if (_showLogin)
+{
+    <Login />
+}
+
+@code {
+    private bool _showLogin;
+
+    // This shell's base href is whichever real, tenant-configured path served it
+    // (AdminPath or LoginPath - see BlazorAdminThemeMiddleware.TryServeIndexHtmlAsync),
+    // so a base-relative "/" request lands here regardless of which one that was.
+    // Routing.AdminPath/LoginPath hold the real, absolute server paths (e.g.
+    // "/backoffice") - when we're already sitting at that same base, NavigateTo-ing
+    // to it again just re-lands here at "/" and loops forever, since the real path
+    // with no further segment IS this page's own base-relative root. Navigate
+    // base-relative ("Dashboard", not Routing.AdminPath) in that case instead, which
+    // Dashboard.razor's own "@page "/Dashboard"" resolves against whatever base is
+    // already loaded - only cross to the *other* shell's real, absolute path with
+    // forceLoad when this base isn't already the right one. Dashboard is currently
+    // the only landing page - see plans/user-settings.md for a future per-user
+    // configurable default landing page, which Orchard has no built-in equivalent of
+    // today.
+    protected override async Task OnInitializedAsync()
+    {
+        await DisplayManager.EnsureInitializedAsync();
+        var currentBasePath = new Uri(Navigation.BaseUri).AbsolutePath.TrimEnd('/');
+
+        if (DisplayManager.IsAuthenticated)
+        {
+            if (string.Equals(currentBasePath, Routing.AdminPath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+            {
+                Navigation.NavigateTo("Dashboard");
+            }
+            else
+            {
+                Navigation.NavigateTo(Routing.AdminPath, forceLoad: true);
+            }
+
+            return;
+        }
+
+        if (string.Equals(currentBasePath, Routing.LoginPath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+        {
+            _showLogin = true;
+        }
+        else
+        {
+            Navigation.NavigateTo(Routing.LoginPath, forceLoad: true);
+        }
+    }
+}

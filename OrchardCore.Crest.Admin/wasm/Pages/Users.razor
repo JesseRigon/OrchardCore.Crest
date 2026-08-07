@@ -1,31 +1,32 @@
-@page "/Admin/Users/Index"
+@page "/Users/Index"
 @using Crest.Admin.Api
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" data-testid="users-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-        <CrestText TextStyle="TextStyle.H4" Text="Users" />
-        <CrestButton Text="Add User" Icon="person_add" Click="NavigateCreate" />
+        <CrestText TextStyle="TextStyle.H4" Text="@T.T("Users_Heading", "Users")" />
+        <CrestButton Text="@T.T("Users_AddUser", "Add User")" Icon="person_add" Click="NavigateCreate" />
     </CrestStack>
     <CrestStack Orientation="Orientation.Horizontal" Gap=".5rem">
-        <CrestTextBox @bind-Value="Search" Placeholder="Search users" Style="width: 20rem" />
+        <CrestTextBox @bind-Value="Search" Placeholder="@T.T("Users_SearchPlaceholder", "Search users")" Style="width: 20rem" />
         <CrestDropDown @bind-Value="Status" Data="Statuses" TextProperty="Text" ValueProperty="Value" Style="width: 10rem" />
-        <CrestButton Text="Filter" Click="LoadAsync" />
+        <CrestButton Text="@T.T("Users_Filter", "Filter")" Click="LoadAsync" />
     </CrestStack>
     @if (List is null) { <CrestProgressBar Mode="ProgressBarMode.Indeterminate" /> }
     else
     {
-        <CrestText TextStyle="TextStyle.Body2" Text="@($"{List.Total} users")" />
+        <CrestText TextStyle="TextStyle.Body2" Text="@string.Format(T.T("Users_TotalFormat", "{0} users"), List.Total)" />
         <CrestDataGrid Data="List.Items" TItem="CrestUser" AllowPaging="true" PageSize="50">
             <Columns>
-                <CrestDataGridColumn TItem="CrestUser" Property="UserName" Title="Username" />
-                <CrestDataGridColumn TItem="CrestUser" Property="Email" Title="Email" />
-                <CrestDataGridColumn TItem="CrestUser" Title="Roles"><Template Context="user">@string.Join(", ", user.Roles)</Template></CrestDataGridColumn>
-                <CrestDataGridColumn TItem="CrestUser" Title="Status"><Template Context="user">@(user.IsEnabled ? "Enabled" : "Disabled")</Template></CrestDataGridColumn>
-                <CrestDataGridColumn TItem="CrestUser" Title="Actions"><Template Context="user"><CrestButton ButtonStyle="ButtonStyle.Light" Icon="edit" Click="@(()=>Edit(user.Id))" /><CrestButton ButtonStyle="ButtonStyle.Light" Icon="@(user.IsEnabled ? "block" : "check_circle")" Click="@(()=>ToggleAsync(user))" /><CrestButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(()=>DeleteAsync(user))" /></Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="CrestUser" Property="UserName" Title="@T.T("Users_UsernameColumn", "Username")" />
+                <CrestDataGridColumn TItem="CrestUser" Property="Email" Title="@T.T("Users_EmailColumn", "Email")" />
+                <CrestDataGridColumn TItem="CrestUser" Title="@T.T("Users_RolesColumn", "Roles")"><Template Context="user">@string.Join(", ", user.Roles)</Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="CrestUser" Title="@T.T("Users_StatusColumn", "Status")"><Template Context="user">@(user.IsEnabled ? T.T("Users_EnabledStatus", "Enabled") : T.T("Users_DisabledStatus", "Disabled"))</Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="CrestUser" Title="@T.T("Users_ActionsColumn", "Actions")"><Template Context="user"><CrestButton ButtonStyle="ButtonStyle.Light" Icon="edit" Click="@(()=>Edit(user.Id))" /><CrestButton ButtonStyle="ButtonStyle.Light" Icon="@(user.IsEnabled ? "block" : "check_circle")" Click="@(()=>ToggleAsync(user))" /><CrestButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(()=>DeleteAsync(user))" /></Template></CrestDataGridColumn>
             </Columns>
         </CrestDataGrid>
     }
@@ -35,11 +36,11 @@
     private CrestUserList? List;
     private string? Search;
     private string? Status;
-    private readonly object[] Statuses = [new { Text = "All users", Value = "" }, new { Text = "Enabled users", Value = "enabled" }, new { Text = "Disabled users", Value = "disabled" }];
+    private object[] Statuses => [new { Text = T.T("Users_AllUsersOption", "All users"), Value = "" }, new { Text = T.T("Users_EnabledUsersOption", "Enabled users"), Value = "enabled" }, new { Text = T.T("Users_DisabledUsersOption", "Disabled users"), Value = "disabled" }];
     protected override Task OnInitializedAsync() => LoadAsync();
     private async Task LoadAsync() => List = await Api.Crest.Rest.Users.ListAsync(Search, Status);
-    private void NavigateCreate() => Navigation.NavigateTo("/Admin/Users/Create");
-    private void Edit(string id) => Navigation.NavigateTo($"/Admin/Users/Edit/{Uri.EscapeDataString(id)}");
+    private void NavigateCreate() => Navigation.NavigateTo("Users/Create");
+    private void Edit(string id) => Navigation.NavigateTo($"Users/Edit/{Uri.EscapeDataString(id)}");
     private async Task ToggleAsync(CrestUser user) { await Api.Crest.Rest.Users.SetEnabledAsync(user.Id, !user.IsEnabled); await LoadAsync(); }
     private async Task DeleteAsync(CrestUser user) { await Api.Crest.Rest.Users.DeleteAsync(user.Id); await LoadAsync(); }
 }

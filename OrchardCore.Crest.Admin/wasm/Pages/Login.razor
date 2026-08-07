@@ -7,23 +7,24 @@
 @inject DisplayManager DisplayManager
 @inject CrestRoutingOptions Routing
 @inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" Style="padding: 2rem;">
     <CrestText TextStyle="TextStyle.H3" Text="OrchardCore.Crest" />
 
     @if (DisplayManager.IsAuthenticated)
     {
-        <CrestText Text="@($"Signed in as {DisplayManager.User.UserName}")" />
-        <CrestButton Text="Logout" Click="LogoutAsync" Disabled="@DisplayManager.IsBusy" />
+        <CrestText Text="@string.Format(T.T("Login_SignedInAsFormat", "Signed in as {0}"), DisplayManager.User.UserName)" />
+        <CrestButton Text="@T.T("Login_Logout", "Logout")" Click="LogoutAsync" Disabled="@DisplayManager.IsBusy" />
     }
     else
     {
         <CrestTemplateForm TItem="LoginForm" Data="@_login" Submit="@((LoginForm form) => LoginAsync(form))">
             <CrestStack Gap="0.75rem" Style="max-width: 22rem;">
-                <CrestTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="Username or email" />
-                <CrestPassword Name="Password" @bind-Value="_login.Password" Placeholder="Password" />
+                <CrestTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="@T.T("Login_UsernamePlaceholder", "Username or email")" />
+                <CrestPassword Name="Password" @bind-Value="_login.Password" Placeholder="@T.T("Login_PasswordPlaceholder", "Password")" />
                 <CrestCheckBox @bind-Value="_login.RememberMe" />
-                <CrestButton ButtonType="ButtonType.Submit" Text="Login" Disabled="@DisplayManager.IsBusy" />
+                <CrestButton ButtonType="ButtonType.Submit" Text="@T.T("Login_Submit", "Login")" Disabled="@DisplayManager.IsBusy" />
                 @if (DisplayManager.ErrorMessage is not null)
                 {
                     <CrestText TextStyle="TextStyle.Caption" Text="@DisplayManager.ErrorMessage" />
@@ -56,7 +57,11 @@
         }
         else if (DisplayManager.IsAuthenticated)
         {
-            Navigation.NavigateTo(Routing.AdminPath);
+            // Crossing from the login shell (base href = LoginPath) to the admin
+            // shell (base href = AdminPath) requires a full reload so the browser
+            // re-fetches index.html with the correct <base> tag - see
+            // BlazorAdminThemeMiddleware's TryServeIndexHtmlAsync.
+            Navigation.NavigateTo(Routing.AdminPath, forceLoad: true);
         }
     }
 
@@ -64,7 +69,7 @@
     {
         if (await DisplayManager.LoginAsync(form.UserName, form.Password, form.RememberMe))
         {
-            Navigation.NavigateTo(Routing.AdminPath);
+            Navigation.NavigateTo(Routing.AdminPath, forceLoad: true);
         }
     }
 

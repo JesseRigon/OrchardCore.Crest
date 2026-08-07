@@ -1,7 +1,8 @@
-@page "/Admin/Recipes"
+@page "/Recipes"
 @using Crest.Admin.Api
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
-<CrestStack Gap="1rem" data-testid="recipes-page"><CrestText TextStyle="TextStyle.H4" Text="Recipes"/>@if(Model is null){<CrestProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<CrestDataGrid Data="Model" TItem="CrestRecipe"><Columns><CrestDataGridColumn TItem="CrestRecipe" Property="DisplayName" Title="Recipe"/><CrestDataGridColumn TItem="CrestRecipe" Property="Description" Title="Description"/><CrestDataGridColumn TItem="CrestRecipe" Title="Actions"><Template Context="recipe"><CrestButton Text="Run" Click="@(()=>Run(recipe))"/></Template></CrestDataGridColumn></Columns></CrestDataGrid>}</CrestStack>
+@inject Crest.Components.Theme.CrestApiLocalizer T
+<CrestStack Gap="1rem" data-testid="recipes-page"><CrestText TextStyle="TextStyle.H4" Text="@T.T("Recipes_Title", "Recipes")"/>@if(Model is null){<CrestProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<CrestDataGrid Data="Model" TItem="CrestRecipe"><Columns><CrestDataGridColumn TItem="CrestRecipe" Property="DisplayName" Title="@T.T("Recipes_RecipeColumn", "Recipe")"/><CrestDataGridColumn TItem="CrestRecipe" Property="Description" Title="@T.T("Recipes_DescriptionColumn", "Description")"/><CrestDataGridColumn TItem="CrestRecipe" Title="@T.T("Recipes_ActionsColumn", "Actions")"><Template Context="recipe"><CrestButton Text="@T.T("Recipes_Run", "Run")" Click="@(()=>Run(recipe))"/></Template></CrestDataGridColumn></Columns></CrestDataGrid>}</CrestStack>
 @code { CrestRecipe[]? Model; protected override async Task OnInitializedAsync()=>Model=await Api.Crest.Rest.Recipes.ListAsync(); async Task Run(CrestRecipe x){await Api.Crest.Rest.Recipes.ExecuteAsync(new(x.BasePath,x.FileName));} }

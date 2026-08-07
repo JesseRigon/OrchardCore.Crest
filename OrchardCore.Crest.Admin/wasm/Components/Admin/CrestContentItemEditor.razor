@@ -6,6 +6,7 @@
 @inject IApi Api
 @inject NavigationManager Navigation
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" data-testid="content-item-editor">
     @if (IsLoading)
@@ -22,22 +23,22 @@
             <CrestStack Gap="1rem">
                 <CrestCard>
                     <CrestStack Gap="0.75rem">
-                        <CrestText TextStyle="TextStyle.H4" Text="@(IsCreate ? $"New {ContentType}" : $"Edit {Model.ContentType}")" />
-                        <CrestText TextStyle="TextStyle.Body2" Text="Edit the Orchard content document directly. Changes are persisted through the standard content manager lifecycle." />
-                        <CrestTextBox Name="displayText" @bind-Value="Model.DisplayText" Placeholder="Title" Style="width: 100%;" />
-                        <CrestCheckBox @bind-Value="Model.Publish" Name="publish" /> <label for="publish">Publish after saving</label>
+                        <CrestText TextStyle="TextStyle.H4" Text="@(IsCreate ? string.Format(T.T("CrestContentItemEditor_NewTitleFormat", "New {0}"), ContentType) : string.Format(T.T("CrestContentItemEditor_EditTitleFormat", "Edit {0}"), Model.ContentType))" />
+                        <CrestText TextStyle="TextStyle.Body2" Text="@T.T("CrestContentItemEditor_Description", "Edit the Orchard content document directly. Changes are persisted through the standard content manager lifecycle.")" />
+                        <CrestTextBox Name="displayText" @bind-Value="Model.DisplayText" Placeholder="@T.T("CrestContentItemEditor_TitlePlaceholder", "Title")" Style="width: 100%;" />
+                        <CrestCheckBox @bind-Value="Model.Publish" Name="publish" /> <label for="publish">@T.T("CrestContentItemEditor_PublishAfterSaving", "Publish after saving")</label>
                     </CrestStack>
                 </CrestCard>
                 <CrestCard>
                     <CrestStack Gap="0.5rem">
-                        <CrestText TextStyle="TextStyle.Subtitle1" Text="Content document" />
-                        <CrestText TextStyle="TextStyle.Caption" Text="This is the content JSON consumed by Orchard parts and fields. Preserve fields you do not intend to change." />
+                        <CrestText TextStyle="TextStyle.Subtitle1" Text="@T.T("CrestContentItemEditor_ContentDocument", "Content document")" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@T.T("CrestContentItemEditor_ContentDocumentHint", "This is the content JSON consumed by Orchard parts and fields. Preserve fields you do not intend to change.")" />
                         <CrestTextArea @bind-Value="Model.ContentJson" Rows="22" Style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; width: 100%;" />
                     </CrestStack>
                 </CrestCard>
                 <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                    <CrestButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="Cancel" Disabled="@IsSaving" />
-                    <CrestButton Text="Save" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                    <CrestButton Text="@T.T("CrestContentItemEditor_CancelButton", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="Cancel" Disabled="@IsSaving" />
+                    <CrestButton Text="@T.T("CrestContentItemEditor_SaveButton", "Save")" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
                 </CrestStack>
             </CrestStack>
         </CrestTemplateForm>
@@ -63,12 +64,12 @@
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(ContentItemId)) { ErrorMessage = "A content item identifier is required."; return; }
+        if (string.IsNullOrWhiteSpace(ContentItemId)) { ErrorMessage = T.T("CrestContentItemEditor_MissingContentItemId", "A content item identifier is required."); return; }
         IsLoading = true;
         try
         {
             var item = await Api.Crest.Rest.Content.Items.GetAsync(ContentItemId);
-            if (item is null) { ErrorMessage = "The requested Orchard content item was not found."; return; }
+            if (item is null) { ErrorMessage = T.T("CrestContentItemEditor_ContentItemNotFound", "The requested Orchard content item was not found."); return; }
             Model = new EditorModel
             {
                 ContentType = item.ContentType,
@@ -84,8 +85,8 @@
     private async Task SaveAsync()
     {
         JsonObject? content;
-        try { content = JsonNode.Parse(Model.ContentJson) as JsonObject ?? throw new InvalidOperationException("The content document must be a JSON object."); }
-        catch (Exception ex) { ErrorMessage = $"Content JSON is invalid: {ex.Message}"; return; }
+        try { content = JsonNode.Parse(Model.ContentJson) as JsonObject ?? throw new InvalidOperationException(T.T("CrestContentItemEditor_ContentDocumentMustBeObject", "The content document must be a JSON object.")); }
+        catch (Exception ex) { ErrorMessage = string.Format(T.T("CrestContentItemEditor_ContentJsonInvalidFormat", "Content JSON is invalid: {0}"), ex.Message); return; }
 
         IsSaving = true;
         ErrorMessage = null;
@@ -95,15 +96,15 @@
             var saved = IsCreate
                 ? await Api.Crest.Rest.Content.Items.CreateAsync(request)
                 : await Api.Crest.Rest.Content.Items.UpdateAsync(ContentItemId!, request);
-            if (saved is null) throw new InvalidOperationException("Orchard did not accept the content item update.");
-            Notifications.Notify(NotificationSeverity.Success, "Content items", $"{saved.DisplayText} saved.");
-            Navigation.NavigateTo("/Admin/Contents/ContentItems");
+            if (saved is null) throw new InvalidOperationException(T.T("CrestContentItemEditor_UpdateRejected", "Orchard did not accept the content item update."));
+            Notifications.Notify(NotificationSeverity.Success, T.T("CrestContentItemEditor_ContentItemsNotificationTitle", "Content items"), string.Format(T.T("CrestContentItemEditor_SavedNotificationFormat", "{0} saved."), saved.DisplayText));
+            Navigation.NavigateTo("Contents/ContentItems");
         }
         catch (Exception ex) { ErrorMessage = ex.Message; }
         finally { IsSaving = false; }
     }
 
-    private void Cancel() => Navigation.NavigateTo("/Admin/Contents/ContentItems");
+    private void Cancel() => Navigation.NavigateTo("Contents/ContentItems");
 
     private sealed class EditorModel
     {

@@ -1,18 +1,19 @@
-@page "/Admin/ContentTypes/List"
+@page "/ContentTypes/List"
 @using Crest.Admin.Api
 @using Crest.Components.Model
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" data-testid="content-types-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="Content Types" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Browse the current Orchard content definitions, their parts, and their fields." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("ContentTypes_Heading", "Content Types")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("ContentTypes_Description", "Browse the current Orchard content definitions, their parts, and their fields.")" />
         </CrestStack>
-        <CrestButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+        <CrestButton Text="@T.T("ContentTypes_Refresh", "Refresh")" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
     </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -23,17 +24,17 @@
     <CrestRow Gap="1rem">
         <CrestColumn Size="12" SizeLG="4">
             <CrestModelList TItem="ContentType"
-                            Title="Content types"
+                            Title="@T.T("ContentTypes_ListTitle", "Content types")"
                             Items="@AllContentTypes"
                             SelectedKey="@SelectedTypeName"
                             KeySelector="@(type => type.Name)"
                             TextSelector="@(type => type.DisplayName)"
-                            DescriptionSelector="@(type => $"{type.Name} · {type.Parts.Length} parts")"
+                            DescriptionSelector="@(type => string.Format(T.T("ContentTypes_PartsCountFormat", "{0} · {1} parts"), type.Name, type.Parts.Length))"
                             SearchPredicate="MatchesSearch"
                             Select="SelectTypeAsync"
                             ShowCreate="false"
                             IsBusy="@IsLoading"
-                            EmptyText="No content types are available." />
+                            EmptyText="@T.T("ContentTypes_NoneAvailable", "No content types are available.")" />
         </CrestColumn>
         <CrestColumn Size="12" SizeLG="8">
             @if (IsLoading)
@@ -42,7 +43,7 @@
             }
             else if (SelectedType is null)
             {
-                <CrestCard><CrestText Text="Select a content type to inspect its Orchard definition." /></CrestCard>
+                <CrestCard><CrestText Text="@T.T("ContentTypes_SelectPrompt", "Select a content type to inspect its Orchard definition.")" /></CrestCard>
             }
             else
             {
@@ -53,17 +54,17 @@
                                 <CrestText TextStyle="TextStyle.H5" Text="@SelectedType.DisplayName" />
                                 <CrestText TextStyle="TextStyle.Caption" Text="@SelectedType.Name" />
                             </CrestStack>
-                            <CrestButton Text="Create content item" Icon="add" Size="ButtonSize.Small" Click="CreateContentItem" />
+                            <CrestButton Text="@T.T("ContentTypes_CreateContentItem", "Create content item")" Icon="add" Size="ButtonSize.Small" Click="CreateContentItem" />
                         </CrestStack>
 
                         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                            <CrestBadge Text="@($"{SelectedType.Parts.Length} parts")" BadgeStyle="BadgeStyle.Info" />
-                            <CrestBadge Text="@($"{FieldCount(SelectedType)} fields")" BadgeStyle="BadgeStyle.Secondary" />
+                            <CrestBadge Text="@string.Format(T.T("ContentTypes_PartsBadgeFormat", "{0} parts"), SelectedType.Parts.Length)" BadgeStyle="BadgeStyle.Info" />
+                            <CrestBadge Text="@string.Format(T.T("ContentTypes_FieldsBadgeFormat", "{0} fields"), FieldCount(SelectedType))" BadgeStyle="BadgeStyle.Secondary" />
                         </CrestStack>
 
                         @if (SelectedType.Parts.Length == 0)
                         {
-                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">This type has no attached parts.</CrestAlert>
+                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("ContentTypes_NoPartsAttached", "This type has no attached parts.")</CrestAlert>
                         }
                         else
                         {
@@ -73,11 +74,11 @@
                                     <CrestStack Gap="0.7rem">
                                         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                                             <CrestBadge Text="@part.Part.Name" BadgeStyle="BadgeStyle.Secondary" />
-                                            <CrestBadge Text="@($"{part.Part.Fields.Length} fields")" BadgeStyle="BadgeStyle.Info" />
+                                            <CrestBadge Text="@string.Format(T.T("ContentTypes_FieldsBadgeFormat", "{0} fields"), part.Part.Fields.Length)" BadgeStyle="BadgeStyle.Info" />
                                         </CrestStack>
                                         @if (part.Part.Fields.Length == 0)
                                         {
-                                            <CrestText TextStyle="TextStyle.Body2" Text="No fields are defined on this part." />
+                                            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("ContentTypes_NoFieldsDefined", "No fields are defined on this part.")" />
                                         }
                                         else
                                         {
@@ -153,7 +154,7 @@
     {
         if (SelectedType is not null)
         {
-            Navigation.NavigateTo($"/Admin/Contents/ContentTypes/{Uri.EscapeDataString(SelectedType.Name)}/Create");
+            Navigation.NavigateTo($"Contents/ContentTypes/{Uri.EscapeDataString(SelectedType.Name)}/Create");
         }
     }
 }

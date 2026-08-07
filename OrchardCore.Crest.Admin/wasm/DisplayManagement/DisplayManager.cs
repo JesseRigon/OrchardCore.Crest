@@ -1,5 +1,6 @@
 using Crest.Admin.Api;
 using Crest.Admin.Theme;
+using Crest.Components.Theme;
 using Crest.Icons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
@@ -9,7 +10,7 @@ using System.Reflection;
 
 namespace Crest.Admin.DisplayManagement;
 
-public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, ClientIconRegistry iconRegistry, NavigationManager navigation, CrestApiLocalizer apiLocalizer, IJSRuntime js)
+public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, ClientIconRegistry iconRegistry, NavigationManager navigation, CrestApiLocalizer apiLocalizer, IJSRuntime js, CrestAntiforgeryHandler antiforgeryHandler)
 {
     private readonly Lazy<IReadOnlyDictionary<string, Type>> _shapeBindings = new(BuildShapeBindings);
     private readonly SemaphoreSlim _manifestLock = new(1, 1);
@@ -36,9 +37,18 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
 
     // This is a navigation convenience only. The server independently
     // authorizes direct route requests and every Crest/Orchard data operation.
+    // AuthorizedRoutes' templates are canonical ("/Features", "/Themes", ... -
+    // matching this app's own @page directives, and matching the real, MVC-resolved
+    // shape of stock Orchard admin URLs once AdminUrlPrefix is substituted in) and
+    // Blazor's Router itself resolves @page routes relative to BaseUri (see
+    // BlazorAdminThemeMiddleware.TryServeIndexHtmlAsync), so a base-relative path IS
+    // already the canonical path minus its leading slash (e.g. "/backoffice/Features"
+    // -> ToBaseRelativePath -> "Features", which is exactly what "@page "/Features""
+    // resolves to under that base) - just needs the slash back. See the same fix in
+    // BlazorAdminThemeMiddleware's server-side CanAccessAsync call.
     public bool IsRouteAuthorized(string uri)
     {
-        var path = new Uri(uri).AbsolutePath;
+        var path = "/" + navigation.ToBaseRelativePath(uri).TrimStart('/');
         return Manifest?.AuthorizedRoutes?.Any(route => RouteMatches(route.Template, path)) == true;
     }
 
@@ -228,7 +238,22 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
             {
                 var resolved = await ResolveCultureAsync(cultureSelector);
                 ResolvedCulture = resolved;
-                await apiLocalizer.LoadAsync(System.Globalization.CultureInfo.GetCultureInfo(resolved));
+                var resolvedCultureInfo = System.Globalization.CultureInfo.GetCultureInfo(resolved);
+                await apiLocalizer.LoadAsync(resolvedCultureInfo);
+
+                // Every date/number ToString()/format-string call in the WASM app that relies
+                // on the ambient culture (CrestDataGridColumn, CrestScheduler's calendar views,
+                // ContentItems.razor's "Modified" timestamp, etc.) reads CultureInfo.CurrentCulture
+                // - it is never set anywhere else in this process, so without this it silently
+                // stays whatever the browser initialized the runtime with (navigator.language at
+                // startup), not the culture DisplayManager just resolved. Set on the current
+                // thread AND as the process default, since Blazor WASM is single-threaded but
+                // async continuations aren't guaranteed to stay on the exact thread that started
+                // them.
+                System.Globalization.CultureInfo.CurrentCulture = resolvedCultureInfo;
+                System.Globalization.CultureInfo.CurrentUICulture = resolvedCultureInfo;
+                System.Globalization.CultureInfo.DefaultThreadCurrentCulture = resolvedCultureInfo;
+                System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = resolvedCultureInfo;
 
                 // Write the fully-resolved value on every refresh, not just when a cookie is
                 // missing - the client is the sole source of truth for this decision (see
@@ -236,6 +261,12 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
                 // server-side cookie must always reflect exactly what was just resolved here,
                 // never something left over from a previous, possibly-stale resolution.
                 await js.InvokeVoidAsync("crestTheme.setAdminCulture", cultureSelector.CookieName, cultureSelector.CookiePath, resolved);
+
+                // Also hand the resolved-culture inputs to CrestAntiforgeryHandler so it can
+                // independently re-resolve and rewrite the cookie immediately before every
+                // subsequent outgoing request, not only here on manifest refresh - see
+                // plans/user-localization.md phase 15 and CrestAntiforgeryHandler.RewriteCultureCookie.
+                antiforgeryHandler.SetCultureCookieContext(new CultureCookieContext(User.UserName, cultureSelector, IsUnderAdminPath()));
             }
         }
         finally
@@ -322,8 +353,14 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
 
         _permissionRefreshCancellation = new CancellationTokenSource();
         var cancellationToken = _permissionRefreshCancellation.Token;
+        // Api endpoints live at the origin root regardless of which shell base
+        // (AdminPath/LoginPath) is currently loaded - combining against
+        // navigation.BaseUri directly would nest this under that base instead (e.g.
+        // "/backoffice/api/crest/permissions"), same class of bug CrestAntiforgeryHandler
+        // had before it was given an explicit origin-root BaseAddress.
+        var origin = new Uri(navigation.BaseUri).GetLeftPart(UriPartial.Authority) + "/";
         _permissionHub = new HubConnectionBuilder()
-            .WithUrl(new Uri(new Uri(navigation.BaseUri), "api/crest/permissions"))
+            .WithUrl(new Uri(new Uri(origin), "api/crest/permissions"))
             .WithAutomaticReconnect()
             .Build();
         _permissionHub.On("permissionsInvalidated", async () => await RefreshAfterPermissionChangeAsync());
@@ -412,6 +449,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         ContentTypes = [];
         Roles = [];
         CurrentContentItem = null;
+        antiforgeryHandler.SetCultureCookieContext(null);
     }
 
     private static DisplayMenu ToDisplayMenu(NavigationMenu menu) => new(

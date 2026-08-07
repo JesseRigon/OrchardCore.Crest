@@ -55,8 +55,29 @@ public sealed class CrestLocalizationController(
             return BadRequest("Culture must be a valid .NET/BCP 47 culture name.");
         }
 
-        var dictionary = localizationManager.GetDictionary(cultureInfo);
         var strings = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        // A region-specific .po file (e.g. es-MX.po) is optional, not required - most
+        // translation content is realistically maintained per-language, not per-region
+        // (see plans/user-localization.md). ILocalizationManager.GetDictionary does not
+        // itself fall back from a region culture to its parent language, so without this,
+        // a tenant supporting "es-MX" would silently render English fallback text for
+        // every key unless a translator maintained an es-MX.po file byte-for-byte
+        // identical to es.po. Fill from the parent language first (base layer), then
+        // overlay the requested culture's own dictionary so a region-specific override
+        // still wins when one actually exists.
+        if (!cultureInfo.IsNeutralCulture && cultureInfo.Parent is { Name.Length: > 0 } parent)
+        {
+            MergeClientStrings(strings, localizationManager.GetDictionary(parent));
+        }
+
+        MergeClientStrings(strings, localizationManager.GetDictionary(cultureInfo));
+
+        return Ok(strings);
+    }
+
+    private static void MergeClientStrings(Dictionary<string, string> strings, CultureDictionary dictionary)
+    {
         foreach (var (key, values) in dictionary.Translations)
         {
             if (string.Equals(key.Context, ClientStringsContext, StringComparison.Ordinal) && values.Length > 0)
@@ -64,8 +85,6 @@ public sealed class CrestLocalizationController(
                 strings[key.MessageId] = values[0];
             }
         }
-
-        return Ok(strings);
     }
 
     // Self-service: the current user's own stored default culture

@@ -1,26 +1,29 @@
 @using Crest.Admin.DisplayManagement
+@using Crest.Admin.Options
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject DisplayManager DisplayManager
+@inject CrestRoutingOptions Routing
 @inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 @if (!DisplayManager.IsInitialized)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
-        <CrestText Text="Loading..." />
+        <CrestText Text="@T.T("CrestAuthorizedRoute_Loading", "Loading...")" />
     </CrestStack>
 }
 else if (!DisplayManager.IsAuthenticated)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
-        <CrestText Text="Sign in is required." />
+        <CrestText Text="@T.T("CrestAuthorizedRoute_SignInRequired", "Sign in is required.")" />
     </CrestStack>
 }
 else if (!DisplayManager.IsRouteAuthorized(Navigation.Uri))
 {
     <CrestStack data-testid="crest-route-forbidden" Gap="0.5rem" Style="padding: 2rem;">
-        <CrestText TextStyle="TextStyle.H4" Text="Access denied" />
-        <CrestText Text="You do not have permission to access this admin page." />
+        <CrestText TextStyle="TextStyle.H4" Text="@T.T("CrestAuthorizedRoute_AccessDenied", "Access denied")" />
+        <CrestText Text="@T.T("CrestAuthorizedRoute_NoPermission", "You do not have permission to access this admin page.")" />
     </CrestStack>
 }
 else
@@ -37,7 +40,10 @@ else
         await DisplayManager.EnsureInitializedAsync();
         if (!DisplayManager.IsAuthenticated)
         {
-            Navigation.NavigateTo("/login");
+            // Crossing from the admin shell (base href = AdminPath) to the login
+            // shell (base href = LoginPath) requires a full reload - see
+            // AdminTitleBar.LogoutAsync for the same rationale.
+            Navigation.NavigateTo(Routing.LoginPath, forceLoad: true);
         }
     }
 }

@@ -16,6 +16,13 @@
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <FileVersion>3.0.0.0</FileVersion>
     <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+    <!-- DisplayManager sets CultureInfo.CurrentCulture from the resolved tenant/user/browser
+         culture (see plans/user-localization.md phase 7) so date/number formatting
+         (CrestDataGridColumn, CrestScheduler views, etc.) reflects it correctly. The SDK's
+         default trimmed ICU data only ships full formatting data for a small set of
+         cultures; without this, a resolved culture outside that set falls back to the
+         invariant format even though CurrentCulture is set correctly. -->
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
   </PropertyGroup>
 
   <ItemGroup>

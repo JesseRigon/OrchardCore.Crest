@@ -2,6 +2,7 @@
 @using Crest.Admin.Components.Shared
 @using Crest.Icons.Components
 @using Crest.Components.Primitives
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <ul class="primary-nav-menu__flyout-list" role="menu">
     @foreach (var item in Items)
@@ -31,7 +32,7 @@
                                      Name="chevron-right"
                                      Library="iconify.mdi"
                                      Version="current"
-                                     Alt="Open submenu"
+                                     Alt="@T.T("PrimaryNavMenuFlyoutItems_OpenSubmenuAlt", "Open submenu")"
                                      Class="primary-nav-menu__flyout-chevron" />
                     }
                 </div>

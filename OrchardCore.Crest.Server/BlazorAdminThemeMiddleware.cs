@@ -17,27 +17,51 @@ namespace Crest;
 
 public sealed class BlazorAdminThemeOptions
 {
+    // Defaults match AdminOptions.AdminUrlPrefix / UserOptions.LoginPath's own stock
+    // defaults ("Admin" / "Login") - BlazorAdminThemeOptionsConfiguration below
+    // overrides these from the tenant's real, configured values (recipe/appsettings,
+    // "OrchardCore_Admin"/"OrchardCore_Users" shell config sections) so a tenant that
+    // customizes either path doesn't silently break admin-theme routing. These
+    // property defaults only apply if that PostConfigure step is somehow skipped.
     public string AdminPath { get; set; } = "/admin";
+    public string LoginPath { get; set; } = "/login";
     public string BlazorThemeTag { get; set; } = "blazor";
     public string BlazorAdminThemeId { get; set; } = "OrchardCore.Crest.Admin";
     public string AdminThemeSourceWebRoot { get; set; } = "modules/OrchardCore.Crest/OrchardCore.Crest.Admin/wasm/wwwroot";
     public string AdminThemeBuildWebRoot { get; set; } = "modules/OrchardCore.Crest/OrchardCore.Crest.Admin/wasm/bin/OrchardCore.Crest.Admin/Debug/net10.0/wwwroot";
-    public HashSet<string> BlazorRoutes { get; set; } = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "/admin",
-        "/admin/themes",
-        "/admin/menus",
-        "/admin/menu",
-        "/admin/menu/list",
-        "/admin/contents/contentitems/menu",
-        "/admin/settings/admin",
-        "/admin/settings/general",
-    };
+
+    // Crest-only route overrides: paths with no Orchard equivalent that still need to
+    // be served by the Blazor admin shell. Everything that DOES have a real .razor
+    // page under BlazorRouteSourceDirectories is discovered automatically
+    // (DiscoverRazorPageRoutes) and does not need to be listed here - listing it
+    // anyway would be redundant and risks drifting out of sync with the actual @page
+    // declarations, which is exactly how the tenant front-end root "/" bug happened.
+    public HashSet<string> BlazorRouteOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public string[] BlazorRouteSourceDirectories { get; set; } =
     [
         "modules/OrchardCore.Crest/OrchardCore.Crest.Admin/wasm/Pages",
     ];
+}
+
+// Keeps BlazorAdminThemeOptions.AdminPath/LoginPath in sync with Orchard's own,
+// real, tenant-configurable settings (AdminOptions.AdminUrlPrefix,
+// UserOptions.LoginPath - both bound from shell config, e.g. a recipe's
+// "OrchardCore_Admin"/"OrchardCore_Users" sections) instead of Crest hardcoding its
+// own copies that silently drift if a tenant customizes either prefix. Runs as
+// IPostConfigureOptions so it applies after BlazorAdminThemeOptions' own
+// IConfigureOptions (currently just the no-op in Startup.cs, but this keeps the
+// override deterministic regardless of registration order - see
+// CrestCultureCookieOptionsConfiguration for the same pattern and its rationale).
+internal sealed class BlazorAdminThemeOptionsConfiguration(
+    IOptions<AdminOptions> adminOptions,
+    IOptions<OrchardCore.Users.UserOptions> userOptions) : IPostConfigureOptions<BlazorAdminThemeOptions>
+{
+    public void PostConfigure(string? name, BlazorAdminThemeOptions options)
+    {
+        options.AdminPath = "/" + adminOptions.Value.AdminUrlPrefix;
+        options.LoginPath = "/" + userOptions.Value.LoginPath;
+    }
 }
 
 public sealed class BlazorAdminThemeMiddleware
@@ -79,8 +103,46 @@ public sealed class BlazorAdminThemeMiddleware
         var adminPath = new PathString(options.AdminPath);
 
         var isAdminRoute = requestPath.StartsWithSegments(adminPath, out var adminRemainder);
-        var isBlazorAssetRoute = IsBlazorAssetRoute(requestPath);
-        var isBlazorPageRoute = IsPageRequest(requestPath) && IsBlazorRoute(options, context.Request);
+        // LoginPath is a shared auth entry point served by the Blazor shell regardless
+        // of admin/front-end (matching IsBlazorRoute's own admin-settings special case
+        // below), and unlike AdminPath's own routes it's matched directly against
+        // options.LoginPath rather than through auto-discovered @page literals -
+        // Login.razor's "@page "/login"" is a WASM-router-relative route name, not a
+        // server path, so a tenant that customizes LoginPath (e.g. "/signin") would
+        // otherwise never match here and would silently fall through to Orchard's own
+        // (unconfigured, Blazor-theme-incompatible) login flow.
+        var isLoginRoute = requestPath.Equals(options.LoginPath, StringComparison.OrdinalIgnoreCase);
+        // Dev-only tooling (e.g. blazor.webassembly.js's hot-reload module) issues
+        // dynamic imports relative to <base href> rather than root-absolute, so under
+        // a non-default AdminPath/LoginPath those requests arrive as
+        // "{shellBasePath}/_framework/..." instead of "/_framework/...". Stripping
+        // whichever shell base matches (mirroring isAdminRoute's own remainder logic)
+        // lets IsBlazorAssetRoute recognize both forms without hardcoding every
+        // possible prefixed asset path.
+        var assetRequestPath = requestPath.StartsWithSegments(new PathString(options.AdminPath), out var adminAssetRemainder)
+            ? adminAssetRemainder
+            : requestPath.StartsWithSegments(new PathString(options.LoginPath), out var loginAssetRemainder)
+                ? loginAssetRemainder
+                : requestPath;
+        var isBlazorAssetRoute = IsBlazorAssetRoute(assetRequestPath);
+        // Blazor page routes are discovered from wasm/Pages/*.razor's own @page
+        // directives (see DiscoverRazorPageRoutes below), which are WASM-router-relative
+        // route names, not server-side paths - they only tell us which segments under
+        // AdminPath correspond to a real page (as opposed to an unknown/404 path).
+        // isAdminRoute is the actual server-side gate: without it, an auto-discovered
+        // literal like "/Features" would keep matching even after a tenant changes
+        // AdminUrlPrefix away from the stock default, since discovery has no idea
+        // what the *current* AdminPath is. OrchardCore.Crest.Admin/wasm/
+        // Pages/Home.razor declares "@page "/"" - that's the admin app's own internal
+        // landing route (served when requestPath resolves to isAdminRoute's own root),
+        // not the tenant's front-end root, and must never be treated as one: the
+        // Blazor admin theme owns AdminPath only, everything else belongs to the site
+        // theme (OrchardCore.Crest.Site must keep working standalone, without
+        // OrchardCore.Crest.Admin, for tenants using the standard Orchard admin theme).
+        var isBlazorPageRoute = isLoginRoute
+            || (isAdminRoute
+                && IsPageRequest(requestPath)
+                && IsBlazorRoute(options, adminRemainder, context.Request.Query));
         var isCrestAdminThemePreviewRoute = requestPath.Equals(CrestAdminThemePreviewPath);
 
         if (!isAdminRoute && !isBlazorAssetRoute && !isBlazorPageRoute && !isCrestAdminThemePreviewRoute)
@@ -126,12 +188,22 @@ public sealed class BlazorAdminThemeMiddleware
 
             if (context.User.Identity?.IsAuthenticated != true)
             {
-                context.Response.Redirect("/login");
+                context.Response.Redirect(options.LoginPath);
                 return;
             }
 
+            // CrestRoutePermissionProvider's templates are canonical ("/Features",
+            // "/Themes", ... matching the WASM app's own @page directives, which
+            // carry no prefix themselves), not real server paths - so matching must
+            // happen against the canonical form of this request, not its real,
+            // tenant-configured requestPath (e.g. "/backoffice/Features" would never
+            // match "/Features" otherwise). adminRemainder is already exactly that
+            // canonical form: it's requestPath with only the matched AdminPath
+            // prefix stripped, e.g. "/backoffice/Features" -> "/Features" - the same
+            // shape Blazor's Router itself resolves "@page "/Features"" to, relative
+            // to BaseUri (AdminPath, per TryServeIndexHtmlAsync).
             var routeAuthorization = context.RequestServices.GetRequiredService<CrestRouteAuthorizationService>();
-            if (!await routeAuthorization.CanAccessAsync(context.User, requestPath.Value))
+            if (!await routeAuthorization.CanAccessAsync(context.User, adminRemainder.Value))
             {
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 return;
@@ -147,15 +219,34 @@ public sealed class BlazorAdminThemeMiddleware
 
         var relativePath = isAdminRoute
             ? GetAdminRelativePath(adminRemainder)
-            : requestPath.Value?.TrimStart('/') ?? string.Empty;
+            : assetRequestPath.Value?.TrimStart('/') ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(relativePath) || !Path.HasExtension(relativePath))
         {
             relativePath = "index.html";
         }
 
+        // The WASM shell can be reached at two independent server paths - AdminPath
+        // and LoginPath - which are not necessarily nested (e.g. "/backoffice" and
+        // "/signin"). <base href> must match whichever one actually served this
+        // request, or Blazor's Router (which resolves @page routes relative to
+        // BaseUri) won't find a match. isLoginRoute is checked first because a
+        // custom LoginPath could theoretically overlap-prefix AdminPath's own
+        // segments; an exact-match login request always means "serve the login base".
+        var shellBasePath = isLoginRoute ? options.LoginPath : options.AdminPath;
+
         foreach (var webRoot in webRoots)
         {
+            if (string.Equals(relativePath, "index.html", StringComparison.OrdinalIgnoreCase))
+            {
+                if (await TryServeIndexHtmlAsync(context, webRoot, shellBasePath))
+                {
+                    return;
+                }
+
+                continue;
+            }
+
             if (await TryServeFileAsync(context, webRoot, relativePath))
             {
                 return;
@@ -193,11 +284,16 @@ public sealed class BlazorAdminThemeMiddleware
         return string.IsNullOrEmpty(value) || !Path.HasExtension(value);
     }
 
-    private bool IsBlazorRoute(BlazorAdminThemeOptions options, HttpRequest request)
+    // adminRemainder is requestPath with the matched, real AdminPath prefix already
+    // stripped (e.g. "/backoffice/Features" -> "/Features") - the same canonical
+    // shape ResolveBlazorRoutes' auto-discovered @page routes are in, since those
+    // directives themselves carry no prefix. Comparing anything here against the
+    // real, absolute request path directly would never match.
+    private bool IsBlazorRoute(BlazorAdminThemeOptions options, PathString adminRemainder, IQueryCollection query)
     {
-        var normalized = NormalizeRoute(request.Path.Value);
-        if (string.Equals(normalized, "/admin/settings", StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(request.Query["groupId"], "SecurityHeaders", StringComparison.OrdinalIgnoreCase))
+        var normalized = NormalizeRoute(adminRemainder.Value);
+        if (string.Equals(normalized, "/settings", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(query["groupId"], "SecurityHeaders", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
@@ -219,7 +315,7 @@ public sealed class BlazorAdminThemeMiddleware
                 return _blazorRoutes;
             }
 
-            var routes = new HashSet<string>(options.BlazorRoutes.Select(NormalizeRoute), StringComparer.OrdinalIgnoreCase);
+            var routes = new HashSet<string>(options.BlazorRouteOverrides.Select(NormalizeRoute), StringComparer.OrdinalIgnoreCase);
 
             foreach (var sourceDirectory in ResolveBlazorRouteSourceDirectories(options))
             {
@@ -387,6 +483,48 @@ public sealed class BlazorAdminThemeMiddleware
 
     private static Version ParseVersion(string? value)
         => Version.TryParse(value, out var version) ? version : new Version(0, 0);
+
+    // The WASM app's Router, @page directives, and base-relative NavigateTo calls
+    // all use canonical paths carrying no prefix ("/Features", "/login") - it's
+    // <base href>, rewritten below, that lets those literals resolve correctly
+    // under any tenant-configured prefix (Blazor's Router matches @page routes
+    // relative to NavigationManager.BaseUri). CrestRoutingController separately
+    // gives the WASM app the real AdminPath/LoginPath values themselves, for
+    // building cross-shell (absolute, forceLoad) navigation targets.
+    private async Task<bool> TryServeIndexHtmlAsync(HttpContext context, string webRoot, string shellBasePath)
+    {
+        var provider = new PhysicalFileProvider(webRoot);
+        var file = provider.GetFileInfo("index.html");
+        if (!file.Exists || file.IsDirectory)
+        {
+            return false;
+        }
+
+        string html;
+        await using (var stream = file.CreateReadStream())
+        using (var reader = new StreamReader(stream))
+        {
+            html = await reader.ReadToEndAsync(context.RequestAborted);
+        }
+
+        // Blazor's Router matches @page routes relative to NavigationManager.BaseUri,
+        // which WebAssemblyHostBuilder derives from this <base> tag at boot - not from
+        // any literal leading "/" in each @page directive. Rewriting it here to
+        // whichever real, configured path (AdminPath or LoginPath) actually served
+        // this request is what lets all 30+ .razor pages under wasm/Pages, including
+        // Login.razor's own "@page "/login"", keep their unmodified routes working
+        // verbatim under any AdminUrlPrefix/LoginPath, without a NavigationManager
+        // subclass (WebAssemblyNavigationManager's JS-interop wiring isn't designed
+        // to be wrapped) or per-file edits.
+        var trimmedBasePath = shellBasePath.Trim('/');
+        var baseHref = string.IsNullOrEmpty(trimmedBasePath) ? "/" : "/" + trimmedBasePath + "/";
+        html = html.Replace("<base href=\"/\" />", $"<base href=\"{System.Net.WebUtility.HtmlEncode(baseHref)}\" />", StringComparison.OrdinalIgnoreCase);
+
+        context.Response.ContentType = "text/html";
+        context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+        await context.Response.WriteAsync(html, context.RequestAborted);
+        return true;
+    }
 
     private async Task<bool> TryServeFileAsync(HttpContext context, string webRoot, string relativePath)
     {

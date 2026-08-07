@@ -7,31 +7,32 @@
 @implements IAsyncDisposable
 @inject ICrestIconSearchClient Icons
 @inject IJSRuntime Js
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <div class="icon-selector">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
         <RadzenTextBox Value="@Value" ValueChanged="SetValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
-        <RadzenButton Icon="apps" ButtonStyle="ButtonStyle.Light" Click="ToggleOpenAsync" ButtonType="ButtonType.Button" title="Choose icon" />
+        <RadzenButton Icon="apps" ButtonStyle="ButtonStyle.Light" Click="ToggleOpenAsync" ButtonType="ButtonType.Button" title="@T.T("IconSelector_ChooseIconTitle", "Choose icon")" />
         @if (!string.IsNullOrWhiteSpace(Value))
         {
-            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ClearAsync" ButtonType="ButtonType.Button" title="Clear icon" />
+            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ClearAsync" ButtonType="ButtonType.Button" title="@T.T("IconSelector_ClearIconTitle", "Clear icon")" />
         }
     </RadzenStack>
 
     @if (IsOpen)
     {
         <div class="icon-selector__modal-backdrop" role="presentation" @onclick="Close">
-            <div class="icon-selector__dialog" role="dialog" aria-modal="true" aria-label="Choose icon" @onclick:stopPropagation="true" @ref="DialogElement">
+            <div class="icon-selector__dialog" role="dialog" aria-modal="true" aria-label="@T.T("IconSelector_ChooseIconTitle", "Choose icon")" @onclick:stopPropagation="true" @ref="DialogElement">
                 <div class="icon-selector__dialog-header">
                     <RadzenStack Gap="0.2rem">
-                        <RadzenText TextStyle="TextStyle.H5" Text="Choose icon" />
-                        <RadzenText TextStyle="TextStyle.Caption" Text="@("Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references.")" />
+                        <RadzenText TextStyle="TextStyle.H5" Text="@T.T("IconSelector_ChooseIconTitle", "Choose icon")" />
+                        <RadzenText TextStyle="TextStyle.Caption" Text="@T.T("IconSelector_DialogDescription", "Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references.")" />
                     </RadzenStack>
-                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="Close" ButtonType="ButtonType.Button" title="Close" />
+                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="Close" ButtonType="ButtonType.Button" title="@T.T("IconSelector_CloseTitle", "Close")" />
                 </div>
 
                 <div class="icon-selector__dialog-body">
-                    <aside class="icon-selector__filters" aria-label="Icon filters">
+                    <aside class="icon-selector__filters" aria-label="@T.T("IconSelector_FiltersAriaLabel", "Icon filters")">
                         @foreach (var facet in Facets)
                         {
                             <div class="icon-selector__filter-section">
@@ -56,17 +57,17 @@
 
                     <section class="icon-selector__results">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="icon-selector__search-row">
-                            <RadzenTextBox Value="@SearchText" @oninput="SearchInputAsync" Placeholder="Search all icons..." Style="width: 100%;" />
+                            <RadzenTextBox Value="@SearchText" @oninput="SearchInputAsync" Placeholder="@T.T("IconSelector_SearchAllPlaceholder", "Search all icons...")" Style="width: 100%;" />
                             @if (ActiveFilterValues.Count > 0 || SelectedLibrary is not null || !string.IsNullOrWhiteSpace(SearchText))
                             {
-                                <RadzenButton Text="Clear" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Light" Click="ClearFiltersAsync" ButtonType="ButtonType.Button" />
+                                <RadzenButton Text="@T.T("IconSelector_ClearFilters", "Clear")" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Light" Click="ClearFiltersAsync" ButtonType="ButtonType.Button" />
                             }
                         </RadzenStack>
 
-                        <div class="icon-selector__style-strip" @ref="StylePacksElement" aria-label="Style packs">
+                        <div class="icon-selector__style-strip" @ref="StylePacksElement" aria-label="@T.T("IconSelector_StylePacksAriaLabel", "Style packs")">
                             <button type="button" class="icon-selector__style-chip @(SelectedLibrary is null ? "icon-selector__style-chip--active" : null)" @onclick="@(() => SelectLibraryAsync(null))">
                                 <span>💙</span>
-                                <span>All style packs</span>
+                                <span>@T.T("IconSelector_AllStylePacks", "All style packs")</span>
                             </button>
                             @foreach (var library in Libraries)
                             {
@@ -78,18 +79,18 @@
                             <span>@ResultSummary</span>
                             @if (ActiveFilterValues.Count > 0)
                             {
-                                <span>Filters: @string.Join(", ", ActiveFilterValues.Select(FilterLabel))</span>
+                                <span>@string.Format(T.T("IconSelector_FiltersFormat", "Filters: {0}"), string.Join(", ", ActiveFilterValues.Select(FilterLabel)))</span>
                             }
                         </div>
 
                         <div class="icon-selector__grid" @ref="GridElement" @onscroll="OnScrollAsync">
                             @if (IsLoading && Items.Count == 0)
                             {
-                                <div class="icon-selector__status">Loading icons...</div>
+                                <div class="icon-selector__status">@T.T("IconSelector_LoadingIcons", "Loading icons...")</div>
                             }
                             else if (Items.Count == 0)
                             {
-                                <div class="icon-selector__status">No icons found.</div>
+                                <div class="icon-selector__status">@T.T("IconSelector_NoIconsFound", "No icons found.")</div>
                             }
                             else
                             {
@@ -102,7 +103,7 @@
                                 }
                                 @if (IsLoading)
                                 {
-                                    <div class="icon-selector__status icon-selector__status--wide">Loading more...</div>
+                                    <div class="icon-selector__status icon-selector__status--wide">@T.T("IconSelector_LoadingMore", "Loading more...")</div>
                                 }
                             }
                         </div>
@@ -111,7 +112,7 @@
 
                 <div class="icon-selector__dialog-footer">
                     <RadzenTextBox Value="@PendingValue" ValueChanged="SetPendingValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
-                    <RadzenButton Text="Save" Icon="save" Click="SaveAsync" ButtonType="ButtonType.Button" Disabled="@string.IsNullOrWhiteSpace(PendingValue)" data-icon-selector-save="true" />
+                    <RadzenButton Text="@T.T("IconSelector_Save", "Save")" Icon="save" Click="SaveAsync" ButtonType="ButtonType.Button" Disabled="@string.IsNullOrWhiteSpace(PendingValue)" data-icon-selector-save="true" />
                 </div>
             </div>
         </div>
@@ -143,7 +144,7 @@
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
 
-    private string ResultSummary => Total == 0 ? "Browse icons or enter a search term." : $"{Total:n0} matching icons";
+    private string ResultSummary => Total == 0 ? T.T("IconSelector_BrowseOrSearch", "Browse icons or enter a search term.") : string.Format(T.T("IconSelector_MatchingIconsFormat", "{0} matching icons"), Total.ToString("n0"));
 
     private async Task ToggleOpenAsync()
     {

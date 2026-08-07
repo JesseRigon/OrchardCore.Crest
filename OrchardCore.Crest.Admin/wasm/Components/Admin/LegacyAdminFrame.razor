@@ -1,6 +1,7 @@
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestAppContainer>
     <div class="legacy-admin-frame-page">
@@ -8,9 +9,9 @@
                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                     <CrestStack Gap="0.25rem">
                         <CrestText TextStyle="TextStyle.H4" Text="@Title" />
-                        <CrestText TextStyle="TextStyle.Body2" Text="This Orchard admin page is running inside the Crest Admin shell." />
+                        <CrestText TextStyle="TextStyle.Body2" Text="@T.T("LegacyAdminFrame_Description", "This Orchard admin page is running inside the Crest Admin shell.")" />
                     </CrestStack>
-                    <CrestButton Text="Open full page" ButtonStyle="ButtonStyle.Light" Click="OpenFullPage" />
+                    <CrestButton Text="@T.T("LegacyAdminFrame_OpenFullPage", "Open full page")" ButtonStyle="ButtonStyle.Light" Click="OpenFullPage" />
                 </CrestStack>
 
                 <iframe class="legacy-admin-frame" src="@FrameUrl" title="@Title"></iframe>
@@ -26,7 +27,7 @@
         get
         {
             var path = new Uri(Navigation.Uri).AbsolutePath.Trim('/');
-            return string.IsNullOrWhiteSpace(path) ? "Admin" : path.Split('/').Last().Replace('-', ' ');
+            return string.IsNullOrWhiteSpace(path) ? T.T("LegacyAdminFrame_DefaultTitle", "Admin") : path.Split('/').Last().Replace('-', ' ');
         }
     }
 

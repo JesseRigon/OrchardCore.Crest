@@ -1,18 +1,19 @@
-@page "/Admin/Settings/general"
+@page "/Settings/general"
 @using Crest.Admin.Api
 @using Crest.Admin.Components.Shared
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="General Settings" />
-            <CrestText TextStyle="TextStyle.Body2" Text="Manage standard Orchard site, resource, and cache settings." />
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("GeneralSettings_Heading", "General Settings")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("GeneralSettings_Description", "Manage standard Orchard site, resource, and cache settings.")" />
         </CrestStack>
-        <CrestButton Text="Refresh" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
+        <CrestButton Text="@T.T("GeneralSettings_Refresh", "Refresh")" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@LoadAsync" Disabled="@IsBusy" />
     </CrestStack>
 
     <CrestCard>
@@ -24,50 +25,50 @@
         {
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
                 <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                <CrestText Text="Loading settings..." />
+                <CrestText Text="@T.T("GeneralSettings_Loading", "Loading settings...")" />
             </CrestStack>
         }
         else
         {
             <CrestTemplateForm TItem="SiteSettingsModel" Data="@Model" Submit="@(_ => SaveAsync())">
                 <CrestStack Gap="1rem">
-                    <CrestMainContentTabs @bind-SelectedIndex="SelectedTabIndex" aria-label="General settings sections">
-                        <CrestTabsItem Text="General" Icon="settings">
+                    <CrestMainContentTabs @bind-SelectedIndex="SelectedTabIndex" aria-label="@T.T("GeneralSettings_SectionsAriaLabel", "General settings sections")">
+                        <CrestTabsItem Text="@T.T("GeneralSettings_GeneralTab", "General")" Icon="settings">
                             <CrestStack Gap="1rem">
-                            <CrestText TextStyle="TextStyle.H5" Text="General" />
+                            <CrestText TextStyle="TextStyle.H5" Text="@T.T("GeneralSettings_GeneralTab", "General")" />
                             <CrestRow Gap="1rem">
-                                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Site name" Style="width: 100%;"><CrestTextBox @bind-Value="Model.SiteName" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Base URL" Style="width: 100%;"><CrestTextBox @bind-Value="Model.BaseUrl" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                                <CrestColumn Size="12"><CrestFormField Text="Page title format" Style="width: 100%;"><CrestTextBox @bind-Value="Model.PageTitleFormat" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Default Time Zone" Style="width: 100%;"><CrestTextBox @bind-Value="Model.TimeZoneId" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="Calendar" Style="width: 100%;"><CrestTextBox @bind-Value="Model.Calendar" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                                <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="Page size" Style="width: 100%;"><CrestNumeric @bind-Value="Model.PageSize" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                                <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="Max page size" Style="width: 100%;"><CrestNumeric @bind-Value="Model.MaxPageSize" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                                <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="Max paged count" Style="width: 100%;"><CrestNumeric @bind-Value="Model.MaxPagedCount" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("GeneralSettings_SiteNameLabel", "Site name")" Style="width: 100%;"><CrestTextBox @bind-Value="Model.SiteName" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("GeneralSettings_BaseUrlLabel", "Base URL")" Style="width: 100%;"><CrestTextBox @bind-Value="Model.BaseUrl" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12"><CrestFormField Text="@T.T("GeneralSettings_PageTitleFormatLabel", "Page title format")" Style="width: 100%;"><CrestTextBox @bind-Value="Model.PageTitleFormat" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("GeneralSettings_TimeZoneLabel", "Default Time Zone")" Style="width: 100%;"><CrestTextBox @bind-Value="Model.TimeZoneId" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T.T("GeneralSettings_CalendarLabel", "Calendar")" Style="width: 100%;"><CrestTextBox @bind-Value="Model.Calendar" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T.T("GeneralSettings_PageSizeLabel", "Page size")" Style="width: 100%;"><CrestNumeric @bind-Value="Model.PageSize" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T.T("GeneralSettings_MaxPageSizeLabel", "Max page size")" Style="width: 100%;"><CrestNumeric @bind-Value="Model.MaxPageSize" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T.T("GeneralSettings_MaxPagedCountLabel", "Max paged count")" Style="width: 100%;"><CrestNumeric @bind-Value="Model.MaxPagedCount" Style="width: 100%;" /></CrestFormField></CrestColumn>
                             </CrestRow>
                             </CrestStack>
                         </CrestTabsItem>
-                        <CrestTabsItem Text="Resources" Icon="widgets">
+                        <CrestTabsItem Text="@T.T("GeneralSettings_ResourcesTab", "Resources")" Icon="widgets">
                             <CrestStack Gap="1rem">
-                            <CrestText TextStyle="TextStyle.H5" Text="Resources" />
-                            <SettingsSwitch Label="Use resources cache busting" Hint="Whether cache busting (append a version) is used for scripts and stylesheets." @bind-Value="Model.AppendVersion" />
-                            <SettingsSwitch Label="Use framework CDN (Content Delivery Network)" Hint="Whether a framework CDN is used for registered scripts and stylesheets, such as jQuery, or their local version." @bind-Value="Model.UseCdn" />
-                            <CrestFormField Text="Site CDN (Content Delivery Network) base URL" Style="width: 100%;"><CrestTextBox @bind-Value="Model.CdnBaseUrl" Style="width: 100%;" /></CrestFormField>
-                            <CrestFormField Text="Resource Debug Mode" Style="width: 100%; max-width: 48rem;"><CrestDropDown @bind-Value="Model.ResourceDebugMode" Data="ResourceDebugOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></CrestFormField>
-                            <CrestText TextStyle="TextStyle.Caption" Text="Determines whether scripts and stylesheets load in their debuggable or minified form." />
+                            <CrestText TextStyle="TextStyle.H5" Text="@T.T("GeneralSettings_ResourcesTab", "Resources")" />
+                            <SettingsSwitch Label="@T.T("GeneralSettings_CacheBustingLabel", "Use resources cache busting")" Hint="@T.T("GeneralSettings_CacheBustingHint", "Whether cache busting (append a version) is used for scripts and stylesheets.")" @bind-Value="Model.AppendVersion" />
+                            <SettingsSwitch Label="@T.T("GeneralSettings_UseCdnLabel", "Use framework CDN (Content Delivery Network)")" Hint="@T.T("GeneralSettings_UseCdnHint", "Whether a framework CDN is used for registered scripts and stylesheets, such as jQuery, or their local version.")" @bind-Value="Model.UseCdn" />
+                            <CrestFormField Text="@T.T("GeneralSettings_CdnBaseUrlLabel", "Site CDN (Content Delivery Network) base URL")" Style="width: 100%;"><CrestTextBox @bind-Value="Model.CdnBaseUrl" Style="width: 100%;" /></CrestFormField>
+                            <CrestFormField Text="@T.T("GeneralSettings_ResourceDebugModeLabel", "Resource Debug Mode")" Style="width: 100%; max-width: 48rem;"><CrestDropDown @bind-Value="Model.ResourceDebugMode" Data="ResourceDebugOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></CrestFormField>
+                            <CrestText TextStyle="TextStyle.Caption" Text="@T.T("GeneralSettings_ResourceDebugModeCaption", "Determines whether scripts and stylesheets load in their debuggable or minified form.")" />
                             </CrestStack>
                         </CrestTabsItem>
-                        <CrestTabsItem Text="Cache" Icon="cached">
+                        <CrestTabsItem Text="@T.T("GeneralSettings_CacheTab", "Cache")" Icon="cached">
                             <CrestStack Gap="1rem">
-                            <CrestText TextStyle="TextStyle.H5" Text="Cache" />
-                            <CrestFormField Text="Cache Mode" Style="width: 100%; max-width: 48rem;"><CrestDropDown @bind-Value="Model.CacheMode" Data="CacheModeOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></CrestFormField>
-                            <CrestText TextStyle="TextStyle.Caption" Text="Determines whether caches are enabled or disabled." />
+                            <CrestText TextStyle="TextStyle.H5" Text="@T.T("GeneralSettings_CacheTab", "Cache")" />
+                            <CrestFormField Text="@T.T("GeneralSettings_CacheModeLabel", "Cache Mode")" Style="width: 100%; max-width: 48rem;"><CrestDropDown @bind-Value="Model.CacheMode" Data="CacheModeOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /></CrestFormField>
+                            <CrestText TextStyle="TextStyle.Caption" Text="@T.T("GeneralSettings_CacheModeCaption", "Determines whether caches are enabled or disabled.")" />
                             </CrestStack>
                         </CrestTabsItem>
                     </CrestMainContentTabs>
 
                     <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                        <CrestButton Text="Save settings" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                        <CrestButton Text="@T.T("GeneralSettings_SaveSettings", "Save settings")" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
                     </CrestStack>
                 </CrestStack>
             </CrestTemplateForm>
@@ -76,19 +77,22 @@
 </CrestStack>
 
 @code {
-    private static readonly SelectOption[] ResourceDebugOptions =
+    // Properties (not static readonly fields) since they depend on T, which isn't set
+    // yet during field initializer execution (constructor runs before [Inject]
+    // properties are assigned).
+    private SelectOption[] ResourceDebugOptions =>
     [
-        new("FromConfiguration", "From environment — disabled in Production, enabled otherwise"),
-        new("Enabled", "Enabled — use debuggable version of resources"),
-        new("Disabled", "Disabled — use minified version of resources"),
+        new("FromConfiguration", T.T("GeneralSettings_ResourceDebugFromConfigOption", "From environment — disabled in Production, enabled otherwise")),
+        new("Enabled", T.T("GeneralSettings_ResourceDebugEnabledOption", "Enabled — use debuggable version of resources")),
+        new("Disabled", T.T("GeneralSettings_ResourceDebugDisabledOption", "Disabled — use minified version of resources")),
     ];
 
-    private static readonly SelectOption[] CacheModeOptions =
+    private SelectOption[] CacheModeOptions =>
     [
-        new("FromConfiguration", "From environment — enabled in Production, disabled otherwise"),
-        new("Enabled", "Enabled"),
-        new("DebugEnabled", "Enabled with cache debug mode"),
-        new("Disabled", "Disabled"),
+        new("FromConfiguration", T.T("GeneralSettings_CacheModeFromConfigOption", "From environment — enabled in Production, disabled otherwise")),
+        new("Enabled", T.T("GeneralSettings_CacheModeEnabledOption", "Enabled")),
+        new("DebugEnabled", T.T("GeneralSettings_CacheModeDebugEnabledOption", "Enabled with cache debug mode")),
+        new("Disabled", T.T("GeneralSettings_CacheModeDisabledOption", "Disabled")),
     ];
 
     private int SelectedTabIndex { get; set; }
@@ -118,7 +122,7 @@
             if (saved is not null)
             {
                 Model = SiteSettingsModel.From(saved);
-                Notifications.Notify(NotificationSeverity.Success, "Settings saved", "General settings were updated.");
+                Notifications.Notify(NotificationSeverity.Success, T.T("GeneralSettings_SavedTitle", "Settings saved"), T.T("GeneralSettings_SavedMessage", "General settings were updated."));
             }
         }
         finally { IsSaving = false; }

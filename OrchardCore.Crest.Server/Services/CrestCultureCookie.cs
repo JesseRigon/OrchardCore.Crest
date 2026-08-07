@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
@@ -17,6 +18,24 @@ namespace Crest.Services;
 // LegacyAdminFrame.razor (same-origin, same tenant base path) and any other tenant-scoped
 // route also need to see the client-resolved culture. So this registers the stock,
 // otherwise-unused CookieRequestCultureProvider tenant-wide instead.
+//
+// This runs as an IPostConfigureOptions, not IConfigureOptions - deliberately. Stock
+// OrchardCore.Localization's RequestLocalizationOptionsConfigurations ALSO inserts its
+// own provider (AdminCookieCultureProvider) at index 0 via the same
+// AddInitialRequestCultureProvider pattern, on the same options instance. Two independent
+// Insert(0, ...) calls from two different IConfigureOptions registrations race - ASP.NET
+// Core does not guarantee Configure-delegate ordering across separate DI registrations -
+// so whichever one happens to run last wins the front slot, and everything behind it
+// (including AcceptLanguageHeaderRequestCultureProvider) ends up at an unstable position.
+// That's the actual root cause of "Accept-Language sometimes doesn't win" - not a missing
+// provider. IPostConfigureOptions is guaranteed to run after every IConfigureOptions, so
+// this rebuilds the list deterministically instead of fighting the race: Crest's
+// tenant-wide cookie first, then stock Accept-Language as the fallback for a visitor who
+// hasn't run the client yet (no cookie set) - exactly what a browser already sends on
+// every request, and one of the rungs the client's own chain already treats as
+// legitimate. AdminCookieCultureProvider is dropped entirely: Crest's cookie already
+// covers everything it covered (tenant-wide, not just /admin), so keeping both is pure
+// redundancy. QueryStringRequestCultureProvider is dropped too - nothing in Crest uses it.
 public static class CrestCultureCookie
 {
     public const string CookieNamePrefix = "crest_culture_";
@@ -29,17 +48,18 @@ public static class CrestCultureCookie
 
     public static void AddCrestCultureCookieProvider(this IServiceCollection services)
     {
-        services.AddTransient<IConfigureOptions<RequestLocalizationOptions>, CrestCultureCookieOptionsConfiguration>();
+        services.AddTransient<IPostConfigureOptions<RequestLocalizationOptions>, CrestCultureCookieOptionsConfiguration>();
     }
 }
 
-internal sealed class CrestCultureCookieOptionsConfiguration(ShellSettings shellSettings) : IConfigureOptions<RequestLocalizationOptions>
+internal sealed class CrestCultureCookieOptionsConfiguration(ShellSettings shellSettings) : IPostConfigureOptions<RequestLocalizationOptions>
 {
-    public void Configure(RequestLocalizationOptions options)
+    public void PostConfigure(string? name, RequestLocalizationOptions options)
     {
-        options.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider
-        {
-            CookieName = CrestCultureCookie.MakeCookieName(shellSettings),
-        });
+        options.RequestCultureProviders = [
+            new CookieRequestCultureProvider { CookieName = CrestCultureCookie.MakeCookieName(shellSettings) },
+            .. options.RequestCultureProviders.Where(provider =>
+                provider is AcceptLanguageHeaderRequestCultureProvider),
+        ];
     }
 }
