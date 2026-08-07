@@ -6,8 +6,9 @@
 
   <ItemGroup>
     <PackageVersion Include="Microsoft.AspNetCore.Authorization" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Forms" Version="10.0.9" />
     <PackageVersion Include="OrchardCore.Admin.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.ContentManagement" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.DisplayManagement" Version="3.0.0" />

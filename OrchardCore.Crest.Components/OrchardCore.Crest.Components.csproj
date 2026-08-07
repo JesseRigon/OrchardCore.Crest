@@ -22,6 +22,19 @@
     <InternalsVisibleTo Include="OrchardCore.Crest.Components.Tests" />
   </ItemGroup>
 
+  <!-- Provides the Razor component model ([Parameter], ComponentBase, etc.) without any
+       WASM-only APIs - previously came transitively via the
+       Microsoft.AspNetCore.Components.WebAssembly PackageReference this project no longer
+       takes. Unlike FrameworkReference (Microsoft.AspNetCore.App has no browser-wasm
+       runtime pack, so that fails a WASM host build), this plain package reference works
+       identically under every host: WASM standalone, Blazor Server, and Blazor Web App
+       SSR. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Forms" />
+  </ItemGroup>
+
   <!-- Full MIT-licensed component source now owned and compiled by Crest. -->
   <ItemGroup>
     <!-- Runtime assets are exposed from this project's canonical wwwroot. -->
@@ -39,7 +52,4 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
-  </ItemGroup>
 </Project>

@@ -4,8 +4,6 @@
 @using System.Text.Json.Nodes
 @using Crest.Components.Forms
 @using Crest.Components.Models
-@using Microsoft.AspNetCore.Components.WebAssembly.Http
-@using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject HttpClient Http
 
@@ -218,7 +216,6 @@
         try
         {
             var request = new HttpRequestMessage(method, url);
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
 
             if (body is not null)
             {

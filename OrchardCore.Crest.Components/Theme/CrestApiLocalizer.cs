@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net.Http.Json;
 using Crest.Components.Primitives;
-using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace Crest.Components.Theme;
 
@@ -76,11 +75,15 @@ public sealed class CrestApiLocalizer(HttpClient http) : ILocalizer
             ? value
             : fallback;
 
+    // Cookie/credential inclusion is configured once, at HttpClient registration time
+    // (see Crest.Admin/wasm/Program.cs's CrestAntiforgeryHandler-wrapped HttpClient), not
+    // per-request here - that keeps this class portable across WASM and server-rendered
+    // execution contexts. The WASM-only per-request BrowserRequestCredentials extension
+    // (Microsoft.AspNetCore.Components.WebAssembly.Http) doesn't exist outside a browser
+    // host and would break under Static SSR/InteractiveServer.
     private async Task<Dictionary<string, string>?> GetStringsAsync(string culture)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"api/crest/localization/strings?culture={Uri.EscapeDataString(culture)}");
-        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-        using var response = await http.SendAsync(request);
+        using var response = await http.GetAsync($"api/crest/localization/strings?culture={Uri.EscapeDataString(culture)}");
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<Dictionary<string, string>>()
             : null;
