@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>OrchardCore.Crest.Site.Client</AssemblyName>
+    <RootNamespace>Crest.Site.Client</RootNamespace>
+    <OrchardCoreCompatibilityVersion>3.0.0</OrchardCoreCompatibilityVersion>
+    <CrestSecurityPatch>0</CrestSecurityPatch>
+    <CrestBugPatch>0</CrestBugPatch>
+    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />
+  </ItemGroup>
+
+</Project>

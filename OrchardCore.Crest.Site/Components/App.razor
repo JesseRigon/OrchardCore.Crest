@@ -1,0 +1,22 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<!--
+    Not yet mounted from a real request - Phase 3's middleware maps a request path to
+    this component (mirroring BlazorAdminThemeMiddleware's IApplicationBuilder-level
+    interception rather than stock MapRazorComponents<App>() endpoint routing, per
+    plans/blazor hybrid conversion.md). Kept minimal on purpose: Layout.liquid's actual
+    <head>/<body> shape (resource manifests, culture attributes, nav) gets ported to a
+    Razor layout component in Phase 5, not duplicated here ahead of time.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <HeadOutlet @rendermode="InteractiveAuto" />
+</head>
+<body>
+    <Routes @rendermode="InteractiveAuto" />
+    <script src="_framework/blazor.web.js"></script>
+</body>
+</html>

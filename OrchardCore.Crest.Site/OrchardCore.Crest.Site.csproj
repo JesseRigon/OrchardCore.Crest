@@ -26,6 +26,16 @@
     <EmbeddedResource Remove="wwwroot\node_modules\**" />
     <None Remove="wwwroot\node_modules\**" />
     <Compile Remove="tests\**\*.cs" />
+    <!-- wasm\ is a sibling project (OrchardCore.Crest.Site.Client), not part of this
+         one - without this, the SDK's default **/*.cs glob also sweeps in its
+         generated obj\ output (duplicate AssemblyInfo/TargetFramework attributes,
+         CS0579) and its own .razor/.cs sources. -->
+    <Compile Remove="wasm\**\*.cs" />
+    <Content Remove="wasm\**" />
+    <EmbeddedResource Remove="wasm\**" />
+    <None Remove="wasm\**" />
+    <RazorGenerate Remove="wasm\**" />
+    <RazorComponent Remove="wasm\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +50,24 @@
     <PackageReference Include="OrchardCore.Email.Abstractions" />
     <PackageReference Include="OrchardCore.Setup.Abstractions" />
     <PackageReference Include="OrchardCore.Setup" />
+    <!-- AddInteractiveWebAssemblyComponents() (Startup.cs) is defined by this package,
+         not by FrameworkReference's shared framework - WASM-hosting-from-a-server
+         support isn't part of Microsoft.AspNetCore.App itself. -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+  </ItemGroup>
+
+  <!-- Razor Components host half of the Blazor Web App split - FrameworkReference above
+       already provides Microsoft.AspNetCore.Components.Web/.Endpoints (part of
+       Microsoft.AspNetCore.App's shared framework), so no separate package reference is
+       needed here the way OrchardCore.Crest.Components' own portable-package fix
+       (Phase 1) required. wasm/OrchardCore.Crest.Site.Client.csproj is the WASM half:
+       components rendered @rendermode InteractiveWebAssembly/InteractiveAuto must live
+       there (or be referenced by it) to be downloadable to the browser; Static-SSR-only
+       components stay in this project. -->
+  <ItemGroup>
+    <ProjectReference Include="..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />
+    <ProjectReference Include="wasm\OrchardCore.Crest.Site.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
