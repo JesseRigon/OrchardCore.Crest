@@ -50,20 +50,15 @@
     <PackageReference Include="OrchardCore.Email.Abstractions" />
     <PackageReference Include="OrchardCore.Setup.Abstractions" />
     <PackageReference Include="OrchardCore.Setup" />
-    <!-- AddInteractiveWebAssemblyComponents() (Startup.cs) is defined by this package,
-         not by FrameworkReference's shared framework - WASM-hosting-from-a-server
-         support isn't part of Microsoft.AspNetCore.App itself. -->
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
   </ItemGroup>
 
-  <!-- Razor Components host half of the Blazor Web App split - FrameworkReference above
-       already provides Microsoft.AspNetCore.Components.Web/.Endpoints (part of
-       Microsoft.AspNetCore.App's shared framework), so no separate package reference is
-       needed here the way OrchardCore.Crest.Components' own portable-package fix
-       (Phase 1) required. wasm/OrchardCore.Crest.Site.Client.csproj is the WASM half:
-       components rendered @rendermode InteractiveWebAssembly/InteractiveAuto must live
-       there (or be referenced by it) to be downloadable to the browser; Static-SSR-only
-       components stay in this project. -->
+  <!-- Crest.Server is the single Blazor Web App host (API + SSR) for every Crest theme -
+       it, not this project, calls AddRazorComponents()/AddInteractiveWebAssemblyComponents()
+       and owns the App.razor/Routes.razor roots (see plans/blazor hybrid conversion.md).
+       This project keeps its own page/layout components (Phase 5) and references
+       Components/Icons to build them, plus its WASM half
+       (wasm/OrchardCore.Crest.Site.Client.csproj) for @rendermode
+       InteractiveWebAssembly/InteractiveAuto components - it just doesn't self-host. -->
   <ItemGroup>
     <ProjectReference Include="..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
     <ProjectReference Include="..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />

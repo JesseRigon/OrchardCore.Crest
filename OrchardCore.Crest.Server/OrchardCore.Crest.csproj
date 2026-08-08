@@ -53,12 +53,48 @@
     <PackageReference Include="OrchardCore.Security" />
     <PackageReference Include="OrchardCore.Users" />
     <PackageReference Include="YesSql.Abstractions" />
+    <!-- AddInteractiveWebAssemblyComponents() (Startup.cs) is defined by this package,
+         not by Microsoft.AspNetCore.App's shared framework - WASM-hosting-from-a-server
+         support isn't part of it. -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
   </ItemGroup>
 
+  <!-- Server is the single Blazor Web App host: API endpoints (api/crest/*) and SSR
+       document rendering machinery both live here, per plans/blazor hybrid
+       conversion.md's decision to keep everything Blazor-hosting-related in one server
+       rather than duplicating hosting per theme. Server only references Components -
+       the shared, generic Blazor primitives/rendering machinery every Blazor-capable
+       theme builds on - not any specific theme (Crest.Site, Crest.Admin, or any future
+       third-party Blazor theme). Themes are discovered dynamically at runtime via
+       Orchard's own extension/feature system, the same way BlazorAdminThemeMiddleware
+       already detects "is the current theme Blazor-tagged" via IAdminThemeService
+       instead of a hardcoded theme ID - a hardcoded ProjectReference to a specific
+       theme here would defeat that and force a Server rebuild for every new
+       Blazor-capable theme. No circular dependency - Components never references
+       Server. -->
   <ItemGroup>
     <ProjectReference Include="..\OrchardCore.Crest.Iconify\OrchardCore.Crest.Iconify.csproj" />
-    <Compile Include="..\OrchardCore.Crest.Components\Utilities\Icons\Contracts\**\*.cs" Link="Icons\Contracts\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\OrchardCore.Crest.Icons\Providers\**\*.cs" Link="Icons\Providers\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\OrchardCore.Crest.Icons\Services\**\*.cs" Link="Icons\Services\%(RecursiveDir)%(Filename)%(Extension)" />
+    <ProjectReference Include="..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />
+    <!-- Providers/TenantMedia is excluded from Icons.csproj's own compile (needs
+         server-side Orchard media dependencies Icons itself doesn't reference) - this
+         source-linking, not the ProjectReference above, is what actually compiles it,
+         same as before this file's Blazor-hosting changes. -->
+    <Compile Include="..\OrchardCore.Crest.Icons\Providers\TenantMedia\**\*.cs" Link="Icons\Providers\TenantMedia\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Build-time, naming-convention-based discovery of theme WASM client assemblies -
+       mirrors Admin.Wasm.csproj's own CrestModuleWasmProject pattern
+       ("..\..\..\*\blazor-wasm\*.csproj") rather than hardcoding a ProjectReference per
+       theme. Any sibling theme project that adds a wasm/*.Client.csproj (Crest.Site's
+       own wasm/OrchardCore.Crest.Site.Client.csproj today, any future Blazor-capable
+       theme tomorrow) is picked up automatically - no Server.csproj edit needed to add
+       one. Startup.cs's AddInteractiveWebAssemblyComponents().AddAdditionalAssemblies(...)
+       registers whichever assemblies this glob resolves to; which one actually renders
+       for a given request is still decided at runtime by theme selection (Phase 3's
+       middleware), not by this glob. -->
+  <ItemGroup>
+    <CrestThemeWasmClientProject Include="..\*\wasm\*.Client.csproj" />
+    <ProjectReference Include="@(CrestThemeWasmClientProject)" />
   </ItemGroup>
 </Project>

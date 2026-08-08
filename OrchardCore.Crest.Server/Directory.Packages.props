@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.9" />
     <PackageVersion Include="OrchardCore.Admin.Abstractions" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.AdminMenu" Version="3.0.0" />
     <PackageVersion Include="OrchardCore.AdminMenu.Abstractions" Version="3.0.0" />

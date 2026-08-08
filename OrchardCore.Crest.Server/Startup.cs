@@ -1,3 +1,4 @@
+using Crest.Components.Primitives;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Crest.Iconify;
@@ -62,6 +63,24 @@ public sealed class Startup : StartupBase
         services.Configure<BlazorAdminThemeOptions>(options => { });
         services.AddTransient<IPostConfigureOptions<BlazorAdminThemeOptions>, BlazorAdminThemeOptionsConfiguration>();
         services.AddCrestCultureCookieProvider();
+
+        // Crest.Server is the single Blazor Web App host for both API and SSR - the only
+        // server needed for any Blazor-capable Crest theme (Site, Admin once Phase 8
+        // converts it, or a future third-party theme). Registered unconditionally here,
+        // exactly like BlazorAdminThemeMiddleware below: whether a tenant's *currently
+        // selected* theme actually uses this hosting is a per-request runtime check
+        // (mirroring IsBlazorAdminThemeAsync), not a [Feature] gate - a tenant could
+        // have a Blazor theme installed but be running a different one, and that
+        // decision can change without a feature enable/disable. Deliberately generic:
+        // no specific theme's root component or WASM client assembly is wired up here -
+        // that's Phase 3's job (MapRazorComponents<TRoot>() with a per-request-resolved
+        // TRoot, .AddAdditionalAssemblies(...) built from the glob-discovered
+        // CrestThemeWasmClientProject assemblies in this project's own .csproj). See
+        // plans/blazor hybrid conversion.md, Phase 2/3.
+        services.AddRazorComponents()
+            .AddInteractiveWebAssemblyComponents();
+        services.AddCrestComponents();
+        services.AddCrestIconClient();
     }
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
