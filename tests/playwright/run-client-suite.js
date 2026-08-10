@@ -12,6 +12,7 @@ function buildSharedClientChecks() {
   return [
     { name: 'localization-anonymous', fn: require('./checks/localization-anonymous') },
     { name: 'localization-smoke-site', fn: require('./checks/localization-smoke-site') },
+    { name: 'blazor-counter', fn: require('./checks/blazor-counter') },
   ];
 }
 

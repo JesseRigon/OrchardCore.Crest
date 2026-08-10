@@ -1,0 +1,65 @@
+@page "/blazor-counter/{ContentItemId}"
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveAuto
+@using global::Crest.Components.Primitives
+@using System.Net.Http.Json
+@using System.Text.Json
+@inject HttpClient Http
+
+@*
+    First real interactive island (plans/blazor hybrid conversion.md, Phase 3.5 note):
+    served through Server's own MapRazorComponents<App>() endpoint, not through
+    CrestBlazorComponentShapeBindingResolver's Static-SSR-only HtmlRenderer path - a
+    working @onclick button needs an actual circuit (InteractiveServer) or a downloaded
+    WASM runtime (InteractiveWebAssembly), neither of which HtmlRenderer can provide.
+    InteractiveAuto: Server-rendered and interactive immediately on first load (SignalR
+    circuit), then switches to the already-cached WASM runtime on subsequent visits -
+    "WASM as the primary route, SSR/Server as the fallback while the client fetches it."
+
+    Lives in the .Client (WASM) project, not Server's own Components/ - Routes/routable
+    @page components have to live wherever MapRazorComponents<App>()'s WASM runtime can
+    actually find them once downloaded to the browser (see docs/BlazorWeb.md's "Root
+    component type ... could not be found" entry). That also means this component can't
+    inject IContentManager (server-only, no WASM implementation) - it fetches its
+    placement data from api/crest/content-items/{id}/view (ContentItemsController.ViewAsync)
+    over HttpClient instead, which works identically whether this instance is currently
+    running server-side (InteractiveServer circuit) or in-browser (WASM). ViewAsync
+    returns only the parts the caller is permitted to see (see plans/permissions.md) -
+    for an anonymous visitor viewing a published BlazorComponent widget, that's exactly
+    CrestBlazorComponentPart, same as any logged-in caller who can also view this item.
+*@
+
+@if (_startValue is int startValue)
+{
+    <CrestCounter StartValue="startValue" />
+}
+else if (_notFound)
+{
+    <p>No CrestBlazorComponentPart found on content item @ContentItemId, or its Parameters has no "StartValue" entry.</p>
+}
+
+@code {
+    [Parameter]
+    public string ContentItemId { get; set; } = string.Empty;
+
+    private int? _startValue;
+    private bool _notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var response = await Http.GetFromJsonAsync<Dictionary<string, JsonElement>>(
+            $"api/crest/content-items/{ContentItemId}/view?parts=CrestBlazorComponentPart");
+
+        if (response is not null
+            && response.TryGetValue("CrestBlazorComponentPart", out var part)
+            && part.TryGetProperty("Parameters", out var parameters)
+            && parameters.TryGetProperty("StartValue", out var raw)
+            && int.TryParse(raw.GetString(), out var parsed))
+        {
+            _startValue = parsed;
+        }
+        else
+        {
+            _notFound = true;
+        }
+    }
+}

@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Crest.Components.Blazor;
+using Microsoft.AspNetCore.Components;
 
 namespace Crest.Components.Primitives
 {
     /// <summary>
     /// CrestHeading component.
     /// </summary>
+    [CrestBlazorComponent("CrestHeading")]
     public partial class CrestHeading : CrestComponent
     {
         /// <summary>

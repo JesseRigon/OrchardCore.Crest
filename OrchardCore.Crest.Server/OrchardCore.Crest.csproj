@@ -25,6 +25,18 @@
     <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
 
+  <!-- OrchardCore.Module.Targets (referenced below) sets EnableDefaultRazorGenerateItems
+       to false project-wide, then only re-adds RazorGenerate for legacy *.cshtml views -
+       it predates Blazor components and has no concept of *.razor. Without this, every
+       *.razor file under Components/ (App.razor, Routes.razor, Pages/*.razor,
+       _Imports.razor) is silently invisible to the compiler: not a RazorComponent, not
+       even a Compile item. Re-declared explicitly here rather than patching the shared
+       module targets, since this is the first Crest module project that hosts its own
+       *.razor files instead of only consuming Components' compiled output. -->
+  <ItemGroup>
+    <RazorComponent Include="Components\**\*.razor" Exclude="Themes\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="OrchardCore.Admin.Abstractions" />

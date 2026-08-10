@@ -1,22 +1,33 @@
 @using Microsoft.AspNetCore.Components.Web
+@using global::Crest.Site.Client
 
-<!--
-    Not yet mounted from a real request - Phase 3's middleware maps a request path to
-    this component (mirroring BlazorAdminThemeMiddleware's IApplicationBuilder-level
-    interception rather than stock MapRazorComponents<App>() endpoint routing, per
-    plans/blazor hybrid conversion.md). Kept minimal on purpose: Layout.liquid's actual
-    <head>/<body> shape (resource manifests, culture attributes, nav) gets ported to a
-    Razor layout component in Phase 5, not duplicated here ahead of time.
--->
+@*
+    Mounted via Startup.cs's routes.MapRazorComponents<App>() (Phase 3.5's interactive-
+    island mechanism) - this is the actual root component for any @rendermode-marked
+    page such as wasm/Pages/BlazorCounter.razor. Static-SSR-only content (the
+    overwhelming majority) never goes through this at all; it's served directly by
+    CrestBlazorComponentShapeBindingResolver's HtmlRenderer path mid-shape, with no
+    App/Routes involvement. Kept minimal on purpose: Layout.liquid's actual <head>/<body>
+    shape (resource manifests, culture attributes, nav) gets ported to a Razor layout
+    component in Phase 5, not duplicated here ahead of time.
+
+    Routes (and every routable @page component, e.g. BlazorCounter.razor) lives in the
+    .Client (WASM) project, not here - the WASM runtime downloaded to the browser only
+    has whatever assembly it was itself compiled into, never this server assembly, so a
+    Routes defined here would resolve fine over the SignalR circuit but throw
+    "Root component type ... could not be found" the moment InteractiveAuto switches to
+    WASM. See docs/BlazorWeb.md.
+*@
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <HeadOutlet @rendermode="InteractiveAuto" />
+    <base href="/" />
+    <HeadOutlet @rendermode="RenderMode.InteractiveAuto" />
 </head>
 <body>
-    <Routes @rendermode="InteractiveAuto" />
-    <script src="_framework/blazor.web.js"></script>
+    <Routes @rendermode="RenderMode.InteractiveAuto" />
+    <script src="/_framework/blazor.web.js"></script>
 </body>
 </html>

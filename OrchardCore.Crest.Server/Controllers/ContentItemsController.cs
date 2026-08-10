@@ -19,6 +19,12 @@ public sealed class ContentItemsController(
     IContentManager contentManager,
     IAuthorizationService authorizationService) : ControllerBase
 {
+    private static readonly string[] DefaultViewFields =
+    [
+        nameof(OrchardCore.ContentManagement.ContentItem.DisplayText),
+        nameof(OrchardCore.ContentManagement.ContentItem.ContentType),
+    ];
+
     [HttpGet]
     public async Task<ActionResult<ContentItemListResult>> ListAsync(
         [FromQuery] string? contentType = null,
@@ -80,6 +86,56 @@ public sealed class ContentItemsController(
         return await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, item)
             ? Ok(ContentItem.From(item))
             : Forbid();
+    }
+
+    // Unlike GetAsync above (full item, gated on EditContent - the content-editor
+    // shape Admin's Api.cs already depends on), this is for any caller reading a
+    // published item's data for display: anonymous Site visitors, logged-in members,
+    // or admins - all through the same action, with the RESPONSE SHAPE driven by
+    // what's requested (?parts=) and what that specific caller is permitted to see,
+    // not by which endpoint they called. An admin who can view the item gets the same
+    // fields back as anyone else who can view it; this isn't a "public" vs "admin"
+    // endpoint, it's permission-shaped for whoever's asking.
+    //
+    // Today every requested field checks the same item-level CommonPermissions.ViewContent
+    // - OrchardCore has no built-in per-part permission (see plans/permissions.md for
+    // why, and what real per-part permissions would require). That means "permitted"
+    // currently means "can view this item at all," not yet differentiated per part -
+    // each field's check is already its own step below so a real per-part permission
+    // can replace CommonPermissions.ViewContent there later without restructuring this
+    // action.
+    [HttpGet("{contentItemId}/view")]
+    public async Task<ActionResult<Dictionary<string, object?>>> ViewAsync(
+        string contentItemId,
+        [FromQuery] string? parts = null)
+    {
+        var item = await contentManager.GetAsync(contentItemId, VersionOptions.Published);
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        var requestedFields = string.IsNullOrWhiteSpace(parts)
+            ? DefaultViewFields
+            : parts.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var result = new Dictionary<string, object?>();
+        foreach (var field in requestedFields)
+        {
+            if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ViewContent, item))
+            {
+                continue;
+            }
+
+            result[field] = field switch
+            {
+                nameof(OrchardCore.ContentManagement.ContentItem.DisplayText) => item.DisplayText,
+                nameof(OrchardCore.ContentManagement.ContentItem.ContentType) => item.ContentType,
+                _ => item.Content[field],
+            };
+        }
+
+        return result.Count == 0 ? Forbid() : Ok(result);
     }
 
     [HttpPost]

@@ -4,10 +4,14 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
-@using Crest.Components.Primitives
-@using Crest.Components.Layout
-@using Crest.Components.Navigation
-@using Crest.Components.Display
-@using Crest.Components.Shapes
-@using Crest.Icons.Components
-@using Crest
+@* Server's own RootNamespace (OrchardCore.Crest) puts this folder's inferred
+   namespace at OrchardCore.Crest.Components; global:: avoids Razor resolving the
+   bare "Crest.Components.*" segment below as a relative sibling of that (which
+   fails to find "Components" nested twice) instead of the OrchardCore.Crest.Components
+   *project*'s actual RootNamespace ("Crest.Components", an unrelated assembly). *@
+@using global::Crest.Components.Primitives
+@using global::Crest.Components.Layout
+@using global::Crest.Components.Navigation
+@using global::Crest.Components.Display
+@using global::Crest.Components.Shapes
+@using global::Crest.Icons.Components
