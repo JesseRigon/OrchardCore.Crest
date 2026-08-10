@@ -1,13 +1,17 @@
-const BLAZOR_COUNTER_CONTENT_ITEM_ID = '4c1b6c1f8f5b4a2f9c2d7e8a1b3f5c6d';
+const DEFAULT_BLAZOR_COUNTER_CONTENT_ITEM_ID = '4c1b6c1f8f5b4a2f9c2d7e8a1b3f5c6d';
 
 // Verifies the first Blazor interactive island (Components/Pages/BlazorCounter.razor,
 // mapped through Startup.cs's MapRazorComponents<App>() endpoint, not the static-SSR
 // shape pipeline) is both reachable and genuinely interactive - a real SignalR
 // circuit/WASM click handler, not just server-rendered markup. The seeded content item
 // (see Recipes/orchardcore.crest.dev.recipe.json) carries CrestBlazorComponentPart with
-// ComponentName "CrestCounter" and Parameters.StartValue "5".
+// ComponentName "CrestCounter" and Parameters.StartValue "5". Some host recipes (e.g.
+// fruitful.orchard's fruitful.saas.recipe.json) generate this content item's id fresh
+// per-run via [js:uuid()] instead of a fixed id, so BLAZOR_COUNTER_CONTENT_ITEM_ID lets
+// the host override it instead of forking this check.
 module.exports = async function run(page, ctx) {
-  const url = `${ctx.baseUrl}/blazor-counter/${BLAZOR_COUNTER_CONTENT_ITEM_ID}`;
+  const contentItemId = process.env.BLAZOR_COUNTER_CONTENT_ITEM_ID || DEFAULT_BLAZOR_COUNTER_CONTENT_ITEM_ID;
+  const url = `${ctx.baseUrl}/blazor-counter/${contentItemId}`;
   await page.goto(url, { waitUntil: 'networkidle' });
 
   const counter = page.locator('.rz-counter');
