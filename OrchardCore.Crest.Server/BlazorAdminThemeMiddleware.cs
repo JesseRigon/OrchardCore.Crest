@@ -112,19 +112,28 @@ public sealed class BlazorAdminThemeMiddleware
         // otherwise never match here and would silently fall through to Orchard's own
         // (unconfigured, Blazor-theme-incompatible) login flow.
         var isLoginRoute = requestPath.Equals(options.LoginPath, StringComparison.OrdinalIgnoreCase);
-        // Dev-only tooling (e.g. blazor.webassembly.js's hot-reload module) issues
-        // dynamic imports relative to <base href> rather than root-absolute, so under
-        // a non-default AdminPath/LoginPath those requests arrive as
-        // "{shellBasePath}/_framework/..." instead of "/_framework/...". Stripping
-        // whichever shell base matches (mirroring isAdminRoute's own remainder logic)
-        // lets IsBlazorAssetRoute recognize both forms without hardcoding every
-        // possible prefixed asset path.
-        var assetRequestPath = requestPath.StartsWithSegments(new PathString(options.AdminPath), out var adminAssetRemainder)
-            ? adminAssetRemainder
-            : requestPath.StartsWithSegments(new PathString(options.LoginPath), out var loginAssetRemainder)
-                ? loginAssetRemainder
-                : requestPath;
-        var isBlazorAssetRoute = IsBlazorAssetRoute(assetRequestPath);
+        // The admin shell's assets are only ever served under the tenant-configured
+        // AdminPath/LoginPath prefixes - index.html references them base-relative, so
+        // they arrive as "{shellBasePath}/_framework/..." etc., and the matched prefix
+        // is stripped before resolving against the admin theme's web roots. Root
+        // "/_framework/*" (and every other unprefixed path) is deliberately NOT
+        // intercepted: that URL space belongs to Crest.Server's Blazor Web App host
+        // (Site's WASM client via MapStaticAssets), and both apps ship
+        // identically-named framework files (dotnet.js, blazor.webassembly.js, the
+        // runtime scripts) whose .NET 10 embedded boot config decides which app boots -
+        // serving the wrong one leaves the shell at "Loading..." forever with no error.
+        var assetRequestPath = requestPath;
+        var isBlazorAssetRoute = false;
+        if (requestPath.StartsWithSegments(adminPath, out var adminAssetRemainder))
+        {
+            assetRequestPath = adminAssetRemainder;
+            isBlazorAssetRoute = IsBlazorAssetRoute(adminAssetRemainder);
+        }
+        else if (requestPath.StartsWithSegments(new PathString(options.LoginPath), out var loginAssetRemainder))
+        {
+            assetRequestPath = loginAssetRemainder;
+            isBlazorAssetRoute = IsBlazorAssetRoute(loginAssetRemainder);
+        }
         // Blazor page routes are discovered from wasm/Pages/*.razor's own @page
         // directives (see DiscoverRazorPageRoutes below), which are WASM-router-relative
         // route names, not server-side paths - they only tell us which segments under
@@ -170,6 +179,24 @@ public sealed class BlazorAdminThemeMiddleware
         {
             await _next(context);
             return;
+        }
+
+        // Route matching above is deliberately case-insensitive, but Blazor's
+        // NavigationManager compares the browser URL against <base href> ordinally -
+        // serving the shell for "/login" with a rewritten base of "/Login/" boots the
+        // runtime and then throws "The URI ... is not contained by the base URI ...",
+        // leaving the page stuck on the index.html "Loading..." placeholder.
+        // Canonicalize the matched prefix's casing with a redirect instead.
+        if (isBlazorPageRoute)
+        {
+            var canonicalPath = isLoginRoute
+                ? options.LoginPath
+                : options.AdminPath + adminRemainder.Value;
+            if (!string.Equals(requestPath.Value, canonicalPath, StringComparison.Ordinal))
+            {
+                context.Response.Redirect(canonicalPath + context.Request.QueryString);
+                return;
+            }
         }
 
         // Direct URL requests are authorized on the server. In-app navigation
