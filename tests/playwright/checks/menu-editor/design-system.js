@@ -12,7 +12,10 @@ module.exports = async function run(page, ctx) {
   const loadedStyles = await page.evaluate(() =>
     Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(link => link.getAttribute('href') || ''),
   );
-  const requiredStyles = ['/CrestAdmin.DesignSystem.Default.css', '/CrestAdmin.css', '/OrchardCore.Crest.Admin.styles.css'];
+  // Phase 8: the admin shell is a Razor class library now, so its scoped CSS ships as
+  // the RCL bundle _content/OrchardCore.Crest.Admin.Client/*.bundle.scp.css instead of
+  // the old exe-style OrchardCore.Crest.Admin.styles.css app bundle.
+  const requiredStyles = ['/CrestAdmin.DesignSystem.Default.css', '/CrestAdmin.css', '/OrchardCore.Crest.Admin.Client.bundle.scp.css'];
   const missingStyles = requiredStyles.filter(required => !loadedStyles.some(href => href.endsWith(required)));
 
   const initialSelected = page.locator('.admin-menu-list-item--selected').first();

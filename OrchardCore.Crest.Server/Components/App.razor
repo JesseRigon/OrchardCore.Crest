@@ -1,33 +1,122 @@
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Http
+@using Microsoft.Extensions.Options
+@using global::Crest
+@using global::Crest.Admin
 @using global::Crest.Site.Client
 
 @*
-    Mounted via Startup.cs's routes.MapRazorComponents<App>() (Phase 3.5's interactive-
-    island mechanism) - this is the actual root component for any @rendermode-marked
-    page such as wasm/Pages/BlazorCounter.razor. Static-SSR-only content (the
-    overwhelming majority) never goes through this at all; it's served directly by
-    CrestBlazorComponentShapeBindingResolver's HtmlRenderer path mid-shape, with no
-    App/Routes involvement. Kept minimal on purpose: Layout.liquid's actual <head>/<body>
-    shape (resource manifests, culture attributes, nav) gets ported to a Razor layout
-    component in Phase 5, not duplicated here ahead of time.
+    Phase 8: theme-dispatching document root, mounted via Startup.cs's
+    routes.MapRazorComponents<App>() - the single Blazor Web App host document for
+    every Crest theme. Which theme's document renders is a per-request decision:
+    BlazorAdminThemeMiddleware authorizes admin/login page requests, rewrites their
+    path to the canonical (prefix-stripped) form MapRazorComponents' route table
+    understands, and stamps HttpContext.Items[CrestBlazorHosting.ShellBasePathItem]
+    (see CrestBlazorHosting.cs) - that marker selects the Admin branch below. Every
+    other request gets the Site branch, exactly what this file rendered before Phase 8.
 
-    Routes (and every routable @page component, e.g. BlazorCounter.razor) lives in the
-    .Client (WASM) project, not here - the WASM runtime downloaded to the browser only
-    has whatever assembly it was itself compiled into, never this server assembly, so a
-    Routes defined here would resolve fine over the SignalR circuit but throw
-    "Root component type ... could not be found" the moment InteractiveAuto switches to
-    WASM. See docs/BlazorWeb.md.
+    Routes (and every routable @page component) live in the WASM client assemblies
+    (Site.Client / Admin.Client under the OrchardCore.Crest.Client entry), never here -
+    the WASM runtime only has whatever assemblies it was compiled with; a Routes
+    defined server-side resolves over the circuit but throws the moment
+    InteractiveAuto switches to WASM. See docs/BlazorWeb.md.
+
+    Admin head assets are root-absolute _content/* static-web-asset URLs (served by
+    MapStaticAssets / the host's static asset pipeline), deliberately independent of
+    the admin <base href> - the old wasm/index.html + CopyCrestSharedAssets flattened
+    copies are retired with the middleware's shell serving.
 *@
+@* lang reflects the culture the request-localization pipeline resolved for this
+   request (tenant default / crest_culture cookie / user preference) - the SSR
+   document must carry it so first-paint markup is correctly language-tagged
+   before any interactive culture handling runs. *@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
-    <HeadOutlet @rendermode="RenderMode.InteractiveAuto" />
+    @if (_isAdminShell)
+    {
+        <title>Crest</title>
+        <base href="@_adminBaseHref" />
+        <link id="crest-radzen-theme" rel="stylesheet" href="/_content/OrchardCore.Crest.Components/css/material-base.css" />
+        <link rel="stylesheet" href="/OrchardCore.Resources/Vendor/fontawesome-free/css/all.min.css" />
+        <link rel="stylesheet" href="/OrchardCore.Resources/Vendor/fontawesome-free/css/v4-shims.min.css" />
+        <link rel="stylesheet" href="/OrchardCore.Resources/Vendor/fontawesome-free/css/v5-font-face.min.css" />
+        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Admin.Client/CrestAdmin.DesignSystem.Default.css" />
+        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Components/CrestComponents.css" />
+        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Components/OrchardCore.Crest.Components.bundle.scp.css" />
+        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Admin.Client/CrestAdmin.css" />
+        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Admin.Client/OrchardCore.Crest.Admin.Client.bundle.scp.css" />
+        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Icons/CrestIcons.css" />
+    }
+    else
+    {
+        <base href="/" />
+    }
+    <HeadOutlet @rendermode="@_renderMode" />
 </head>
 <body>
-    <Routes @rendermode="RenderMode.InteractiveAuto" />
+    @if (_isAdminShell)
+    {
+        <AdminRoutes @rendermode="@_renderMode" />
+        <script src="/_content/OrchardCore.Crest.Admin.Client/crest.theme.js"></script>
+        <script src="/_content/OrchardCore.Crest.Components/crest.components.js"></script>
+        <script src="/_content/OrchardCore.Crest.Admin.Client/crest.adminMenus.js"></script>
+        <script src="/_content/OrchardCore.Crest.Icons/icons.js"></script>
+        <script src="/_content/OrchardCore.Crest.Components/Radzen.Blazor.js"></script>
+    }
+    else
+    {
+        @* Site shell. Note that "/" currently resolves here: Admin's Home.razor declares
+           @page "/" meaning "this admin shell's own base" (/Admin/ or /Login/), and under
+           the shared Blazor Web App route table that also matches the SITE root. Rendering
+           the Site shell for it is the RIGHT outcome — the conversion's goal is Blazor all
+           the way down (Phase 5 replaces Views/*.liquid with .razor, Phase 7 deletes them)
+           — but Site has no @page "/" component yet, so the body comes out empty. The fix
+           is to add the Site home page, not to hand "/" back to Liquid. See the "Site root"
+           section of plans/blazor hybrid conversion.md. *@
+        <Routes @rendermode="@_renderMode" />
+    }
     <script src="/_framework/blazor.web.js"></script>
 </body>
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    [Inject]
+    private IOptions<BlazorAdminThemeOptions> AdminThemeOptions { get; set; } = default!;
+
+    private bool _isAdminShell;
+    private string _adminBaseHref = "/";
+    private IComponentRenderMode _renderMode = RenderMode.InteractiveAuto;
+
+    protected override void OnInitialized()
+    {
+        // Only the middleware's explicit marker selects the admin document - a raw
+        // path check here would bypass its theme-selection and route-authorization
+        // gates (an admin-path request without the marker means the middleware
+        // deliberately declined: Blazor admin theme not selected for this tenant).
+        if (HttpContext?.Items.TryGetValue(CrestBlazorHosting.ShellBasePathItem, out var value) == true
+            && value is string shellBasePath
+            && !string.IsNullOrWhiteSpace(shellBasePath))
+        {
+            _isAdminShell = true;
+            _adminBaseHref = shellBasePath.TrimEnd('/') + "/";
+
+            // The login shell is the render-mode exception: under InteractiveAuto's
+            // first-visit server circuit, Login.razor's credential POST goes out on
+            // the server-side loopback HttpClient - the auth Set-Cookie lands in that
+            // handler, never in the browser, and the "successful" login leaves the
+            // browser anonymous. InteractiveWebAssembly keeps the SSR-prerendered
+            // form but runs the interactive phase in the browser, where the fetch's
+            // Set-Cookie is stored by the browser exactly like the old WASM shell.
+            if (string.Equals(shellBasePath, AdminThemeOptions.Value.LoginPath, StringComparison.OrdinalIgnoreCase))
+            {
+                _renderMode = RenderMode.InteractiveWebAssembly;
+            }
+        }
+    }
+}

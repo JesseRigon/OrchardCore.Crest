@@ -35,10 +35,9 @@
     <PackageReference Include="OrchardCore.DisplayManagement" />
   </ItemGroup>
 
-  <Target Name="BuildCrestAdminWasm"
-          AfterTargets="Build"
-          Condition="'$(SkipCrestAdminWasmBuild)' != 'true' and '$(DesignTimeBuild)' != 'true'">
-    <Exec Command="dotnet restore &quot;$(MSBuildProjectDirectory)\wasm\OrchardCore.Crest.Admin.Wasm.csproj&quot; /p:SkipCrestAdminWasmBuild=true" />
-    <Exec Command="dotnet build &quot;$(MSBuildProjectDirectory)\wasm\OrchardCore.Crest.Admin.Wasm.csproj&quot; --no-restore --configuration $(Configuration) /p:SkipCrestAdminWasmBuild=true" />
-  </Target>
+  <!-- Phase 8: the old BuildCrestAdminWasm Exec target (side-building the standalone
+       WASM app for BlazorAdminThemeMiddleware's hand-served webroot) is gone - the
+       admin client (wasm/OrchardCore.Crest.Admin.Client.csproj, now a Razor class
+       library) builds as an ordinary member of the dependency graph via
+       OrchardCore.Crest.Client -> Crest.Server -> the host app. -->
 </Project>

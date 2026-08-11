@@ -2,6 +2,8 @@
 // Verifies the tenant media icon lifecycle: enabling the TenantMedia feature, uploading an
 // SVG icon, seeing it listed and searchable, then deleting it. Uses a timestamped icon name
 // (as the original did) so repeated runs don't collide.
+const { fetchAntiforgeryToken } = require('../harness/antiforgery');
+
 const featureId = 'OrchardCore.Crest.Icons.TenantMedia';
 const svg =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Zm-7 8v5l7 5 7-5v-5l-7 4-7-4Z"/></svg>';
@@ -20,15 +22,16 @@ async function api(page, path, options = {}) {
   }, { path, options });
 }
 
-async function uploadIcon(page, iconFileName) {
-  return page.evaluate(async ({ iconFileName, svg }) => {
+async function uploadIcon(page, iconFileName, headers) {
+  return page.evaluate(async ({ iconFileName, svg, headers }) => {
     const form = new FormData();
     form.append('file', new Blob([svg], { type: 'image/svg+xml' }), iconFileName);
     form.append('overwrite', 'true');
-    const response = await fetch('/api/crest/icons/tenant', { method: 'POST', credentials: 'include', body: form });
+    // Note: no manual content-type here - the browser sets the multipart boundary itself.
+    const response = await fetch('/api/crest/icons/tenant', { method: 'POST', credentials: 'include', headers, body: form });
     const text = await response.text();
     return { status: response.status, ok: response.ok, body: text ? JSON.parse(text) : null };
-  }, { iconFileName, svg });
+  }, { iconFileName, svg, headers });
 }
 
 module.exports = async function run(page, ctx) {
@@ -36,13 +39,17 @@ module.exports = async function run(page, ctx) {
   const iconName = iconFileName.replace(/\.svg$/i, '');
   const results = [];
 
-  const enable = await api(page, `/api/crest/features/${encodeURIComponent(featureId)}/enable`, { method: 'POST' });
+  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
+  const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
+
+  const enable = await api(page, `/api/crest/features/${encodeURIComponent(featureId)}/enable`, { method: 'POST', headers: antiforgeryHeaders });
   results.push({ name: 'enable-tenant-media-feature', pass: enable.ok || enable.status === 204, message: `status=${enable.status}` });
   if (!results[0].pass) return results;
 
   await page.waitForTimeout(3000);
 
-  const upload = await uploadIcon(page, iconFileName);
+  const upload = await uploadIcon(page, iconFileName, antiforgeryHeaders);
   results.push({
     name: 'upload-tenant-icon',
     pass: upload.ok && upload.body?.name === iconName,
@@ -59,7 +66,7 @@ module.exports = async function run(page, ctx) {
     search.ok && Array.isArray(search.body?.items) && search.body.items.some(icon => icon.key === `tenant/current/default/${iconName}` && Boolean(icon.svgMarkup));
   results.push({ name: 'tenant-icon-searchable', pass: found, message: `found=${found}` });
 
-  const remove = await api(page, `/api/crest/icons/tenant/${encodeURIComponent(iconName)}`, { method: 'DELETE' });
+  const remove = await api(page, `/api/crest/icons/tenant/${encodeURIComponent(iconName)}`, { method: 'DELETE', headers: antiforgeryHeaders });
   results.push({ name: 'delete-tenant-icon', pass: remove.ok, message: `status=${remove.status}` });
 
   return results;

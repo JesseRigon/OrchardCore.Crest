@@ -28,7 +28,7 @@ module.exports = async function run(page, ctx) {
 
   try {
     await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'domcontentloaded' });
-    await page.getByRole('heading', { name: 'Primary Navigation', exact: true }).waitFor({ timeout: 20000 });
+    await page.getByRole('heading', { name: 'Sidebar', exact: true }).waitFor({ timeout: 20000 });
 
     const state = await page.evaluate(async () => {
       const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
@@ -40,14 +40,24 @@ module.exports = async function run(page, ctx) {
     originalSettings = JSON.parse(JSON.stringify(menu.primaryNavMenuSettings));
 
     await page.getByRole('button', { name: /Export JSON/i }).waitFor({ timeout: 10000 });
-    const addButton = page.locator('.admin-menu-actions button:has-text("Add")').first();
+    // There are TWO .admin-menu-actions "add" buttons: the icon-only one that creates a
+    // MENU (its popover offers Admin/Local/User Profile Menu) and the labelled "Add" that
+    // adds a NODE or separator to the selected menu. :has-text("Add") matched both and
+    // .first() picked the menu-creation one, whose popover has no "Node" entry — hence the
+    // timeout. Match the accessible name exactly, as separators.js does.
+    const addButton = page.getByRole('button', { name: 'Add', exact: true });
     await addButton.waitFor({ timeout: 10000 });
-    await addButton.click();
+    // clickForEffect covers the prerendered-inert-button race (harness/interactive.js) —
+    // a bare click here lands before handlers attach and the popover never opens.
+    const { clickForEffect } = require('../../harness/interactive');
+    await clickForEffect(addButton, page.locator('.admin-menu-actions__popover'));
     await page.locator('.admin-menu-actions__popover button:has-text("Node")').waitFor({ timeout: 5000 });
     await page.locator('.admin-menu-actions__popover button:has-text("Separator")').waitFor({ timeout: 5000 });
 
-    await page.getByTitle('PrimaryNavMenu settings').click();
-    await page.getByRole('dialog', { name: 'PrimaryNavMenu settings' }).waitFor({ timeout: 5000 });
+    // The button title and dialog aria-label are both "Primary navigation settings" —
+    // the old "PrimaryNavMenu settings" wording no longer appears anywhere in the product.
+    const settingsDialog = page.getByRole('dialog', { name: 'Primary navigation settings' });
+    await clickForEffect(page.getByTitle('Primary navigation settings'), settingsDialog);
 
     const settingsSections = await page.evaluate(() => {
       const result = {};

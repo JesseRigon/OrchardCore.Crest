@@ -189,6 +189,11 @@
         catch (JSException)
         {
         }
+        catch (JSDisconnectedException)
+        {
+            // Fire-and-forget from a focus handler: the circuit can drop mid-flight and the
+            // exception would otherwise go unobserved. Scroll state dies with the page anyway.
+        }
     }
 
     private static readonly string[] DefaultLevelIndents = ["0rem", "0.75rem", "1.25rem", "1.75rem"];

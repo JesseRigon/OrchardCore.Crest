@@ -1,4 +1,5 @@
 const { drainConsoleErrors } = require('../harness/instance');
+const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 
 // Converted from the old admin-templates-page.js (originally a dense one-liner). The
 // original didn't assert on console errors, so no `no-console-errors` result is added
@@ -12,13 +13,19 @@ module.exports = async function run(page, ctx) {
 
   // Round-trips a throwaway template through the native API to prove the page sits on
   // top of real Orchard template APIs, then cleans it up immediately.
+  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
+
   const name = `crest-probe-${Date.now()}`;
   const saved = await page.request.put(`${ctx.baseUrl}/api/crest/templates/${name}`, {
+    headers: { [antiforgery.headerName]: antiforgery.requestToken },
     data: { description: 'probe', content: 'Hello' },
   });
   let cleanupOk = false;
   if (saved.ok()) {
-    const deleted = await page.request.delete(`${ctx.baseUrl}/api/crest/templates/${name}`);
+    const deleted = await page.request.delete(`${ctx.baseUrl}/api/crest/templates/${name}`, {
+      headers: { [antiforgery.headerName]: antiforgery.requestToken },
+    });
     cleanupOk = deleted.ok();
   }
 

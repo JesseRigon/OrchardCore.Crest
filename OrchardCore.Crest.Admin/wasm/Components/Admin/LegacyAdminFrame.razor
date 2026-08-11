@@ -20,18 +20,40 @@
 </CrestAppContainer>
 
 @code {
-    private string FrameUrl => EnsureLegacyFrame(Navigation.Uri);
+    // Static SSR: Navigation.Uri here is the server-side REWRITTEN request path
+    // (the rewrite that routed this request into the legacy host), not the URL the
+    // browser is actually sitting at, so a FrameUrl computed during prerender would
+    // point the iframe at the wrong legacy page - and the prerendered src would
+    // start loading it before interactivity takes over. Render a src-less iframe
+    // (about:blank) during prerender; the interactive phase (circuit or WASM)
+    // recomputes it from the real browser URL.
+    private string? FrameUrl => RendererInfo.IsInteractive ? EnsureLegacyFrame(Navigation.Uri) : null;
 
     private string Title
     {
         get
         {
+            // Same rewritten-URL caveat as FrameUrl: only derive the title from
+            // Navigation.Uri once interactive; prerender paints the default.
+            if (!RendererInfo.IsInteractive)
+            {
+                return T.T("LegacyAdminFrame_DefaultTitle", "Admin");
+            }
+
             var path = new Uri(Navigation.Uri).AbsolutePath.Trim('/');
             return string.IsNullOrWhiteSpace(path) ? T.T("LegacyAdminFrame_DefaultTitle", "Admin") : path.Split('/').Last().Replace('-', ' ');
         }
     }
 
-    private void OpenFullPage() => Navigation.NavigateTo(FrameUrl, forceLoad: true);
+    private void OpenFullPage()
+    {
+        // FrameUrl is only null during prerender, where no click can occur - this
+        // guard just keeps the null-flow honest.
+        if (FrameUrl is { } url)
+        {
+            Navigation.NavigateTo(url, forceLoad: true);
+        }
+    }
 
     private static string EnsureLegacyFrame(string uri)
     {

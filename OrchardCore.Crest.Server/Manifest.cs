@@ -14,7 +14,16 @@ using OrchardCore.Modules.Manifest;
     Name = "Crest Server",
     Description = "Provides Crest tenant APIs for authentication, theme settings, and app configuration.",
     Category = "OrchardCore.Crest",
-    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Contents", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Queries", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.LegacyFrame", "OrchardCore.Crest.Icons"],
+    // Every entry here is constructor-injected or GetRequiredService'd by an
+    // always-live controller/service in this assembly - see docs/feature-enablement.md
+    // in the host repo for why these belong in the manifest rather than a setup recipe
+    // (a recipe entry only fixes tenants provisioned from that recipe).
+    //   OrchardCore.Navigation -> INavigationManager (AdminMenus/App/Navigation
+    //     controllers). Resolves today only because OrchardCore.Admin happens to call
+    //     AddNavigation() without declaring the feature; declared here so Crest does not
+    //     depend on that incidental coupling.
+    //   OrchardCore.Recipes    -> IRecipeExecutor (RecipesController.ExecuteAsync).
+    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Contents", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.LegacyFrame", "OrchardCore.Crest.Icons"],
     IsAlwaysEnabled = true
 )]
 

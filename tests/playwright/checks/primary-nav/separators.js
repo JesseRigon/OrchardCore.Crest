@@ -5,11 +5,17 @@
 // not a test, and was dropped in this conversion.)
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('heading', { name: 'Primary Navigation', exact: true }).waitFor({ timeout: 20000 });
+  await page.getByRole('heading', { name: 'Sidebar', exact: true }).waitFor({ timeout: 20000 });
 
   const initialCount = await page.locator('.admin-menu-separator').count();
-  await page.getByRole('button', { name: /\+ Add/i }).click();
-  await page.getByRole('button', { name: /Separator/i }).click();
+  // The single "+ Add" button became an Add -> popover flow; clickForEffect also
+  // covers the prerendered-inert-button race (see harness/interactive.js).
+  const { clickForEffect } = require('../../harness/interactive');
+  await clickForEffect(
+    page.getByRole('button', { name: 'Add', exact: true }),
+    page.locator('.admin-menu-actions__popover'),
+  );
+  await page.locator('.admin-menu-actions__popover').getByRole('button', { name: /Separator/i }).click();
   await page.waitForFunction(count => document.querySelectorAll('.admin-menu-separator').length > count, initialCount, { timeout: 20000 });
 
   const separator = page.locator('.admin-menu-separator').last();
@@ -17,7 +23,13 @@ module.exports = async function run(page, ctx) {
 
   const separatorLayout = await separator.evaluate(element => {
     const handle = element.querySelector('.admin-menu-node__handle');
-    const text = Array.from(element.querySelectorAll('*')).find(child => child.textContent?.trim() === 'Separator');
+    // Match the innermost element whose text is exactly "Separator" (the <h6> label).
+    // querySelectorAll returns document order, so a plain .find() picks the OUTERMOST
+    // match — the .admin-menu-separator__content wrapper, whose left edge equals the
+    // handle's. That made the left-alignment assertion compare the handle against
+    // itself and fail even though the row is laid out correctly.
+    const labels = Array.from(element.querySelectorAll('*')).filter(child => child.textContent?.trim() === 'Separator');
+    const text = labels.length ? labels[labels.length - 1] : undefined;
     const line = element.querySelector('.admin-menu-separator__line');
     return {
       hasHandle: Boolean(handle),
@@ -26,6 +38,15 @@ module.exports = async function run(page, ctx) {
       lineLeft: line?.getBoundingClientRect().left ?? 0,
     };
   });
+
+  // Index of the separator among root entries BEFORE the drag. A new separator is
+  // appended at the end, and dropping it "before" the first node lands it at index 1
+  // (the drop inserts relative to that node, it does not become the list head). The old
+  // assertion required index 0 and so failed even though the reorder succeeded — the
+  // real contract is "the separator moved", so compare positions instead.
+  const rootEntryTypes = () =>
+    page.evaluate(() => [...document.querySelectorAll('.admin-menu-tree__list--root > .admin-menu-tree__item')].map(entry => entry.dataset.entryType));
+  const separatorIndexBefore = (await rootEntryTypes()).indexOf('separator');
 
   let dragReorderWorked = false;
   try {
@@ -45,8 +66,11 @@ module.exports = async function run(page, ctx) {
       handle.dispatchEvent(new DragEvent('dragend', eventInit));
     });
     await page.waitForFunction(
-      () => document.querySelector('.admin-menu-tree__list--root > .admin-menu-tree__item')?.dataset.entryType === 'separator',
-      null,
+      indexBefore =>
+        [...document.querySelectorAll('.admin-menu-tree__list--root > .admin-menu-tree__item')].findIndex(
+          entry => entry.dataset.entryType === 'separator',
+        ) !== indexBefore,
+      separatorIndexBefore,
       { timeout: 20000 },
     );
     dragReorderWorked = true;
@@ -54,12 +78,20 @@ module.exports = async function run(page, ctx) {
     dragReorderWorked = false;
   }
 
+  // Delete unconditionally: this check ADDED a separator, so it must remove it even when
+  // the drag-reorder step failed. Leaving it behind persists in tenant state and makes
+  // every later run start from a different initialCount.
   let finalCount = await page.locator('.admin-menu-separator').count();
-  if (dragReorderWorked) {
-    await page.locator('.admin-menu-tree__list--root > .admin-menu-tree__item[data-entry-type="separator"]').first().locator('button').click();
-    await page.waitForFunction(count => document.querySelectorAll('.admin-menu-separator').length === count, initialCount, { timeout: 20000 });
-    finalCount = await page.locator('.admin-menu-separator').count();
-  }
+  await page
+    .locator('.admin-menu-tree__list--root > .admin-menu-tree__item[data-entry-type="separator"]')
+    .first()
+    .locator('button')
+    .click()
+    .catch(() => {});
+  await page
+    .waitForFunction(count => document.querySelectorAll('.admin-menu-separator').length === count, initialCount, { timeout: 20000 })
+    .catch(() => {});
+  finalCount = await page.locator('.admin-menu-separator').count();
 
   return [
     { name: 'separator-has-visible-line-color', pass: Boolean(lineColor) && lineColor !== 'rgba(0, 0, 0, 0)', message: `lineColor=${lineColor}` },
@@ -68,7 +100,7 @@ module.exports = async function run(page, ctx) {
       pass: separatorLayout.hasHandle && separatorLayout.handleLeft < separatorLayout.textLeft && separatorLayout.textLeft < separatorLayout.lineLeft,
       message: JSON.stringify(separatorLayout),
     },
-    { name: 'separator-drag-reorder-works', pass: dragReorderWorked, message: `dragReorderWorked=${dragReorderWorked}` },
+    { name: 'separator-drag-reorder-works', pass: dragReorderWorked, message: `movedFromIndex=${separatorIndexBefore} dragReorderWorked=${dragReorderWorked}` },
     { name: 'separator-delete-restores-count', pass: finalCount === initialCount, message: `initialCount=${initialCount} finalCount=${finalCount}` },
   ];
 };

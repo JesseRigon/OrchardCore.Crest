@@ -29,11 +29,23 @@ async function clearAdminDefaultCulture(page, baseUrl) {
     });
   }, { baseUrl, antiforgery, body: localization });
 }
-async function pickCulture(page, label) {
+async function pickCulture(page, label, expectedCulture) {
+  // Both clicks can land on prerendered, not-yet-interactive elements — retry the
+  // whole pick until the resolved-culture hook reflects the expected value (or the
+  // attempts run out, letting the caller's assertion report the real resolved value).
   const trigger = page.locator('.admin-titlebar__culture-selector');
-  await trigger.click();
-  await page.locator('[role="option"]', { hasText: label }).first().click();
-  await page.waitForTimeout(300);
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await trigger.click().catch(() => {});
+    const option = page.locator('[role="option"]', { hasText: label }).first();
+    const optionShown = await option.waitFor({ timeout: 3000 }).then(() => true).catch(() => false);
+    if (optionShown) {
+      await option.click().catch(() => {});
+    }
+    await page.waitForTimeout(400);
+    if (!expectedCulture) return;
+    const resolved = await page.locator('[data-testid="resolved-culture"]').textContent().catch(() => null);
+    if (resolved === expectedCulture) return;
+  }
 }
 
 async function resolvedCulture(page) {
@@ -52,7 +64,7 @@ module.exports = async function run(page, ctx) {
   try {
     await loginAsUser(session.page, ctx.baseUrl, userA);
     await session.page.goto(`${ctx.baseUrl}/Admin`, { waitUntil: 'networkidle' });
-    await pickCulture(session.page, 'français');
+    await pickCulture(session.page, 'français', 'fr-FR');
     const beforeSwitch = await resolvedCulture(session.page);
     results.push({ name: 'user-a-override-applied', pass: beforeSwitch === 'fr-FR', message: `resolved=${beforeSwitch}` });
 

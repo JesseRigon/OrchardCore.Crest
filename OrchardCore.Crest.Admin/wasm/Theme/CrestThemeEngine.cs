@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.JSInterop;
 using Crest.Admin.Api;
+using Crest.Components.Primitives;
 
 namespace Crest.Admin.Theme;
 
@@ -68,7 +69,10 @@ public sealed partial class CrestThemeEngine(IJSRuntime js)
     public async Task ApplyAsync(CrestThemeSettings settings)
     {
         var variables = Translate(settings.Tokens);
-        await js.InvokeVoidAsync("crestTheme.apply", settings.RadzenTheme, variables);
+        // Prerender-safe: applying theme CSS variables is a browser-only effect; the
+        // interactive phase re-runs the caller's init with working interop and
+        // reapplies. See PrerenderSafeJs.
+        await js.TryInvokeVoidAsync("crestTheme.apply", settings.RadzenTheme, variables);
     }
 
     private static Dictionary<string, string> Translate(IReadOnlyDictionary<string, string> tokens)

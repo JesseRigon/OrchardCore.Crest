@@ -1,4 +1,5 @@
 const { severeConsoleErrors, drainConsoleErrors } = require('../harness/instance');
+const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 
 // Converted from the old admin-media-profiles-page.js. Same assertions (page renders
 // natively, no legacy iframe, create+delete a probe media profile via the API), minus
@@ -15,8 +16,12 @@ module.exports = async function run(page, ctx) {
 
   const iframeCount = await page.locator('iframe').count();
 
+  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
+
   const name = `crest-probe-${Date.now()}`;
   const saved = await page.request.put(`${ctx.baseUrl}/api/crest/media/profiles/${name}`, {
+    headers: { [antiforgery.headerName]: antiforgery.requestToken },
     data: {
       hint: 'probe',
       width: 120,
@@ -33,7 +38,9 @@ module.exports = async function run(page, ctx) {
   let removedOk = false;
   let removedStatus = 'skipped (create failed)';
   if (savedOk) {
-    const removed = await page.request.delete(`${ctx.baseUrl}/api/crest/media/profiles/${name}`);
+    const removed = await page.request.delete(`${ctx.baseUrl}/api/crest/media/profiles/${name}`, {
+      headers: { [antiforgery.headerName]: antiforgery.requestToken },
+    });
     removedOk = removed.ok();
     removedStatus = removed.status();
   }

@@ -344,6 +344,18 @@
 
     private async Task StartAdminMenuLayoutHubAsync()
     {
+        // Browser-only: this runs from OnInitializedAsync, which also executes during
+        // static SSR prerender and the InteractiveServer circuit phase - both on the
+        // server, where this HubConnection would be an outbound server-to-self connection
+        // carrying none of the user's auth cookies (and during prerender it would just
+        // burn a failed negotiate while blocking the request). The WASM phase re-runs
+        // this init in the browser, where the connection authenticates via the ambient
+        // cookies; until then the manual Refresh button covers layout invalidation.
+        if (!OperatingSystem.IsBrowser())
+        {
+            return;
+        }
+
         if (AdminMenuLayoutHub is not null)
         {
             return;
@@ -1454,7 +1466,10 @@
         }
         catch
         {
-            // Ignore JS runtime disposal races during navigation.
+            // Ignore JS runtime disposal races during navigation, plus the
+            // InvalidOperationException thrown when this instance is the prerender-phase
+            // copy being torn down - interop is unavailable there and letting it escape
+            // would fail the whole SSR request (same crash PrerenderSafeJs exists for).
         }
 
         if (AdminMenuLayoutHub is not null)

@@ -6,6 +6,7 @@
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject Crest.Components.Theme.CrestApiLocalizer T
+@inject NotificationService Notifications
 @using Microsoft.AspNetCore.Components
 
 <CrestStack Gap="1rem" data-testid="security-headers-page">
@@ -178,12 +179,30 @@
     private async Task SaveAsync()
     {
         if (Model is null) return;
-        Model = await Api.Crest.Rest.SecurityHeaders.SaveAsync(Model with
+        try
         {
-            ReferrerPolicy = ReferrerPolicy,
-            ContentSecurityPolicy = ContentSecurityPolicy,
-            PermissionsPolicy = PermissionsPolicy,
-        });
+            Model = await Api.Crest.Rest.SecurityHeaders.SaveAsync(Model with
+            {
+                ReferrerPolicy = ReferrerPolicy,
+                ContentSecurityPolicy = ContentSecurityPolicy,
+                PermissionsPolicy = PermissionsPolicy,
+            });
+
+            // Saving used to be silent: the PUT succeeded and the model updated, but the
+            // page gave no confirmation at all, so there was no way to tell a successful
+            // save from a no-op. Match the feedback every other settings page gives.
+            Notifications.Notify(
+                NotificationSeverity.Success,
+                T.T("SecurityHeaders_SavedTitle", "Security headers saved"),
+                T.T("SecurityHeaders_SavedMessage", "The security header settings were updated."));
+        }
+        catch (Exception)
+        {
+            Notifications.Notify(
+                NotificationSeverity.Error,
+                T.T("SecurityHeaders_SaveFailedTitle", "Security headers not saved"),
+                T.T("SecurityHeaders_SaveFailedMessage", "The security header settings could not be updated."));
+        }
     }
 
     private sealed record SecurityPolicyOption(string Key, string Label);

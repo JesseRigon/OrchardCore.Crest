@@ -3,7 +3,7 @@
 // editable — its edit button opens the node editor with the expected fields.
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('heading', { name: 'Primary Navigation', exact: true }).waitFor({ timeout: 20000 });
+  await page.getByRole('heading', { name: 'Sidebar', exact: true }).waitFor({ timeout: 20000 });
 
   const newNode = page.locator('.admin-menu-tree__item[data-node-id="new"]').first();
   await newNode.waitFor({ timeout: 10000 });
@@ -13,13 +13,14 @@ module.exports = async function run(page, ctx) {
     draggable: element.querySelector('.admin-menu-node__handle')?.getAttribute('draggable'),
   }));
 
+  // clickForEffect covers the prerendered-inert-button race — a raw DOM click can
+  // land before the interactive runtime attaches handlers (harness/interactive.js).
+  const { clickForEffect } = require('../../harness/interactive');
   let editButtonUsable = false;
   try {
-    await newNode.evaluate(element => {
-      const editButton = Array.from(element.querySelectorAll('button')).find(button => button.textContent?.trim() === 'edit');
-      if (!editButton || editButton.disabled) throw new Error('New node edit button is missing or disabled.');
-      editButton.click();
-    });
+    const editButton = newNode.locator('button', { hasText: 'edit' }).first();
+    if (await editButton.isDisabled()) throw new Error('New node edit button is disabled.');
+    await clickForEffect(editButton, page.locator('.admin-menu-node-editor'));
     editButtonUsable = true;
   } catch {
     editButtonUsable = false;

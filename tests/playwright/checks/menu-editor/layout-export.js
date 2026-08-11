@@ -17,10 +17,10 @@ module.exports = async function run(page, ctx) {
     await builtInMenu.click();
   }
 
-  const button = page.getByRole('button', { name: /export layout json/i }).first();
+  const button = page.getByRole('button', { name: /export json/i }).first();
   await button.waitFor({ timeout: 20000 });
   await button.click();
-  await page.getByText('PrimaryNavMenu layout exported', { exact: false }).waitFor({ timeout: 20000 });
+  await page.getByText('Primary navigation exported', { exact: false }).waitFor({ timeout: 20000 });
 
   const fileExists = fs.existsSync(exportFile);
   let hasExpectedShape = false;

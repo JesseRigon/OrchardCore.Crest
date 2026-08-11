@@ -1,5 +1,6 @@
 using Crest.Admin.Api;
 using Crest.Admin.Theme;
+using Crest.Components.Primitives;
 using Crest.Components.Theme;
 using Crest.Icons;
 using Microsoft.AspNetCore.Components;
@@ -10,7 +11,7 @@ using System.Reflection;
 
 namespace Crest.Admin.DisplayManagement;
 
-public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, ClientIconRegistry iconRegistry, NavigationManager navigation, CrestApiLocalizer apiLocalizer, IJSRuntime js, CrestAntiforgeryHandler antiforgeryHandler)
+public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, ClientIconRegistry iconRegistry, NavigationManager navigation, CrestApiLocalizer apiLocalizer, IJSRuntime js, ICrestCultureCookieWriter cultureCookieWriter) : IAsyncDisposable
 {
     private readonly Lazy<IReadOnlyDictionary<string, Type>> _shapeBindings = new(BuildShapeBindings);
     private readonly SemaphoreSlim _manifestLock = new(1, 1);
@@ -260,13 +261,16 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
                 // plans/user-localization.md's "Resolution architecture" section), so the
                 // server-side cookie must always reflect exactly what was just resolved here,
                 // never something left over from a previous, possibly-stale resolution.
-                await js.InvokeVoidAsync("crestTheme.setAdminCulture", cultureSelector.CookieName, cultureSelector.CookiePath, resolved);
+                // Prerender-safe: cookie writeback is browser-only; the interactive phase
+                // re-runs the manifest refresh and writes it for real. Server-side the
+                // cookie is read (RequestLocalizationOptions), never written.
+                await js.TryInvokeVoidAsync("crestTheme.setAdminCulture", cultureSelector.CookieName, cultureSelector.CookiePath, resolved);
 
                 // Also hand the resolved-culture inputs to CrestAntiforgeryHandler so it can
                 // independently re-resolve and rewrite the cookie immediately before every
                 // subsequent outgoing request, not only here on manifest refresh - see
                 // plans/user-localization.md phase 15 and CrestAntiforgeryHandler.RewriteCultureCookie.
-                antiforgeryHandler.SetCultureCookieContext(new CultureCookieContext(User.UserName, cultureSelector, IsUnderAdminPath()));
+                cultureCookieWriter.SetCultureCookieContext(new CultureCookieContext(User.UserName, cultureSelector, IsUnderAdminPath()));
             }
         }
         finally
@@ -292,8 +296,11 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         // setSessionCultureOverride/getSessionCultureOverride and plans/user-localization.md's
         // "Per-tab and per-user override scoping" section. Switching signed-in identity in
         // this tab looks up that identity's own override, never carries the previous user's.
-        var sessionOverride = await js.InvokeAsync<string?>("crestTheme.getSessionCultureOverride", User.UserName);
-        var browserLocale = await js.InvokeAsync<string?>("crestTheme.getBrowserLocale");
+        // Prerender-safe: sessionStorage/navigator are browser-only; during prerender both
+        // return null and ResolveCulture falls through to the manifest/tenant chain -
+        // matching what the server itself resolved via the culture cookie pipeline.
+        var sessionOverride = await js.TryInvokeAsync<string?>("crestTheme.getSessionCultureOverride", null, User.UserName);
+        var browserLocale = await js.TryInvokeAsync<string?>("crestTheme.getBrowserLocale");
 
         return ResolveCulture(cultureSelector, sessionOverride, browserLocale, IsUnderAdminPath());
     }
@@ -423,6 +430,12 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         }
     }
 
+    // Phase 8: DI-scope-tied cleanup. Under the Blazor Web App model this scoped
+    // service is constructed per prerender request / per circuit / per WASM app - the
+    // permission hub connection and the 15-minute refresh timer must die with their
+    // scope, or every authenticated admin-page prerender leaks both until process end.
+    public async ValueTask DisposeAsync() => await StopPermissionRefreshAsync();
+
     private async Task StopPermissionRefreshAsync()
     {
         var cancellation = Interlocked.Exchange(ref _permissionRefreshCancellation, null);
@@ -449,7 +462,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         ContentTypes = [];
         Roles = [];
         CurrentContentItem = null;
-        antiforgeryHandler.SetCultureCookieContext(null);
+        cultureCookieWriter.SetCultureCookieContext(null);
     }
 
     private static DisplayMenu ToDisplayMenu(NavigationMenu menu) => new(

@@ -12,16 +12,22 @@ module.exports = async function run(page, ctx) {
   const tenantSelectorCount = await tenantSelector.count();
   const legacyTenantMenuCount = await page.locator('.admin-titlebar__tenant-menu').count();
 
+  // Since the Radzen source merge (ad8db47) the dropdown root is the visible,
+  // clickable face — the old .crest-dropdown__trigger inner button is gone. The
+  // culture value (flag icon) renders in the label span; the chevron is a
+  // .crest-icon inside .rz-dropdown-trigger.
   const cultureSelector = page.locator('.admin-titlebar__culture-selector');
   const cultureSelectorCount = await cultureSelector.count();
   let cultureIconCount = null;
   if (cultureSelectorCount) {
-    cultureIconCount = await cultureSelector.locator('.crest-dropdown__trigger .orchard-icon').count();
+    cultureIconCount = await cultureSelector
+      .locator('.rz-dropdown-label .orchard-icon, .rz-dropdown-trigger .crest-icon, .rz-dropdown-trigger .orchard-icon')
+      .count();
   }
 
   let tenantBackground = null;
   if (tenantSelectorCount === 1) {
-    tenantBackground = await tenantSelector.locator('.crest-dropdown__trigger')
+    tenantBackground = await tenantSelector
       .evaluate(element => getComputedStyle(element).backgroundColor);
   }
 

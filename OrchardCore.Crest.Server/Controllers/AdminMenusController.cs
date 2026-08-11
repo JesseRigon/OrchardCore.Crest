@@ -622,7 +622,14 @@ public sealed class AdminMenusController(
 
     private async Task<AdminMenuSummary> GetDefaultMenuSummaryAsync()
     {
-        var layout = await layoutService.GetAsync();
+        // LoadAsync (GetOrCreateMutableAsync), not GetAsync (GetOrCreateImmutableAsync).
+        // The immutable overload serves the CACHED document, which does not yet reflect
+        // layout mutations made earlier in this same request — those are only visible via
+        // the mutable instance until the deferred save commits after the response is
+        // written. Every mutating endpoint returns this summary, so reading the immutable
+        // copy made each PUT/POST respond with the PREVIOUS state: the write landed, but
+        // the response body was always one edit behind.
+        var layout = await layoutService.LoadAsync();
         var primaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted);
         var baseMenu = await BuildDefaultNavigationMenuAsync();
         var managedMenu = await iconController.ResolveMenuIconsAsync(baseMenu with

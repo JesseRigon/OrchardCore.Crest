@@ -8,12 +8,16 @@
 // (same as the original script). They are kept as real assertions rather than turned into
 // always-pass checks; if outbound network access isn't available where this suite runs,
 // expect those two to fail for environmental reasons rather than a real regression.
+const { fetchAntiforgeryToken } = require('../harness/antiforgery');
+
 async function api(page, path, options = {}) {
   return page.evaluate(async ({ path, options }) => {
     const response = await fetch(path, {
       credentials: 'include',
-      headers: { 'content-type': 'application/json', ...(options.headers || {}) },
       ...options,
+      // Merged AFTER the options spread, or options.headers would replace this object
+      // entirely and drop the content-type → 415.
+      headers: { 'content-type': 'application/json', ...(options.headers || {}) },
     });
     const text = await response.text();
     let body = null;
@@ -32,10 +36,15 @@ module.exports = async function run(page, ctx) {
     return { name: 'read-provider-settings', pass: false, message: `status=${original.status}` };
   }
 
+  // IconProvidersController is [AutoValidateAntiforgeryToken] - mutating calls without
+  // this header are rejected with 400. See harness/antiforgery.js.
+  const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
+  const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
+
   const results = [];
   try {
     const configured = { iconify: { enabled: true, baseUrl: 'https://api.iconify.design', apiKey: null, apiKeyHeader: null, prefixes: ['mdi'] } };
-    const save = await api(page, '/api/crest/icons/providers', { method: 'PUT', body: JSON.stringify(configured) });
+    const save = await api(page, '/api/crest/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(configured) });
     results.push({
       name: 'save-iconify-provider-settings',
       pass: save.ok && save.body?.iconify?.baseUrl === configured.iconify.baseUrl && save.body?.iconify?.prefixes?.[0] === 'mdi',
@@ -77,21 +86,31 @@ module.exports = async function run(page, ctx) {
       await dialog.getByRole('button', { name: 'Iconify' }).click();
       const searchBox = dialog.getByPlaceholder('Search all icons...');
       await searchBox.click();
-      await searchBox.pressSequentially('home');
-      const remoteHomeItem = page.locator('.icon-selector__item[title="@iconify:mdi:home"]');
+      // Query "mdi:home", not "home": the remote result set is capped and a bare "home"
+      // returns ~200 icons from other prefixes without mdi:home among them.
+      await searchBox.pressSequentially('mdi:home');
+      const remoteHomeItem = page.locator('.icon-selector__item[title="@iconify:mdi:home"]').first();
       await remoteHomeItem.waitFor({ timeout: 30000 }).catch(() => {});
       if (await remoteHomeItem.count()) {
+        // The grid scrolls inside the dialog, so the match may be below the fold.
+        await remoteHomeItem.scrollIntoViewIfNeeded();
         await remoteHomeItem.click();
+        // Clicking only marks the icon selected inside the dialog — the value is not
+        // written back to the field until the dialog's Save button confirms it. There is
+        // no "Selected icon: ..." caption anywhere in this UI; the observable result is
+        // the icon-key input holding the chosen value.
+        await dialog.locator('.icon-selector__dialog-footer button').first().click();
         pickedIcon = await page
-          .getByText('Selected icon: @iconify:mdi:home')
-          .waitFor({ timeout: 10000 })
-          .then(() => true)
+          .locator('input[placeholder="@api-provider:icon-prefix:icon-name"]')
+          .first()
+          .inputValue()
+          .then(value => value === '@iconify:mdi:home')
           .catch(() => false);
       }
     }
     results.push({ name: 'selecting-remote-icon-updates-field', pass: pickedIcon, message: `picked=${pickedIcon}` });
   } finally {
-    await api(page, '/api/crest/icons/providers', { method: 'PUT', body: JSON.stringify(original.body) }).catch(() => {});
+    await api(page, '/api/crest/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
   }
 
   return results;

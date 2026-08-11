@@ -127,11 +127,18 @@ module.exports = async function run(page, ctx) {
 
     const rootButton = primaryNavMenu.locator('.crest-panel-menu__item-link', { hasText: rootText }).first();
     await rootButton.waitFor({ timeout: 10000 });
-    if ((await rootButton.getAttribute('aria-expanded')) !== 'true') await rootButton.click();
+    // Blazor emits aria-expanded="" (empty string) for a true bool and OMITS the attribute
+    // entirely when false — it never writes the literal "true" or "false". So "expanded"
+    // is: attribute present AND not "false". Anything else (including null) is collapsed.
+    const isExpanded = async locator => {
+      const value = await locator.getAttribute('aria-expanded');
+      return value !== null && value !== 'false';
+    };
+    if (!(await isExpanded(rootButton))) await rootButton.click();
 
     const childButton = primaryNavMenu.locator('.crest-panel-menu__item-link', { hasText: childText }).first();
     await childButton.waitFor({ timeout: 10000 });
-    if ((await childButton.getAttribute('aria-expanded')) !== 'true') await childButton.click();
+    if (!(await isExpanded(childButton))) await childButton.click();
 
     const trigger = primaryNavMenu.locator('.crest-panel-menu__item-link', { hasText: triggerText }).first();
     await trigger.waitFor({ timeout: 10000 });
@@ -193,9 +200,28 @@ module.exports = async function run(page, ctx) {
   } finally {
     try {
       if (menuId) {
-        for (const nodeId of createdNodeIds.reverse()) {
+        // Delete in CREATION order (root first), not reverse. Deleting a node re-parents
+        // its surviving children to the root rather than cascading, so leaf-first deletion
+        // left "Popup Child" promoted to a root-level orphan that no later delete targeted
+        // — it then persisted in the tenant AND got baked into recipes/crest-admin-menu-layout.json
+        // by the layout-export check. Root-first lets the server remove the whole subtree;
+        // the follow-up sweep below catches anything the cascade misses.
+        for (const nodeId of createdNodeIds) {
           await deleteNode(menuId, nodeId).catch(() => {});
         }
+        // Belt and braces: nothing named "Popup <Root|Child|Trigger|Leaf> <stamp>" may
+        // survive this check, however the server chose to re-parent during deletion.
+        await page
+          .evaluate(async id => {
+            const state = await (await fetch('/api/crest/admin-menus', { credentials: 'include' })).json();
+            const menu = state.menus.find(entry => entry.id === id);
+            const flatten = nodes => (nodes || []).flatMap(node => [node, ...flatten(node.children || node.nodes || [])]);
+            return flatten(menu?.nodes).filter(node => /^Popup (Root|Child|Trigger|Leaf) /.test(node.text || '')).map(node => node.id);
+          }, menuId)
+          .then(async strays => {
+            for (const strayId of strays) await deleteNode(menuId, strayId).catch(() => {});
+          })
+          .catch(() => {});
         if (originalSettings) {
           await postJson(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/primary-nav-menu-settings`, originalSettings).catch(() => {});
         }

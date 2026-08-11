@@ -1,3 +1,14 @@
+@* "/" here means "this admin shell's own base": the document that serves this page sets
+   <base href> to /Admin/ or /Login/, so a base-relative "/" lands here no matter which
+   of the two served it. Keep it that way — do NOT change this to absolute "@page "/Admin""
+   / "@page "/Login"": those collide with OrchardCore's real server routes (notably
+   OrchardCore.Users' AccountController.Login) and the endpoint selector throws an
+   ambiguous-match 500 on every /Login request.
+
+   The site-root leak this route can cause (Admin.Client shares ONE route table with the
+   Site client under the Blazor Web App model, so a bare "/" also matches the SITE root
+   and swallows Orchard's Liquid homepage) is handled in Crest.Server's App.razor, which
+   only renders AdminRoutes when the middleware marked the request as an admin shell. *@
 @page "/"
 @using Crest.Admin.DisplayManagement
 @using Crest.Admin.Options
@@ -31,6 +42,17 @@
     // today.
     protected override async Task OnInitializedAsync()
     {
+        // Static SSR: Navigation.BaseUri is the site root here (no browser <base href>
+        // in play), so the "already at this base?" comparisons below always miss and
+        // NavigateTo(absolute, forceLoad) becomes a 302 right back to the URL being
+        // rendered - an infinite redirect loop on bare "/Admin". The interactive phase
+        // (circuit or WASM) re-runs this init with the browser's real base URI and
+        // applies the redirect policy correctly; prerender just paints nothing.
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
         await DisplayManager.EnsureInitializedAsync();
         var currentBasePath = new Uri(Navigation.BaseUri).AbsolutePath.TrimEnd('/');
 

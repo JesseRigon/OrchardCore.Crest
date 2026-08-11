@@ -13,7 +13,9 @@ module.exports = async function run(page, ctx) {
 
   const rendersOk = await Promise.all([
     page.locator('[data-testid="localization-page"]').waitFor({ timeout: 20000 }).then(() => true).catch(() => false),
-    page.getByRole('heading', { name: 'Cultures' }).waitFor({ timeout: 20000 }).then(() => true).catch(() => false),
+    // exact: true — without it 'Cultures' also matches the "Supported cultures"
+    // subheading and the strict-mode violation fails the wait.
+    page.getByRole('heading', { name: 'Cultures', exact: true }).waitFor({ timeout: 20000 }).then(() => true).catch(() => false),
   ]).then(results => results.every(Boolean));
 
   const iframeCount = await page.locator('iframe').count();

@@ -17,7 +17,7 @@ namespace Crest;
 // "{realAdminPrefix}/DesignSystem" shape stock links get. DesignSystem.razor/
 // Icons.razor's own "@page" directives carry no "/Admin" segment either - Blazor's
 // Router resolves them relative to <base href>, already rewritten to the real
-// prefix by BlazorAdminThemeMiddleware.TryServeIndexHtmlAsync.
+// prefix by the admin document root (Crest.Server/Components/App.razor).
 public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocalizer, IOptions<AdminOptions> adminOptions) : AdminNavigationProvider
 {
     private readonly IStringLocalizer S = stringLocalizer;

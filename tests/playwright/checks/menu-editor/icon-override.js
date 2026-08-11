@@ -4,6 +4,8 @@
 //
 // Note: the original script pointed at /Admin/CRM/Customers, which predates this repo's
 // CRM -> Accounting module rename; updated to /Admin/Accounting/Customers.
+const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
+
 module.exports = async function run(page, ctx) {
   const menuId = '__crest_default_admin_menu';
   const targetNodeId = process.env.NODE_ID || 'content';
@@ -18,8 +20,10 @@ module.exports = async function run(page, ctx) {
       async ({ path, options }) => {
         const res = await fetch(path, {
           credentials: 'include',
-          headers: { 'content-type': 'application/json', ...(options.headers || {}) },
           ...options,
+          // Merged AFTER the options spread, or options.headers (the antiforgery token
+          // alone) would replace this object entirely and drop the content-type → 415.
+          headers: { 'content-type': 'application/json', ...(options.headers || {}) },
         });
         return { ok: res.ok, status: res.status, text: await res.text() };
       },
@@ -28,6 +32,10 @@ module.exports = async function run(page, ctx) {
     if (!response.ok) throw new Error(`${path} failed ${response.status}: ${response.text}`);
     return response.text ? JSON.parse(response.text) : null;
   }
+
+  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
+  const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
 
   const state = await api('/api/crest/admin-menus');
   const menu = state.menus.find(m => m.id === menuId);
@@ -54,6 +62,7 @@ module.exports = async function run(page, ctx) {
   try {
     const updated = await api(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(targetNodeId)}`, {
       method: 'PUT',
+      headers: antiforgeryHeaders,
       body: JSON.stringify(model),
     });
     updatedIconClass = flatten(updated.nodes).find(n => n.id === targetNodeId)?.iconClass;
@@ -61,7 +70,7 @@ module.exports = async function run(page, ctx) {
     await page.goto(`${ctx.baseUrl}/Admin/Accounting/Customers`, { waitUntil: 'networkidle' });
     await page.locator('.primary-nav-menu').waitFor({ timeout: 15000 });
     contentIcon = await page
-      .locator('.primary-nav-menu__item-content', { hasText: /^Content$/ })
+      .locator('.crest-panel-menu__item-content', { hasText: /^Content$/ })
       .first()
       .locator('.orchard-icon')
       .evaluate(icon => ({
@@ -73,6 +82,7 @@ module.exports = async function run(page, ctx) {
     const restore = { ...model, iconClass: originalIconClass };
     await api(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(targetNodeId)}`, {
       method: 'PUT',
+      headers: antiforgeryHeaders,
       body: JSON.stringify(restore),
     }).catch(() => {});
   }

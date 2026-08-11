@@ -38,6 +38,10 @@
     background: rgba(15, 23, 42, 0.48);
 }
 
+/* .admin-sidebar wraps .primary-nav-menu and establishes its own stacking context
+   (position:relative; z-index:15), so disabling pointer events on the nav alone still
+   leaves the wrapper itself intercepting clicks aimed at the dialog above it. */
+body:has(.icon-selector__modal-backdrop) .admin-sidebar,
 body:has(.icon-selector__modal-backdrop) .primary-nav-menu,
 body:has(.icon-selector__modal-backdrop) .primary-nav-menu__flyout {
     pointer-events: none !important;

@@ -95,18 +95,20 @@
     <Compile Include="..\OrchardCore.Crest.Icons\Providers\TenantMedia\**\*.cs" Link="Icons\Providers\TenantMedia\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <!-- Build-time, naming-convention-based discovery of theme WASM client assemblies -
-       mirrors Admin.Wasm.csproj's own CrestModuleWasmProject pattern
-       ("..\..\..\*\blazor-wasm\*.csproj") rather than hardcoding a ProjectReference per
-       theme. Any sibling theme project that adds a wasm/*.Client.csproj (Crest.Site's
-       own wasm/OrchardCore.Crest.Site.Client.csproj today, any future Blazor-capable
-       theme tomorrow) is picked up automatically - no Server.csproj edit needed to add
-       one. Startup.cs's AddInteractiveWebAssemblyComponents().AddAdditionalAssemblies(...)
-       registers whichever assemblies this glob resolves to; which one actually renders
-       for a given request is still decided at runtime by theme selection (Phase 3's
-       middleware), not by this glob. -->
+  <!-- Phase 8: Server references the single WASM entry project
+       (OrchardCore.Crest.Client) instead of glob-discovering per-theme client
+       projects - a Blazor Web App has exactly one browser payload/Program.Main, and
+       the entry project is where per-theme client libraries (Site, Admin, future
+       themes via its own references) and module blazor-wasm libraries (via
+       Admin.Client's CrestModuleWasmProject glob) all converge. Extensibility moved,
+       it didn't disappear: adding a theme client library or module blazor-wasm project
+       means it gets picked up by the entry project's reference graph, and
+       Startup.Configure's assembly scan (*.Client.dll / *.BlazorWasm.dll) feeds
+       everything to MapRazorComponents' route table automatically. Which theme
+       actually renders for a given request is still decided at runtime (the
+       theme-dispatching Components/App.razor + BlazorAdminThemeMiddleware's theme
+       check), never at build time. -->
   <ItemGroup>
-    <CrestThemeWasmClientProject Include="..\*\wasm\*.Client.csproj" />
-    <ProjectReference Include="@(CrestThemeWasmClientProject)" />
+    <ProjectReference Include="..\OrchardCore.Crest.Client\OrchardCore.Crest.Client.csproj" />
   </ItemGroup>
 </Project>

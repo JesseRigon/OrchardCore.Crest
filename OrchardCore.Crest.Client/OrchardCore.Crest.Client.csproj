@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Phase 8: the single WASM entry project for the whole Crest Blazor Web App. A
+       Blazor Web App has exactly one browser payload with one Program.Main; every
+       theme's client half (Site, Admin, future themes) and every module-contributed
+       blazor-wasm library is compiled into it via the references below. Crest.Server
+       references this project and passes its assembly graph to
+       MapRazorComponents<App>().AddAdditionalAssemblies(...). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>OrchardCore.Crest.Client</AssemblyName>
+    <RootNamespace>Crest.Client</RootNamespace>
+    <OrchardCoreCompatibilityVersion>3.0.0</OrchardCoreCompatibilityVersion>
+    <CrestSecurityPatch>0</CrestSecurityPatch>
+    <CrestBugPatch>0</CrestBugPatch>
+    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+    <!-- DisplayManager sets CultureInfo.CurrentCulture from the resolved tenant/user/
+         browser culture (see plans/user-localization.md phase 7) so date/number
+         formatting (CrestDataGridColumn, CrestScheduler views, etc.) reflects it
+         correctly. The SDK's default trimmed ICU data only ships full formatting data
+         for a small set of cultures; without this, a resolved culture outside that set
+         falls back to the invariant format even though CurrentCulture is set
+         correctly. (Carried over from the pre-Phase-8 Admin WASM project.) -->
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrchardCore.Crest.Admin\wasm\OrchardCore.Crest.Admin.Client.csproj" />
+    <ProjectReference Include="..\OrchardCore.Crest.Site\wasm\OrchardCore.Crest.Site.Client.csproj" />
+  </ItemGroup>
+
+</Project>

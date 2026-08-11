@@ -292,11 +292,26 @@
         }
     }
 
-    private string GetCurrentRoute() => !string.IsNullOrWhiteSpace(BrowserPathAndQuery)
-        ? NormalizePathOnly(BrowserPathAndQuery)
-        : Uri.TryCreate(Navigation.Uri, UriKind.Absolute, out var uri)
-            ? NormalizePathOnly(uri.PathAndQuery)
-            : NormalizePathOnly(Navigation.Uri);
+    private string GetCurrentRoute()
+    {
+        // Static SSR: Navigation.Uri is the server-side rewritten request path
+        // (e.g. the legacy-host rewrite), not the URL the browser is sitting at,
+        // so an active-item match computed from it would highlight and pre-expand
+        // the wrong menu entry in the prerendered paint. Return the bare root
+        // (matches no menu link) instead; the interactive phase re-resolves the
+        // real route, and OnAfterRenderAsync then refines it further from the
+        // browser's own location via crestAdminMenus.getPathAndQuery.
+        if (!RendererInfo.IsInteractive)
+        {
+            return "/";
+        }
+
+        return !string.IsNullOrWhiteSpace(BrowserPathAndQuery)
+            ? NormalizePathOnly(BrowserPathAndQuery)
+            : Uri.TryCreate(Navigation.Uri, UriKind.Absolute, out var uri)
+                ? NormalizePathOnly(uri.PathAndQuery)
+                : NormalizePathOnly(Navigation.Uri);
+    }
 
     private void InvalidateMenuModel() => CachedMenuModel = null;
 
@@ -317,6 +332,17 @@
                 {
                     IsPinnedExpanded = savedPinnedState.Value;
                 }
+
+                // The cached model was built during static SSR, where GetCurrentRoute()
+                // deliberately returns "/" (it cannot trust the server-rewritten path).
+                // Now that the real browser route is known, that cache is stale: it holds
+                // no active item, so nothing is highlighted and the active trail is not
+                // expanded. Drop it and re-seed the expanded set, or the menu stays flat
+                // for the rest of the session - StateHasChanged alone re-renders the same
+                // stale model. OnParametersSet cannot cover this: Menu is unchanged here,
+                // only the route we resolve it against is.
+                InvalidateMenuModel();
+                SyncExpandedItemsWithMenu();
 
                 StateHasChanged();
             }

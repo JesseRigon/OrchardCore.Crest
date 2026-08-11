@@ -51,6 +51,20 @@
             _login.UserName = UserName;
         }
 
+        // Static SSR prerender: paint the form (or signed-in state) and stop - the
+        // redirect/logout policy below belongs to the interactive phase, which re-runs
+        // this init with the browser in the loop (see Home.razor for the same pattern).
+        // LogoutAsync in particular is a cookie mutation: server-side it would POST over
+        // the forwarded-cookie loopback client, whose Set-Cookie response never reaches
+        // the browser, so the user would not actually be signed out - only the
+        // browser-issued interactive request can clear the Orchard auth cookie.
+        // EnsureInitializedAsync above still runs during prerender (it is
+        // prerender-safe) so the form's culture/theme state renders correctly.
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
         if (DisplayManager.IsAuthenticated && SwitchUser)
         {
             await DisplayManager.LogoutAsync();

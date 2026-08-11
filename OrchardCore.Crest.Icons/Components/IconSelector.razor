@@ -10,25 +10,25 @@
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
 <div class="icon-selector">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-        <RadzenTextBox Value="@Value" ValueChanged="SetValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
-        <RadzenButton Icon="apps" ButtonStyle="ButtonStyle.Light" Click="ToggleOpenAsync" ButtonType="ButtonType.Button" title="@T.T("IconSelector_ChooseIconTitle", "Choose icon")" />
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+        <CrestTextBox Value="@Value" ValueChanged="SetValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
+        <CrestButton Icon="apps" ButtonStyle="ButtonStyle.Light" Click="ToggleOpenAsync" ButtonType="ButtonType.Button" title="@T.T("IconSelector_ChooseIconTitle", "Choose icon")" />
         @if (!string.IsNullOrWhiteSpace(Value))
         {
-            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ClearAsync" ButtonType="ButtonType.Button" title="@T.T("IconSelector_ClearIconTitle", "Clear icon")" />
+            <CrestButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ClearAsync" ButtonType="ButtonType.Button" title="@T.T("IconSelector_ClearIconTitle", "Clear icon")" />
         }
-    </RadzenStack>
+    </CrestStack>
 
     @if (IsOpen)
     {
         <div class="icon-selector__modal-backdrop" role="presentation" @onclick="Close">
             <div class="icon-selector__dialog" role="dialog" aria-modal="true" aria-label="@T.T("IconSelector_ChooseIconTitle", "Choose icon")" @onclick:stopPropagation="true" @ref="DialogElement">
                 <div class="icon-selector__dialog-header">
-                    <RadzenStack Gap="0.2rem">
-                        <RadzenText TextStyle="TextStyle.H5" Text="@T.T("IconSelector_ChooseIconTitle", "Choose icon")" />
-                        <RadzenText TextStyle="TextStyle.Caption" Text="@T.T("IconSelector_DialogDescription", "Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references.")" />
-                    </RadzenStack>
-                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="Close" ButtonType="ButtonType.Button" title="@T.T("IconSelector_CloseTitle", "Close")" />
+                    <CrestStack Gap="0.2rem">
+                        <CrestText TextStyle="TextStyle.H5" Text="@T.T("IconSelector_ChooseIconTitle", "Choose icon")" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@T.T("IconSelector_DialogDescription", "Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references.")" />
+                    </CrestStack>
+                    <CrestButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="Close" ButtonType="ButtonType.Button" title="@T.T("IconSelector_CloseTitle", "Close")" />
                 </div>
 
                 <div class="icon-selector__dialog-body">
@@ -56,13 +56,13 @@
                     </aside>
 
                     <section class="icon-selector__results">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="icon-selector__search-row">
-                            <RadzenTextBox Value="@SearchText" @oninput="SearchInputAsync" Placeholder="@T.T("IconSelector_SearchAllPlaceholder", "Search all icons...")" Style="width: 100%;" />
+                        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="icon-selector__search-row">
+                            <CrestTextBox Value="@SearchText" @oninput="SearchInputAsync" Placeholder="@T.T("IconSelector_SearchAllPlaceholder", "Search all icons...")" Style="width: 100%;" />
                             @if (ActiveFilterValues.Count > 0 || SelectedLibrary is not null || !string.IsNullOrWhiteSpace(SearchText))
                             {
-                                <RadzenButton Text="@T.T("IconSelector_ClearFilters", "Clear")" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Light" Click="ClearFiltersAsync" ButtonType="ButtonType.Button" />
+                                <CrestButton Text="@T.T("IconSelector_ClearFilters", "Clear")" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Light" Click="ClearFiltersAsync" ButtonType="ButtonType.Button" />
                             }
-                        </RadzenStack>
+                        </CrestStack>
 
                         <div class="icon-selector__style-strip" @ref="StylePacksElement" aria-label="@T.T("IconSelector_StylePacksAriaLabel", "Style packs")">
                             <button type="button" class="icon-selector__style-chip @(SelectedLibrary is null ? "icon-selector__style-chip--active" : null)" @onclick="@(() => SelectLibraryAsync(null))">
@@ -111,8 +111,8 @@
                 </div>
 
                 <div class="icon-selector__dialog-footer">
-                    <RadzenTextBox Value="@PendingValue" ValueChanged="SetPendingValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
-                    <RadzenButton Text="@T.T("IconSelector_Save", "Save")" Icon="save" Click="SaveAsync" ButtonType="ButtonType.Button" Disabled="@string.IsNullOrWhiteSpace(PendingValue)" data-icon-selector-save="true" />
+                    <CrestTextBox Value="@PendingValue" ValueChanged="SetPendingValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
+                    <CrestButton Text="@T.T("IconSelector_Save", "Save")" Icon="save" Click="SaveAsync" ButtonType="ButtonType.Button" Disabled="@string.IsNullOrWhiteSpace(PendingValue)" data-icon-selector-save="true" />
                 </div>
             </div>
         </div>
@@ -131,6 +131,7 @@
     private ElementReference StylePacksElement;
     private DotNetObjectReference<IconSelector>? DotNetRef;
     private bool IsOpen;
+    private bool KeyboardRegistered;
     private bool IsLoading;
     private bool LoadWhenRendered;
     private bool ReloadAfterLoad;
@@ -165,6 +166,7 @@
 
         DotNetRef ??= DotNetObjectReference.Create(this);
         await Js.InvokeVoidAsync("crestIconSelector.registerDialogKeyboard", DialogElement, DotNetRef);
+        KeyboardRegistered = true;
 
         if (LoadWhenRendered)
         {
@@ -385,12 +387,30 @@
 
     private async ValueTask UnregisterDialogKeyboardAsync()
     {
+        // Only unregister when OnAfterRenderAsync actually registered the handler - during
+        // static-SSR/prerender the dialog never renders interactively, so there is nothing
+        // to tear down and no browser to talk to.
+        if (!KeyboardRegistered)
+        {
+            return;
+        }
+
         try
         {
             await Js.InvokeVoidAsync("crestIconSelector.unregisterDialogKeyboard", DialogElement);
         }
         catch (JSException)
         {
+        }
+        catch (InvalidOperationException)
+        {
+            // Static-SSR/prerender scope teardown: no browser is attached, so interop throws.
+            // See Crest.Components.Primitives.PrerenderSafeJs - the handler was never
+            // registered in this phase, so there is nothing to unregister.
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit already disconnected; the browser discarded the handler with the page.
         }
     }
 

@@ -7,7 +7,17 @@ const { severeConsoleErrors, drainConsoleErrors } = require('../harness/instance
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Admin Menus', exact: true }).waitFor({ timeout: 20000 });
-  await page.getByRole('button', { name: /add node/i }).click();
+  // The single "Add node" button became an Add -> popover -> Node flow when the
+  // menu editor grew separator/menu-type options (see AdminMenus.razor ToggleAddMenu).
+  const { clickForEffect } = require('../harness/interactive');
+  await clickForEffect(
+    page.getByRole('button', { name: 'Add', exact: true }),
+    page.locator('.admin-menu-actions__popover'),
+  );
+  await clickForEffect(
+    page.locator('.admin-menu-actions__popover').getByRole('button', { name: 'Node', exact: true }),
+    page.locator('.admin-menu-node-editor'),
+  );
   await page.locator('.admin-menu-node-editor').getByTitle('Choose icon').click();
 
   const dialog = page.locator('.icon-selector__dialog');

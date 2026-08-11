@@ -4,13 +4,19 @@
 // and hover-to-overlay-expand behavior (with a one-second hover delay before it opens,
 // and the underlying main content never shifting).
 module.exports = async function run(page, ctx) {
-  await page.goto(`${ctx.baseUrl}/Admin/Settings/SecurityHeaders`, { waitUntil: 'domcontentloaded' });
-  await page.locator('[data-testid="security-headers-page"]').waitFor({ timeout: 20000 });
+  // Must land on a route that IS an admin-menu link: this check asserts active-item accent
+  // styling and expand/collapse of children, both of which require a resolved active trail.
+  // /Admin/Settings/SecurityHeaders renders fine but appears nowhere in the menu (Settings
+  // exposes General/Admin/Localization), so it yields no active item and no expandable item.
+  await page.goto(`${ctx.baseUrl}/Admin/Contents/ContentItems`, { waitUntil: 'domcontentloaded' });
+  await page.locator('[data-testid="primary-nav-menu"] .crest-panel-menu__item-link--active').waitFor({ timeout: 20000 });
 
   const primaryNavMenu = page.locator('[data-testid="primary-nav-menu"]');
   const toggle = page.getByRole('button', { name: 'Collapse navigation' });
   await primaryNavMenu.waitFor({ timeout: 20000 });
-  await toggle.click();
+  // clickForEffect covers the prerendered-inert-button race (harness/interactive.js).
+  const { clickForEffect } = require('../../harness/interactive');
+  await clickForEffect(toggle, page.locator('[data-testid="primary-nav-menu"].primary-nav-menu--compact'));
   await page.locator('.admin-dashboard__main').hover();
   await page.waitForTimeout(240);
   await page.locator('[data-testid="primary-nav-menu"].primary-nav-menu--compact').waitFor({ timeout: 5000 });
@@ -46,15 +52,34 @@ module.exports = async function run(page, ctx) {
 
   const expandableItem = primaryNavMenu.locator('.crest-panel-menu__item-link[aria-expanded]').first();
   await expandableItem.waitFor({ timeout: 10000 });
-  if ((await expandableItem.getAttribute('aria-expanded')) !== 'true') {
+  // Blazor emits aria-expanded="" (empty string) for a true bool and OMITS the attribute
+  // when false — never the literal "true"/"false". Expanded == present and not "false".
+  const expandedAttr = await expandableItem.getAttribute('aria-expanded');
+  if (expandedAttr === null || expandedAttr === 'false') {
     await expandableItem.click();
   }
   const expandedChevron = await expandableItem.locator('.crest-panel-menu__expand-icon').evaluate(element => getComputedStyle(element).transform);
 
-  const collapsedChildren = await primaryNavMenu.locator('.crest-panel-menu__children--collapsed').first().evaluate(element => ({
-    inert: element.hasAttribute('inert'),
-    hidden: element.getAttribute('aria-hidden'),
-  }));
+  // CrestPanelMenuItems renders a children container ONLY while the item is expanded
+  // (`hasExpandableChildren && IsExpanded(item)`), so .crest-panel-menu__children--collapsed
+  // no longer exists in the DOM and waiting for it timed out. The safety property this
+  // asserted — collapsed children must not be reachable by keyboard or screen reader — is
+  // now guaranteed structurally: an unexpanded item has a collapsed parent and no children
+  // in the DOM at all. Assert that instead.
+  const collapsedChildren = await primaryNavMenu.evaluate(root => {
+    // Blazor emits aria-expanded="" (empty string) for a true bool and OMITS the attribute
+    // when false — it never writes "false". So "collapsed" means the attribute is absent
+    // (or literally "false"), never the empty string.
+    const isExpanded = link => link !== null && link.hasAttribute('aria-expanded') && link.getAttribute('aria-expanded') !== 'false';
+    const collapsedParents = [...root.querySelectorAll('.crest-panel-menu__item--has-children')].filter(
+      item => !isExpanded(item.querySelector(':scope > .crest-panel-menu__item-wrapper > .crest-panel-menu__item-link')),
+    );
+    return {
+      collapsedParentCount: collapsedParents.length,
+      // No collapsed parent may carry a rendered children container.
+      noRenderedChildren: collapsedParents.every(item => !item.querySelector(':scope > .crest-panel-menu__children')),
+    };
+  });
 
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('[data-testid="primary-nav-menu"].primary-nav-menu--compact').waitFor({ timeout: 20000 });
@@ -89,7 +114,12 @@ module.exports = async function run(page, ctx) {
       .map(item => ({ rowHeight: item.querySelector('.crest-panel-menu__item-link')?.getBoundingClientRect().height || 0 })),
   );
 
-  await page.getByRole('button', { name: 'Keep navigation expanded' }).click();
+  // Re-pin expanded before leaving: the pinned state is a persisted user preference, so
+  // a collapsed nav left behind here changes the starting state of every later check.
+  await clickForEffect(
+    page.getByRole('button', { name: 'Keep navigation expanded' }),
+    page.locator('[data-testid="primary-nav-menu"]:not(.primary-nav-menu--compact)'),
+  ).catch(() => {});
   const pinned = await page.locator('[data-testid="primary-nav-menu"].primary-nav-menu--pinned').count().catch(() => 0);
 
   return [
@@ -99,7 +129,7 @@ module.exports = async function run(page, ctx) {
     { name: 'expanded-chevron-rotates', pass: expandedChevron !== 'none', message: `transform=${expandedChevron}` },
     {
       name: 'collapsed-children-mounted-safely',
-      pass: collapsedChildren.inert && collapsedChildren.hidden === 'true',
+      pass: collapsedChildren.collapsedParentCount > 0 && collapsedChildren.noRenderedChildren,
       message: JSON.stringify(collapsedChildren),
     },
     {

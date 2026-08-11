@@ -1,4 +1,5 @@
 const { severeConsoleErrors, drainConsoleErrors } = require('../harness/instance');
+const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 
 // Converted from the old admin-content-item-editor-page.js. Depends on at least one
 // real (seeded) content item existing — like the original, it fetches the first item
@@ -36,7 +37,10 @@ module.exports = async function run(page, ctx) {
 
   // Round-trips a throwaway content item through the native API to prove the editor
   // route sits on top of real Orchard content APIs, then cleans it up immediately.
+  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
   const created = await page.request.post(`${ctx.baseUrl}/api/crest/content-items`, {
+    headers: { [antiforgery.headerName]: antiforgery.requestToken },
     data: { contentType: item.contentType, displayText: 'Crest editor probe', content: {}, publish: false },
   });
   let createdOk = created.ok();
@@ -44,7 +48,9 @@ module.exports = async function run(page, ctx) {
   if (createdOk) {
     const probe = await created.json();
     probeId = probe.contentItemId;
-    const deleted = await page.request.delete(`${ctx.baseUrl}/api/crest/content-items/${encodeURIComponent(probeId)}`);
+    const deleted = await page.request.delete(`${ctx.baseUrl}/api/crest/content-items/${encodeURIComponent(probeId)}`, {
+      headers: { [antiforgery.headerName]: antiforgery.requestToken },
+    });
     createdOk = deleted.ok();
   }
   results.push({

@@ -134,7 +134,13 @@
 
     private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? T.T("AdminTitleBar_TenantFallback", "Tenant");
     private string UserName => DisplayManager?.User.UserName ?? T.T("AdminTitleBar_UserFallback", "User");
-    private string? CurrentTitle => FindCurrentTitle(DisplayManager?.AdminMenu?.Items);
+    // Static SSR: IsActive resolves Navigation.Uri against Navigation.BaseUri, and
+    // during prerender Uri is the server-side rewritten request path (not the
+    // browser URL) while BaseUri is the site root (not this shell's <base href>),
+    // so the computed "current page" title would be wrong in the prerendered
+    // paint. Skip it there; the interactive phase (circuit or WASM) recomputes it
+    // from the real browser URL.
+    private string? CurrentTitle => RendererInfo.IsInteractive ? FindCurrentTitle(DisplayManager?.AdminMenu?.Items) : null;
     private DisplayMenuItem[] ProfileMenuItems => DisplayManager?.ProfileMenu?.Items ?? [];
     private string TenantInitial => string.IsNullOrWhiteSpace(SelectedTenantName) ? "?" : SelectedTenantName[..1].ToUpperInvariant();
     private string UserInitials => GetInitials(UserName);

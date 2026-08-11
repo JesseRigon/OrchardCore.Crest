@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\wasm\OrchardCore.Crest.Admin.Wasm.csproj" />
+    <ProjectReference Include="..\..\wasm\OrchardCore.Crest.Admin.Client.csproj" />
   </ItemGroup>
 
 </Project>

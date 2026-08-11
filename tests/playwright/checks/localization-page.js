@@ -16,11 +16,21 @@ module.exports = async function run(page, ctx) {
 
   let defaultOptionCount = 0;
   if (dropdownCount >= 2) {
+    // The dropdown root IS the clickable combobox since the Radzen source merge
+    // (ad8db47) — the old .crest-dropdown__trigger inner button no longer exists.
+    // Radzen renders the dropdown's <li role="option"> list into the DOM up front and
+    // only toggles panel visibility on click, so the options can be counted without
+    // opening anything. That matters here: clicking TOGGLES the panel, so a
+    // click-then-retry loop closes it again on every second attempt, and the options
+    // are display:none while closed — which is why waiting for one to become *visible*
+    // timed out. Count them directly instead.
+    //
+    // nth(1) is the tenant's default-culture selector (4 configured cultures). nth(0) is
+    // the "add culture" picker with the full ~850-culture list — do not confuse them.
     const defaultDropdown = dropdowns.nth(1);
-    await defaultDropdown.locator('.crest-dropdown__trigger').click();
     const options = defaultDropdown.locator('[role="option"]');
+    await options.first().waitFor({ state: 'attached', timeout: 10000 }).catch(() => {});
     defaultOptionCount = await options.count();
-    await page.keyboard.press('Escape');
   }
 
   const errors = severeConsoleErrors(drainConsoleErrors(ctx.consoleErrors));

@@ -1,0 +1,90 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- Phase 8: converted from Microsoft.NET.Sdk.BlazorWebAssembly (a standalone WASM
+       app entry with its own index.html + Program.Main) to a Razor class library. A
+       Blazor Web App has exactly ONE WASM entry project - OrchardCore.Crest.Client -
+       which references this library (and Site's) and runs the merged Program.cs. This
+       project keeps everything else: the admin pages/components, the WASM-side service
+       implementations (registered via AddCrestAdminClient in Extensions/), and the
+       module blazor-wasm discovery below. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>OrchardCore.Crest.Admin.Client</AssemblyName>
+    <RootNamespace>Crest.Admin</RootNamespace>
+    <OrchardCoreCompatibilityVersion>3.0.0</OrchardCoreCompatibilityVersion>
+    <CrestSecurityPatch>0</CrestSecurityPatch>
+    <CrestBugPatch>0</CrestBugPatch>
+    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SDK default items discover C#, Razor components, colocated .razor.css, and wwwroot assets. -->
+    <Watch Include="**\*.cs;**\*.razor;wwwroot\**\*" Exclude="bin\**;obj\**;**\bin\**;**\obj\**" />
+    <Watch Remove="bin\**;obj\**;**\bin\**;**\obj\**" />
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OrchardCore.Crest.Admin.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebAssembly package (not the full BlazorWebAssembly SDK): WASM-side service
+         classes here still use browser-only APIs (CrestAntiforgeryHandler's
+         IJSInProcessRuntime + SetBrowserRequestCredentials). Those code paths only ever
+         execute in the browser; the assembly itself also loads server-side for SSR
+         route discovery, which is fine - referencing the package doesn't require a
+         browser host, invoking those APIs does. -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />
+    <!-- Auto-import Crest component libraries contributed by Orchard modules. -->
+    <CrestModuleWasmProject Include="..\..\..\*\blazor-wasm\*.csproj" />
+    <ProjectReference Include="@(CrestModuleWasmProject)" />
+  </ItemGroup>
+
+  <Target Name="GenerateCrestModuleAssemblyRegistry" BeforeTargets="CoreCompile">
+    <MakeDir Directories="$(IntermediateOutputPath)Generated" />
+    <ItemGroup>
+      <_CrestModuleAssemblyRegistryLine Include="using System.Reflection%3B" />
+      <_CrestModuleAssemblyRegistryLine Include="namespace Crest.Admin%3B" />
+      <_CrestModuleAssemblyRegistryLine Include="internal static class CrestModuleAssemblyRegistry" />
+      <_CrestModuleAssemblyRegistryLine Include="{" />
+      <_CrestModuleAssemblyRegistryLine Include="    public static IReadOnlyList&lt;Assembly&gt; Assemblies { get%3B } = Load()%3B" />
+      <_CrestModuleAssemblyRegistryLine Include="    private static IReadOnlyList&lt;Assembly&gt; Load()" />
+      <_CrestModuleAssemblyRegistryLine Include="    {" />
+      <_CrestModuleAssemblyRegistryLine Include="        var assemblies = new List&lt;Assembly&gt;()%3B" />
+      <_CrestModuleAssemblyRegistryLine Include="@(CrestModuleWasmProject-&gt;'        TryAdd(assemblies, &quot;%(Filename)&quot;)%3B')" />
+      <_CrestModuleAssemblyRegistryLine Include="        return assemblies.Distinct().ToArray()%3B" />
+      <_CrestModuleAssemblyRegistryLine Include="    }" />
+      <_CrestModuleAssemblyRegistryLine Include="    private static void TryAdd(List&lt;Assembly&gt; assemblies, string assemblyName)" />
+      <_CrestModuleAssemblyRegistryLine Include="    {" />
+      <_CrestModuleAssemblyRegistryLine Include="        try" />
+      <_CrestModuleAssemblyRegistryLine Include="        {" />
+      <_CrestModuleAssemblyRegistryLine Include="            assemblies.Add(Assembly.Load(assemblyName))%3B" />
+      <_CrestModuleAssemblyRegistryLine Include="        }" />
+      <_CrestModuleAssemblyRegistryLine Include="        catch" />
+      <_CrestModuleAssemblyRegistryLine Include="        {" />
+      <_CrestModuleAssemblyRegistryLine Include="        }" />
+      <_CrestModuleAssemblyRegistryLine Include="    }" />
+      <_CrestModuleAssemblyRegistryLine Include="}" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)Generated\CrestModuleAssemblyRegistry.g.cs" Lines="@(_CrestModuleAssemblyRegistryLine)" Overwrite="true" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)Generated\CrestModuleAssemblyRegistry.g.cs" />
+    </ItemGroup>
+  </Target>
+
+</Project>

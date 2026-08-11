@@ -1,0 +1,13 @@
+@page "/legacy-host"
+@using Crest.Admin.Components.Admin
+
+@* Phase 8: the server-side (SSR/InteractiveServer) document host for admin URLs that
+   are NOT Crest Blazor pages - BlazorAdminThemeMiddleware rewrites those requests to
+   this route instead of index-html-serving them like the old WASM shell did. The
+   browser URL stays the original admin path, so LegacyAdminFrame (which reads
+   NavigationManager.Uri) iframes the right legacy Orchard page, and once the client
+   Router takes over it resolves the same URL to its NotFound branch -> the same
+   LegacyAdminFrame. Listed in AdminRoutes' shell-less set: LegacyAdminFrame brings
+   its own CrestAppContainer, so the Found-branch wrapper would double-wrap it. *@
+
+<LegacyAdminFrame />

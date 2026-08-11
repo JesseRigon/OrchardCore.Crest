@@ -8,7 +8,7 @@ namespace Crest.Admin.Api;
 /// Adds Orchard's antiforgery request token to every unsafe same-origin Crest
 /// request. Authentication continues to use the browser's Orchard cookie.
 /// </summary>
-public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : DelegatingHandler, ICrestAntiforgeryTokenStore
+public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : DelegatingHandler, ICrestAntiforgeryTokenStore, ICrestCultureCookieWriter
 {
     private readonly SemaphoreSlim _tokenLock = new(1, 1);
     private CrestAntiforgeryToken? _token;
@@ -118,6 +118,18 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : Delegating
 public interface ICrestAntiforgeryTokenStore
 {
     void Clear();
+}
+
+// Phase 8: DisplayManager's seam onto the browser-side culture-cookie rewrite, so it
+// can depend on an interface instead of the concrete WASM-only CrestAntiforgeryHandler
+// (whose ctor hard-requires IJSInProcessRuntime and can't be constructed server-side).
+// WASM: implemented by CrestAntiforgeryHandler (rewrites the cookie via synchronous JS
+// interop before each request). Server (SSR/InteractiveServer): a no-op registration -
+// the server *reads* the culture cookie through RequestLocalizationOptions and never
+// writes it; cookie writeback stays exclusively client-side per docs/localization.md.
+public interface ICrestCultureCookieWriter
+{
+    void SetCultureCookieContext(CultureCookieContext? context);
 }
 
 public sealed record CrestAntiforgeryToken(string HeaderName, string RequestToken);

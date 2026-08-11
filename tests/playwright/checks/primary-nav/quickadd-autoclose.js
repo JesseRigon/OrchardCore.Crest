@@ -9,6 +9,17 @@ module.exports = async function run(page, ctx) {
   const primaryNavMenu = page.locator('[data-testid="primary-nav-menu"]');
   await primaryNavMenu.waitFor({ timeout: 20000 });
 
+  // The pinned expand/collapse state is a persisted user preference, so a previous
+  // check (e.g. compact-mode) can leave the nav collapsed. The expanded-overlay
+  // assertions below are only meaningful from the expanded state — normalize first.
+  const { clickForEffect } = require('../../harness/interactive');
+  if (await page.locator('[data-testid="primary-nav-menu"].primary-nav-menu--compact').count()) {
+    await clickForEffect(
+      page.getByRole('button', { name: 'Keep navigation expanded' }),
+      page.locator('[data-testid="primary-nav-menu"]:not(.primary-nav-menu--compact)'),
+    );
+  }
+
   const placeholders = primaryNavMenu.locator('.primary-nav-menu__icon-placeholder--dot');
   const placeholderCount = await placeholders.count();
   const placeholderStyle =
@@ -22,9 +33,9 @@ module.exports = async function run(page, ctx) {
 
   const quickAddButton = primaryNavMenu.locator('.primary-nav-menu__quickadd-toggle, .primary-nav-menu__quickadd-row').first();
   await quickAddButton.waitFor({ timeout: 10000 });
-  await quickAddButton.click();
+  // clickForEffect covers the prerendered-inert-button race (harness/interactive.js).
   const popover = primaryNavMenu.locator('.primary-nav-menu__quickadd-popover');
-  await popover.waitFor({ timeout: 10000 });
+  await clickForEffect(quickAddButton, popover);
   const popoverBox = await popover.boundingBox();
   const primaryNavMenuBox = await primaryNavMenu.boundingBox();
   await popover.locator('.primary-nav-menu__quickadd-header').waitFor({ timeout: 10000 });
@@ -41,8 +52,10 @@ module.exports = async function run(page, ctx) {
   await page.mouse.move(640, 320);
   await popover.waitFor({ state: 'detached', timeout: 10000 });
 
-  await page.getByRole('button', { name: 'Collapse navigation' }).click();
-  await page.locator('[data-testid="primary-nav-menu"].primary-nav-menu--compact').waitFor({ timeout: 10000 });
+  await clickForEffect(
+    page.getByRole('button', { name: 'Collapse navigation' }),
+    page.locator('[data-testid="primary-nav-menu"].primary-nav-menu--compact'),
+  );
 
   const compactQuickAddButton = primaryNavMenu.locator('.primary-nav-menu__quickadd-toggle, .primary-nav-menu__quickadd-row').first();
   await compactQuickAddButton.click();

@@ -7,7 +7,22 @@
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
-@if (!DisplayManager.IsInitialized)
+@* Static SSR: Navigation.Uri is the server-side rewritten request path, not the
+   browser URL, so IsRouteAuthorized (which resolves it against BaseUri - during
+   prerender the site root, not this shell's <base href>) would evaluate the wrong
+   path and prerender a spurious "Access denied" flash on perfectly authorized
+   pages. But every prerendered admin page request has ALREADY been authorized
+   server-side - BlazorAdminThemeMiddleware runs CanAccessAsync before the App
+   document renders and 403s/redirects unauthorized requests, so a request that
+   reaches this component during prerender is authorized by construction. Render
+   ChildContent (that's the whole value of SSR - real first-paint markup) and only
+   defer this component's own auth/deny branches to the interactive phase, where
+   the browser URL and manifest-based UI gating are meaningful again. *@
+@if (!RendererInfo.IsInteractive)
+{
+    @ChildContent
+}
+else if (!DisplayManager.IsInitialized)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
         <CrestText Text="@T.T("CrestAuthorizedRoute_Loading", "Loading...")" />
@@ -38,6 +53,15 @@ else
     protected override async Task OnInitializedAsync()
     {
         await DisplayManager.EnsureInitializedAsync();
+        // Prerender: the middleware already authenticated this request (see the
+        // markup comment above); a server-side manifest failure here must not turn
+        // an authorized page's prerender into a 302 to the login shell. The
+        // interactive phase re-runs this init and applies the redirect for real.
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
         if (!DisplayManager.IsAuthenticated)
         {
             // Crossing from the admin shell (base href = AdminPath) to the login

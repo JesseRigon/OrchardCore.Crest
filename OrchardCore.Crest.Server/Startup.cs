@@ -46,6 +46,17 @@ public sealed class Startup : StartupBase
         });
 
         services.AddHttpContextAccessor();
+
+        // BlazorAdminThemeMiddleware rewrites Request.Path (tenant-configured admin
+        // prefix -> compile-time @page literals, plus base-href-relative _framework/
+        // _content/_blazor infrastructure URLs -> site root) - so it MUST run before
+        // endpoint routing matches a path. OrchardCore's tenant pipeline calls
+        // UseRouting() ahead of every module middleware regardless of ConfigureOrder
+        // (ShellPipelineExtensions.ConfigurePipelineAsync), which is why this is an
+        // IStartupFilter (applied before UseRouting, see BuildPipelineInternalAsync)
+        // and not an app.UseMiddleware call in Configure() - registered there, its
+        // rewrites happen after the endpoint is already selected and change nothing.
+        services.AddTransient<Microsoft.AspNetCore.Hosting.IStartupFilter, BlazorAdminThemeStartupFilter>();
         services.AddSignalR();
         services.AddScoped<ICrestRequestAccess, CrestRequestAccess>();
         services.AddScoped<ICrestRoutePermissionProvider, CrestRoutePermissionProvider>();
@@ -98,24 +109,63 @@ public sealed class Startup : StartupBase
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();
 
-        // InteractiveAuto's first render runs server-side (SignalR circuit) before a
-        // WASM runtime is even downloaded - any interactive-island component that calls
-        // a relative api/crest/* endpoint via HttpClient (e.g. BlazorCounter.razor,
-        // which can't inject IContentManager once it also has to run in WASM - see
-        // docs/BlazorWeb.md) needs an HttpClient with a real BaseAddress during that
-        // server-side phase too, mirroring what wasm/Program.cs sets up client-side.
-        // Scoped + IHttpContextAccessor-derived base address: correct per-request even
-        // behind a reverse proxy/different host header, and matches the WASM client's
-        // own builder.HostEnvironment.BaseAddress semantics (the app's own origin).
-        // (IHttpContextAccessor is already registered above.)
+        // InteractiveAuto's first render runs server-side (SSR, then a SignalR
+        // circuit) before a WASM runtime is even downloaded - every component that
+        // calls a relative api/crest/* endpoint via HttpClient needs one with a real
+        // BaseAddress during those server-side phases too, mirroring what the WASM
+        // entry (OrchardCore.Crest.Client/Program.cs) sets up client-side. Scoped +
+        // IHttpContextAccessor-derived base address: correct per-request even behind a
+        // reverse proxy/different host header.
+        //
+        // Phase 8: wrapped in CrestForwardedAuthHandler - Admin components make
+        // *authenticated* api/crest/* calls, and server-side there's no browser to
+        // attach the Orchard auth cookie, so the handler forwards the incoming
+        // request's own Cookie header (auth + antiforgery + culture cookies) and
+        // fetches the antiforgery request token through it, exactly like the WASM
+        // CrestAntiforgeryHandler does browser-side. Anonymous callers (Site's
+        // BlazorCounter) are unaffected - forwarding an empty cookie set is a no-op.
         services.AddScoped(sp =>
         {
             var httpContext = sp.GetRequiredService<IHttpContextAccessor>().HttpContext!;
-            var baseAddress = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.PathBase}/";
-            return new HttpClient { BaseAddress = new Uri(baseAddress) };
+            var baseAddress = new Uri($"{httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.PathBase}/");
+            var handler = sp.GetRequiredService<CrestForwardedAuthHandler>();
+            handler.BaseAddress = baseAddress;
+            handler.InnerHandler = new HttpClientHandler();
+            return new HttpClient(handler) { BaseAddress = baseAddress };
         });
+        services.AddScoped<CrestForwardedAuthHandler>();
+        services.AddScoped<Crest.Admin.Api.ICrestAntiforgeryTokenStore>(sp => sp.GetRequiredService<CrestForwardedAuthHandler>());
+        services.AddScoped<Crest.Admin.Api.ICrestCultureCookieWriter, CrestNoOpCultureCookieWriter>();
         services.AddCrestComponents();
         services.AddCrestIconClient();
+
+        // Phase 8: the Admin theme's client-service set, server-side. Admin pages run
+        // under InteractiveAuto, so their SSR/circuit phases resolve these from THIS
+        // container - any admin-page dependency missing here is the AdminMenu DI bug
+        // all over again (an unresolvable constructor surfacing as a blank/broken
+        // page). Counterparts of Crest.Admin's AddCrestAdminClient (WASM side):
+        // IApi/DisplayManager/CrestThemeEngine/CrestApiLocalizer ride the
+        // forwarded-cookie HttpClient above; CrestRoutingOptions comes straight from
+        // the tenant's configured options (no HTTP self-call needed server-side) via
+        // BlazorAdminThemeOptions, which BlazorAdminThemeOptionsConfiguration already
+        // post-configures from AdminOptions.AdminUrlPrefix/UserOptions.LoginPath.
+        // Culture needs no explicit registration: CultureInfo.CurrentUICulture is
+        // already resolved per-request by CrestCultureCookieOptionsConfiguration's
+        // RequestLocalizationOptions pipeline, which CrestApiLocalizer picks up.
+        services.AddScoped<Crest.Admin.Api.IApi, Crest.Admin.Api.Api>();
+        services.AddScoped<Crest.Admin.DisplayManagement.DisplayManager>();
+        services.AddScoped<Crest.Admin.Theme.CrestThemeEngine>();
+        services.AddScoped<Crest.Components.Theme.CrestApiLocalizer>();
+        services.AddScoped<Crest.Components.Primitives.ILocalizer>(sp => sp.GetRequiredService<Crest.Components.Theme.CrestApiLocalizer>());
+        services.AddScoped(sp =>
+        {
+            var themeOptions = sp.GetRequiredService<IOptions<BlazorAdminThemeOptions>>().Value;
+            return new Crest.Admin.Options.CrestRoutingOptions
+            {
+                AdminPath = themeOptions.AdminPath,
+                LoginPath = themeOptions.LoginPath,
+            };
+        });
 
         // Phase 3: Blazor participates in Orchard's own shape pipeline instead of a
         // custom request-intercepting middleware - see plans/blazor hybrid
@@ -150,7 +200,6 @@ public sealed class Startup : StartupBase
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
     {
-        app.UseMiddleware<BlazorAdminThemeMiddleware>();
         app.UseCors(CrestWebCors);
         routes.MapHub<CrestPermissionHub>("/api/crest/permissions");
         routes.MapHub<CrestAdminMenuLayoutHub>("/api/crest/admin-menu-layout");
@@ -175,8 +224,14 @@ public sealed class Startup : StartupBase
         // GetAssemblies(), or Routes/routable @page components living in the .Client
         // project (see docs/BlazorWeb.md) silently 404 - MapRazorComponents<App>()
         // built its route table before the assembly was ever loaded.
-        foreach (var clientAssemblyPath in Directory.EnumerateFiles(
-            AppContext.BaseDirectory, "*.Client.dll", SearchOption.TopDirectoryOnly))
+        // Two naming conventions feed the route table: theme client assemblies
+        // (*.Client - Site.Client, Admin.Client, the OrchardCore.Crest.Client entry)
+        // and module-contributed Blazor page libraries (*.BlazorWasm - e.g.
+        // Accounting.BlazorWasm, the same set Admin.Client's generated
+        // CrestModuleAssemblyRegistry loads browser-side; keep the two conventions in
+        // sync or a module's pages route in one runtime and 404 in the other).
+        foreach (var clientAssemblyPath in Directory.EnumerateFiles(AppContext.BaseDirectory, "*.Client.dll", SearchOption.TopDirectoryOnly)
+            .Concat(Directory.EnumerateFiles(AppContext.BaseDirectory, "*.BlazorWasm.dll", SearchOption.TopDirectoryOnly)))
         {
             System.Reflection.Assembly.LoadFrom(clientAssemblyPath);
         }
@@ -186,7 +241,8 @@ public sealed class Startup : StartupBase
             .AddInteractiveServerRenderMode()
             .AddInteractiveWebAssemblyRenderMode()
             .AddAdditionalAssemblies(AppDomain.CurrentDomain.GetAssemblies()
-                .Where(assembly => assembly.GetName().Name?.EndsWith(".Client", StringComparison.Ordinal) == true)
+                .Where(assembly => assembly.GetName().Name is { } name
+                    && (name.EndsWith(".Client", StringComparison.Ordinal) || name.EndsWith(".BlazorWasm", StringComparison.Ordinal)))
                 .ToArray());
     }
 }

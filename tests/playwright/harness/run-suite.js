@@ -30,6 +30,10 @@ async function runSuite({ baseUrl, login, checks, outputRoot, skipHealthCheck = 
 
     for (const check of checks) {
       const started = Date.now();
+      // Every check shares one page, so console errors logged by an earlier check stay
+      // in the buffer and get attributed to whichever check drains next. Clear at the
+      // boundary so a check's no-console-errors assertion only sees its own errors.
+      consoleErrors.length = 0;
       try {
         const outcome = await check.fn(page, { baseUrl, outputRoot, consoleErrors });
         const list = Array.isArray(outcome) ? outcome : [outcome];

@@ -33,7 +33,18 @@ module.exports = async function run(page, ctx) {
     message: `count=${blazorPageTextCount}`,
   });
 
-  await tenants.locator('button').filter({ hasText: 'Add tenant' }).click();
+  // The button exists in the SSR-prerendered markup before InteractiveAuto attaches
+  // its handler — a single early click can land on an inert element. Retry until the
+  // client-side navigation actually takes.
+  const addTenant = tenants.locator('button').filter({ hasText: 'Add tenant' });
+  let navigated = false;
+  for (let attempt = 0; attempt < 4 && !navigated; attempt++) {
+    await addTenant.click();
+    navigated = await page
+      .waitForFunction(() => window.location.pathname.includes('/Tenants/Create'), { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+  }
   const legacyFrame = await page.locator('iframe.legacy-admin-frame').waitFor({ timeout: 20000 }).then(() => true).catch(() => false);
   const opensCreateForm = legacyFrame && page.url().includes('/Admin/Tenants/Create');
   results.push({

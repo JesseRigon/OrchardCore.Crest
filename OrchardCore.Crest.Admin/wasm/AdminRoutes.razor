@@ -1,11 +1,17 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Crest.Admin.Components.Admin
 @using Crest.Components.Primitives
-@using Crest.Components.Primitives
+
+@* Phase 8: this was App.razor, the WASM SPA's root component mounted at #app by the
+   old wasm/Program.cs. Under the Blazor Web App model it's the admin *Routes*
+   component instead, mounted (with @rendermode InteractiveAuto) by Crest.Server's
+   theme-dispatching Components/App.razor document root. It must live in this client
+   assembly, not Server - the WASM runtime only has the assemblies it was compiled
+   with (see docs/BlazorWeb.md). *@
 
 <CrestNotification />
 
-<Router AppAssembly="@typeof(App).Assembly" AdditionalAssemblies="@CrestModuleAssemblyRegistry.Assemblies">
+<Router AppAssembly="@typeof(AdminRoutes).Assembly" AdditionalAssemblies="@CrestModuleAssemblyRegistry.Assemblies">
     <Found Context="routeData">
         @if (IsShelllessRoute(routeData))
         {
@@ -28,5 +34,6 @@
 @code {
     private static bool IsShelllessRoute(RouteData routeData)
         => string.Equals(routeData.PageType.Name, "Login", StringComparison.Ordinal)
-            || string.Equals(routeData.PageType.Name, "Home", StringComparison.Ordinal);
+            || string.Equals(routeData.PageType.Name, "Home", StringComparison.Ordinal)
+            || string.Equals(routeData.PageType.Name, "LegacyHost", StringComparison.Ordinal);
 }

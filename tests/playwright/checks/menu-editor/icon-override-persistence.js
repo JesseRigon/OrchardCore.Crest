@@ -1,8 +1,14 @@
 // Converted from OrchardCore.Crest.Admin/tests/playwright/admin-menu-icon-override-persistence.js.
 // Two separate icon-override saves on different root nodes must each persist
 // independently — a later save on one node must not clobber an earlier save on another.
+const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
+
 module.exports = async function run(page, ctx) {
   const defaultMenuId = '__crest_default_admin_menu';
+
+  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
+  const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
 
   async function getRootNodes() {
     const data = await page.evaluate(async () => {
@@ -28,16 +34,16 @@ module.exports = async function run(page, ctx) {
     };
 
     const result = await page.evaluate(
-      async ({ id, payload }) => {
+      async ({ id, payload, antiforgeryHeaders }) => {
         const response = await fetch(`/api/crest/admin-menus/__crest_default_admin_menu/nodes/${encodeURIComponent(id)}`, {
           method: 'PUT',
           credentials: 'include',
-          headers: { 'content-type': 'application/json' },
+          headers: { 'content-type': 'application/json', ...antiforgeryHeaders },
           body: JSON.stringify(payload),
         });
         return { ok: response.ok, status: response.status, text: await response.text() };
       },
-      { id: node.id, payload },
+      { id: node.id, payload, antiforgeryHeaders },
     );
 
     if (!result.ok) throw new Error(`Updating ${node.text} failed: ${result.status} ${result.text}`);

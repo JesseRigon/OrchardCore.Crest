@@ -37,11 +37,11 @@
     --rz-profile-menu-padding: 0;
 }
 
+/* Since the Radzen source merge the dropdown ROOT is the visible face — the old
+   .crest-dropdown__trigger/__chevron/__option inner structure no longer exists,
+   so these rules target the rz-* structure directly. */
 ::deep .admin-titlebar__tenant-selector {
     max-width: 18rem;
-}
-
-::deep .admin-titlebar__tenant-selector .crest-dropdown__trigger {
     min-height: 2.25rem;
     padding-inline: 0.35rem;
     border-color: transparent;
@@ -49,8 +49,9 @@
     font-weight: 600;
 }
 
-::deep .admin-titlebar__tenant-selector .crest-dropdown__chevron .orchard-icon,
-::deep .admin-titlebar__tenant-selector .crest-dropdown__option--selected .orchard-icon {
+::deep .admin-titlebar__tenant-selector .rz-dropdown-trigger .crest-icon,
+::deep .admin-titlebar__tenant-selector .rz-dropdown-trigger .orchard-icon,
+::deep .admin-titlebar__tenant-selector .rz-state-highlight .orchard-icon {
     color: var(--crest-color-accent-1, #2f6f4e);
 }
 
@@ -63,23 +64,23 @@
 
 ::deep .admin-titlebar__culture-selector {
     width: 3.5rem;
-}
-
-::deep .admin-titlebar__culture-selector .crest-dropdown__trigger {
     justify-content: center;
     min-height: 2.25rem;
     padding-inline: 0.25rem;
     border-color: transparent;
+    background: transparent;
     color: var(--crest-color-text-2, var(--crest-color-text-1, #1f2937));
     font-weight: 600;
 }
 
 ::deep .admin-titlebar__culture-selector .orchard-icon,
-::deep .admin-titlebar__culture-selector .crest-dropdown__chevron .orchard-icon {
+::deep .admin-titlebar__culture-selector .rz-dropdown-trigger .crest-icon {
     color: var(--crest-color-accent-1, #2f6f4e);
 }
 
-::deep .admin-titlebar__culture-selector .crest-dropdown__option {
+::deep .admin-titlebar__culture-selector .rz-dropdown-item {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
 }
 

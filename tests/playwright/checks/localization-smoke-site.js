@@ -1,5 +1,14 @@
 const { createInstance } = require('../harness/instance');
 
+// TODO (Phase 5): this check is anchored to a template that is scheduled for deletion.
+// The smoke hook lives in Content-Page.liquid, but the conversion's goal is Blazor all
+// the way down - Phase 5 replaces every Views/*.liquid with a .razor component and Phase 7
+// deletes the Views/ directory. The site root "/" is already served by Blazor (with an
+// empty body until Site gets its own @page "/" component), which is why this check is
+// currently red. Rewrite it against the Blazor homepage - assert a translated string that
+// reached the page through the Blazor/IStringLocalizer path - rather than making it pass
+// by keeping Liquid alive. See the "Site root" section of plans/blazor hybrid conversion.md.
+//
 // Verifies translated content actually renders on the front-end site
 // (OrchardCore.Crest.Site) for a non-English resolved culture - the "simple component
 // just to test the translations actually work" from plans/user-localization-testing.md.

@@ -316,6 +316,10 @@
 
     public async ValueTask DisposeAsync()
     {
+        // Disposal can run during static-SSR/prerender scope teardown (no browser attached,
+        // interop throws InvalidOperationException) or after the circuit dropped
+        // (JSDisconnectedException) - same constraint as Crest.Components.Primitives.PrerenderSafeJs.
+        // In both cases the browser-side popup state is gone with the page, so swallowing is safe.
         if (PopupRegistered)
         {
             try
@@ -323,6 +327,12 @@
                 await JS.InvokeVoidAsync("crestComponents.disposePopup", LastPopupElement);
             }
             catch (JSException)
+            {
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (JSDisconnectedException)
             {
             }
         }
@@ -334,6 +344,12 @@
                 await JS.InvokeVoidAsync("Crest.destroyPopup", Id);
             }
             catch (JSException)
+            {
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (JSDisconnectedException)
             {
             }
 

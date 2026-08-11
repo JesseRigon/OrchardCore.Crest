@@ -17,6 +17,12 @@ const { loginAsAdmin } = require('./harness/auth');
 // stateful/interactive enough to need real judgment, not a mechanical port.
 function buildSharedAdminChecks() {
   return [
+    // Phase 8 hosting-model checks: SSR prerender, route gating ahead of render,
+    // culture flowing into the static document, and InteractiveAuto handoff.
+    { name: 'ssr-login-prerender', fn: require('./checks/ssr-login-prerender') },
+    { name: 'route-auth-ssr', fn: require('./checks/route-auth-ssr') },
+    { name: 'ssr-culture', fn: require('./checks/ssr-culture') },
+    { name: 'admin-interactive-auto-handoff', fn: require('./checks/admin-interactive-auto-handoff') },
     { name: 'dashboard-screenshot', fn: require('./checks/dashboard-screenshot') },
     { name: 'features-page', fn: require('./checks/features-page') },
     { name: 'features-list-api', fn: require('./checks/features-list-api') },

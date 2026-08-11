@@ -153,8 +153,11 @@ namespace Crest.Components.Primitives
 
             try
             {
-                _jsRef?.InvokeVoidAsync("dispose");
-                _jsRef?.DisposeAsync();
+                // Guarded fire-and-forget (JSRuntimeExtensions): observes and swallows the JSDisconnectedException /
+                // InvalidOperationException raised when no browser is attached (dropped circuit or prerender
+                // scope teardown) - same constraint as Crest.Components.Primitives.PrerenderSafeJs.
+                _jsRef?.InvokeVoid("dispose");
+                _jsRef?.DisposeFireAndForget();
             }
             catch (ObjectDisposedException)
             {
