@@ -7,6 +7,16 @@ using OrchardCore.Tenants;
 
 namespace Crest.Controllers;
 
+// OrchardCore.Tenants is deliberately NOT declared in OrchardCore.Crest's manifest
+// Dependencies (unlike Contents/Media/Localization/etc. - see Manifest.cs) even though
+// this controller is reachable whenever the always-enabled Crest feature is present:
+// the Tenants feature is DefaultTenantOnly, so a hard dependency would be invalid (and
+// silently unsatisfiable) on every non-default tenant. IOptions<TenantsOptions> below is
+// safe without it regardless - DI always resolves it to a default-constructed instance
+// (TenantRemovalAllowed defaults to false, the conservative/correct value) even when the
+// Tenants feature is off, so there's no crash and no incorrect-permissive fallback to
+// guard against. GetDefaultTenantAccessAsync already restricts this whole controller to
+// the default tenant, where Tenants is normally enabled anyway.
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/tenants")]

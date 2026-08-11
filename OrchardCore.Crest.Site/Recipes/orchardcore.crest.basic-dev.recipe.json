@@ -33,7 +33,6 @@
       "name": "feature",
       "disable": [
         "OrchardCore.AdminDashboard",
-        "OrchardCore.AdminMenu",
         "OrchardCore.AdminTemplates",
         "OrchardCore.Alias",
         "OrchardCore.Apis.GraphQL",
@@ -189,6 +188,7 @@
       "enable": [
         "Application.Default",
         "OrchardCore.Admin",
+        "OrchardCore.AdminMenu",
         "OrchardCore.Crest",
         "OrchardCore.Crest.Admin",
         "OrchardCore.Crest.Icons",
@@ -213,7 +213,8 @@
     },
     {
       "name": "themes",
-      "admin": "TheAdmin"
+      "admin": "OrchardCore.Crest.Admin",
+      "site": "SafeMode"
     },
     {
       "name": "settings",
