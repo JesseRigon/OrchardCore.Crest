@@ -147,13 +147,31 @@ public sealed class Startup : StartupBase
         // fetches the antiforgery request token through it, exactly like the WASM
         // CrestAntiforgeryHandler does browser-side. Anonymous callers (Site's
         // BlazorCounter) are unaffected - forwarding an empty cookie set is a no-op.
+        // Named handler registration (not AddHttpMessageHandler) so CrestForwardedAuthHandler
+        // stays wired up per-request-scope explicitly below, instead of through
+        // IHttpClientFactory's own handler pipeline - that pipeline resolves message
+        // handlers from a rotating *internal* DI scope with its own lifetime (2 minutes
+        // by default), not the calling request's scope, so a scoped handler registered
+        // via AddHttpMessageHandler can get reused across unrelated requests within that
+        // window (wrong user's forwarded cookies attached to someone else's request).
+        // What AddHttpClient still buys us: a shared, pooled SocketsHttpHandler as the
+        // *primary* handler, created once and reused - the actual fix for the socket
+        // exhaustion (constructing `new HttpClientHandler()` per scope, as this used to,
+        // opened a fresh unreused connection pool on every single request and eventually
+        // exhausted ephemeral ports/file descriptors under load - observed as
+        // SocketException "Resource temporarily unavailable" during a fresh-tenant
+        // recipe run). CrestForwardedAuthHandler wraps that shared primary handler
+        // fresh per scope below, so its own per-request state (captured cookies, cached
+        // antiforgery token) stays correctly scoped while the sockets underneath it
+        // don't.
+        services.AddHttpClient("Crest.Server.Loopback.Primary");
         services.AddScoped(sp =>
         {
             var httpContext = sp.GetRequiredService<IHttpContextAccessor>().HttpContext!;
             var baseAddress = new Uri($"{httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.PathBase}/");
             var handler = sp.GetRequiredService<CrestForwardedAuthHandler>();
             handler.BaseAddress = baseAddress;
-            handler.InnerHandler = new HttpClientHandler();
+            handler.InnerHandler = sp.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("Crest.Server.Loopback.Primary");
             return new HttpClient(handler) { BaseAddress = baseAddress };
         });
         services.AddScoped<CrestForwardedAuthHandler>();
@@ -224,6 +242,7 @@ public sealed class Startup : StartupBase
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
     {
         app.UseCors(CrestWebCors);
+
         routes.MapHub<CrestPermissionHub>("/api/crest/permissions");
         routes.MapHub<CrestAdminMenuLayoutHub>("/api/crest/admin-menu-layout");
 

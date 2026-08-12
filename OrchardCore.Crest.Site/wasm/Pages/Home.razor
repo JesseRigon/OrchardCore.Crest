@@ -31,7 +31,14 @@ else if (_notFound)
 
     protected override async Task OnInitializedAsync()
     {
-        var home = await Http.GetFromJsonAsync<JsonElement?>("api/crest/site/home");
+        var response = await Http.GetAsync("api/crest/site/home");
+        if (!response.IsSuccessStatusCode)
+        {
+            _notFound = true;
+            return;
+        }
+
+        var home = await response.Content.ReadFromJsonAsync<JsonElement?>();
         if (home is not { } homeElement || !homeElement.TryGetProperty("contentItemId", out var idProperty))
         {
             _notFound = true;
