@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using OrchardCore.ContentManagement.Routing;
 using OrchardCore.Settings;
 
 namespace Crest.Controllers;
@@ -7,7 +9,10 @@ namespace Crest.Controllers;
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/site")]
-public sealed class SiteController(ISiteService siteService, IAuthorizationService authorization) : ControllerBase
+public sealed class SiteController(
+    ISiteService siteService,
+    IAuthorizationService authorization,
+    IOptions<AutorouteOptions> autorouteOptions) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<SiteSettings>> Get()
@@ -15,6 +20,31 @@ public sealed class SiteController(ISiteService siteService, IAuthorizationServi
         if (!await authorization.AuthorizeAsync(User, SettingsPermissions.ManageSettings)) return Forbid();
         var site = await siteService.GetSiteSettingsAsync();
         return Ok(SiteSettings.From(site));
+    }
+
+    // Anonymous, permission-shaped like ContentItemsController.ViewAsync: any caller may
+    // ask "what is the site's home content item", the same way any caller may load the
+    // home page in a browser. ISite.HomeRoute is written by AutoroutePartHandler when a
+    // content item's AutoroutePart.SetHomepage is published (OrchardCore.Autoroute,
+    // now a real Crest.Server manifest dependency - see Manifest.cs) - reading it here
+    // via IOptions<AutorouteOptions>.ContentItemIdKey ("contentItemId", configured in
+    // OrchardCore.Contents/Startup.cs) is the same lookup HomeRouteTransformer performs
+    // server-side; no invented literal, just the one real key Orchard itself defines.
+    [HttpGet("home")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SiteHomeResult>> GetHomeAsync()
+    {
+        var site = await siteService.GetSiteSettingsAsync();
+        var contentItemIdKey = autorouteOptions.Value.ContentItemIdKey;
+
+        if (site.HomeRoute is null
+            || !site.HomeRoute.TryGetValue(contentItemIdKey, out var contentItemId)
+            || contentItemId is not string { Length: > 0 } homeContentItemId)
+        {
+            return NotFound();
+        }
+
+        return Ok(new SiteHomeResult(homeContentItemId));
     }
 
     [HttpPut]
@@ -92,3 +122,5 @@ public sealed record SiteSettingsUpdate(
     string CdnBaseUrl,
     string ResourceDebugMode,
     string CacheMode);
+
+public sealed record SiteHomeResult(string ContentItemId);

@@ -6,8 +6,8 @@
 @inject HttpClient Http
 
 @*
-    First real interactive island (plans/blazor hybrid conversion.md, Phase 3.5 note):
-    served through Server's own MapRazorComponents<App>() endpoint, not through
+    First real interactive island: served through Server's own MapRazorComponents<App>()
+    endpoint, not through
     CrestBlazorComponentShapeBindingResolver's Static-SSR-only HtmlRenderer path - a
     working @onclick button needs an actual circuit (InteractiveServer) or a downloaded
     WASM runtime (InteractiveWebAssembly), neither of which HtmlRenderer can provide.

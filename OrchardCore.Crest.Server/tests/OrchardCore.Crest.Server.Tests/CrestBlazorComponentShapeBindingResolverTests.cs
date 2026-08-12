@@ -9,11 +9,11 @@ using Xunit;
 
 namespace Crest.Server.Tests;
 
-// Exercises the actual end-to-end path Phase 3 built: registry resolves a real component
-// by its [CrestBlazorComponent] name, and the resolver renders it via HtmlRenderer to real
-// HTML - not just "no exception thrown" (see plans/blazor hybrid conversion.md's Phase 3
-// verification entry, which explicitly calls out response-content inspection over
-// exception-only checks).
+// Exercises the actual end-to-end path: registry resolves a real component by its
+// [CrestBlazorComponent] name, and the resolver renders it via HtmlRenderer to real HTML -
+// not just "no exception thrown". Asserting on rendered content (not just a clean run) is
+// what caught the real ParametersFromShape bug this suite found during development (see
+// the integration test in this same project for that history).
 public sealed class CrestBlazorComponentShapeBindingResolverTests
 {
     [Fact]

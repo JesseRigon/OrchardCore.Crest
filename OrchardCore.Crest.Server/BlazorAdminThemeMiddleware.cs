@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Crest.Services;
 using OrchardCore.Admin;
-using OrchardCore.Environment.Extensions;
 using OrchardCore.Environment.Shell;
 using OrchardCore.Environment.Shell.Scope;
 
@@ -24,28 +23,16 @@ public sealed class BlazorAdminThemeOptions
     // property defaults only apply if that PostConfigure step is somehow skipped.
     public string AdminPath { get; set; } = "/admin";
     public string LoginPath { get; set; } = "/login";
+    public string LogoutPath { get; set; } = "/users/logoff";
     public string BlazorThemeTag { get; set; } = "blazor";
     public string BlazorAdminThemeId { get; set; } = "OrchardCore.Crest.Admin";
-
-    // Crest-only route overrides: paths with no Orchard equivalent that still need to
-    // be served by the Blazor admin shell. Everything that DOES have a real .razor
-    // page under BlazorRouteSourceDirectories is discovered automatically
-    // (DiscoverRazorPageRoutes) and does not need to be listed here - listing it
-    // anyway would be redundant and risks drifting out of sync with the actual @page
-    // declarations, which is exactly how the tenant front-end root "/" bug happened.
-    public HashSet<string> BlazorRouteOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-
-    public string[] BlazorRouteSourceDirectories { get; set; } =
-    [
-        "modules/OrchardCore.Crest/OrchardCore.Crest.Admin/wasm/Pages",
-    ];
 }
 
-// Keeps BlazorAdminThemeOptions.AdminPath/LoginPath in sync with Orchard's own,
-// real, tenant-configurable settings (AdminOptions.AdminUrlPrefix,
-// UserOptions.LoginPath - both bound from shell config, e.g. a recipe's
+// Keeps BlazorAdminThemeOptions.AdminPath/LoginPath/LogoutPath in sync with Orchard's own,
+// real, tenant-configurable settings (AdminOptions.AdminUrlPrefix, UserOptions.LoginPath,
+// UserOptions.LogoffPath - all bound from shell config, e.g. a recipe's
 // "OrchardCore_Admin"/"OrchardCore_Users" sections) instead of Crest hardcoding its
-// own copies that silently drift if a tenant customizes either prefix. Runs as
+// own copies that silently drift if a tenant customizes any of them. Runs as
 // IPostConfigureOptions so it applies after BlazorAdminThemeOptions' own
 // IConfigureOptions (currently just the no-op in Startup.cs, but this keeps the
 // override deterministic regardless of registration order - see
@@ -58,6 +45,7 @@ internal sealed class BlazorAdminThemeOptionsConfiguration(
     {
         options.AdminPath = "/" + adminOptions.Value.AdminUrlPrefix;
         options.LoginPath = "/" + userOptions.Value.LoginPath;
+        options.LogoutPath = "/" + userOptions.Value.LogoffPath;
     }
 }
 
@@ -105,20 +93,15 @@ public sealed class BlazorAdminThemeMiddleware
     private const string CrestAdminThemePreviewAsset = "/_content/OrchardCore.Crest.Admin.Client/Theme.png";
 
     private readonly RequestDelegate _next;
-    private readonly IHostEnvironment _environment;
     private readonly IOptions<BlazorAdminThemeOptions> _options;
     private readonly ILogger<BlazorAdminThemeMiddleware> _logger;
-    private readonly object _blazorRoutesLock = new();
-    private HashSet<string>? _blazorRoutes;
 
     public BlazorAdminThemeMiddleware(
         RequestDelegate next,
-        IHostEnvironment environment,
         IOptions<BlazorAdminThemeOptions> options,
         ILogger<BlazorAdminThemeMiddleware> logger)
     {
         _next = next;
-        _environment = environment;
         _options = options;
         _logger = logger;
     }
@@ -188,7 +171,7 @@ public sealed class BlazorAdminThemeMiddleware
             return;
         }
 
-        if (!await IsBlazorAdminThemeAsync(context, options, requestPath))
+        if (!await IsBlazorAdminThemeAsync(context, requestPath))
         {
             await _next(context);
             return;
@@ -210,7 +193,7 @@ public sealed class BlazorAdminThemeMiddleware
         }
 
         var isBlazorPageRoute = isLoginRoute
-            || (isAdminRoute && IsBlazorRoute(options, adminRemainder, context.Request.Query));
+            || (isAdminRoute && await IsBlazorRouteAsync(context, adminRemainder, context.Request.Query));
 
         // Direct URL requests are authorized on the server. In-app navigation
         // uses the login manifest's batch as a fast UI guard, but that browser
@@ -298,11 +281,15 @@ public sealed class BlazorAdminThemeMiddleware
     }
 
     // adminRemainder is requestPath with the matched, real AdminPath prefix already
-    // stripped (e.g. "/backoffice/Features" -> "/Features") - the same canonical
-    // shape ResolveBlazorRoutes' auto-discovered @page routes are in, since those
-    // directives themselves carry no prefix. Comparing anything here against the
-    // real, absolute request path directly would never match.
-    private bool IsBlazorRoute(BlazorAdminThemeOptions options, PathString adminRemainder, IQueryCollection query)
+    // stripped (e.g. "/backoffice/Features" -> "/Features") - the same canonical shape
+    // RouteComponentTable's entries are in, since @page directives themselves carry no
+    // prefix. Comparing anything here against the real, absolute request path directly
+    // would never match. Route discovery itself now lives entirely in
+    // Crest.Routing.AdminRouteComponentTableProvider (reflection over [Route] attributes,
+    // reusing the exact same table Crest.Routing.RouteGateMatcherPolicy consults) - this
+    // middleware no longer scans .razor source files itself, avoiding two independent
+    // "is this an Admin route" implementations drifting out of sync.
+    private static async Task<bool> IsBlazorRouteAsync(HttpContext context, PathString adminRemainder, IQueryCollection query)
     {
         var normalized = NormalizeRoute(adminRemainder.Value);
         if (string.Equals(normalized, "/settings", StringComparison.OrdinalIgnoreCase) &&
@@ -311,80 +298,9 @@ public sealed class BlazorAdminThemeMiddleware
             return true;
         }
 
-        return ResolveBlazorRoutes(options).Any(route => CrestRouteAuthorizationService.Matches(route, normalized));
-    }
-
-    private HashSet<string> ResolveBlazorRoutes(BlazorAdminThemeOptions options)
-    {
-        if (_blazorRoutes is not null)
-        {
-            return _blazorRoutes;
-        }
-
-        lock (_blazorRoutesLock)
-        {
-            if (_blazorRoutes is not null)
-            {
-                return _blazorRoutes;
-            }
-
-            var routes = new HashSet<string>(options.BlazorRouteOverrides.Select(NormalizeRoute), StringComparer.OrdinalIgnoreCase);
-
-            foreach (var sourceDirectory in ResolveBlazorRouteSourceDirectories(options))
-            {
-                foreach (var route in DiscoverRazorPageRoutes(sourceDirectory))
-                {
-                    routes.Add(route);
-                }
-            }
-
-            // LegacyHost is the middleware's own rewrite target for non-Blazor admin
-            // URLs, not a page users navigate to - treating it as a discoverable admin
-            // route would let "/Admin/legacy-host" short-circuit the legacy pipeline.
-            routes.Remove(LegacyHostRoute);
-
-            _logger.LogInformation("Blazor admin routes: {Routes}", string.Join(", ", routes.Order(StringComparer.OrdinalIgnoreCase)));
-            _blazorRoutes = routes;
-            return routes;
-        }
-    }
-
-    private IEnumerable<string> ResolveBlazorRouteSourceDirectories(BlazorAdminThemeOptions options)
-    {
-        foreach (var routeSource in options.BlazorRouteSourceDirectories)
-        {
-            yield return Path.Combine(_environment.ContentRootPath, routeSource);
-            yield return Path.Combine(AppContext.BaseDirectory, routeSource);
-        }
-    }
-
-    private static IEnumerable<string> DiscoverRazorPageRoutes(string sourceDirectory)
-    {
-        if (!Directory.Exists(sourceDirectory))
-        {
-            yield break;
-        }
-
-        foreach (var file in Directory.EnumerateFiles(sourceDirectory, "*.razor", SearchOption.AllDirectories))
-        {
-            foreach (var line in File.ReadLines(file))
-            {
-                var trimmed = line.Trim();
-                if (!trimmed.StartsWith("@page", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                var firstQuote = trimmed.IndexOf('"');
-                var lastQuote = trimmed.LastIndexOf('"');
-                if (firstQuote < 0 || lastQuote <= firstQuote)
-                {
-                    continue;
-                }
-
-                yield return NormalizeRoute(trimmed[(firstQuote + 1)..lastQuote]);
-            }
-        }
+        var tableManager = context.RequestServices.GetRequiredService<Crest.Routing.IRouteComponentTableManager>();
+        var table = await tableManager.GetRouteComponentTableAsync();
+        return table.TryMatch(new PathString(normalized), out _);
     }
 
     private static string NormalizeRoute(string? route)
@@ -397,12 +313,18 @@ public sealed class BlazorAdminThemeMiddleware
         return "/" + route.Trim('/').ToLowerInvariant();
     }
 
-    private async Task<bool> IsBlazorAdminThemeAsync(HttpContext context, BlazorAdminThemeOptions options, PathString requestPath)
+    // Delegates the actual "is Blazor the active admin theme" question to
+    // Crest.Routing.IBlazorAdminThemeDetector (the single source of truth
+    // RouteGateMatcherPolicy and the route-component table also consult) - this method's
+    // own job is purely "how do I get a DI scope to ask that question in", since this
+    // middleware alone can run before the tenant's own request scope carries
+    // IAdminThemeService (e.g. very early pipeline positions / cross-tenant probing).
+    private async Task<bool> IsBlazorAdminThemeAsync(HttpContext context, PathString requestPath)
     {
-        var adminThemeService = context.RequestServices.GetService<IAdminThemeService>();
-        if (adminThemeService is not null)
+        var detector = context.RequestServices.GetService<Crest.Routing.IBlazorAdminThemeDetector>();
+        if (detector is not null)
         {
-            return await IsBlazorAdminThemeAsync(adminThemeService, options, context, requestPath);
+            return await detector.IsBlazorAdminThemeActiveAsync();
         }
 
         var shellHost = context.RequestServices.GetService<IShellHost>();
@@ -423,34 +345,10 @@ public sealed class BlazorAdminThemeMiddleware
         var isBlazorAdminTheme = false;
         await (await shellHost.GetScopeAsync(shellSettings)).UsingServiceScopeAsync(async scope =>
         {
-            var scopedAdminThemeService = scope.ServiceProvider.GetRequiredService<IAdminThemeService>();
-            isBlazorAdminTheme = await IsBlazorAdminThemeAsync(scopedAdminThemeService, options, context, requestPath);
+            var scopedDetector = scope.ServiceProvider.GetRequiredService<Crest.Routing.IBlazorAdminThemeDetector>();
+            isBlazorAdminTheme = await scopedDetector.IsBlazorAdminThemeActiveAsync();
         });
 
         return isBlazorAdminTheme;
-    }
-
-    private async Task<bool> IsBlazorAdminThemeAsync(IAdminThemeService adminThemeService, BlazorAdminThemeOptions options, HttpContext context, PathString requestPath)
-    {
-        var adminThemeName = await adminThemeService.GetAdminThemeNameAsync();
-        var adminTheme = await adminThemeService.GetAdminThemeAsync();
-        var hasBlazorTag = HasBlazorTag(adminTheme, options.BlazorThemeTag);
-        var isBlazorAdminTheme = string.Equals(adminThemeName, options.BlazorAdminThemeId, StringComparison.OrdinalIgnoreCase) || hasBlazorTag;
-
-        _logger.LogDebug(
-            "Blazor admin route check for {Path}: selected admin theme name '{AdminThemeName}', resolved extension '{ExtensionId}', has '{Tag}' tag: {HasBlazorTag}, serving Blazor: {ServeBlazor}.",
-            requestPath,
-            adminThemeName,
-            adminTheme?.Id,
-            options.BlazorThemeTag,
-            hasBlazorTag,
-            isBlazorAdminTheme);
-
-        return isBlazorAdminTheme;
-    }
-
-    private static bool HasBlazorTag(IExtensionInfo? extension, string tag)
-    {
-        return extension?.Manifest?.Tags?.Any(candidate => string.Equals(candidate, tag, StringComparison.OrdinalIgnoreCase)) == true;
     }
 }

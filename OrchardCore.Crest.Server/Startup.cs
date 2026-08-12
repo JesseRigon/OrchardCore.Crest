@@ -85,6 +85,29 @@ public sealed class Startup : StartupBase
         services.AddRecipeExecutionStep<Recipes.CrestAdminMenuLayoutStep>();
         services.Configure<BlazorAdminThemeOptions>(options => { });
         services.AddTransient<IPostConfigureOptions<BlazorAdminThemeOptions>, BlazorAdminThemeOptionsConfiguration>();
+        services.AddScoped<Crest.Routing.IBlazorAdminThemeDetector, Crest.Routing.BlazorAdminThemeDetector>();
+
+        // RouteComponentTable: a per-shell, per-active-(admin+site)-theme-pair registry
+        // mapping @page route patterns to their owning Blazor component Type, mirroring
+        // DefaultShapeTableManager/ShapeTable's own caching shape (a keyed singleton
+        // dictionary, no separate invalidation signal - the shell itself is torn down and
+        // rebuilt by Orchard on feature/theme change). See
+        // Crest.Routing.DefaultRouteComponentTableManager and docs/BlazorWeb.md's "Route
+        // reachability" section for the full rationale. Each theme supplies its own
+        // IRouteComponentTableProvider; nobody hand-maintains a central route list.
+        services.AddSingleton(new System.Collections.Concurrent.ConcurrentDictionary<
+            (string? AdminThemeId, string? SiteThemeId), Task<Crest.Routing.RouteComponentTable>>());
+        services.AddScoped<Crest.Routing.IRouteComponentTableManager, Crest.Routing.DefaultRouteComponentTableManager>();
+        services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.AdminRouteComponentTableProvider>();
+        services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.SiteRouteComponentTableProvider>();
+
+        // The gate itself - see Crest.Routing.RouteGateMatcherPolicy's own comments for
+        // why this is a MatcherPolicy/IEndpointSelectorPolicy and not a
+        // DynamicRouteValueTransformer or EndpointDataSource filter. Registered as
+        // Microsoft.AspNetCore.Routing.Matching.MatcherPolicy, the base type ASP.NET
+        // Core's endpoint selection pipeline discovers policies by (it enumerates every
+        // registered MatcherPolicy, not just IEndpointSelectorPolicy directly).
+        services.AddSingleton<Microsoft.AspNetCore.Routing.MatcherPolicy, Crest.Routing.RouteGateMatcherPolicy>();
         services.AddCrestCultureCookieProvider();
 
         // Crest.Server is the single Blazor Web App host for both API and SSR - the only
@@ -99,12 +122,12 @@ public sealed class Startup : StartupBase
         // Both AddInteractiveServerComponents() and AddInteractiveWebAssemblyComponents()
         // are required for InteractiveAuto (Server-first on the initial visit while the
         // WASM runtime downloads in the background, then WASM for every visit after -
-        // "WASM as the primary route, Server as the fallback" per the plan doc's own
-        // notes). Static-SSR-only content (the overwhelming majority - anything rendered
-        // via CrestBlazorComponentShapeBindingResolver's HtmlRenderer path) never touches
+        // "WASM as the primary route, Server as the fallback." Static-SSR-only content
+        // (the overwhelming majority - anything rendered via
+        // CrestBlazorComponentShapeBindingResolver's HtmlRenderer path) never touches
         // either of these; they only matter for components explicitly marked
         // @rendermode, i.e. genuine interactive islands like Components/Pages/
-        // BlazorCounter.razor. See plans/blazor hybrid conversion.md, Phase 3/3.5.
+        // BlazorCounter.razor.
         services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();
@@ -243,7 +266,41 @@ public sealed class Startup : StartupBase
             .AddAdditionalAssemblies(AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly => assembly.GetName().Name is { } name
                     && (name.EndsWith(".Client", StringComparison.Ordinal) || name.EndsWith(".BlazorWasm", StringComparison.Ordinal)))
-                .ToArray());
+                .ToArray())
+            // Stamps Crest.Routing.ThemeOwnerMetadata onto each @page-attributed
+            // component's own endpoint (not the root), keyed off the component's
+            // declaring assembly - the same assembly-name check
+            // AdminRouteComponentTableProvider/SiteRouteComponentTableProvider use, so
+            // there's one source of truth for "which bucket owns this assembly's
+            // routes", never a second copy. ComponentTypeMetadata (added by Blazor's own
+            // RazorComponentEndpointFactory before conventions run) is what makes this
+            // per-endpoint rather than a single global tag on the whole data source -
+            // confirmed via decompiled Microsoft.AspNetCore.Components.Endpoints source.
+            // Crest.Routing.RouteGateMatcherPolicy is the sole consumer. The metadata
+            // carries a two-value RouteBucket, not a raw theme id - see
+            // ThemeOwnerMetadata's own comment for why a theme-id comparison can never
+            // disambiguate an Admin-vs-Site route collision (both a tenant's admin theme
+            // and site theme are active at once, by construction).
+            .Add(endpointBuilder =>
+            {
+                var componentType = endpointBuilder.Metadata
+                    .OfType<Microsoft.AspNetCore.Components.Endpoints.ComponentTypeMetadata>()
+                    .FirstOrDefault()?.Type;
+                var assemblyName = componentType?.Assembly.GetName().Name;
+
+                Crest.Routing.RouteBucket? bucket = assemblyName switch
+                {
+                    "OrchardCore.Crest.Admin.Client" => Crest.Routing.RouteBucket.Admin,
+                    "OrchardCore.Crest.Site.Client" => Crest.Routing.RouteBucket.Site,
+                    { } name when name.EndsWith(".BlazorWasm", StringComparison.Ordinal) => Crest.Routing.RouteBucket.Admin,
+                    _ => null,
+                };
+
+                if (bucket is { } value)
+                {
+                    endpointBuilder.Metadata.Add(new Crest.Routing.ThemeOwnerMetadata(value));
+                }
+            });
     }
 }
 

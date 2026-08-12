@@ -68,14 +68,12 @@
     }
     else
     {
-        @* Site shell. Note that "/" currently resolves here: Admin's Home.razor declares
-           @page "/" meaning "this admin shell's own base" (/Admin/ or /Login/), and under
-           the shared Blazor Web App route table that also matches the SITE root. Rendering
-           the Site shell for it is the RIGHT outcome — the conversion's goal is Blazor all
-           the way down (Phase 5 replaces Views/*.liquid with .razor, Phase 7 deletes them)
-           — but Site has no @page "/" component yet, so the body comes out empty. The fix
-           is to add the Site home page, not to hand "/" back to Liquid. See the "Site root"
-           section of plans/blazor hybrid conversion.md. *@
+        @* Site shell. Admin's Home.razor also declares @page "/" (meaning "this admin
+           shell's own base", /Admin/ or /Login/) — both endpoints exist in the same
+           shared Blazor Web App route table, but Crest.Routing.RouteGateMatcherPolicy
+           (see docs/BlazorWeb.md's "Route reachability" section) vetoes whichever one
+           doesn't own this request before endpoint selection completes, so only one of
+           the two ever actually renders here. *@
         <Routes @rendermode="@_renderMode" />
     }
     <script src="/_framework/blazor.web.js"></script>

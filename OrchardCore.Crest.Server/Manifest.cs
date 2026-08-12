@@ -23,7 +23,14 @@ using OrchardCore.Modules.Manifest;
     //     AddNavigation() without declaring the feature; declared here so Crest does not
     //     depend on that incidental coupling.
     //   OrchardCore.Recipes    -> IRecipeExecutor (RecipesController.ExecuteAsync).
-    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Contents", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.LegacyFrame", "OrchardCore.Crest.Icons"],
+    //   OrchardCore.Autoroute  -> ISite.HomeRoute (SiteController's home-page-lookup
+    //     endpoint, consumed by Site's Home.razor) is only ever WRITTEN by
+    //     AutoroutePartHandler.PublishedAsync, which only runs while this feature is
+    //     enabled - AutorouteOptions itself is a ContentManagement.Abstractions type
+    //     (already referenced), but without this feature enabled, HomeRoute would stay
+    //     permanently null regardless. Also brings in OrchardCore.HomeRoute (its own
+    //     manifest dependency) for free.
+    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Autoroute", "OrchardCore.Contents", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.LegacyFrame", "OrchardCore.Crest.Icons"],
     IsAlwaysEnabled = true
 )]
 

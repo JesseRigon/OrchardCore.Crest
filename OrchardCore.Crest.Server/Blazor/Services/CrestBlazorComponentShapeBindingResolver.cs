@@ -14,11 +14,12 @@ namespace Crest.Blazor;
 // rendering with tenant-stored Liquid - here the override renders a Blazor component with
 // .NET's own HtmlRenderer instead. Falls through (returns null) for every shape that isn't
 // a registered component name, so normal Liquid/Razor/Templates-resolved shapes are
-// unaffected. See plans/blazor hybrid conversion.md, Phase 3b.
+// unaffected.
 //
 // Static SSR only: the component renders once, inline, to static HTML - no hydration, no
-// @rendermode. Genuinely interactive "islands" are a separate concern (Phase 2's whole-page
-// hosting/WASM client glob), not this resolver's job.
+// @rendermode. Genuinely interactive "islands" are a separate concern (the whole-page
+// Blazor Web App host/WASM client glob, Server's MapRazorComponents<App>()), not this
+// resolver's job.
 public sealed class CrestBlazorComponentShapeBindingResolver : IShapeBindingResolver
 {
     private readonly ICrestBlazorComponentRegistry _registry;

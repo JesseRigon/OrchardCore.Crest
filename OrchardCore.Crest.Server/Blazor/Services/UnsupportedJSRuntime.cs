@@ -9,8 +9,8 @@ namespace Crest.Blazor;
 // HtmlRenderer without this). Real interop attempts throw a clear, actionable error
 // instead of hanging or silently no-op-ing - correct, because a component calling JS
 // outside OnAfterRenderAsync (the only lifecycle stage HtmlRenderer's quiescence task
-// actually reaches) is a genuine bug that needs to surface during Phase 3 component
-// authoring, not be masked.
+// actually reaches) is a genuine bug that needs to surface during component authoring,
+// not be masked.
 public sealed class UnsupportedJSRuntime : IJSRuntime
 {
     public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) => throw NotSupported();
@@ -20,5 +20,5 @@ public sealed class UnsupportedJSRuntime : IJSRuntime
     private static InvalidOperationException NotSupported() => new(
         "JavaScript interop is not available when a component is rendered by CrestBlazorComponentShapeBindingResolver " +
         "(Static SSR via HtmlRenderer, no browser attached). Guard interop calls behind OnAfterRenderAsync, or mark the " +
-        "component as an interactive island instead (see plans/blazor hybrid conversion.md, Phase 3b).");
+        "component as an interactive island instead (see docs/BlazorWeb.md).");
 }

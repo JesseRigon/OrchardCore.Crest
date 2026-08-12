@@ -1,0 +1,54 @@
+@page "/"
+@using System.Net.Http.Json
+@using System.Text.Json
+@inject HttpClient Http
+
+@*
+    Site's home page. @page "/" is the one place Blazor's compiler requires a literal to
+    exist at all - Crest.Routing.SiteRouteComponentTableProvider reads it back via
+    reflection as its default-landing entry, so nobody re-types "/" a second time
+    anywhere else (see agents.md's "no invented path literals" rule, and docs/BlazorWeb.md's
+    "Route reachability" section for how this and Admin's own @page "/" coexist).
+
+    Reads the tenant's configured homepage content item through the REST surface
+    (api/crest/site/home -> ISite.HomeRoute, then api/crest/content-items/{id}/view),
+    the same pattern BlazorCounter.razor already uses - not IContentManager/ISiteService
+    directly, since neither has a WASM implementation.
+*@
+
+@if (_displayText is not null)
+{
+    <h1>@_displayText</h1>
+}
+else if (_notFound)
+{
+    <p>No home page is configured for this site yet.</p>
+}
+
+@code {
+    private string? _displayText;
+    private bool _notFound;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var home = await Http.GetFromJsonAsync<JsonElement?>("api/crest/site/home");
+        if (home is not { } homeElement || !homeElement.TryGetProperty("contentItemId", out var idProperty))
+        {
+            _notFound = true;
+            return;
+        }
+
+        var contentItemId = idProperty.GetString();
+        var view = await Http.GetFromJsonAsync<Dictionary<string, JsonElement>>(
+            $"api/crest/content-items/{contentItemId}/view?parts=DisplayText");
+
+        if (view is not null && view.TryGetValue("DisplayText", out var displayText))
+        {
+            _displayText = displayText.GetString();
+        }
+        else
+        {
+            _notFound = true;
+        }
+    }
+}
