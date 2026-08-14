@@ -430,10 +430,10 @@
         await DisplayManager.LogoutAsync();
         // Crossing from the admin shell (base href = AdminPath) to the login shell
         // (base href = LoginPath) requires a full reload so the browser re-fetches
-        // index.html with the correct <base> tag - see BlazorAdminThemeMiddleware's
-        // TryServeIndexHtmlAsync. A same-document SPA navigation would leave the
-        // already-loaded Router trying to match Routing.LoginPath against the admin
-        // shell's route table and fail.
+        // the document with the correct <base> tag - see BlazorAdminThemeMiddleware's
+        // PathBase shift and App.razor. A same-document SPA navigation would leave
+        // the already-loaded Router trying to match Routing.LoginPath against the
+        // admin shell's route table and fail.
         Navigation.NavigateTo(Routing.LoginPath, forceLoad: true);
     }
 

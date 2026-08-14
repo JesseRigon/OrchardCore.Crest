@@ -201,10 +201,21 @@ public sealed class Startup : StartupBase
         services.AddScoped(sp =>
         {
             var themeOptions = sp.GetRequiredService<IOptions<BlazorAdminThemeOptions>>().Value;
+            // Composed on the tenant base so these stay real, navigable browser URLs
+            // under URL-prefixed tenants, mirroring the WASM side's own composition
+            // (OrchardCore.Crest.Client/Program.cs). During SSR of an admin page the
+            // middleware has already shifted the shell base into PathBase, so the
+            // pre-shift value it stashed is the tenant layer; on a circuit/hub request
+            // PathBase was never shifted and is already exactly that layer.
+            var httpContext = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
+            var tenantBase = (httpContext?.Items.TryGetValue(CrestBlazorHosting.TenantBasePathItem, out var stashed) == true
+                && stashed is string stashedBase
+                    ? stashedBase
+                    : httpContext?.Request.PathBase.Value ?? string.Empty).TrimEnd('/');
             return new Crest.Admin.Options.CrestRoutingOptions
             {
-                AdminPath = themeOptions.AdminPath,
-                LoginPath = themeOptions.LoginPath,
+                AdminPath = tenantBase + themeOptions.AdminPath,
+                LoginPath = tenantBase + themeOptions.LoginPath,
             };
         });
 

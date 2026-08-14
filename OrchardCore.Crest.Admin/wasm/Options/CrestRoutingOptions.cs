@@ -10,7 +10,7 @@ namespace Crest.Admin.Options;
 // not some Crest-specific "canonical shape" - every @page directive in this app is
 // itself already the real page path with no prefix baked in (Blazor's Router
 // resolves them relative to BaseUri, which the server rewrites to the tenant's real
-// prefix - see BlazorAdminThemeMiddleware.TryServeIndexHtmlAsync).
+// prefix - see BlazorAdminThemeMiddleware's PathBase shift).
 public sealed class CrestRoutingOptions
 {
     public const string CanonicalAdminPath = "/Admin";

@@ -42,7 +42,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     // matching this app's own @page directives, and matching the real, MVC-resolved
     // shape of stock Orchard admin URLs once AdminUrlPrefix is substituted in) and
     // Blazor's Router itself resolves @page routes relative to BaseUri (see
-    // BlazorAdminThemeMiddleware.TryServeIndexHtmlAsync), so a base-relative path IS
+    // BlazorAdminThemeMiddleware's PathBase shift), so a base-relative path IS
     // already the canonical path minus its leading slash (e.g. "/backoffice/Features"
     // -> ToBaseRelativePath -> "Features", which is exactly what "@page "/Features""
     // resolves to under that base) - just needs the slash back. See the same fix in
@@ -360,14 +360,14 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
 
         _permissionRefreshCancellation = new CancellationTokenSource();
         var cancellationToken = _permissionRefreshCancellation.Token;
-        // Api endpoints live at the origin root regardless of which shell base
-        // (AdminPath/LoginPath) is currently loaded - combining against
-        // navigation.BaseUri directly would nest this under that base instead (e.g.
-        // "/backoffice/api/crest/permissions"), same class of bug CrestAntiforgeryHandler
-        // had before it was given an explicit origin-root BaseAddress.
-        var origin = new Uri(navigation.BaseUri).GetLeftPart(UriPartial.Authority) + "/";
+        // Base-relative on purpose: the document base is tenantPrefix + shellBase, and
+        // BlazorAdminThemeMiddleware strips the shell base off "{shellBase}/api/..."
+        // server-side, landing on the tenant-root hub mapping. The previous
+        // origin-root form escaped the tenant prefix entirely and broke URL-prefixed
+        // tenants - base-relative is what keeps the client free of any origin/tenant
+        // knowledge.
         _permissionHub = new HubConnectionBuilder()
-            .WithUrl(new Uri(new Uri(origin), "api/crest/permissions"))
+            .WithUrl(new Uri(new Uri(navigation.BaseUri), "api/crest/permissions"))
             .WithAutomaticReconnect()
             .Build();
         _permissionHub.On("permissionsInvalidated", async () => await RefreshAfterPermissionChangeAsync());

@@ -73,8 +73,8 @@
         {
             // Crossing from the login shell (base href = LoginPath) to the admin
             // shell (base href = AdminPath) requires a full reload so the browser
-            // re-fetches index.html with the correct <base> tag - see
-            // BlazorAdminThemeMiddleware's TryServeIndexHtmlAsync.
+            // re-fetches the document with the correct <base> tag - see
+            // BlazorAdminThemeMiddleware's PathBase shift and App.razor.
             Navigation.NavigateTo(Routing.AdminPath, forceLoad: true);
         }
     }

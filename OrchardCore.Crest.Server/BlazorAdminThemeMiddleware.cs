@@ -137,20 +137,22 @@ public sealed class BlazorAdminThemeMiddleware
         // blazor.web.js resolves its own infrastructure URLs against the document's
         // <base href> (derived from the shifted PathBase), not the site root - so the
         // browser asks for "/Login/_framework/dotnet.js", "/Admin/_blazor" (the
-        // server-circuit hub), "/Admin/_content/..." etc. Those are all mapped at the
-        // tenant root by MapRazorComponents/MapStaticAssets/BlazorFrameworkScriptEndpoints;
-        // shift the shell base into PathBase (the same PathBase += prefix / Path =
-        // remainder move ModularTenantRouterMiddleware makes for the tenant prefix) and
-        // pass through - endpoint routing matches the bare remainder, while
-        // PathBase-aware URL generation keeps composing full prefixed URLs. This must
-        // run before the page gating below: "/Admin/_blazor" has no file extension and
-        // would otherwise be treated as a page URL and rewritten to /legacy-host,
-        // killing the interactive circuit. No theme check here - these requests only
-        // follow a document this middleware already theme-gated, and a stray one merely
-        // 404s at root.
-        if (TryStripShellPrefixForBlazorInfrastructure(requestPath, adminPath, new PathString(options.LoginPath), out var shellPrefix, out var infrastructurePath))
+        // server-circuit hub), "/Admin/api/crest/..." etc. Those are all mapped at the
+        // tenant root by MapRazorComponents/MapStaticAssets/BlazorFrameworkScriptEndpoints/
+        // MapHub; strip the shell base off Path and pass through. Deliberately a
+        // Path-ONLY rewrite, unlike the page branch's full PathBase shift below:
+        // cookie issuance (auth, antiforgery, culture) defaults Cookie.Path to the
+        // request's PathBase, and every cookie must stay scoped to the TENANT base -
+        // appending the shell base here scoped the auth cookie to "/Login" once,
+        // making the just-logged-in session invisible to "/Admin" (an infinite
+        // login redirect loop). PathBase therefore stays exactly what Orchard set:
+        // the tenant layer. This must run before the page gating below:
+        // "/Admin/_blazor" has no file extension and would otherwise be treated as a
+        // page URL and rewritten to /legacy-host, killing the interactive circuit. No
+        // theme check here - these requests only follow a document this middleware
+        // already theme-gated, and a stray one merely 404s at root.
+        if (TryStripShellPrefixForBlazorInfrastructure(requestPath, adminPath, new PathString(options.LoginPath), out var infrastructurePath))
         {
-            context.Request.PathBase = requestPathBase.Add(shellPrefix);
             context.Request.Path = infrastructurePath;
             try
             {
@@ -158,7 +160,6 @@ public sealed class BlazorAdminThemeMiddleware
             }
             finally
             {
-                context.Request.PathBase = requestPathBase;
                 context.Request.Path = requestPath;
             }
             return;
@@ -282,25 +283,29 @@ public sealed class BlazorAdminThemeMiddleware
         PathString requestPath,
         PathString adminPath,
         PathString loginPath,
-        out PathString shellPrefix,
         out PathString infrastructurePath)
     {
         if ((requestPath.StartsWithSegments(adminPath, out var remainder) ||
              requestPath.StartsWithSegments(loginPath, out remainder)) &&
             (remainder.StartsWithSegments("/_framework") ||
              remainder.StartsWithSegments("/_content") ||
-             remainder.StartsWithSegments("/_blazor")))
+             remainder.StartsWithSegments("/_blazor") ||
+             // The whole client-side app (WASM HttpClient, SignalR hub connections,
+             // the pre-boot routing-options fetch) addresses api/crest/* relative to
+             // the document base, so under the admin shell those arrive as
+             // "{shellBase}/api/..." - normalized here to the tenant-root api surface
+             // the controllers/hubs are actually mapped at. This is what lets the
+             // client stay entirely base-relative (no origin-root or tenant-prefix
+             // knowledge browser-side) and still work under URL-prefixed tenants.
+             // Orchard's own admin never routes "{AdminUrlPrefix}/api/..." (admin
+             // controller routes are "{prefix}/{area}/{controller}/...", and "api" is
+             // not an area), so nothing legitimate is shadowed.
+             remainder.StartsWithSegments("/api")))
         {
-            // The matched prefix in its request casing, not the canonical option value -
-            // PathBase must stay a literal prefix of the URL the browser actually sent,
-            // or PathBase-derived absolute URL generation would emit a casing the
-            // browser never navigated to.
-            shellPrefix = new PathString(requestPath.Value![..(requestPath.Value.Length - (remainder.Value?.Length ?? 0))]);
             infrastructurePath = remainder;
             return true;
         }
 
-        shellPrefix = PathString.Empty;
         infrastructurePath = PathString.Empty;
         return false;
     }

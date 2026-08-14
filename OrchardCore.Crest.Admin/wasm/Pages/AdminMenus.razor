@@ -363,12 +363,11 @@
             return;
         }
 
-        // Api endpoints live at the origin root regardless of the current shell base
-        // (AdminPath) - see DisplayManager.StartPermissionRefreshAsync for the same fix
-        // and rationale.
-        var origin = new Uri(Navigation.BaseUri).GetLeftPart(UriPartial.Authority) + "/";
+        // Base-relative: the server middleware strips the shell base off
+        // "{shellBase}/api/..." - see DisplayManager.StartPermissionRefreshAsync for
+        // the same pattern and rationale.
         AdminMenuLayoutHub = new HubConnectionBuilder()
-            .WithUrl(new Uri(new Uri(origin), "api/crest/admin-menu-layout"))
+            .WithUrl(new Uri(new Uri(Navigation.BaseUri), "api/crest/admin-menu-layout"))
             .WithAutomaticReconnect()
             .Build();
 

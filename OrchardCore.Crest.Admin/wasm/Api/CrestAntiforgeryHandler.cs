@@ -14,14 +14,13 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : Delegating
     private CrestAntiforgeryToken? _token;
     private CultureCookieContext? _cultureCookieContext;
 
-    // Set by Program.cs to the same origin-root address the owning HttpClient itself
-    // uses (see apiBaseAddress). GetTokenAsync below sends its own request directly
-    // through the inner handler chain via base.SendAsync, bypassing the owning
-    // HttpClient.SendAsync's usual BaseAddress + relative-URI combination step - so a
-    // plain relative "api/crest/antiforgery/token" string would otherwise resolve
-    // against the browser's document.baseURI (i.e. <base href>) instead, breaking
-    // once that stopped being the origin root for shells served under a tenant's
-    // configured AdminPath/LoginPath.
+    // Set by Program.cs to the same document-base address the owning HttpClient
+    // itself uses (see apiBaseAddress - tenantPrefix + shellBase; the server
+    // middleware strips the shell base off "{shellBase}/api/..." so these resolve to
+    // the tenant-root api surface). GetTokenAsync below sends its own request
+    // directly through the inner handler chain via base.SendAsync, bypassing the
+    // owning HttpClient.SendAsync's usual BaseAddress + relative-URI combination
+    // step, so it needs the base handed to it explicitly.
     public Uri? BaseAddress { get; set; }
 
     // Pushed by DisplayManager.RefreshManifestAsync every time it resolves culture (see

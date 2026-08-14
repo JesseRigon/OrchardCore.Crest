@@ -27,7 +27,7 @@
     private bool _showLogin;
 
     // This shell's base href is whichever real, tenant-configured path served it
-    // (AdminPath or LoginPath - see BlazorAdminThemeMiddleware.TryServeIndexHtmlAsync),
+    // (AdminPath or LoginPath - see BlazorAdminThemeMiddleware's PathBase shift),
     // so a base-relative "/" request lands here regardless of which one that was.
     // Routing.AdminPath/LoginPath hold the real, absolute server paths (e.g.
     // "/backoffice") - when we're already sitting at that same base, NavigateTo-ing
