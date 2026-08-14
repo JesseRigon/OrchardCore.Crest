@@ -31,7 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OrchardCore.Module.Targets" />
+    <!-- Theme.Targets, not Module.Targets: sets ModuleType=Theme so IsTheme() is true at
+         runtime and ThemeViewLocationExpanderProvider contributes this theme's Views/
+         paths. See the same note in OrchardCore.Crest.LegacyFrame.csproj. -->
+    <PackageReference Include="OrchardCore.Theme.Targets" />
     <PackageReference Include="OrchardCore.DisplayManagement" />
   </ItemGroup>
 

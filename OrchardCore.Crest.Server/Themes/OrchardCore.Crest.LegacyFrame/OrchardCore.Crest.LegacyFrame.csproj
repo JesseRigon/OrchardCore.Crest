@@ -21,7 +21,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OrchardCore.Module.Targets" />
+    <!-- Theme.Targets, not Module.Targets: it sets ModuleType=Theme, which becomes the
+         ModuleMarkerAttribute's type string in the built assembly. IsTheme() (see
+         OrchardCore's ExtensionInfoExtensions) tests exactly that, and
+         ThemeViewLocationExpanderProvider only contributes a feature's Views/ paths when
+         IsTheme() is true - built as a module, this theme's Views/Layout.cshtml was
+         never in the view-location list, so every legacy-frame request silently fell
+         through to BaseTheme (TheAdmin) and rendered its full admin chrome
+         (navbar + sidebar) inside the Crest iframe. The [assembly: Theme] attribute in
+         Manifest.cs alone is not sufficient: the targets-generated marker attribute is
+         what ModuleInfo actually resolves to at runtime. -->
+    <PackageReference Include="OrchardCore.Theme.Targets" />
     <PackageReference Include="OrchardCore.Admin.Abstractions" />
     <PackageReference Include="OrchardCore.DisplayManagement" />
     <PackageReference Include="OrchardCore.ResourceManagement" />

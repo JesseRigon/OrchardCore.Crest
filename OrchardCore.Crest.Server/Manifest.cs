@@ -30,15 +30,18 @@ using OrchardCore.Modules.Manifest;
     //     (already referenced), but without this feature enabled, HomeRoute would stay
     //     permanently null regardless. Also brings in OrchardCore.HomeRoute (its own
     //     manifest dependency) for free.
-    // OrchardCore.Crest.LegacyFrame is NOT listed here even though this feature needs it
-    // enabled: a module can never hard-depend on a theme in OrchardCore's ordering model
-    // without creating a cycle, because ThemeExtensionDependencyStrategy gives every theme
-    // an implicit dependency on every non-theme feature (Crest -> LegacyFrame via
-    // Dependencies, LegacyFrame -> Crest via the implicit theme rule). LegacyFrame is
-    // IsAlwaysEnabled instead, and After (below) keeps load order correct without
-    // reintroducing the cycle.
+    // OrchardCore.Crest.LegacyFrame is deliberately absent from Dependencies AND from any
+    // Before/After hint, even though this feature needs it enabled. In OrchardCore's
+    // ordering model a module can never point at a theme in either way without creating a
+    // cycle: ThemeExtensionDependencyStrategy gives every theme an implicit dependency on
+    // every non-theme feature, so LegacyFrame -> Crest already exists, and any
+    // Crest -> LegacyFrame edge closes the loop. The resulting fallback ordering is not
+    // cosmetic - it breaks the theme's own shape/view registration, which is what made
+    // legacy-frame requests silently render TheAdmin's full chrome. LegacyFrame is
+    // IsAlwaysEnabled instead, which is all this feature actually needs (the theme has to
+    // exist and be enabled so LegacyFrameThemeSelector can switch to it by Id at runtime;
+    // its load order relative to this feature is irrelevant).
     Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Autoroute", "OrchardCore.Contents", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.Icons"],
-    After = ["OrchardCore.Crest.LegacyFrame"],
     IsAlwaysEnabled = true
 )]
 
