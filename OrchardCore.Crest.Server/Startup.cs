@@ -36,7 +36,6 @@ public sealed class Startup : StartupBase
 
     public override void ConfigureServices(IServiceCollection services)
     {
-        Console.WriteLine("[DIAG] Crest.Startup.ConfigureServices invoked");
         services.AddCors(options =>
         {
             options.AddPolicy(CrestWebCors, policy => policy

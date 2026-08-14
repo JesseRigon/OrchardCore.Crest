@@ -23,4 +23,14 @@ public static class CrestBlazorHosting
     /// "/Admin/Features" before the middleware rewrote it to "/Features").
     /// </summary>
     public const string OriginalPathItem = "Crest.BlazorAdmin.OriginalPath";
+
+    /// <summary>
+    /// HttpContext.Items key holding the request's PathBase as it stood BEFORE the
+    /// middleware shifted the shell base into it - i.e. Orchard's own layer: the
+    /// tenant's RequestUrlPrefix (plus any host-level base). This is the base the
+    /// tenant-root API surface (api/crest/*, the SignalR hubs) lives under, which is
+    /// NOT the admin shell's own base - the WASM client needs it to compose API and
+    /// hub URLs that survive URL-prefixed tenants.
+    /// </summary>
+    public const string TenantBasePathItem = "Crest.BlazorAdmin.TenantBasePath";
 }

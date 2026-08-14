@@ -108,7 +108,6 @@ public sealed class BlazorAdminThemeMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        Console.WriteLine($"[DIAG] BlazorAdminThemeMiddleware invoked for {context.Request.Path}");
         if (LegacyFrameThemeSelector.IsLegacyFrameRequest(context))
         {
             await _next(context);
@@ -116,6 +115,13 @@ public sealed class BlazorAdminThemeMiddleware
         }
 
         var requestPath = context.Request.Path;
+        // Already carries the tenant's RequestUrlPrefix: ModularTenantRouterMiddleware
+        // shifted it there (PathBase += prefix, Path = remainder) before this tenant
+        // pipeline was even invoked. Every absolute URL this middleware emits
+        // (redirects) must be composed on top of it, and the shell-base shifts below
+        // append to it - mirroring exactly how Orchard itself layers the tenant prefix
+        // on whatever PathBase the host (IIS virtual dir, reverse proxy) already set.
+        var requestPathBase = context.Request.PathBase;
         var options = _options.Value;
         var adminPath = new PathString(options.AdminPath);
 
@@ -124,22 +130,27 @@ public sealed class BlazorAdminThemeMiddleware
         // under _content/ - redirect rather than resurrecting a file-serving path here.
         if (requestPath.Equals(CrestAdminThemePreviewPath))
         {
-            context.Response.Redirect(CrestAdminThemePreviewAsset);
+            context.Response.Redirect(requestPathBase.Add(new PathString(CrestAdminThemePreviewAsset)).Value!);
             return;
         }
 
         // blazor.web.js resolves its own infrastructure URLs against the document's
-        // <base href> (the shell base this middleware stamps), not the site root - so
-        // the browser asks for "/Login/_framework/dotnet.js", "/Admin/_blazor" (the
+        // <base href> (derived from the shifted PathBase), not the site root - so the
+        // browser asks for "/Login/_framework/dotnet.js", "/Admin/_blazor" (the
         // server-circuit hub), "/Admin/_content/..." etc. Those are all mapped at the
-        // site root by MapRazorComponents/MapStaticAssets; strip the shell prefix and
-        // pass through. This must run before the page gating below: "/Admin/_blazor"
-        // has no file extension and would otherwise be treated as a page URL and
-        // rewritten to /legacy-host, killing the interactive circuit. No theme check
-        // here - these requests only follow a document this middleware already
-        // theme-gated, and a stray one merely 404s at root.
-        if (TryStripShellPrefixForBlazorInfrastructure(requestPath, adminPath, new PathString(options.LoginPath), out var infrastructurePath))
+        // tenant root by MapRazorComponents/MapStaticAssets/BlazorFrameworkScriptEndpoints;
+        // shift the shell base into PathBase (the same PathBase += prefix / Path =
+        // remainder move ModularTenantRouterMiddleware makes for the tenant prefix) and
+        // pass through - endpoint routing matches the bare remainder, while
+        // PathBase-aware URL generation keeps composing full prefixed URLs. This must
+        // run before the page gating below: "/Admin/_blazor" has no file extension and
+        // would otherwise be treated as a page URL and rewritten to /legacy-host,
+        // killing the interactive circuit. No theme check here - these requests only
+        // follow a document this middleware already theme-gated, and a stray one merely
+        // 404s at root.
+        if (TryStripShellPrefixForBlazorInfrastructure(requestPath, adminPath, new PathString(options.LoginPath), out var shellPrefix, out var infrastructurePath))
         {
+            context.Request.PathBase = requestPathBase.Add(shellPrefix);
             context.Request.Path = infrastructurePath;
             try
             {
@@ -147,6 +158,7 @@ public sealed class BlazorAdminThemeMiddleware
             }
             finally
             {
+                context.Request.PathBase = requestPathBase;
                 context.Request.Path = requestPath;
             }
             return;
@@ -189,7 +201,7 @@ public sealed class BlazorAdminThemeMiddleware
             : options.AdminPath + adminRemainder.Value;
         if (!string.Equals(requestPath.Value, canonicalPath, StringComparison.Ordinal))
         {
-            context.Response.Redirect(canonicalPath + context.Request.QueryString);
+            context.Response.Redirect(requestPathBase.Add(new PathString(canonicalPath)).Value + context.Request.QueryString);
             return;
         }
 
@@ -212,7 +224,7 @@ public sealed class BlazorAdminThemeMiddleware
 
             if (context.User.Identity?.IsAuthenticated != true)
             {
-                context.Response.Redirect(options.LoginPath);
+                context.Response.Redirect(requestPathBase.Add(new PathString(options.LoginPath)).Value!);
                 return;
             }
 
@@ -231,19 +243,29 @@ public sealed class BlazorAdminThemeMiddleware
             }
         }
 
-        // Bridge the tenant-configured prefix to MapRazorComponents' route table: the
-        // endpoint routing that renders the App document matches raw server paths
-        // against compile-time @page literals, which carry no admin prefix. The
-        // browser URL is untouched (this is a server-internal rewrite) - client-side,
-        // Blazor's Router resolves the original URL against the <base href> the App
-        // root emits from the stashed shell base, landing on the same page.
+        // Bridge the tenant-configured prefix to MapRazorComponents' route table by
+        // shifting the shell base into PathBase (PathBase += shellBase, Path = the
+        // compile-time @page literal) - the same move ModularTenantRouterMiddleware
+        // makes for the tenant's own RequestUrlPrefix, one layer further in. Endpoint
+        // routing matches the bare @page literal ("/Features", "/login",
+        // "/legacy-host"), while everything PathBase-derived - NavigationManager's
+        // BaseUri, the <base href> App.razor emits from it, redirect composition -
+        // automatically carries tenantPrefix + shellBase. The browser URL is untouched
+        // (this is a server-internal rewrite): client-side, Blazor's Router resolves
+        // the original URL against that same composed <base href>, landing on the same
+        // page. When .NET 11's <BasePath /> component ships
+        // (dotnet/aspnetcore#66388) it derives from this exact PathBase too, so the
+        // document side can adopt it without touching this middleware.
+        var shellBasePath = isLoginRoute ? options.LoginPath : options.AdminPath;
         context.Items[CrestBlazorHosting.OriginalPathItem] = requestPath.Value;
-        context.Items[CrestBlazorHosting.ShellBasePathItem] = isLoginRoute ? options.LoginPath : options.AdminPath;
+        context.Items[CrestBlazorHosting.ShellBasePathItem] = shellBasePath;
+        context.Items[CrestBlazorHosting.TenantBasePathItem] = requestPathBase.Value ?? string.Empty;
         var rewrittenPath = isLoginRoute
             ? new PathString("/login")
             : isBlazorPageRoute
                 ? (adminRemainder.HasValue ? adminRemainder : new PathString("/"))
                 : new PathString(LegacyHostRoute);
+        context.Request.PathBase = requestPathBase.Add(new PathString(shellBasePath));
         context.Request.Path = rewrittenPath;
         try
         {
@@ -251,6 +273,7 @@ public sealed class BlazorAdminThemeMiddleware
         }
         finally
         {
+            context.Request.PathBase = requestPathBase;
             context.Request.Path = requestPath;
         }
     }
@@ -259,6 +282,7 @@ public sealed class BlazorAdminThemeMiddleware
         PathString requestPath,
         PathString adminPath,
         PathString loginPath,
+        out PathString shellPrefix,
         out PathString infrastructurePath)
     {
         if ((requestPath.StartsWithSegments(adminPath, out var remainder) ||
@@ -267,10 +291,16 @@ public sealed class BlazorAdminThemeMiddleware
              remainder.StartsWithSegments("/_content") ||
              remainder.StartsWithSegments("/_blazor")))
         {
+            // The matched prefix in its request casing, not the canonical option value -
+            // PathBase must stay a literal prefix of the URL the browser actually sent,
+            // or PathBase-derived absolute URL generation would emit a casing the
+            // browser never navigated to.
+            shellPrefix = new PathString(requestPath.Value![..(requestPath.Value.Length - (remainder.Value?.Length ?? 0))]);
             infrastructurePath = remainder;
             return true;
         }
 
+        shellPrefix = PathString.Empty;
         infrastructurePath = PathString.Empty;
         return false;
     }
