@@ -20,14 +20,17 @@ module.exports = async function run(page, ctx) {
   const primaryNavMenu = page.locator('.primary-nav-menu');
   await primaryNavMenu.waitFor({ timeout: 20000 });
 
-  // The active trail expands "Content"; "Content Definition" itself starts collapsed
-  // and its children only enter the DOM once expanded. clickForEffect covers the
-  // prerendered-inert-button race.
   const expandLink = label =>
     primaryNavMenu.locator(`button.crest-panel-menu__item-link:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
   const itemContent = label =>
     primaryNavMenu.locator(`.crest-panel-menu__item-content:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
-  await itemContent('Content Definition').waitFor({ timeout: 20000 });
+
+  // "Content Definition" is a child of "Design", not of "Content" - the active trail
+  // from a Contents route expands "Content", which leaves Design (and therefore
+  // Content Definition) collapsed and entirely absent from the DOM. Expand Design
+  // first, then Content Definition itself. clickForEffect covers the
+  // prerendered-inert-button race on both.
+  await clickForEffect(expandLink('Design'), itemContent('Content Definition'));
   await clickForEffect(expandLink('Content Definition'), itemContent('Content Types'));
 
   const result = await primaryNavMenu.evaluate(root => {
@@ -45,8 +48,14 @@ module.exports = async function run(page, ctx) {
       return { text, hasIcon: !!icon, hasPlaceholder: !!placeholder, textLeft: textBox?.left || 0 };
     };
 
-    const adminMenus = details('Admin Menus');
-    const siteMenus = details('Site Menus');
+    // The mixed icon/no-icon level-1 pair. "Admin Menus"/"Site Menus" were the original
+    // pair, but both have since moved under Platform > Configuration and are no longer
+    // level-1 at all. Under the expanded Design group, "Templates" (real icon) and
+    // "Admin Templates" (placeholder dot) are the current pair exercising the same
+    // contract: both occupy the icon rail one way or the other, so their text rails stay
+    // aligned.
+    const adminMenus = details('Templates');
+    const siteMenus = details('Admin Templates');
 
     const contentDefinition = Array.from(root.querySelectorAll('.primary-nav-menu__item--level-1')).find(
       element => textOf(element) === 'Content Definition',

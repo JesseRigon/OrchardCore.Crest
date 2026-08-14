@@ -53,7 +53,14 @@ module.exports = async function run(page, ctx) {
     const row = page.locator('tr').filter({ hasText: name });
     await row.locator('button').last().click();
     await page.getByText(`Delete query ${name}?`, { exact: false }).waitFor();
-    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    // Scope the confirmation to the inline confirm alert: every query row also renders
+    // its own exact-name "Delete" button, so a page-wide getByRole match is a
+    // strict-mode violation (it resolves to one button per row plus this one) and the
+    // click silently never happens - which looked like a broken delete flow rather than
+    // a broken selector. The confirmation is a Radzen alert rendered in place, not a
+    // modal dialog, so there is no [role="dialog"] to scope to.
+    const confirm = page.locator('.rz-alert').filter({ hasText: `Delete query ${name}` }).last();
+    await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
     await row.waitFor({ state: 'detached', timeout: 20000 });
   };
 
