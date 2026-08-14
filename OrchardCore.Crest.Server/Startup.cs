@@ -280,6 +280,12 @@ public sealed class Startup : StartupBase
         }
 
         routes.MapStaticAssets();
+        // The framework boot scripts are absent from the static web assets manifest by
+        // construction (see BlazorFrameworkScriptEndpoints' own comment) - mapped as
+        // ordinary tenant endpoints so tenant/admin prefix stripping applies to them
+        // like everything else Orchard routes.
+        routes.MapBlazorFrameworkScripts(
+            serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Startup>>());
         routes.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode()
             .AddInteractiveWebAssemblyRenderMode()
