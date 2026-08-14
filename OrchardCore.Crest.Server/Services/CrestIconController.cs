@@ -38,7 +38,7 @@ public sealed class CrestIconController(CrestIconSourceStore iconSourceStore)
 
     private async Task<NavigationItem> ResolveItemIconsAsync(NavigationItem item, CancellationToken cancellationToken)
     {
-        var icon = await ResolveIconAsync(item.Text, item.Id, item.Classes, cancellationToken);
+        var icon = await ResolveIconAsync(item.Id, item.Classes, cancellationToken);
 
         return item with
         {
@@ -47,13 +47,13 @@ public sealed class CrestIconController(CrestIconSourceStore iconSourceStore)
         };
     }
 
-    private async Task<NavigationIcon?> ResolveIconAsync(string text, string? itemId, string[] classes, CancellationToken cancellationToken)
+    private async Task<NavigationIcon?> ResolveIconAsync(string? itemId, string[] classes, CancellationToken cancellationToken)
     {
         var iconClass = GetIconClass(classes);
 
         if (string.IsNullOrWhiteSpace(iconClass))
         {
-            iconClass = await iconSourceStore.ResolveNavigationItemIconClassAsync(text, itemId, classes, cancellationToken);
+            iconClass = await iconSourceStore.ResolveNavigationItemIconClassAsync(itemId, classes, cancellationToken);
         }
 
         if (string.IsNullOrWhiteSpace(iconClass))

@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json.Serialization;
 using Crest.Controllers;
 using OrchardCore.Data.Documents;
@@ -18,64 +16,6 @@ public sealed class CrestAdminMenuLayoutService(
     public async Task<CrestAdminMenuLayoutDocument> GetAsync() => await documents.GetOrCreateImmutableAsync();
 
     public async Task<CrestAdminMenuLayoutDocument> LoadAsync() => await documents.GetOrCreateMutableAsync();
-
-    // NavigationItem.Key used to hash the item's translated Text when no Id/link was
-    // present, so an override saved before this fix is keyed by a hash of whatever
-    // culture was active at save time. Recompute that legacy hash for every item in the
-    // CURRENT request's menu tree (any culture) and, on a match, rewrite the override to
-    // the new culture-invariant key. Self-healing and idempotent - once every legacy key
-    // has been renamed there is nothing left to match and this becomes a no-op scan.
-    public async Task<NavigationMenu> MigrateLegacyKeysAsync(NavigationMenu baseMenu)
-    {
-        var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
-        Flatten(baseMenu.Items, null, flat);
-
-        var legacy = flat.Values.ToDictionary(node => LegacyStableKey(node.Item.Text, node.Item.Link), node => node.Key, StringComparer.Ordinal);
-        if (legacy.Count == 0)
-        {
-            return baseMenu;
-        }
-
-        var layout = await LoadAsync();
-        var changed = false;
-
-        foreach (var item in layout.Items)
-        {
-            if (legacy.TryGetValue(item.ItemKey, out var currentKey) && !string.Equals(item.ItemKey, currentKey, StringComparison.Ordinal))
-            {
-                item.ItemKey = currentKey;
-                changed = true;
-            }
-
-            if (item.ParentKey is not null && legacy.TryGetValue(item.ParentKey, out var currentParentKey) && !string.Equals(item.ParentKey, currentParentKey, StringComparison.Ordinal))
-            {
-                item.ParentKey = currentParentKey;
-                changed = true;
-            }
-        }
-
-        foreach (var separator in layout.Separators)
-        {
-            if (separator.ParentKey is not null && legacy.TryGetValue(separator.ParentKey, out var currentParentKey) && !string.Equals(separator.ParentKey, currentParentKey, StringComparison.Ordinal))
-            {
-                separator.ParentKey = currentParentKey;
-                changed = true;
-            }
-        }
-
-        if (changed)
-        {
-            await SaveAsync(layout);
-        }
-
-        return baseMenu;
-    }
-
-    private static string LegacyStableKey(string text, string? link)
-    {
-        var input = $"{text}|{link}";
-        return "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
-    }
 
     public Task SaveAsync(CrestAdminMenuLayoutDocument document) =>
         documents.UpdateAsync(document, _ => invalidator.InvalidateTenantAsync());
@@ -391,6 +331,52 @@ public sealed class CrestAdminMenuLayoutService(
         return layout.CustomItems.Any(item => string.Equals(item.Key, key, StringComparison.Ordinal));
     }
 
+    // Removes override rows that no longer correspond to anything in the CURRENT menu
+    // tree - e.g. rows left behind by the fixed Href-based Key bug (NavigationItem.Key
+    // used to be a per-request-generated route Href for some items, which could differ
+    // between the request that saved a drag-drop move and the request that re-applied
+    // it, permanently orphaning the old row under a key nothing will ever match again).
+    // Only safe to call when baseMenu reflects the tenant's full feature set (all
+    // features enabled) - otherwise a row for a merely-DISABLED-but-installed feature's
+    // item would look orphaned too and get wrongly deleted. Custom items are always
+    // user-authored and kept regardless of tree membership.
+    public async Task<int> PruneOrphanedOverridesAsync(NavigationMenu baseMenu)
+    {
+        var flat = new Dictionary<string, LayoutNode>(StringComparer.Ordinal);
+        Flatten(baseMenu.Items, null, flat);
+
+        var layout = await LoadAsync();
+        var customKeys = new HashSet<string>(layout.CustomItems.Select(item => item.Key), StringComparer.Ordinal);
+        var live = new HashSet<string>(flat.Keys, StringComparer.Ordinal);
+        live.UnionWith(customKeys);
+        live.Add(LockedNewItemKey);
+
+        var orphanedKeys = layout.Items
+            .Select(item => item.ItemKey)
+            .Where(key => !live.Contains(key))
+            .ToHashSet(StringComparer.Ordinal);
+
+        if (orphanedKeys.Count == 0)
+        {
+            return 0;
+        }
+
+        layout.Items.RemoveAll(item => orphanedKeys.Contains(item.ItemKey));
+
+        foreach (var item in layout.Items.Where(item => item.ParentKey is not null && orphanedKeys.Contains(item.ParentKey)))
+        {
+            item.ParentKey = null;
+        }
+
+        foreach (var separator in layout.Separators.Where(separator => separator.ParentKey is not null && orphanedKeys.Contains(separator.ParentKey)))
+        {
+            separator.ParentKey = null;
+        }
+
+        await SaveAsync(layout);
+        return orphanedKeys.Count;
+    }
+
     public async Task<bool> IsLockedNewBranchAsync(NavigationMenu baseMenu, string? key)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -429,12 +415,19 @@ public sealed class CrestAdminMenuLayoutService(
         })
         .ToArray();
 
+    // Items without an Id have no stable identity to persist layout/icon overrides
+    // against and are skipped entirely, along with their descendants.
     private static void Flatten(IEnumerable<NavigationItem> items, string? parentKey, Dictionary<string, LayoutNode> flat)
     {
         var index = 0;
         foreach (var item in items)
         {
             var key = item.Key;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                continue;
+            }
+
             if (!flat.ContainsKey(key))
             {
                 flat[key] = new LayoutNode(key, item with { Items = [] }, parentKey, index);

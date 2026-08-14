@@ -147,6 +147,9 @@ module.exports = async function run(page, ctx) {
         await updateNodeIcon(page, ctx.baseUrl, restoreContent, original).catch(() => {});
       }
     }
+    // Restore the tenant's original supportedCultures/defaultCulture - otherwise fr-FR
+    // stays enabled for every check that runs after this one in the same suite run.
+    await putJson(page, ctx.baseUrl, '/api/crest/localization', localization).catch(() => {});
   }
 
   return results;

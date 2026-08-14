@@ -108,6 +108,7 @@ public sealed class BlazorAdminThemeMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        Console.WriteLine($"[DIAG] BlazorAdminThemeMiddleware invoked for {context.Request.Path}");
         if (LegacyFrameThemeSelector.IsLegacyFrameRequest(context))
         {
             await _next(context);

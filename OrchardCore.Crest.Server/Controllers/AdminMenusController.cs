@@ -574,6 +574,30 @@ public sealed class AdminMenusController(
         return Ok(AdminMenuSummary.From(menu));
     }
 
+    // Removes stored layout overrides that no longer match anything in the CURRENT menu
+    // tree - e.g. rows left behind by the fixed Href-based Key bug (see
+    // NavigationItem.Key in NavigationController.cs). Only safe to run when all features
+    // are enabled: with any feature disabled, that feature's items are also absent from
+    // baseMenu and their still-legitimate overrides would be wrongly deleted, since
+    // "disabled but installed" and "not present at all" both look identical here.
+    [HttpPost("{menuId}/prune-overrides")]
+    public async Task<ActionResult<AdminMenuSummary>> PruneOverridesAsync(string menuId)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        {
+            return NotFound();
+        }
+
+        var baseMenu = await BuildDefaultNavigationMenuAsync();
+        await layoutService.PruneOrphanedOverridesAsync(baseMenu);
+        return Ok(await GetDefaultMenuSummaryAsync());
+    }
+
     [HttpDelete("{menuId}/nodes/{nodeId}")]
     public async Task<ActionResult<AdminMenuSummary>> DeleteNodeAsync(string menuId, string nodeId)
     {
@@ -660,11 +684,9 @@ public sealed class AdminMenusController(
     {
         await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
         var items = await navigationManager.BuildMenuAsync("admin", ControllerContext);
-        var menu = new NavigationMenu("admin", items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
+        return new NavigationMenu("admin", items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
             .ToArray());
-
-        return await layoutService.MigrateLegacyKeysAsync(menu);
     }
 
     private async Task<AdminMenu?> LoadMenuForUpdateAsync(string menuId)

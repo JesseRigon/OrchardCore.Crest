@@ -120,10 +120,11 @@
                                                         <CrestText TextStyle="TextStyle.H5" Text="@SelectedMenu.Name" />
                                                         <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminMenus_DragHint", "Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child. Admin menus support up to 4 tiers.")" />
                                                     </CrestStack>
-                                                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-menu-toolbar-actions">
                                                         @if (SelectedMenu.IsDefault)
                                                         {
                                                             <CrestButton Text="@T.T("AdminMenus_ExportJson", "Export JSON")" Icon="download" ButtonStyle="ButtonStyle.Light" Click="ExportLayoutAsync" Disabled="@(IsBusy || IsExportingLayout)" />
+                                                            <CrestButton Text="@T.T("AdminMenus_PruneJson", "Prune JSON")" Icon="cleaning_services" ButtonStyle="ButtonStyle.Light" Click="PruneOverridesAsync" Disabled="@(IsBusy || IsPruningOverrides)" />
                                                         }
                                                         <CrestButton Text="@(AllNodesCollapsed ? T.T("AdminMenus_ExpandAll", "Expand All") : T.T("AdminMenus_CollapseAll", "Collapse All"))" Icon="@(AllNodesCollapsed ? "unfold_more" : "unfold_less")" ButtonStyle="ButtonStyle.Light" Click="ToggleCollapseAll" Disabled="@(IsBusy || SelectedMenu.Nodes.Length == 0)" />
                                                         <div class="admin-menu-actions">
@@ -236,6 +237,7 @@
     private bool IsLoading { get; set; } = true;
     private bool IsBusy { get; set; }
     private bool IsExportingLayout { get; set; }
+    private bool IsPruningOverrides { get; set; }
     private string? ErrorMessage { get; set; }
     private ElementReference TreeRoot;
     private DotNetObjectReference<AdminMenus>? DotNetRef;
@@ -411,6 +413,30 @@
         finally
         {
             IsExportingLayout = false;
+        }
+    }
+
+    private async Task PruneOverridesAsync()
+    {
+        if (SelectedMenu is null || !SelectedMenu.IsDefault)
+        {
+            return;
+        }
+
+        IsPruningOverrides = true;
+
+        try
+        {
+            await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.PruneOverridesAsync(SelectedMenu.Id));
+            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_PrunedTitle", "Layout overrides cleaned up"), T.T("AdminMenus_PrunedMessage", "Removed any saved overrides that no longer match a current menu item."));
+        }
+        catch (Exception ex)
+        {
+            Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_PruneFailedTitle", "Cleanup failed"), ex.Message);
+        }
+        finally
+        {
+            IsPruningOverrides = false;
         }
     }
 

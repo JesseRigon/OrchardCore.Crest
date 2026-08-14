@@ -209,6 +209,7 @@ public interface IAdminMenusApi
     Task<AdminMenuSummary?> DeleteSeparatorAsync(string menuId, string separatorId);
     Task<AdminMenuSummary?> UpdatePrimaryNavMenuSettingsAsync(string menuId, AdminPrimaryNavMenuSettings settings);
     Task<AdminMenuLayoutExportResult?> ExportLayoutAsync(string? fileName = null);
+    Task<AdminMenuSummary?> PruneOverridesAsync(string menuId);
 }
 
 public sealed class Api(HttpClient http, ICrestAntiforgeryTokenStore antiforgery) : IApi
@@ -974,6 +975,12 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
         return response.IsSuccessStatusCode;
     }
 
+    public async Task<AdminMenuSummary?> PruneOverridesAsync(string menuId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/prune-overrides")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
+    }
+
     public async Task<AdminMenuLayoutExportResult?> ExportLayoutAsync(string? fileName = null)
     {
         var uri = "api/crest/admin-menu-layout/export";
@@ -1199,18 +1206,14 @@ public sealed record NavigationItem(
     string? Position,
     NavigationIcon? Icon,
     string[] Classes,
-    NavigationItem[] Items,
-    string? Path = null)
+    NavigationItem[] Items)
 {
     // Must mirror NavigationController.NavigationItem.Key exactly (server and client
     // compute the same key independently from the same wire payload) - Text is
-    // translated and must never be part of the match key, Path is a culture-invariant
-    // resource-key structural fingerprint the server computes and sends alongside Text.
-    public string Key => !string.IsNullOrWhiteSpace(Id) ? Id : (Link ?? StableKey(Path ?? Text));
+    // translated and must never be part of the match key. Every stock OrchardCore
+    // admin navigation provider now sets a stable, culture-invariant Id.
+    public string? Key => Id;
     public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
-
-    private static string StableKey(string input) =>
-        "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
 }
 
 public sealed record ContentType(

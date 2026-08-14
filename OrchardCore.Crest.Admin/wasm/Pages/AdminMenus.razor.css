@@ -42,6 +42,15 @@
     color: var(--rz-danger, #dc2626) !important;
 }
 
+.admin-menu-toolbar-actions ::deep .rz-button {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.admin-menu-toolbar-actions ::deep .rz-button-text {
+    white-space: nowrap;
+}
+
 .admin-menu-tree__list {
     list-style: none;
     margin: 0;

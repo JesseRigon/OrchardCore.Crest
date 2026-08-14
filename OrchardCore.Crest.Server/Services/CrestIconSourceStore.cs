@@ -39,9 +39,9 @@ public sealed class CrestIconSourceStore(IIconRegistry iconRegistry)
             result.Take);
     }
 
-    public ValueTask<string?> ResolveNavigationItemIconClassAsync(string? text, string? itemId, string[] classes, CancellationToken cancellationToken = default)
+    public ValueTask<string?> ResolveNavigationItemIconClassAsync(string? itemId, string[] classes, CancellationToken cancellationToken = default)
     {
-        foreach (var value in GetLookupValues(text, itemId, classes))
+        foreach (var value in GetLookupValues(itemId, classes))
         {
             if (LegacyNavigationIconMap.TryGetValue(value, out var iconClass))
             {
@@ -70,7 +70,7 @@ public sealed class CrestIconSourceStore(IIconRegistry iconRegistry)
         return await iconRegistry.BuildPackAsync(keys, cancellationToken);
     }
 
-    private static IEnumerable<string> GetLookupValues(string? text, string? itemId, IEnumerable<string> classes)
+    private static IEnumerable<string> GetLookupValues(string? itemId, IEnumerable<string> classes)
     {
         if (!string.IsNullOrWhiteSpace(itemId))
         {
@@ -81,56 +81,46 @@ public sealed class CrestIconSourceStore(IIconRegistry iconRegistry)
         {
             yield return className;
         }
-
-        if (!string.IsNullOrWhiteSpace(text))
-        {
-            yield return text;
-        }
     }
 
+    // Keyed by the stable, culture-invariant MenuItem.Id (bare slug, e.g. "content-items"), never by
+    // translated caption text: a text-keyed lookup breaks as soon as the UI culture changes.
     private static readonly IReadOnlyDictionary<string, string> LegacyNavigationIconMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["new"] = "@iconify:mdi:plus-circle",
         ["content"] = "@iconify:mdi:file-document-multiple",
-        ["Content Items"] = "@iconify:mdi:file-document-outline",
-        ["Menus"] = "@iconify:mdi:menu",
+        ["content-items"] = "@iconify:mdi:file-document-outline",
+        ["menus"] = "@iconify:mdi:menu",
         ["design"] = "@iconify:mdi:palette",
-        ["Content Definition"] = "@iconify:mdi:shape-outline",
-        ["Placements"] = "@iconify:mdi:view-dashboard-edit",
-        ["Shortcodes"] = "@iconify:mdi:code-braces",
-        ["Templates"] = "@iconify:mdi:file-tree",
-        ["Themes"] = "@iconify:mdi:theme-light-dark",
-        ["Widgets"] = "@iconify:mdi:widgets-outline",
+        ["content-definition"] = "@iconify:mdi:shape-outline",
+        ["placements"] = "@iconify:mdi:view-dashboard-edit",
+        ["shortcodes"] = "@iconify:mdi:code-braces",
+        ["templates"] = "@iconify:mdi:file-tree",
+        ["themes"] = "@iconify:mdi:theme-light-dark",
+        ["widgets"] = "@iconify:mdi:widgets-outline",
         ["search"] = "@iconify:mdi:magnify",
         ["indexes"] = "@iconify:mdi:database-search",
-        ["Indexes"] = "@iconify:mdi:database-search",
-        ["Queries"] = "@iconify:mdi:format-list-bulleted",
+        ["queries"] = "@iconify:mdi:format-list-bulleted",
         ["accessControl"] = "@iconify:mdi:shield-account",
+        ["access-control"] = "@iconify:mdi:shield-account",
         ["roles"] = "@iconify:mdi:account-key",
-        ["Roles"] = "@iconify:mdi:account-key",
         ["users"] = "@iconify:mdi:account-group",
-        ["Users"] = "@iconify:mdi:account-group",
         ["media"] = "@iconify:mdi:image-multiple",
-        ["Library"] = "@iconify:mdi:folder-image",
-        ["Profiles"] = "@iconify:mdi:image-size-select-large",
-        ["menu-multitenancy"] = "@iconify:mdi:home-city",
-        ["Multi-Tenancy"] = "@iconify:mdi:home-city",
-        ["Tenants"] = "@iconify:mdi:home-city",
+        ["library"] = "@iconify:mdi:folder-image",
+        ["profiles"] = "@iconify:mdi:image-size-select-large",
+        ["multi-tenancy"] = "@iconify:mdi:home-city",
+        ["tenants"] = "@iconify:mdi:home-city",
         ["tools"] = "@iconify:mdi:tools",
-        ["Admin Menus"] = "@iconify:mdi:menu",
-        ["Deployments"] = "@iconify:mdi:cloud-upload",
-        ["Features"] = "@iconify:mdi:shape-outline",
+        ["admin-menus"] = "@iconify:mdi:menu",
+        ["deployments"] = "@iconify:mdi:cloud-upload",
+        ["features"] = "@iconify:mdi:shape-outline",
         ["recipes"] = "@iconify:mdi:chef-hat",
-        ["Recipes"] = "@iconify:mdi:chef-hat",
         ["settings"] = "@iconify:mdi:cog",
         ["general"] = "@iconify:mdi:cog-outline",
-        ["General"] = "@iconify:mdi:cog-outline",
         ["debugging"] = "@iconify:mdi:bug",
-        ["Debugging"] = "@iconify:mdi:bug",
         ["admin"] = "@iconify:mdi:shield-crown",
-        ["Admin"] = "@iconify:mdi:shield-crown",
-        ["Localization"] = "@iconify:mdi:translate",
-        ["Security"] = "@iconify:mdi:security",
-        ["Zones"] = "@iconify:mdi:map-marker-path"
+        ["localization"] = "@iconify:mdi:translate",
+        ["security"] = "@iconify:mdi:security",
+        ["zones"] = "@iconify:mdi:map-marker-path"
     };
 }

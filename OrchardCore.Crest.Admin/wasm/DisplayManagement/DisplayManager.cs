@@ -467,7 +467,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
 
     private static DisplayMenu ToDisplayMenu(NavigationMenu menu) => new(
         menu.Name,
-        menu.Items.Select(ToDisplayMenuItem).ToArray(),
+        menu.Items.Where(item => !string.IsNullOrWhiteSpace(item.Key)).Select(ToDisplayMenuItem).ToArray(),
         (menu.Separators ?? []).Select(ToDisplayMenuSeparator).ToArray(),
         ToDisplayPrimaryNavMenuSettings(menu.PrimaryNavMenuSettings));
 
@@ -529,7 +529,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
 
     private static DisplayMenuItem ToDisplayMenuItem(NavigationItem item) => new(
         item.Text,
-        item.Key,
+        item.Key!,
         item.Id,
         item.Href,
         item.Url,
@@ -537,7 +537,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         item.Position,
         ToDisplayIcon(item.Icon),
         item.Classes,
-        item.Items.Select(ToDisplayMenuItem).ToArray());
+        item.Items.Where(child => !string.IsNullOrWhiteSpace(child.Key)).Select(ToDisplayMenuItem).ToArray());
 
     private static DisplayIcon? ToDisplayIcon(NavigationIcon? icon) => icon is null
         ? null

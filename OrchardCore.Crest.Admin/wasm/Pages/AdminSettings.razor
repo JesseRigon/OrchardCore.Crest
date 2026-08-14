@@ -218,7 +218,7 @@
     {
         public static RouteNode From(Crest.Components.Theme.CrestApiLocalizer t, NavigationItem item, string? parentId, int depth, int order)
         {
-            var id = item.Key;
+            var id = item.Key ?? "(no id)";
             var metaValues = new List<string>();
             if (!string.IsNullOrWhiteSpace(item.Link)) metaValues.Add(item.Link!);
             if (item.Classes.Length > 0) metaValues.Add(string.Format(t.T("AdminSettings_ClassesFormat", "Classes: {0}"), string.Join(" ", item.Classes)));

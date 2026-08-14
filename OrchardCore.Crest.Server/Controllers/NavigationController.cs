@@ -3,8 +3,6 @@ using Crest.Icons;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Admin;
 using OrchardCore.Navigation;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Crest.Controllers;
 
@@ -65,7 +63,6 @@ public sealed class NavigationController(
 
         if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
         {
-            menu = await layoutService.MigrateLegacyKeysAsync(menu);
             menu = await layoutService.ApplyAsync(menu);
             menu = menu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
         }
@@ -92,29 +89,18 @@ public sealed record NavigationItem(
     string? Position,
     NavigationIcon? Icon,
     string[] Classes,
-    NavigationItem[] Items,
-    string? Path = null)
+    NavigationItem[] Items)
 {
-    // Menu labels (Text) are translated and must never be part of the match key - the
-    // same item resolves to different Text per admin culture. Id is the only field
-    // authors set explicitly for this purpose; Href/Url (a route) is culture-invariant
-    // too. Path is a resource-key (LocalizedString.Name, never the translated Value)
-    // structural fingerprint used only when neither Id nor a link is present, e.g. the
-    // parent-only category nodes ("Configuration", "Settings") that stock OrchardCore
-    // providers emit with no .Id(...) and no link.
-    // If Crest is ever merged upstream into OrchardCore core, part of that merge should
-    // auto-assign a stable Id to every admin MenuItem that doesn't declare one (instead
-    // of leaving Id optional), and this Key fallback chain should be replaced with a
-    // straight MenuItem.Id lookup.
-    public string Key => !string.IsNullOrWhiteSpace(Id) ? Id : (Link ?? StableKey(Path ?? Text));
+    // Menu labels (Text) are translated and must never be part of the match key - the same
+    // item resolves to different Text per admin culture. Every stock OrchardCore admin
+    // navigation provider now sets a stable, culture-invariant Id, so Id is the only
+    // supported match key: an item with no Id simply has no stable identity to persist
+    // layout/icon overrides against.
+    public string? Key => Id;
     public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
 
-    public static NavigationItem From(MenuItem item) => From(item, null, 0);
-
-    private static NavigationItem From(MenuItem item, string? parentPath, int index)
-    {
-        var path = $"{parentPath}/{item.Text.Name}#{index}";
-        return new(
+    public static NavigationItem From(MenuItem item) =>
+        new(
             item.Text.Value,
             item.Id,
             item.Href,
@@ -124,13 +110,8 @@ public sealed record NavigationItem(
             null,
             item.Classes.ToArray(),
             item.Items.OrderBy(child => child.Position, NavigationPositionComparer.Instance)
-                .Select((child, childIndex) => From(child, path, childIndex))
-                .ToArray(),
-            path);
-    }
-
-    private static string StableKey(string input) =>
-        "nav-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
+                .Select(From)
+                .ToArray());
 }
 
 internal sealed class NavigationPositionComparer : IComparer<string?>
@@ -171,13 +152,14 @@ internal sealed class NavigationPositionComparer : IComparer<string?>
 
             if (!xIsInt && !yIsInt)
             {
-                var result = string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
-
-                if (result != 0)
-                {
-                    return result;
-                }
-
+                // Position strings are built almost universally upstream via
+                // LocalizedString.PrefixPosition(), which bakes in the TRANSLATED display
+                // text (LocalizedString.ToString() returns .Value, discarding .Name - see
+                // OrchardCore.Navigation.Core's PrefixPosition(LocalizedString) overload).
+                // Comparing that text would sort items differently per admin culture. Treat
+                // non-numeric segments as tied instead: OrderBy is a stable sort, so ties
+                // fall through to the underlying provider's original (culture-invariant)
+                // registration order rather than alphabetizing translated words.
                 continue;
             }
 

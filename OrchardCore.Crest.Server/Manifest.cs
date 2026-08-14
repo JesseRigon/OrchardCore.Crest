@@ -30,7 +30,15 @@ using OrchardCore.Modules.Manifest;
     //     (already referenced), but without this feature enabled, HomeRoute would stay
     //     permanently null regardless. Also brings in OrchardCore.HomeRoute (its own
     //     manifest dependency) for free.
-    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Autoroute", "OrchardCore.Contents", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.LegacyFrame", "OrchardCore.Crest.Icons"],
+    // OrchardCore.Crest.LegacyFrame is NOT listed here even though this feature needs it
+    // enabled: a module can never hard-depend on a theme in OrchardCore's ordering model
+    // without creating a cycle, because ThemeExtensionDependencyStrategy gives every theme
+    // an implicit dependency on every non-theme feature (Crest -> LegacyFrame via
+    // Dependencies, LegacyFrame -> Crest via the implicit theme rule). LegacyFrame is
+    // IsAlwaysEnabled instead, and After (below) keeps load order correct without
+    // reintroducing the cycle.
+    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Autoroute", "OrchardCore.Contents", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.Icons"],
+    After = ["OrchardCore.Crest.LegacyFrame"],
     IsAlwaysEnabled = true
 )]
 
