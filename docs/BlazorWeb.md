@@ -63,31 +63,22 @@ Crest.Server hosts interactive Blazor islands (routable `.razor` pages marked `@
 - Orchard's shell-scoped `IEndpointRouteBuilder` — it's the same live `IEndpointRouteBuilder`/`DataSources` as the real request pipeline (Orchard's `ShellPipelineExtensions.BuildPipelineInternalAsync` is the only place `UseRouting()`/`UseEndpoints()` run), so `MapStaticAssets()` inside a module `Startup.Configure()` is correctly wired — it just has nothing to serve, because the asset was never in the manifest to begin with.
 - Setting `OutputType=Exe` on the module project directly *would* satisfy the SDK gate, but risks breaking `OrchardCore.Module.Targets`' embedded-resource-based module asset packaging, which assumes a library. Not used here.
 
-**Fix** — serve the file directly from the same physical location the SDK target would have used, scoped to `/_framework` only, registered once in the host's top-level `Program.cs` (see `OrchardCore.Crest.Host/Program.cs`):
+**Fix** — `OrchardCore.Crest.Server/BlazorFrameworkScriptEndpoints.cs`: the boot scripts are mapped as ordinary **tenant endpoints** in Crest's own `Startup.Configure` (`routes.MapBlazorFrameworkScripts(...)`), serving the physical files from the `microsoft.aspnetcore.app.internal.assets` package directory, version-pinned to the running shared framework. Consuming hosts need **nothing** in `Program.cs` anymore.
 
-```csharp
-var frameworkAssetsRoot = Directory
-    .EnumerateDirectories(Path.Combine(
-        Environment.GetEnvironmentVariable("NUGET_PACKAGES")
-            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages"),
-        "microsoft.aspnetcore.app.internal.assets"))
-    .OrderByDescending(path => path)
-    .Select(path => Path.Combine(path, "_framework"))
-    .FirstOrDefault(Directory.Exists);
+An earlier revision registered a host-level `UseStaticFiles(PhysicalFileProvider, RequestPath: "/_framework")` in each host's `Program.cs` instead. That was retired deliberately: registered before `UseOrchardCore()`, it only ever matched the bare root form of the URL — it could never serve `/{tenantPrefix}/_framework/...` (Orchard strips the tenant prefix *inside* `UseOrchardCore()`) or `/{shellBase}/_framework/...` (stripped by `BlazorAdminThemeMiddleware`, also inside the tenant pipeline), and it had to be copy-pasted into every consuming host. As a tenant endpoint, matching runs after both prefix strips, so one registration serves every request form — and OrchardCore's routing stays the single authority over the URL space.
 
-if (frameworkAssetsRoot is not null)
-{
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(frameworkAssetsRoot),
-        RequestPath = "/_framework",
-    });
-}
-```
+**Diagnose:** `curl -o /dev/null -w '%{http_code}' http://<host>/_framework/blazor.web.js` — if it's not 200, no interactive island on that host will ever be clickable, no matter how correct the `.razor`/`Startup.cs` wiring looks. Check this *before* debugging render-mode code. Under a URL-prefixed tenant or an admin shell, also check the prefixed forms (`/{prefix}/_framework/...`, `/Admin/_framework/...`).
 
-This resolves the package version dynamically (no hardcoded version string to go stale on an SDK upgrade) and only needs to exist once per host, not per module.
+## The base path model: OrchardCore prefixes vs .NET 10 Blazor
 
-**Diagnose:** `curl -o /dev/null -w '%{http_code}' http://<host>/_framework/blazor.web.js` — if it's not 200, no interactive island on that host will ever be clickable, no matter how correct the `.razor`/`Startup.cs` wiring looks. Check this *before* debugging render-mode code.
+.NET 10 Blazor has no dynamic base-path support: the only sanctioned mechanism is a *static* `UsePathBase` at startup plus a hand-edited `<base href>` (framework scripts 404 under sub-paths — [dotnet/aspnetcore#54525](https://github.com/dotnet/aspnetcore/issues/54525); multi-client path-base is broken and backlogged — [#62249](https://github.com/dotnet/aspnetcore/issues/62249)). OrchardCore needs the opposite: the admin shell's base is `tenantPrefix + adminPrefix`, both tenant-configurable, resolved per request. The [.NET 11 `<BasePath />` component](https://github.com/dotnet/aspnetcore/issues/66388) only fixes the *document* side (`<base href>` from `NavigationManager.BaseUri`); the serving side still needs `Request.PathBase` to be correct server-side.
+
+Crest therefore implements base paths with OrchardCore's own idiom — the `PathBase += prefix / Path = remainder` move `ModularTenantRouterMiddleware` makes for tenant prefixes — one layer further in:
+
+- **Page requests** (`BlazorAdminThemeMiddleware`, page branch): `PathBase += shellBase`, `Path =` the compile-time `@page` literal. Endpoint routing matches the literal; everything PathBase-derived (`NavigationManager.BaseUri`, the `<base href>` `App.razor` emits, redirect composition) automatically carries `tenantPrefix + shellBase`. When .NET 11's `<BasePath />` ships, `App.razor`'s manual `<base>` line can be replaced by it with no other changes.
+- **Infrastructure/API requests** (`{shellBase}/_framework|_content|_blazor|api/...`): a **Path-only** strip to the tenant-root form. Deliberately *not* a PathBase shift: cookie issuance (auth, antiforgery, culture) defaults `Cookie.Path` to the request's PathBase, and cookies must scope to the *tenant* base — carrying the shell base into PathBase once scoped the auth cookie to `/Login`, making a fresh login invisible to `/Admin` (infinite login redirect loop).
+- **The client is fully base-relative**: the WASM `HttpClient` base, SignalR hub URLs, and the antiforgery token fetch all resolve against the document base; the `/api` strip normalizes them server-side. The client needs no origin or tenant knowledge. Cross-shell `forceLoad` navigation targets (`CrestRoutingOptions.AdminPath/LoginPath`) are tenant-composed absolute URLs, built on both sides from the document base / the middleware-stashed pre-shift PathBase.
+- **Document asset URLs** (`_content/*`, `OrchardCore.Resources/*`, `_framework/blazor.web.js`) are tenant-root-absolute, composed via `App.razor`'s `Asset()` helper on the tenant base — deliberately independent of the admin `<base href>`.
 
 ## Testing gotchas found converting Admin to SSR (Phase 8 triage, condensed)
 
@@ -105,7 +96,7 @@ These recur any time a page is converted from pure-WASM to Static SSR + `Interac
 
 `launchSettings.json` is the only place this host sets `ASPNETCORE_ENVIRONMENT=Development`. Launching with `dotnet run --no-launch-profile` (used to avoid the profile's browser-launch behavior, e.g. under Playwright or a headless dev loop) skips `launchSettings.json` entirely, so the app defaults to `Production` with no error or warning.
 
-**Symptom:** every asset resolved from a *referenced project's own* `wwwroot` (`_content/*`, and any `_framework/*` file not covered by the `PhysicalFileProvider` workaround in `Program.cs`, Bug 2 above) 500s with `FileNotFoundException` re-stating a physical file under the **host's own** (empty) `wwwroot`.
+**Symptom:** every asset resolved from a *referenced project's own* `wwwroot` (`_content/*`, and any `_framework/*` file not covered by `BlazorFrameworkScriptEndpoints`, Bug 2 above) 500s with `FileNotFoundException` re-stating a physical file under the **host's own** (empty) `wwwroot`.
 
 **Actual mechanism (verified by decompiling `Microsoft.AspNetCore.dll`/`Microsoft.AspNetCore.Hosting.dll`, not just inferred from symptoms):**
 - `WebApplicationBuilder`'s `ConfigureWebDefaults` only calls `StaticWebAssetsLoader.UseStaticWebAssets(...)` when `IsDevelopment()` is true. That call is what composes every referenced project's real `wwwroot` (via the build-time static-web-assets manifest) into `IWebHostEnvironment.WebRootFileProvider`. Skip it, and `WebRootFileProvider` is just the host's own physical `wwwroot` - empty for a module-hosted app like this.

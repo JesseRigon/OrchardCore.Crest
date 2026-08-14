@@ -54,22 +54,33 @@ internal sealed class BlazorAdminThemeOptionsConfiguration(
 // asset out of the wasm project's build webroot) is retired - Crest.Server's
 // MapRazorComponents<App>() endpoint is the only thing that produces admin documents
 // now, and every asset flows through the static-web-assets pipeline (_content/*,
-// /_framework/*). What remains here is the request *gatekeeping* that has to happen
-// before endpoint routing:
+// /_framework/*, with the framework boot scripts mapped by
+// BlazorFrameworkScriptEndpoints). What remains here is the request *gatekeeping*
+// that has to happen before endpoint routing:
 //
 //   1. theme check - the Blazor admin shell only applies when the tenant's selected
 //      admin theme is (or is tagged as) the Blazor one;
 //   2. canonical-casing redirect - Blazor's NavigationManager compares the browser
-//      URL against <base href> ordinally, so "/login" must 302 to "/Login";
+//      URL against <base href> ordinally, so "/login" must 302 to "/Login" (composed
+//      on the tenant PathBase);
 //   3. authentication + per-route authorization for admin Blazor pages, server-side,
 //      ahead of any rendering;
-//   4. the path rewrite that bridges Orchard's tenant-configured admin prefix to
-//      MapRazorComponents' compile-time route table: "/Admin/Features" becomes
-//      "/Features" (the @page literal), "/Login" becomes "/login", and admin URLs
-//      with no Crest Blazor page become "/legacy-host" (LegacyHost.razor, which
-//      renders the LegacyAdminFrame the client-side Router's NotFound branch shows
-//      for the same URLs). The matched shell base is stashed in HttpContext.Items
-//      (CrestBlazorHosting) for the theme-dispatching App root to build <base href>.
+//   4. the shell-base shift that bridges Orchard's tenant-configured admin prefix to
+//      MapRazorComponents' compile-time route table, mirroring how
+//      ModularTenantRouterMiddleware handles the tenant's own RequestUrlPrefix:
+//      PathBase += shellBase, Path = the @page literal ("/Admin/Features" ->
+//      PathBase "/Admin" + Path "/Features", "/Login" -> "/login", admin URLs with
+//      no Crest Blazor page -> "/legacy-host", whose LegacyHost.razor renders the
+//      LegacyAdminFrame the client-side Router's NotFound branch shows for the same
+//      URLs). .NET 10 has no dynamic base-path support of its own
+//      (dotnet/aspnetcore#54525; the .NET 11 <BasePath /> component, #66388, only
+//      covers the document side) - this shift IS the base-path mechanism, and
+//      App.razor derives <base href> from the shifted PathBase. The shell base and
+//      the pre-shift tenant base are stashed in HttpContext.Items
+//      (CrestBlazorHosting) for the App root and CrestRoutingOptions composition.
+//      Infrastructure/API requests ("{shellBase}/_framework|_content|_blazor|api/...")
+//      get a Path-ONLY strip instead - see the comment at that branch for why
+//      PathBase (and therefore cookie scoping) must stay at the tenant layer there.
 // Inserts BlazorAdminThemeMiddleware ahead of the tenant pipeline's UseRouting() -
 // OrchardCore applies IStartupFilters before it adds routing (ShellPipelineExtensions),
 // while module Configure() middlewares all land after, where a Request.Path rewrite
