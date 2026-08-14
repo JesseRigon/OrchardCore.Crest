@@ -21,10 +21,12 @@
     defined server-side resolves over the circuit but throws the moment
     InteractiveAuto switches to WASM. See docs/BlazorWeb.md.
 
-    Admin head assets are root-absolute _content/* static-web-asset URLs (served by
-    MapStaticAssets / the host's static asset pipeline), deliberately independent of
-    the admin <base href> - the old wasm/index.html + CopyCrestSharedAssets flattened
-    copies are retired with the middleware's shell serving.
+    Admin head assets are tenant-root-absolute _content/* static-web-asset URLs
+    (served by MapStaticAssets inside the tenant pipeline), deliberately independent
+    of the admin <base href> and composed via Asset() on Orchard's tenant base so
+    URL-prefixed tenants resolve them correctly - the old wasm/index.html +
+    CopyCrestSharedAssets flattened copies are retired with the middleware's shell
+    serving.
 *@
 @* lang reflects the culture the request-localization pipeline resolved for this
    request (tenant default / crest_culture cookie / user preference) - the SSR
@@ -39,20 +41,22 @@
     {
         <title>Crest</title>
         <base href="@_adminBaseHref" />
-        <link id="crest-radzen-theme" rel="stylesheet" href="/_content/OrchardCore.Crest.Components/css/material-base.css" />
-        <link rel="stylesheet" href="/OrchardCore.Resources/Vendor/fontawesome-free/css/all.min.css" />
-        <link rel="stylesheet" href="/OrchardCore.Resources/Vendor/fontawesome-free/css/v4-shims.min.css" />
-        <link rel="stylesheet" href="/OrchardCore.Resources/Vendor/fontawesome-free/css/v5-font-face.min.css" />
-        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Admin.Client/CrestAdmin.DesignSystem.Default.css" />
-        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Components/CrestComponents.css" />
-        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Components/OrchardCore.Crest.Components.bundle.scp.css" />
-        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Admin.Client/CrestAdmin.css" />
-        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Admin.Client/OrchardCore.Crest.Admin.Client.bundle.scp.css" />
-        <link rel="stylesheet" href="/_content/OrchardCore.Crest.Icons/CrestIcons.css" />
+        <meta name="crest-tenant-base" content="@_tenantBasePath" />
+        <link id="crest-radzen-theme" rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Components/css/material-base.css")" />
+        <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/all.min.css")" />
+        <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/v4-shims.min.css")" />
+        <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/v5-font-face.min.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Admin.Client/CrestAdmin.DesignSystem.Default.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Components/CrestComponents.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Components/OrchardCore.Crest.Components.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Admin.Client/CrestAdmin.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Admin.Client/OrchardCore.Crest.Admin.Client.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Icons/CrestIcons.css")" />
     }
     else
     {
-        <base href="/" />
+        <base href="@(_tenantBasePath + "/")" />
+        <meta name="crest-tenant-base" content="@_tenantBasePath" />
     }
     <HeadOutlet @rendermode="@_renderMode" />
 </head>
@@ -60,11 +64,11 @@
     @if (_isAdminShell)
     {
         <AdminRoutes @rendermode="@_renderMode" />
-        <script src="/_content/OrchardCore.Crest.Admin.Client/crest.theme.js"></script>
-        <script src="/_content/OrchardCore.Crest.Components/crest.components.js"></script>
-        <script src="/_content/OrchardCore.Crest.Admin.Client/crest.adminMenus.js"></script>
-        <script src="/_content/OrchardCore.Crest.Icons/icons.js"></script>
-        <script src="/_content/OrchardCore.Crest.Components/Radzen.Blazor.js"></script>
+        <script src="@Asset("/_content/OrchardCore.Crest.Admin.Client/crest.theme.js")"></script>
+        <script src="@Asset("/_content/OrchardCore.Crest.Components/crest.components.js")"></script>
+        <script src="@Asset("/_content/OrchardCore.Crest.Admin.Client/crest.adminMenus.js")"></script>
+        <script src="@Asset("/_content/OrchardCore.Crest.Icons/icons.js")"></script>
+        <script src="@Asset("/_content/OrchardCore.Crest.Components/Radzen.Blazor.js")"></script>
     }
     else
     {
@@ -76,7 +80,7 @@
            the two ever actually renders here. *@
         <Routes @rendermode="@_renderMode" />
     }
-    <script src="/_framework/blazor.web.js"></script>
+    <script src="@Asset("/_framework/blazor.web.js")"></script>
 </body>
 </html>
 
@@ -89,10 +93,25 @@
 
     private bool _isAdminShell;
     private string _adminBaseHref = "/";
+    private string _tenantBasePath = "";
     private IComponentRenderMode _renderMode = RenderMode.InteractiveAuto;
+
+    // Head/body asset URLs are tenant-root-absolute (deliberately independent of the
+    // admin <base href> - see the header comment), composed on Orchard's tenant base
+    // so they survive URL-prefixed tenants: "/_content/x" becomes "/tenant2/_content/x".
+    private string Asset(string path) => _tenantBasePath + path;
 
     protected override void OnInitialized()
     {
+        // Orchard's own layer of the request base: the tenant RequestUrlPrefix (plus
+        // any host-level PathBase), WITHOUT Crest's admin shell base. For admin-shell
+        // requests the middleware stashes the pre-shift value; for site requests
+        // PathBase was never shifted, so it IS the tenant base.
+        _tenantBasePath = HttpContext?.Items.TryGetValue(CrestBlazorHosting.TenantBasePathItem, out var tenantBase) == true
+            && tenantBase is string tenantBasePath
+                ? tenantBasePath.TrimEnd('/')
+                : (HttpContext?.Request.PathBase.Value ?? "").TrimEnd('/');
+
         // Only the middleware's explicit marker selects the admin document - a raw
         // path check here would bypass its theme-selection and route-authorization
         // gates (an admin-path request without the marker means the middleware
@@ -102,7 +121,11 @@
             && !string.IsNullOrWhiteSpace(shellBasePath))
         {
             _isAdminShell = true;
-            _adminBaseHref = shellBasePath.TrimEnd('/') + "/";
+            // The middleware shifted the shell base into PathBase (tenant prefix +
+            // shell base), so PathBase + "/" is the complete, composed base href -
+            // the same value .NET 11's <BasePath /> component will derive from
+            // NavigationManager.BaseUri once available (dotnet/aspnetcore#66388).
+            _adminBaseHref = (HttpContext.Request.PathBase.Value ?? shellBasePath).TrimEnd('/') + "/";
 
             // The login shell is the render-mode exception: under InteractiveAuto's
             // first-visit server circuit, Login.razor's credential POST goes out on
