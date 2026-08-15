@@ -518,12 +518,17 @@ public sealed class CrestAdminMenuLayoutService(
             .Select((value, index) => index == 0 ? "icon-class-" + value : value)
             .ToArray();
 
+    // Materializes an override row for every item currently in the tree, so that a
+    // subsequent reorder has a row to write Order into for each sibling. Deliberately
+    // records NOTHING but the Id: the layout document is identity-only, and storing the
+    // caption here (as this used to) wrote whatever culture the editing request ran under
+    // into the tenant's layout, which then leaked into exported recipes as translated
+    // strings.
     private static void SnapshotKnownItems(CrestAdminMenuLayoutDocument layout, Dictionary<string, LayoutNode> flat)
     {
         foreach (var node in flat.Values)
         {
-            var item = GetOrCreateOverride(layout, node.Key);
-            item.Text = node.Item.Text;
+            GetOrCreateOverride(layout, node.Key);
         }
     }
 
@@ -664,13 +669,19 @@ public sealed class CrestPrimaryNavMenuSettings
     }
 }
 
+// An override row for a stock Orchard menu item, addressed purely by its stable
+// MenuItem.Id (ItemKey/ParentKey). Everything here is either identity or a deliberate
+// user authoring decision - notably there is NO copy of the item's own caption: that is
+// Orchard's, resolved per-request per-culture, and snapshotting it here made a tenant's
+// layout (and its exported recipe) carry whatever language the admin happened to be
+// using when they last dragged something. DisplayText is the one caption in this type
+// and it is a genuine user-authored rename, not a snapshot.
 public sealed class CrestAdminMenuLayoutItem
 {
     public string ItemKey { get; set; } = string.Empty;
     public string? ParentKey { get; set; }
     public int? Order { get; set; }
     public bool Hidden { get; set; }
-    public string? Text { get; set; }
     public string? DisplayText { get; set; }
     public string? IconClass { get; set; }
 }

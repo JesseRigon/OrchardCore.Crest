@@ -656,6 +656,9 @@ public sealed class AdminMenusController(
         var layout = await layoutService.LoadAsync();
         var primaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted);
         var baseMenu = await BuildDefaultNavigationMenuAsync();
+        // Captured BEFORE ApplyForManagement substitutes any DisplayText rename, so the
+        // editor can show "originally called X" without the layout ever storing X.
+        var originalTexts = AdminMenuNodeSummary.CollectOriginalTexts(baseMenu.Items);
         var managedMenu = await iconController.ResolveMenuIconsAsync(baseMenu with
         {
             Items = layoutService.ApplyForManagement(baseMenu.Items, layout),
@@ -677,7 +680,7 @@ public sealed class AdminMenusController(
             separators,
             primaryNavMenuSettings,
             managedMenu.Icons,
-            items.Select((item, index) => AdminMenuNodeSummary.From(item, layout, layoutService, null, 0, index)).ToArray());
+            items.Select((item, index) => AdminMenuNodeSummary.From(item, layout, layoutService, null, 0, index, originalTexts)).ToArray());
     }
 
     private async Task<NavigationMenu> BuildDefaultNavigationMenuAsync()
@@ -971,11 +974,20 @@ public sealed record AdminMenuNodeSummary(
         _ => null,
     };
 
-    public static AdminMenuNodeSummary From(NavigationItem item, CrestAdminMenuLayoutDocument layout, CrestAdminMenuLayoutService layoutService, string? parentId, int depth, int order)
+    public static AdminMenuNodeSummary From(NavigationItem item, CrestAdminMenuLayoutDocument layout, CrestAdminMenuLayoutService layoutService, string? parentId, int depth, int order, IReadOnlyDictionary<string, string> originalTextsById)
     {
         var itemOverride = layout.Items.FirstOrDefault(layoutItem => string.Equals(layoutItem.ItemKey, item.Key, StringComparison.Ordinal));
-        var originalText = !string.IsNullOrWhiteSpace(itemOverride?.DisplayText) && !string.Equals(itemOverride.Text, item.Text, StringComparison.Ordinal)
-            ? itemOverride.Text
+        // The "originally called X" hint shown next to a renamed item. Resolved by Id from
+        // the pre-override menu tree, whose captions Orchard just localized for THIS
+        // request - never from a stored copy. The layout document is identity-only by
+        // design: persisting a caption there would bake whatever culture the renaming
+        // admin happened to be using into the tenant's layout, and from there into its
+        // exported recipe. item.Text is unusable as the original here because Build() has
+        // already substituted DisplayText over it by the time this runs.
+        var originalText = !string.IsNullOrWhiteSpace(itemOverride?.DisplayText)
+            && originalTextsById.TryGetValue(item.Key, out var original)
+            && !string.Equals(original, item.Text, StringComparison.Ordinal)
+            ? original
             : null;
 
         return new(
@@ -994,7 +1006,29 @@ public sealed record AdminMenuNodeSummary(
             [],
             item.Key.StartsWith("custom-", StringComparison.Ordinal) == true,
             originalText,
-            item.Items.Select((child, index) => From(child, layout, layoutService, item.Key, depth + 1, index)).ToArray());
+            item.Items.Select((child, index) => From(child, layout, layoutService, item.Key, depth + 1, index, originalTextsById)).ToArray());
+    }
+
+    // Id -> the item's own, un-overridden caption as Orchard localized it for this
+    // request. Built from the base menu before any layout override is applied.
+    public static Dictionary<string, string> CollectOriginalTexts(IEnumerable<NavigationItem> items)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        Collect(items);
+        return map;
+
+        void Collect(IEnumerable<NavigationItem> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (!string.IsNullOrWhiteSpace(node.Key))
+                {
+                    map[node.Key] = node.Text;
+                }
+
+                Collect(node.Items);
+            }
+        }
     }
 
     private static string[] GetPermissionNames(AdminNode node) => node switch
