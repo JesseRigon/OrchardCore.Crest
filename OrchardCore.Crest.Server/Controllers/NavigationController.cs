@@ -82,6 +82,7 @@ public sealed record NavigationIcon(string? Key, string Library, string? Version
 
 public sealed record NavigationItem(
     string Text,
+    string? TextKey,
     string? Id,
     string? Href,
     string? Url,
@@ -93,15 +94,23 @@ public sealed record NavigationItem(
 {
     // Menu labels (Text) are translated and must never be part of the match key - the same
     // item resolves to different Text per admin culture. Every stock OrchardCore admin
-    // navigation provider now sets a stable, culture-invariant Id, so Id is the only
-    // supported match key: an item with no Id simply has no stable identity to persist
-    // layout/icon overrides against.
-    public string? Key => Id;
+    // navigation provider now sets a stable, culture-invariant Id, so Id is the preferred
+    // match key.
+    //
+    // TextKey is MenuItem.Text.Name: the untranslated literal a provider passed to S["..."],
+    // which OrchardCore's own NavigationManager.Merge matches on and which therefore does not
+    // vary by admin culture. It is a weaker identifier than Id, because it changes whenever
+    // someone rewords the caption in the provider's source, but it is present on every item
+    // rather than only on those whose provider bothered to set an Id. Falling back to it lets
+    // an item contributed by a third-party provider with no Id still keep a stable handle
+    // across culture changes, instead of having none at all.
+    public string? Key => !string.IsNullOrEmpty(Id) ? Id : TextKey;
     public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
 
     public static NavigationItem From(MenuItem item) =>
         new(
             item.Text.Value,
+            item.Text.Name,
             item.Id,
             item.Href,
             item.Url,

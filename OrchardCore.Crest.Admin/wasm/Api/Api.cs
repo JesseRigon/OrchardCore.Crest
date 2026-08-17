@@ -1199,6 +1199,7 @@ public sealed record NavigationIcon(string? Key, string Library, string? Version
 
 public sealed record NavigationItem(
     string Text,
+    string? TextKey,
     string? Id,
     string? Href,
     string? Url,
@@ -1210,9 +1211,13 @@ public sealed record NavigationItem(
 {
     // Must mirror NavigationController.NavigationItem.Key exactly (server and client
     // compute the same key independently from the same wire payload) - Text is
-    // translated and must never be part of the match key. Every stock OrchardCore
-    // admin navigation provider now sets a stable, culture-invariant Id.
-    public string? Key => Id;
+    // translated and must never be part of the match key.
+    //
+    // TextKey is MenuItem.Text.Name, the untranslated S["..."] literal that OrchardCore's
+    // own Merge matches on, so it does not vary by admin culture. Id is preferred because
+    // it survives a caption being reworded; TextKey is the fallback for items whose
+    // provider never set an Id, which would otherwise have no stable handle at all.
+    public string? Key => !string.IsNullOrEmpty(Id) ? Id : TextKey;
     public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
 }
 

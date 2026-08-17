@@ -1,3 +1,4 @@
+using System.Globalization;
 using Crest.Icons;
 using Crest.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -984,7 +985,9 @@ public sealed record AdminMenuNodeSummary(
         // admin happened to be using into the tenant's layout, and from there into its
         // exported recipe. item.Text is unusable as the original here because Build() has
         // already substituted DisplayText over it by the time this runs.
-        var originalText = !string.IsNullOrWhiteSpace(itemOverride?.DisplayText)
+        // Renames are per-culture, so the hint must only appear when this culture actually has
+        // one: a Spanish rename shouldn't mark the item as renamed while viewing English.
+        var originalText = !string.IsNullOrWhiteSpace(itemOverride?.GetDisplayText(CultureInfo.CurrentUICulture.Name))
             && originalTextsById.TryGetValue(item.Key, out var original)
             && !string.Equals(original, item.Text, StringComparison.Ordinal)
             ? original

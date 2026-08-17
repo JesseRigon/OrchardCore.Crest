@@ -58,6 +58,11 @@ async function resolvedCultureFor(page, baseUrl, adminPath) {
 
 module.exports = async function run(page, ctx) {
   const results = [];
+  // Captured before any mutation so the finally below can put the tenant back exactly as
+  // it was found. Without that restore this check leaves AdminDefaultCulture=fr-FR (stage
+  // 2) and the user's stored default at es-ES behind for the rest of the suite and for
+  // whoever next opens the tenant by hand - a check that reads the resolved culture then
+  // sees this check's leftovers rather than the state it set up itself.
   const localization = await getJson(page, ctx.baseUrl, '/api/crest/localization');
 
   const withAllCultures = { ...localization, supportedCultures: CULTURES, defaultCulture: 'en-US', adminDefaultCulture: null };
@@ -83,12 +88,15 @@ module.exports = async function run(page, ctx) {
   results.push({ name: 'testuser-provisioned', pass: !!testUser.id, message: `id=${testUser.id}` });
 
   const { browser: userBrowser, page: userPage } = await createInstance();
+  let userDefaultSet = false;
+  let restored = false;
   try {
     await loginAsUser(userPage, ctx.baseUrl, testUser);
 
     // Stage 3: testuser's stored default = es -> es wins over the admin default (rung 2
     // outranks rung 3) even though admin default is still fr from stage 2.
     await putJson(userPage, ctx.baseUrl, '/api/crest/localization/me', { culture: 'es-ES' });
+    userDefaultSet = true;
     const user3 = await resolvedCultureFor(userPage, ctx.baseUrl, '/Admin');
     results.push({ name: 'stage3-user-default-es', pass: user3 === 'es-ES', message: `resolved=${user3}` });
 
@@ -102,8 +110,32 @@ module.exports = async function run(page, ctx) {
     const user4 = await resolvedCultureFor(userPage, ctx.baseUrl, '/Admin');
     results.push({ name: 'stage4-session-override-de', pass: user4 === 'de-DE', message: `resolved=${user4}` });
   } finally {
+    // The stored default is per-user state, so it can only be cleared from that user's own
+    // authenticated session - it has to happen before this browser closes, not alongside
+    // the tenant-settings restore below. A blank culture is the documented clear (see
+    // LocalizationController.SetMyCultureAsync: blank -> null, not a 400).
+    if (userDefaultSet) {
+      await putJson(userPage, ctx.baseUrl, '/api/crest/localization/me', { culture: null })
+        .catch(() => {});
+    }
     await userBrowser.close();
+
+    // Put the tenant back to whatever was found at entry. In the same finally as the
+    // per-user clear so a thrown stage above still restores rather than stranding
+    // AdminDefaultCulture=fr-FR. Restoring the captured value rather than hardcoding a
+    // "clean" default matters because the suite may run against a tenant that
+    // legitimately has cultures configured; this check stays transparent either way.
+    restored = await putJson(page, ctx.baseUrl, '/api/crest/localization', localization)
+      .then(() => true).catch(() => false);
   }
+
+  results.push({
+    name: 'restores-tenant-localization-settings',
+    pass: restored,
+    message: restored
+      ? `supported=${(localization.supportedCultures ?? []).join(',') || 'none'} default=${localization.defaultCulture} adminDefault=${localization.adminDefaultCulture ?? 'none'}`
+      : 'restore PUT failed',
+  });
 
   return results;
 };

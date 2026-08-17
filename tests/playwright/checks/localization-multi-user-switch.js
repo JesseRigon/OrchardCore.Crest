@@ -10,11 +10,12 @@ const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 // stale value under the old user's key must simply not apply to the new user).
 //
 // User A's override is deliberately set to a culture that ISN'T also the tenant's
-// current AdminDefaultCulture (rung 3) - otherwise, if a prior check (e.g.
-// localization-sequential-settings) left AdminDefaultCulture pointing at the same
-// culture, user B (who has no override/stored default of their own) would legitimately
-// resolve to that same value via rung 3, and the assertion below couldn't tell a real
-// override leak apart from coincidental agreement with the tenant setting.
+// current AdminDefaultCulture (rung 3) - if AdminDefaultCulture happened to point at the
+// same culture, user B (who has no override/stored default of their own) would
+// legitimately resolve to that same value via rung 3, and the assertion below couldn't
+// tell a real override leak apart from coincidental agreement with the tenant setting.
+// This clear keeps the check self-contained rather than depending on tenant state: it
+// holds whether the tenant was configured by hand or by another check.
 async function clearAdminDefaultCulture(page, baseUrl) {
   const localization = await page.evaluate(async (baseUrl) => {
     const r = await fetch(`${baseUrl}/api/crest/localization`, { credentials: 'include' });

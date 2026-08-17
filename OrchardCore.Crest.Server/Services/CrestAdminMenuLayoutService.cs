@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Serialization;
 using Crest.Controllers;
 using OrchardCore.Data.Documents;
@@ -12,6 +13,13 @@ public sealed class CrestAdminMenuLayoutService(
     public const string DefaultMenuId = "__crest_default_admin_menu";
     public const string DefaultMenuName = "Sidebar";
     public const string LockedNewItemKey = "new";
+
+    /// <summary>
+    /// The culture a rename is recorded against, and the one renames are resolved for when the
+    /// menu is built. Resolved per request by the RequestLocalizationOptions pipeline
+    /// (see Startup), so it reflects whichever culture the admin is currently viewing.
+    /// </summary>
+    private static string CurrentCulture => CultureInfo.CurrentUICulture.Name;
 
     public async Task<CrestAdminMenuLayoutDocument> GetAsync() => await documents.GetOrCreateImmutableAsync();
 
@@ -198,9 +206,14 @@ public sealed class CrestAdminMenuLayoutService(
 
         var item = GetOrCreateOverride(layout, key);
         var displayText = text?.Trim();
-        item.DisplayText = string.IsNullOrWhiteSpace(displayText) || string.Equals(displayText, node.Item.Text, StringComparison.Ordinal)
-            ? null
-            : displayText;
+
+        // node.Item.Text is the caption already localized for this request, so comparing against
+        // it means "the admin didn't actually change anything" and no rename is stored.
+        item.SetDisplayText(
+            CurrentCulture,
+            string.IsNullOrWhiteSpace(displayText) || string.Equals(displayText, node.Item.Text, StringComparison.Ordinal)
+                ? null
+                : displayText);
         item.IconClass = string.IsNullOrWhiteSpace(iconClass) ? null : iconClass.Trim();
 
         if (parentKey is not null || position.HasValue)
@@ -233,9 +246,14 @@ public sealed class CrestAdminMenuLayoutService(
 
         var item = GetOrCreateOverride(layout, key);
         var renamedText = text?.Trim();
-        item.DisplayText = string.IsNullOrWhiteSpace(renamedText) || string.Equals(renamedText, node.Item.Text, StringComparison.Ordinal)
-            ? null
-            : renamedText;
+
+        // Scoped to the culture the admin is viewing: renaming under es-ES must not disturb the
+        // English caption, which comes from the navigation provider's own S["..."] resource.
+        item.SetDisplayText(
+            CurrentCulture,
+            string.IsNullOrWhiteSpace(renamedText) || string.Equals(renamedText, node.Item.Text, StringComparison.Ordinal)
+                ? null
+                : renamedText);
 
         await SaveAsync(layout);
         return ApplyToMenu(baseMenu, layout);
@@ -409,7 +427,12 @@ public sealed class CrestAdminMenuLayoutService(
         .Select(node =>
         {
             var itemOverride = GetOverride(layout, node.Key);
-            var text = string.IsNullOrWhiteSpace(itemOverride.DisplayText) ? node.Item.Text : itemOverride.DisplayText;
+
+            // Only a rename recorded for this request's culture applies. Under any other culture
+            // the provider's own localized caption is used, so a Spanish rename doesn't leak into
+            // the English menu.
+            var renamed = itemOverride.GetDisplayText(CurrentCulture);
+            var text = string.IsNullOrWhiteSpace(renamed) ? node.Item.Text : renamed;
             var classes = string.IsNullOrWhiteSpace(itemOverride.IconClass) ? node.Item.Classes : ToIconClasses(itemOverride.IconClass);
             return node.Item with { Text = text, Classes = classes, Items = Build(childMap[node.Key], childMap, layout) };
         })
@@ -547,7 +570,10 @@ public sealed class CrestAdminMenuLayoutService(
                 : custom.IconClass.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     .Select(value => "icon-class-" + value)
                     .ToArray();
-            var item = new NavigationItem(custom.Text, custom.Key, null, custom.Url, null, null, null, classes, []);
+            // Custom items are user-authored rather than declared by a navigation provider, so
+            // they have no S["..."] literal behind them: TextKey is null and Key falls back to
+            // the Id, which is the custom item's own key.
+            var item = new NavigationItem(custom.Text, null, custom.Key, null, custom.Url, null, null, null, classes, []);
             flat[custom.Key] = new LayoutNode(custom.Key, item, null, index++);
         }
     }
@@ -682,8 +708,85 @@ public sealed class CrestAdminMenuLayoutItem
     public string? ParentKey { get; set; }
     public int? Order { get; set; }
     public bool Hidden { get; set; }
+    /// <summary>
+    /// Renames keyed by the culture they were entered in, e.g. <c>{"es-ES": "Nuevinhos"}</c>.
+    /// A rename is a translation of one caption, not a change of identity, so it must only
+    /// affect the culture the admin was viewing when they typed it: renaming under <c>es</c>
+    /// leaves the English caption alone.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public Dictionary<string, string>? DisplayTextByCulture { get; set; }
+
+    /// <summary>
+    /// Legacy single-culture rename, kept so documents and recipes written before
+    /// <see cref="DisplayTextByCulture"/> still import. Treated as an entry for the invariant
+    /// culture: it applies wherever no culture-specific rename exists. Never written to.
+    /// </summary>
     public string? DisplayText { get; set; }
+
     public string? IconClass { get; set; }
+
+    /// <summary>
+    /// The rename to show for <paramref name="culture"/>, falling back through the parent
+    /// culture (<c>es-ES</c> then <c>es</c>) and finally to the legacy single-culture value.
+    /// Returns <c>null</c> when nothing has been renamed for this culture, in which case the
+    /// caption from the navigation provider is used as-is.
+    /// </summary>
+    public string? GetDisplayText(string? culture)
+    {
+        if (!string.IsNullOrEmpty(culture) && DisplayTextByCulture is { Count: > 0 } byCulture)
+        {
+            if (byCulture.TryGetValue(culture, out var exact) && !string.IsNullOrWhiteSpace(exact))
+            {
+                return exact;
+            }
+
+            var separator = culture.IndexOf('-');
+            if (separator > 0
+                && byCulture.TryGetValue(culture[..separator], out var parent)
+                && !string.IsNullOrWhiteSpace(parent))
+            {
+                return parent;
+            }
+        }
+
+        return string.IsNullOrWhiteSpace(DisplayText) ? null : DisplayText;
+    }
+
+    /// <summary>
+    /// Records a rename for <paramref name="culture"/>, or clears it when
+    /// <paramref name="text"/> is empty. Only ever touches that one culture's entry.
+    /// </summary>
+    public void SetDisplayText(string? culture, string? text)
+    {
+        // No culture to attribute the rename to: fall back to the legacy field rather than
+        // inventing a key, so the value still applies everywhere as it did before.
+        if (string.IsNullOrEmpty(culture))
+        {
+            DisplayText = string.IsNullOrWhiteSpace(text) ? null : text;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            DisplayTextByCulture?.Remove(culture);
+            if (DisplayTextByCulture is { Count: 0 })
+            {
+                DisplayTextByCulture = null;
+            }
+
+            // Clearing a rename in the culture the legacy value came from must actually clear
+            // it, otherwise the legacy value would silently resurface as the fallback.
+            DisplayText = null;
+            return;
+        }
+
+        DisplayTextByCulture ??= [];
+        DisplayTextByCulture[culture] = text;
+    }
+
+    public bool HasAnyDisplayText()
+        => DisplayTextByCulture is { Count: > 0 } || !string.IsNullOrWhiteSpace(DisplayText);
 }
 
 public sealed class CrestAdminMenuCustomItem
