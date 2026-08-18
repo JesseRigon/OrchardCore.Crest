@@ -19,14 +19,12 @@
   "steps": [
     {
       "name": "settings",
-      "Properties": {
-        "LocalizationSettings": {
-          "DefaultCulture": "en-US",
-          "SupportedCultures": [
-            "en-US"
-          ],
-          "FallBackToParentCulture": true
-        }
+      "LocalizationSettings": {
+        "DefaultCulture": "en-US",
+        "SupportedCultures": [
+          "en-US"
+        ],
+        "FallBackToParentCulture": true
       },
       "AdminSettings": {
         "DisplayThemeToggler": true,

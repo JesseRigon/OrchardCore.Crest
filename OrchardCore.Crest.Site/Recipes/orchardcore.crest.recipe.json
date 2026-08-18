@@ -103,6 +103,13 @@
       "LayerSettings": {
         "Zones": [ "Content", "Footer" ]
       },
+      "LocalizationSettings": {
+        "DefaultCulture": "en-US",
+        "SupportedCultures": [
+          "en-US"
+        ],
+        "FallBackToParentCulture": true
+      },
       "AdminSettings": {
         "DisplayThemeToggler": true,
         "DisplayMenuFilter": true,

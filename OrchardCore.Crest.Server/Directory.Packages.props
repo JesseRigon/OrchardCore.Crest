@@ -13,6 +13,7 @@
     <PackageVersion Include="OrchardCore.ContentManagement" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Contents" Version="3.0.2-local" />
     <PackageVersion Include="YesSql.Abstractions" Version="6.0.0" />
+    <PackageVersion Include="OrchardCore.DataLocalization" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.DisplayManagement" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Email.Abstractions" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Features" Version="3.0.2-local" />

@@ -19,14 +19,12 @@
   "steps": [
     {
       "name": "settings",
-      "Properties": {
-        "LocalizationSettings": {
-          "DefaultCulture": "en-US",
-          "SupportedCultures": [
-            "en-US"
-          ],
-          "FallBackToParentCulture": true
-        }
+      "LocalizationSettings": {
+        "DefaultCulture": "en-US",
+        "SupportedCultures": [
+          "en-US"
+        ],
+        "FallBackToParentCulture": true
       }
     },
     {
@@ -218,9 +216,7 @@
     },
     {
       "name": "settings",
-      "Properties": {
-        "CurrentAdminThemeName": "OrchardCore.Crest.Admin"
-      },
+      "CurrentAdminThemeName": "OrchardCore.Crest.Admin",
       "AdminSettings": {
         "DisplayThemeToggler": true,
         "DisplayMenuFilter": true,

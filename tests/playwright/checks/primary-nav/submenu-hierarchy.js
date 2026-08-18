@@ -49,13 +49,15 @@ module.exports = async function run(page, ctx) {
     };
 
     // The mixed icon/no-icon level-1 pair. "Admin Menus"/"Site Menus" were the original
-    // pair, but both have since moved under Platform > Configuration and are no longer
-    // level-1 at all. Under the expanded Design group, "Templates" (real icon) and
-    // "Admin Templates" (placeholder dot) are the current pair exercising the same
-    // contract: both occupy the icon rail one way or the other, so their text rails stay
-    // aligned.
+    // pair, then "Templates"/"Admin Templates" - but Admin Templates belongs to the
+    // OrchardCore.AdminTemplates feature, which a freshly provisioned FruitfulSetup tenant
+    // does not enable, so that pair only existed on tenants where some earlier run had
+    // enabled it. Under the expanded Design group, "Templates" (real icon) and
+    // "Workflows" (no legacy icon mapping, so the placeholder dot) are the current pair
+    // exercising the same contract on a fresh tenant: both occupy the icon rail one way
+    // or the other, so their text rails stay aligned.
     const adminMenus = details('Templates');
-    const siteMenus = details('Admin Templates');
+    const siteMenus = details('Workflows');
 
     const contentDefinition = Array.from(root.querySelectorAll('.primary-nav-menu__item--level-1')).find(
       element => textOf(element) === 'Content Definition',

@@ -656,6 +656,16 @@
                                 @if (!string.IsNullOrWhiteSpace(node.OriginalText))
                                 {
                                     <span class="admin-menu-node__original-text">@node.OriginalText</span>
+                                    @* A rename applies only inside Crest until it is promoted into the
+                                       tenant's translation store, which is what Orchard's own admin reads.
+                                       Only offered where a rename actually exists for the current culture -
+                                       OriginalText is set exactly then. *@
+                                    <CrestButton Size="ButtonSize.Small"
+                                                 Icon="translate"
+                                                 ButtonStyle="ButtonStyle.Light"
+                                                 title="@T.T("AdminMenus_PromoteRenameTitle", "Save as this tenant's translation")"
+                                                 Click="@(() => PromoteRenameAsync(node))"
+                                                 Disabled="@IsBusy" />
                                 }
                             }
                             <CrestBadge Text="@NodeTypeLabel(node.Type)" BadgeStyle="BadgeStyle.Info" />
@@ -1152,6 +1162,38 @@
     }
 
     private static string OriginalNodeText(AdminMenuNodeSummary node) => string.IsNullOrWhiteSpace(node.OriginalText) ? node.Text : node.OriginalText;
+
+    // Writes the rename into the tenant's translation store so Orchard's own admin renders it
+    // too. Requires ManageTranslations on top of ManageAdminMenu, so a null result here is
+    // usually a permission refusal rather than a failure - reported as such instead of a
+    // generic error.
+    private async Task PromoteRenameAsync(AdminMenuNodeSummary node)
+    {
+        if (SelectedMenu is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        var result = await Api.Crest.Rest.AdminMenus.PromoteNodeRenameAsync(SelectedMenu.Id, node.Id);
+        await ApplyMenuResultAsync(result);
+        if (result is not null)
+        {
+            Notifications.Notify(
+                NotificationSeverity.Success,
+                T.T("AdminMenus_RenamePromotedTitle", "Saved as a tenant translation"),
+                T.T("AdminMenus_RenamePromotedMessage", "This caption now applies everywhere in the current culture, not only in this sidebar."));
+        }
+        else
+        {
+            Notifications.Notify(
+                NotificationSeverity.Warning,
+                T.T("AdminMenus_RenamePromoteFailedTitle", "Could not save the translation"),
+                T.T("AdminMenus_RenamePromoteFailedMessage", "Only captions from an admin menu can be saved as tenant translations, and doing so needs permission to manage translations."));
+        }
+
+        IsBusy = false;
+    }
 
     private async Task SaveNodeAsync(AdminMenuNodeFormModel model)
     {

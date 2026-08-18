@@ -19,11 +19,28 @@ public sealed class AdminMenusController(
     IAdminMenuService adminMenuService,
     INavigationManager navigationManager,
     CrestAdminMenuLayoutService layoutService,
+    CrestAdminMenuTranslationService translationService,
+    CrestProviderMenuSyncCoordinator providerMenuSync,
+    CrestProviderMenuSyncService providerMenuSyncService,
     CrestMenuPlacementService menuPlacementService,
     CrestPrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
     CrestAdminSettingsNormalizer adminSettingsNormalizer,
     CrestIconController iconController) : ControllerBase
 {
+    // Re-runs the provider-menu import on demand. The import normally runs once per shell on
+    // first use; this exposes it for the case where a tenant needs it re-checked without waiting
+    // for a shell release, and reports what actually changed.
+    [HttpPost("sync-providers")]
+    public async Task<ActionResult<CrestProviderMenuSyncResult>> SyncProvidersAsync()
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        {
+            return Forbid();
+        }
+
+        return Ok(await providerMenuSyncService.SyncAsync(ControllerContext));
+    }
+
     [HttpGet]
     public async Task<ActionResult<AdminMenusState>> ListAsync()
     {
@@ -502,6 +519,65 @@ public sealed class AdminMenusController(
         return Ok(await GetDefaultMenuSummaryAsync());
     }
 
+    // Promotes a rename from the Crest layout document into the tenant's translation store,
+    // making it the tenant-wide translation of that caption rather than a Crest-only display
+    // override. Separate from the rename endpoint above, and separately authorized: renaming an
+    // item in Crest's own sidebar only needs ManageAdminMenu, but writing the tenant's
+    // translation store changes what Orchard's Razor admin renders for every user of this
+    // tenant in that culture, so it additionally requires ManageTranslations (Administrator
+    // only by default - see OrchardCore.DataLocalization's Permissions).
+    [HttpPost("{menuId}/nodes/{nodeId}/promote-rename")]
+    public async Task<ActionResult<AdminMenuSummary>> PromoteRenameAsync(string menuId, string nodeId)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu) ||
+            !await authorizationService.AuthorizeAsync(User, OrchardCore.Localization.Data.DataLocalizationPermissions.ManageTranslations))
+        {
+            return Forbid();
+        }
+
+        var culture = CultureInfo.CurrentUICulture.Name;
+        if (string.IsNullOrEmpty(culture))
+        {
+            // The invariant culture has no translation store entry to write to - a translation
+            // has to be attributed to a culture. Callers hit this only when the tenant resolved
+            // to invariant, which dev.sh and the Crest recipes now avoid by always configuring
+            // a real default culture.
+            return BadRequest("A rename can only be promoted while viewing a specific culture.");
+        }
+
+        // Resolved from the owning admin menu rather than from the generated primary navigation.
+        // Not every admin menu feeds that navigation, so looking the node up there would make
+        // promotion unreachable for menus that don't - and the node's own menu is where both
+        // pieces this needs actually live:
+        //   * the caption Orchard looks the translation up by, and
+        //   * the menu name that scopes the IDataLocalizer context (see TheAdmin's
+        //     NavigationItemText.cshtml, which keys on the item's own MenuName).
+        var owner = await FindNodeAsync(nodeId);
+        if (owner is null)
+        {
+            // Provider-contributed items have no owning AdminMenu, so there is no DB-backed
+            // caption for IDataLocalizer to translate. Their captions come from the provider's
+            // own S["..."] resource and are translated through PO files instead, which a tenant
+            // admin cannot edit from here.
+            return BadRequest("Only items from an admin menu can be promoted; this caption comes from a module's own resources.");
+        }
+
+        var (menuName, sourceText) = owner.Value;
+        if (string.IsNullOrWhiteSpace(sourceText))
+        {
+            return NotFound();
+        }
+
+        // Follows whatever the layout currently says for this culture, including "nothing":
+        // promoting after a rename has been cleared removes the translation, so the two stores
+        // can be brought back into agreement the same way they were put into it.
+        var layout = await layoutService.LoadAsync();
+        var renamed = CrestAdminMenuLayoutService.GetRename(layout, nodeId, culture);
+
+        await translationService.SetAsync(culture, menuName, sourceText, renamed);
+        return Ok(await GetDefaultMenuSummaryAsync());
+    }
+
     [HttpPost("{menuId}/nodes/{nodeId}/move")]
     public async Task<ActionResult<AdminMenuSummary>> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model)
     {
@@ -684,9 +760,53 @@ public sealed class AdminMenusController(
             items.Select((item, index) => AdminMenuNodeSummary.From(item, layout, layoutService, null, 0, index, originalTexts)).ToArray());
     }
 
+    // The owning admin menu's name and the node's own stored caption, for the node with this
+    // UniqueId - or null when no admin menu owns it (a provider-contributed item). Matched on
+    // UniqueId rather than caption, because that is exactly the identity a caption cannot supply
+    // once it has been translated or edited.
+    private async Task<(string MenuName, string? SourceText)?> FindNodeAsync(string nodeId)
+    {
+        var list = await adminMenuService.GetAdminMenuListAsync();
+        foreach (var menu in list.AdminMenu)
+        {
+            var found = FindNode(menu.MenuItems, nodeId);
+            if (found is not null)
+            {
+                return (menu.Name, AdminMenuNodeSummary.GetNodeText(found));
+            }
+        }
+
+        return null;
+
+        static AdminNode? FindNode(IEnumerable<MenuItem> items, string nodeId)
+        {
+            foreach (var item in items)
+            {
+                if (item is AdminNode node && string.Equals(node.UniqueId, nodeId, StringComparison.Ordinal))
+                {
+                    return node;
+                }
+
+                var child = FindNode(item.Items, nodeId);
+                if (child is not null)
+                {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+    }
+
     private async Task<NavigationMenu> BuildDefaultNavigationMenuAsync()
     {
         await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
+        // Once per shell, before the menu is read, so provider items exist as admin menu nodes.
+        // Both the provider item and its imported node contribute to the same "admin" menu;
+        // NavigationManager.Merge folds each pair into one item, and because the imported node
+        // carries Priority+1, Merge's authority rule hands the survivor the node's values -
+        // including its UniqueId as the item's Id.
+        await providerMenuSync.EnsureSyncedAsync(ControllerContext);
         var items = await navigationManager.BuildMenuAsync("admin", ControllerContext);
         return new NavigationMenu("admin", items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
             .Select(NavigationItem.From)
@@ -960,6 +1080,10 @@ public sealed record AdminMenuNodeSummary(
         false,
         null,
         node.Items.OfType<AdminNode>().Select((child, index) => From(child, node.UniqueId, depth + 1, index)).ToArray());
+
+    // The node's own stored caption, as opposed to the rendered one: this is the key the
+    // translation store is looked up by.
+    public static string GetNodeText(AdminNode node) => GetText(node);
 
     private static string GetText(AdminNode node) => node switch
     {

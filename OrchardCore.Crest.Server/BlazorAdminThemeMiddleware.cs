@@ -183,8 +183,12 @@ public sealed class BlazorAdminThemeMiddleware
         // WASM-router-relative route name, not a server path, so a tenant that
         // customizes LoginPath (e.g. "/signin") would otherwise never match here and
         // would silently fall through to Orchard's own (unconfigured,
-        // Blazor-theme-incompatible) login flow.
-        var isLoginRoute = requestPath.Equals(options.LoginPath, StringComparison.OrdinalIgnoreCase);
+        // Blazor-theme-incompatible) login flow. Subpaths under LoginPath match too:
+        // the login shell serves exactly one page, but URLs like "/Login/login" reach
+        // browsers anyway (the statically prerendered form's action is the middleware's
+        // internal composed URL, and such URLs get bookmarked) - folding them onto the
+        // canonical LoginPath via the redirect below beats a dead 404.
+        var isLoginRoute = requestPath.StartsWithSegments(new PathString(options.LoginPath), StringComparison.OrdinalIgnoreCase, out _);
 
         // Only page requests are gated/rewritten. Asset requests (anything with a file
         // extension) are none of this middleware's business anymore - admin assets are

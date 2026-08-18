@@ -64,8 +64,11 @@ public sealed class AppController(
         var adminDefaultCulture = site.As<CrestLocalizationSettings>().AdminDefaultCulture;
         var cultureSelector = await CultureSelector.FromAsync(HttpContext, shellSettings, serviceProvider.GetService<ILocalizationService>(), userDefaultCulture, adminDefaultCulture);
         var profileMenu = await profileMenuService.BuildAsync(User, HttpContext.RequestAborted);
+        // Same caption resolution as NavigationController.GetMenu - the manifest's copy of the
+        // admin menu must agree with the sidebar endpoint for the same request culture.
+        var dataLocalizer = serviceProvider.GetService<OrchardCore.Localization.Data.IDataLocalizer>();
         var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
-            .Select(NavigationItem.From)
+            .Select(item => NavigationItem.From(item, dataLocalizer))
             .ToArray()));
         adminMenu = adminMenu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
         adminMenu = await iconController.ResolveMenuIconsAsync(

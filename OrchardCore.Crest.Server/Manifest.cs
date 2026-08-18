@@ -23,6 +23,12 @@ using OrchardCore.Modules.Manifest;
     //     AddNavigation() without declaring the feature; declared here so Crest does not
     //     depend on that incidental coupling.
     //   OrchardCore.Recipes    -> IRecipeExecutor (RecipesController.ExecuteAsync).
+    //   OrchardCore.DataLocalization -> TranslationsManager (AdminMenusController's
+    //     promote-rename-to-translation endpoint). This is also the feature that registers
+    //     IDataLocalizer, which is how Orchard's own Razor admin translates DB-backed admin
+    //     menu node captions - without it a rename can be stored per-culture in the Crest
+    //     layout but never promoted into the tenant's translation store, so the Razor admin
+    //     and Crest would disagree about the caption.
     //   OrchardCore.Autoroute  -> ISite.HomeRoute (SiteController's home-page-lookup
     //     endpoint, consumed by Site's Home.razor) is only ever WRITTEN by
     //     AutoroutePartHandler.PublishedAsync, which only runs while this feature is
@@ -41,7 +47,7 @@ using OrchardCore.Modules.Manifest;
     // IsAlwaysEnabled instead, which is all this feature actually needs (the theme has to
     // exist and be enabled so LegacyFrameThemeSelector can switch to it by Id at runtime;
     // its load order relative to this feature is irrelevant).
-    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Autoroute", "OrchardCore.Contents", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.Icons"],
+    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Autoroute", "OrchardCore.Contents", "OrchardCore.DataLocalization", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.Icons"],
     IsAlwaysEnabled = true
 )]
 

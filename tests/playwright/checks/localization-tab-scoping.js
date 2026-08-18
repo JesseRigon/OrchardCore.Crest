@@ -1,3 +1,4 @@
+const { ensureCultures } = require('../harness/localization');
 const { ensureTestUser } = require('../harness/testUsers');
 const { loginAsUser } = require('../harness/auth');
 const { createInstance } = require('../harness/instance');
@@ -22,6 +23,9 @@ async function resolvedCulture(page) {
 }
 
 module.exports = async function run(page, ctx) {
+  // fr-FR is not in a fresh tenant's supported cultures - provision it for the check
+  // and put the tenant back afterwards (see harness/localization.js).
+  const restoreCultures = await ensureCultures(page, ctx.baseUrl, ['fr-FR', 'de-DE']);
   const testUser = await ensureTestUser(page, ctx.baseUrl, '');
   const results = [];
 
@@ -55,6 +59,7 @@ module.exports = async function run(page, ctx) {
   } finally {
     await tabA.browser.close();
     await tabB.browser.close();
+    await restoreCultures();
   }
 
   return results;

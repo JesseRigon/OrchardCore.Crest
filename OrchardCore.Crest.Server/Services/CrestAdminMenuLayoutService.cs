@@ -599,6 +599,17 @@ public sealed class CrestAdminMenuLayoutService(
         return false;
     }
 
+    /// <summary>
+    /// The rename recorded for <paramref name="key"/> in <paramref name="culture"/>, or
+    /// <c>null</c> when this item has never been renamed in that culture. Unlike the internal
+    /// override lookup this does not synthesize an empty override, so callers can distinguish
+    /// "no rename to act on" from "renamed to blank".
+    /// </summary>
+    public static string? GetRename(CrestAdminMenuLayoutDocument layout, string key, string? culture)
+        => layout.Items
+            .FirstOrDefault(item => string.Equals(item.ItemKey, key, StringComparison.Ordinal))
+            ?.GetDisplayText(culture);
+
     private static CrestAdminMenuLayoutItem GetOverride(CrestAdminMenuLayoutDocument layout, string key)
         => layout.Items.FirstOrDefault(item => string.Equals(item.ItemKey, key, StringComparison.Ordinal)) ?? new CrestAdminMenuLayoutItem { ItemKey = key };
 
@@ -736,17 +747,18 @@ public sealed class CrestAdminMenuLayoutItem
     {
         if (!string.IsNullOrEmpty(culture) && DisplayTextByCulture is { Count: > 0 } byCulture)
         {
-            if (byCulture.TryGetValue(culture, out var exact) && !string.IsNullOrWhiteSpace(exact))
+            // An entry present for this culture is authoritative, including when it is empty:
+            // SetDisplayText records an empty entry to mean "explicitly not renamed here",
+            // which has to shadow the culture-less legacy value rather than fall through to it.
+            if (byCulture.TryGetValue(culture, out var exact))
             {
-                return exact;
+                return string.IsNullOrWhiteSpace(exact) ? null : exact;
             }
 
             var separator = culture.IndexOf('-');
-            if (separator > 0
-                && byCulture.TryGetValue(culture[..separator], out var parent)
-                && !string.IsNullOrWhiteSpace(parent))
+            if (separator > 0 && byCulture.TryGetValue(culture[..separator], out var parent))
             {
-                return parent;
+                return string.IsNullOrWhiteSpace(parent) ? null : parent;
             }
         }
 
@@ -770,14 +782,22 @@ public sealed class CrestAdminMenuLayoutItem
         if (string.IsNullOrWhiteSpace(text))
         {
             DisplayTextByCulture?.Remove(culture);
-            if (DisplayTextByCulture is { Count: 0 })
+
+            // The legacy value has no culture of its own, so GetDisplayText falls back to it in
+            // every culture. Removing the entry above is therefore not enough on its own - the
+            // legacy value would immediately resurface here. Recording an explicit empty entry
+            // for this culture shadows it without disturbing any other culture, which a bare
+            // `DisplayText = null` would.
+            if (!string.IsNullOrWhiteSpace(DisplayText))
+            {
+                DisplayTextByCulture ??= [];
+                DisplayTextByCulture[culture] = string.Empty;
+            }
+            else if (DisplayTextByCulture is { Count: 0 })
             {
                 DisplayTextByCulture = null;
             }
 
-            // Clearing a rename in the culture the legacy value came from must actually clear
-            // it, otherwise the legacy value would silently resurface as the fallback.
-            DisplayText = null;
             return;
         }
 
@@ -785,8 +805,11 @@ public sealed class CrestAdminMenuLayoutItem
         DisplayTextByCulture[culture] = text;
     }
 
+    // Empty entries are shadows recorded by SetDisplayText to cancel the legacy value for one
+    // culture, not renames, so they do not count as "this item has been renamed".
     public bool HasAnyDisplayText()
-        => DisplayTextByCulture is { Count: > 0 } || !string.IsNullOrWhiteSpace(DisplayText);
+        => DisplayTextByCulture?.Values.Any(value => !string.IsNullOrWhiteSpace(value)) == true
+            || !string.IsNullOrWhiteSpace(DisplayText);
 }
 
 public sealed class CrestAdminMenuCustomItem

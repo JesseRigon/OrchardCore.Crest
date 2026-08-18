@@ -201,6 +201,7 @@ public interface IAdminMenusApi
     Task<AdminMenuSummary?> CreateNodeAsync(string menuId, AdminMenuNodeEditModel model);
     Task<AdminMenuSummary?> UpdateNodeAsync(string menuId, string nodeId, AdminMenuNodeEditModel model);
     Task<AdminMenuSummary?> RenameNodeAsync(string menuId, string nodeId, AdminMenuNodeRenameModel model);
+    Task<AdminMenuSummary?> PromoteNodeRenameAsync(string menuId, string nodeId);
     Task<AdminMenuSummary?> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model);
     Task<AdminMenuSummary?> ToggleNodeAsync(string menuId, string nodeId);
     Task<AdminMenuSummary?> DeleteNodeAsync(string menuId, string nodeId);
@@ -1001,6 +1002,13 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
 
     public Task<AdminMenuSummary?> RenameNodeAsync(string menuId, string nodeId, AdminMenuNodeRenameModel model) =>
         SendNodeAsync(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/rename", model);
+
+    // Promotes the rename already recorded for the current culture into the tenant's
+    // translation store, so it also applies outside Crest's own sidebar. Requires
+    // ManageTranslations on top of ManageAdminMenu, so this returns null (403) for admins who
+    // may reorganize their own menu but not rewrite the tenant's translations.
+    public Task<AdminMenuSummary?> PromoteNodeRenameAsync(string menuId, string nodeId) =>
+        SendNodeAsync(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/promote-rename", null);
 
     public Task<AdminMenuSummary?> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model) =>
         SendNodeAsync(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/nodes/{Uri.EscapeDataString(nodeId)}/move", model);

@@ -40,8 +40,13 @@ module.exports = async function run(page, ctx) {
   const state = await api('/api/crest/admin-menus');
   const menu = state.menus.find(m => m.id === menuId);
   if (!menu) throw new Error(`Menu ${menuId} not found`);
-  const node = flatten(menu.nodes).find(n => n.id === targetNodeId);
+  // Provider items are imported as admin menu nodes keyed by UniqueId, so 'content' is no
+  // longer an item id. The node is resolved by caption instead; the explicit NODE_ID env
+  // override still wins when provided.
+  const node = flatten(menu.nodes).find(n => n.id === targetNodeId)
+    ?? flatten(menu.nodes).find(n => n.text === 'Content');
   if (!node) throw new Error(`Node ${targetNodeId} not found`);
+  const nodeId = node.id;
   const originalIconClass = node.iconClass || null;
 
   const model = {
@@ -60,12 +65,12 @@ module.exports = async function run(page, ctx) {
   let updatedIconClass;
   let contentIcon;
   try {
-    const updated = await api(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(targetNodeId)}`, {
+    const updated = await api(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(nodeId)}`, {
       method: 'PUT',
       headers: antiforgeryHeaders,
       body: JSON.stringify(model),
     });
-    updatedIconClass = flatten(updated.nodes).find(n => n.id === targetNodeId)?.iconClass;
+    updatedIconClass = flatten(updated.nodes).find(n => n.id === nodeId)?.iconClass;
 
     await page.goto(`${ctx.baseUrl}/Admin/Accounting/Customers`, { waitUntil: 'networkidle' });
     await page.locator('.primary-nav-menu').waitFor({ timeout: 15000 });
@@ -80,7 +85,7 @@ module.exports = async function run(page, ctx) {
       }));
   } finally {
     const restore = { ...model, iconClass: originalIconClass };
-    await api(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(targetNodeId)}`, {
+    await api(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(nodeId)}`, {
       method: 'PUT',
       headers: antiforgeryHeaders,
       body: JSON.stringify(restore),

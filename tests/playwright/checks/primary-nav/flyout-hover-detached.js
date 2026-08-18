@@ -2,15 +2,56 @@
 // A deeply-nested primaryNavMenu item's flyout must render detached (fixed-position,
 // portalled outside the menu tree) rather than as an inline submenu, and must actually
 // hit-test at its rendered screen position on hover.
-// RETARGETED (Phase 8 triage): this used to drive Platform > Search > Queries > "All
-// Queries". The admin menu no longer has a "Queries" node at all — Search's only child
-// is now "Indexes", which is childless and therefore cannot produce a flyout. Flyouts
-// need a level >= FlyoutDepth (2) item that HAS children, and the current menu contains
-// exactly one such node: Platform > Settings > Localization > Cultures. The behaviour
-// under test (detached, hit-testable flyout) is unchanged; only the node exercising it is.
+// RETARGETED twice (Phase 8 triage, then the provider-menu import): earlier targets rode
+// on nesting that only existed in one tenant's accumulated layout overlay ("Platform" was a
+// custom root, not anything a fresh FruitfulSetup tenant has), and a fresh tenant's menu is
+// only three levels deep - no level >= FlyoutDepth (2) item has children at all. Rather than
+// depend on any particular tenant's layout, the check now BUILDS the geometry it needs: it
+// reparents the "Media" branch (which has children) under Design > Templates via the same
+// move API the editor uses, hovers it at level 2, and restores the layout afterwards.
+const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
+
 module.exports = async function run(page, ctx) {
-  const parentText = 'Localization';
-  const childText = 'Cultures';
+  const parentText = 'Media';
+  const childText = 'Library';
+
+  async function moveNode(nodeId, parentNodeId, position) {
+    const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
+    return page.evaluate(async ({ nodeId, parentNodeId, position, antiforgery }) => {
+      const response = await fetch(`/api/crest/admin-menus/__crest_default_admin_menu/nodes/${encodeURIComponent(nodeId)}/move`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },
+        body: JSON.stringify({ parentNodeId, position }),
+      });
+      if (!response.ok) throw new Error(`move failed: ${response.status} ${await response.text()}`);
+    }, { nodeId, parentNodeId, position, antiforgery });
+  }
+
+  // Resolve the pieces from the live menu - keys are UniqueIds, not knowable up front.
+  const layout = await page.evaluate(async () => {
+    const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+    if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
+    const data = await response.json();
+    const menu = data.menus.find(candidate => candidate.id === '__crest_default_admin_menu');
+    const design = menu.nodes.find(node => node.text === 'Design');
+    const templates = (design?.items || []).find(node => node.text === 'Templates');
+    const media = menu.nodes.find(node => node.text === 'Media');
+    return {
+      templatesId: templates?.id ?? null,
+      mediaId: media?.id ?? null,
+      mediaIndex: menu.nodes.findIndex(node => node.text === 'Media'),
+    };
+  });
+  if (!layout.templatesId || !layout.mediaId) {
+    return [{ name: 'flyout-parent-found', pass: false, message: `missing Design > Templates or Media (${JSON.stringify(layout)})` }];
+  }
+
+  // Design(0) > Templates(1) > Media(2, has children): the shallowest arrangement that puts a
+  // child-bearing item at FlyoutDepth.
+  await moveNode(layout.mediaId, layout.templatesId, 0);
+
+  try {
 
   await page.goto(`${ctx.baseUrl}/Admin`, { waitUntil: 'networkidle' });
   const primaryNavMenu = page.locator('.primary-nav-menu');
@@ -32,8 +73,8 @@ module.exports = async function run(page, ctx) {
     primaryNavMenu.locator(`button.crest-panel-menu__item-link:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
   const itemContent = label =>
     primaryNavMenu.locator(`.crest-panel-menu__item-content:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
-  await clickForEffect(expandLink('Platform'), itemContent('Settings'));
-  await clickForEffect(expandLink('Settings'), itemContent('Localization'));
+  await clickForEffect(expandLink('Design'), itemContent('Templates'));
+  await clickForEffect(expandLink('Templates'), itemContent('Media'));
   await page.waitForTimeout(250);
 
   const before = await primaryNavMenu.evaluate(
@@ -129,4 +170,9 @@ module.exports = async function run(page, ctx) {
     },
     { name: 'flyout-hit-tests-at-its-position', pass: after.flyoutHit, message: JSON.stringify(after) },
   ];
+
+  } finally {
+    // Put Media back at the root where it started, whatever happened above.
+    await moveNode(layout.mediaId, null, Math.max(0, layout.mediaIndex)).catch(() => {});
+  }
 };

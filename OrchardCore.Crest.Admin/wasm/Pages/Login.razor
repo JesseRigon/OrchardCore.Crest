@@ -24,7 +24,13 @@
                 <CrestTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="@T.T("Login_UsernamePlaceholder", "Username or email")" />
                 <CrestPassword Name="Password" @bind-Value="_login.Password" Placeholder="@T.T("Login_PasswordPlaceholder", "Password")" />
                 <CrestCheckBox @bind-Value="_login.RememberMe" />
-                <CrestButton ButtonType="ButtonType.Submit" Text="@T.T("Login_Submit", "Login")" Disabled="@DisplayManager.IsBusy" />
+                @* Disabled until interactive: the statically prerendered form carries the
+                   middleware's INTERNAL composed URL (PathBase "/Login" + Path "/login") as
+                   its action and no method, so a submit before the runtime attaches is a
+                   native GET to "/Login/login?UserName=...&Password=..." - a 404 that leaks
+                   the password into the URL, history and server logs. A disabled sole submit
+                   button also blocks the Enter-key implicit submission for that window. *@
+                <CrestButton ButtonType="ButtonType.Submit" Text="@T.T("Login_Submit", "Login")" Disabled="@(DisplayManager.IsBusy || !RendererInfo.IsInteractive)" />
                 @if (DisplayManager.ErrorMessage is not null)
                 {
                     <CrestText TextStyle="TextStyle.Caption" Text="@DisplayManager.ErrorMessage" />

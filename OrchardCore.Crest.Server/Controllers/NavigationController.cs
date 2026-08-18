@@ -2,6 +2,7 @@ using Crest.Services;
 using Crest.Icons;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Admin;
+using OrchardCore.Localization.Data;
 using OrchardCore.Navigation;
 
 namespace Crest.Controllers;
@@ -51,14 +52,25 @@ public sealed class NavigationController(
         if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
         {
             await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
+            // Once per shell: import provider items as admin menu nodes (see the note in
+            // AdminMenusController's BuildDefaultNavigationMenuAsync for how Merge then keys the
+            // rendered items by UniqueId). Done here as well so the import happens on whichever
+            // of the sidebar or the menu editor is loaded first.
+            await access.GetRequiredService<CrestProviderMenuSyncCoordinator>().EnsureSyncedAsync(ControllerContext);
         }
 
         var items = await navigationManager.BuildMenuAsync(menuName, ControllerContext);
 
+        // Resolves each admin menu node's caption against the tenant translation store for the
+        // request culture - see NavigationItem.From. GetService, not GetRequiredService: with
+        // the data localization feature somehow absent the menu should render untranslated, not
+        // fail.
+        var dataLocalizer = access.GetService<IDataLocalizer>();
+
         var menu = new NavigationMenu(
             menuName,
             items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
-                .Select(NavigationItem.From)
+                .Select(item => NavigationItem.From(item, dataLocalizer))
                 .ToArray());
 
         if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
@@ -107,9 +119,48 @@ public sealed record NavigationItem(
     public string? Key => !string.IsNullOrEmpty(Id) ? Id : TextKey;
     public string? Link => !string.IsNullOrWhiteSpace(Href) ? Href : Url;
 
-    public static NavigationItem From(MenuItem item) =>
-        new(
-            item.Text.Value,
+    public static NavigationItem From(MenuItem item) => From(item, dataLocalizer: null);
+
+    // An item that belongs to an admin menu (MenuName is set only by the admin node navigation
+    // builders) carries its node's raw caption as Text - the built LocalizedString is
+    // (LinkText, LinkText), untranslated. Orchard's own Razor admin resolves EVERY caption
+    // through IDataLocalizer at render time (TheAdmin's NavigationItemText.cshtml, keyed on the
+    // displayed caption, scoped to DataLocalizationContext.AdminMenu(MenuName) - which for an
+    // item with no owning menu, like the "New" branch's content type children, is the generic
+    // "Admin Menus" context); serialization here is Crest's render time, so the same resolution
+    // happens in the same place, unconditionally, keeping the two admins in agreement. A miss
+    // returns the caption unchanged, so provider items keep their PO-translated Text.Value.
+    public static NavigationItem From(MenuItem item, IDataLocalizer? dataLocalizer)
+    {
+        var text = item.Text.Value;
+        if (dataLocalizer is not null && !string.IsNullOrEmpty(text))
+        {
+            var localized = dataLocalizer[text, OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(
+                string.IsNullOrEmpty(item.MenuName) ? null : item.MenuName)];
+
+            // Additive over upstream, for ownerless items only (in practice the "New" branch's
+            // content type children): fall back to the "Content Types" translation of the same
+            // caption. Upstream renders those captions under the generic "Admin Menus" context,
+            // which no provider populates with type names - so a content type translated in the
+            // Translations editor shows translated on every content-editing surface yet
+            // untranslated in the very menu that creates it. The fallback closes that seam: one
+            // "Content Types" translation covers the New menu too. Menu-owned items don't get
+            // the fallback - their captions are menu data, not type names, and a caption that
+            // happens to collide with a type name must not borrow its translation.
+            if (localized.ResourceNotFound && string.IsNullOrEmpty(item.MenuName))
+            {
+                var contentType = dataLocalizer[text, OrchardCore.ContentTypes.DataLocalizationContext.ContentType];
+                if (!contentType.ResourceNotFound)
+                {
+                    localized = contentType;
+                }
+            }
+
+            text = localized.Value;
+        }
+
+        return new(
+            text,
             item.Text.Name,
             item.Id,
             item.Href,
@@ -119,8 +170,9 @@ public sealed record NavigationItem(
             null,
             item.Classes.ToArray(),
             item.Items.OrderBy(child => child.Position, NavigationPositionComparer.Instance)
-                .Select(From)
+                .Select(child => From(child, dataLocalizer))
                 .ToArray());
+    }
 }
 
 internal sealed class NavigationPositionComparer : IComparer<string?>
