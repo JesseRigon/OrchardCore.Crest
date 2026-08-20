@@ -19,7 +19,7 @@ namespace Crest.Services;
 ///
 /// The key is the caption Orchard itself would look up, not the item's Crest key: the data
 /// localizer is keyed on the source caption within a context, mirroring how
-/// <c>IStringLocalizer</c> keys on the untranslated literal. Callers pass the pre-override
+/// <c>IStringLocalizer</c> keys on the invariant literal. Callers pass the pre-override
 /// caption for that reason.
 /// </remarks>
 public sealed class CrestAdminMenuTranslationService(TranslationsManager translationsManager)
@@ -60,5 +60,56 @@ public sealed class CrestAdminMenuTranslationService(TranslationsManager transla
         }
 
         await translationsManager.UpdateTranslationAsync(culture, existing);
+    }
+
+    /// <summary>
+    /// Removes the given keys under <paramref name="context"/> from every culture. Used when
+    /// the translated thing itself is deleted (an admin menu node, a content type) so its
+    /// translations do not linger as orphans the Translations editor cannot show. Callers are
+    /// responsible for the shared-caption guard: only pass keys nothing else still uses.
+    /// </summary>
+    public async Task RemoveKeysAsync(string context, IReadOnlyCollection<string> keys)
+    {
+        if (keys.Count == 0)
+        {
+            return;
+        }
+
+        var document = await translationsManager.GetTranslationsDocumentAsync();
+
+        foreach (var (culture, entries) in document.Translations)
+        {
+            var kept = entries
+                .Where(entry =>
+                    !string.Equals(entry.Context, context, StringComparison.OrdinalIgnoreCase) ||
+                    !keys.Contains(entry.Key, StringComparer.Ordinal))
+                .ToList();
+
+            if (kept.Count != entries.Count())
+            {
+                await translationsManager.UpdateTranslationAsync(culture, kept);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes every entry under <paramref name="context"/> from every culture. Used when a
+    /// whole admin menu is deleted, taking its entire translation context with it.
+    /// </summary>
+    public async Task RemoveContextAsync(string context)
+    {
+        var document = await translationsManager.GetTranslationsDocumentAsync();
+
+        foreach (var (culture, entries) in document.Translations)
+        {
+            var kept = entries
+                .Where(entry => !string.Equals(entry.Context, context, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (kept.Count != entries.Count())
+            {
+                await translationsManager.UpdateTranslationAsync(culture, kept);
+            }
+        }
     }
 }

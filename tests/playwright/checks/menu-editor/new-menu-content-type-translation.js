@@ -83,7 +83,7 @@ module.exports = async function run(page, ctx) {
   if (!typeChild) {
     return [{ name: 'new-branch-found', pass: false, message: `no New branch child (${JSON.stringify(newBranch)})` }];
   }
-  // textKey is the untranslated literal - the content type's DisplayName, which is the key the
+  // textKey is the invariant literal - the content type's DisplayName, which is the key the
   // Content Types translations are stored under.
   const typeName = typeChild.textKey;
 

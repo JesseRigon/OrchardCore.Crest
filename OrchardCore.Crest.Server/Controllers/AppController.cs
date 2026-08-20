@@ -66,9 +66,10 @@ public sealed class AppController(
         var profileMenu = await profileMenuService.BuildAsync(User, HttpContext.RequestAborted);
         // Same caption resolution as NavigationController.GetMenu - the manifest's copy of the
         // admin menu must agree with the sidebar endpoint for the same request culture.
-        var dataLocalizer = serviceProvider.GetService<OrchardCore.Localization.Data.IDataLocalizer>();
+        var captionResolver = serviceProvider.GetRequiredService<CrestMenuCaptionResolver>();
+        await captionResolver.EnsureLoadedAsync();
         var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
-            .Select(item => NavigationItem.From(item, dataLocalizer))
+            .Select(item => NavigationItem.From(item, captionResolver))
             .ToArray()));
         adminMenu = adminMenu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
         adminMenu = await iconController.ResolveMenuIconsAsync(

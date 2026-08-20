@@ -1,11 +1,12 @@
 // A rename is a translation of one caption, not a change of identity, so it must only apply
 // to the culture the admin was viewing when they typed it. Renaming under fr-FR used to
-// replace the single stored DisplayText and therefore changed the English caption too - the
-// layout had one rename slot per item, with no record of which culture it belonged to.
+// replace the single stored DisplayText and therefore changed every other culture's caption
+// too - the layout had one rename slot per item, with no record of which culture it belonged
+// to.
 //
 // Drives a rename under French through a browser context resolved to French, then reads the
-// same item back under English and asserts the English caption is untouched, and vice versa:
-// both cultures must be able to hold their own rename of the same item simultaneously.
+// same item back under en-US and asserts its caption is untouched, and vice versa: both
+// cultures must be able to hold their own rename of the same item simultaneously.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
 const { createInstance } = require('../../harness/instance');
 const { loginAsAdmin } = require('../../harness/auth');
@@ -95,8 +96,8 @@ module.exports = async function run(page, ctx) {
       message: `fr text="${frenchAfter?.text}"`,
     });
 
-    // The point of the check: the English caption must still be the provider's own, not the
-    // French rename leaking across cultures.
+    // The point of the check: under en-US the caption must still be the provider's own
+    // invariant literal, not the French rename leaking across cultures.
     const englishAfter = (await getRootNodes(page)).find(node => node.id === nodeId);
     results.push({
       name: 'rename-does-not-leak-to-other-culture',

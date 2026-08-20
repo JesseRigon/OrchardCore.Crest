@@ -247,8 +247,9 @@ public sealed class CrestAdminMenuLayoutService(
         var item = GetOrCreateOverride(layout, key);
         var renamedText = text?.Trim();
 
-        // Scoped to the culture the admin is viewing: renaming under es-ES must not disturb the
-        // English caption, which comes from the navigation provider's own S["..."] resource.
+        // Scoped to the culture the admin is viewing: renaming under es-ES must not disturb any
+        // other culture, where the caption stays the provider's own - that culture's translation
+        // of the S["..."] resource, or the invariant literal itself when none exists.
         item.SetDisplayText(
             CurrentCulture,
             string.IsNullOrWhiteSpace(renamedText) || string.Equals(renamedText, node.Item.Text, StringComparison.Ordinal)
@@ -430,7 +431,7 @@ public sealed class CrestAdminMenuLayoutService(
 
             // Only a rename recorded for this request's culture applies. Under any other culture
             // the provider's own localized caption is used, so a Spanish rename doesn't leak into
-            // the English menu.
+            // any other culture's menu.
             var renamed = itemOverride.GetDisplayText(CurrentCulture);
             var text = string.IsNullOrWhiteSpace(renamed) ? node.Item.Text : renamed;
             var classes = string.IsNullOrWhiteSpace(itemOverride.IconClass) ? node.Item.Classes : ToIconClasses(itemOverride.IconClass);
@@ -723,7 +724,8 @@ public sealed class CrestAdminMenuLayoutItem
     /// Renames keyed by the culture they were entered in, e.g. <c>{"es-ES": "Nuevinhos"}</c>.
     /// A rename is a translation of one caption, not a change of identity, so it must only
     /// affect the culture the admin was viewing when they typed it: renaming under <c>es</c>
-    /// leaves the English caption alone.
+    /// leaves every other culture's caption alone (each keeps its own translation, or the
+    /// invariant literal when none exists).
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Dictionary<string, string>? DisplayTextByCulture { get; set; }

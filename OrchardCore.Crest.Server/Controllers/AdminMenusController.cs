@@ -38,7 +38,11 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        return Ok(await providerMenuSyncService.SyncAsync(ControllerContext));
+        // reseedMissingTranslations: an admin invoking the sync by hand is asking for
+        // restoration - missing PO-seeded translations are refilled even if seeded before,
+        // which is also the recovery path for seeds lost to the Translations editor's
+        // wholesale save. The automatic per-shell pass never refills a deleted one.
+        return Ok(await providerMenuSyncService.SyncAsync(ControllerContext, reseedMissingTranslations: true));
     }
 
     [HttpGet]
@@ -295,6 +299,20 @@ public sealed class AdminMenusController(
 
         await adminMenuService.DeleteAsync(menu);
         await menuPlacementService.RemoveAsync(menuId);
+
+        // The menu's translations go with it: its whole context, plus the menu NAME's own
+        // entry in the generic context (that one only if no other menu still bears the name -
+        // menu names are not enforced unique).
+        await translationService.RemoveContextAsync(OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(menu.Name));
+        var nameStillUsed = list.AdminMenu.Any(other =>
+            other.Id != menu.Id && string.Equals(other.Name, menu.Name, StringComparison.OrdinalIgnoreCase));
+        if (!nameStillUsed)
+        {
+            await translationService.RemoveKeysAsync(
+                OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(),
+                [menu.Name]);
+        }
+
         return NoContent();
     }
 
@@ -718,7 +736,41 @@ public sealed class AdminMenusController(
         }
 
         await adminMenuService.SaveAsync(menu);
+
+        // The node's translations must not outlive it as orphans. The deleted subtree's
+        // captions are removed from the menu's translation context in every culture - except
+        // any caption a surviving node in the same menu still uses, since translations are
+        // keyed on the caption and shared by every node bearing it.
+        var deletedCaptions = new HashSet<string>(StringComparer.Ordinal);
+        CollectNodeCaptions([node], deletedCaptions);
+        var survivingCaptions = new HashSet<string>(StringComparer.Ordinal);
+        CollectNodeCaptions(menu.MenuItems, survivingCaptions);
+        deletedCaptions.ExceptWith(survivingCaptions);
+        await translationService.RemoveKeysAsync(
+            OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(menu.Name),
+            deletedCaptions);
+
         return Ok(AdminMenuSummary.From(menu));
+    }
+
+    private static void CollectNodeCaptions(IEnumerable<MenuItem> items, HashSet<string> captions)
+    {
+        foreach (var item in items)
+        {
+            var caption = item switch
+            {
+                LinkAdminNode link => link.LinkText,
+                PlaceholderAdminNode placeholder => placeholder.LinkText,
+                _ => null,
+            };
+
+            if (!string.IsNullOrWhiteSpace(caption))
+            {
+                captions.Add(caption);
+            }
+
+            CollectNodeCaptions(item.Items, captions);
+        }
     }
 
     private async Task<AdminMenuSummary> GetDefaultMenuSummaryAsync()
@@ -1110,7 +1162,8 @@ public sealed record AdminMenuNodeSummary(
         // exported recipe. item.Text is unusable as the original here because Build() has
         // already substituted DisplayText over it by the time this runs.
         // Renames are per-culture, so the hint must only appear when this culture actually has
-        // one: a Spanish rename shouldn't mark the item as renamed while viewing English.
+        // one: a Spanish rename shouldn't mark the item as renamed while viewing any other
+        // culture.
         var originalText = !string.IsNullOrWhiteSpace(itemOverride?.GetDisplayText(CultureInfo.CurrentUICulture.Name))
             && originalTextsById.TryGetValue(item.Key, out var original)
             && !string.Equals(original, item.Text, StringComparison.Ordinal)

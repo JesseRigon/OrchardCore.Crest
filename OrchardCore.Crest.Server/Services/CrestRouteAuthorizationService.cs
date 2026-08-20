@@ -122,6 +122,12 @@ public sealed class CrestRoutePermissionProvider : ICrestRoutePermissionProvider
         new("/Settings/general", SettingsPermissions.ManageSettings),
         new("/Settings/admin", AdminPermissions.ManageAdminSettings),
         new("/Settings/localization", LocalizationPermissions.ManageCultures),
+        // The Crest translations editor (Pages/Translations.razor) shadows the stock
+        // DataLocalization URLs so the existing admin menu link and the Localization page's
+        // "Edit translations" button land on it instead of the legacy frame. View-level gate
+        // only - the API enforces per-culture edit rights on top.
+        new("/DataLocalization", OrchardCore.Localization.Data.DataLocalizationPermissions.ViewDynamicTranslations),
+        new("/DataLocalization/Index", OrchardCore.Localization.Data.DataLocalizationPermissions.ViewDynamicTranslations),
         new("/Settings/userLogin", UsersPermissions.ManageUsers),
         new("/Settings/SecurityHeaders", SecurityPermissions.ManageSecurityHeadersSettings),
         new("/Settings", SecurityPermissions.ManageSecurityHeadersSettings),

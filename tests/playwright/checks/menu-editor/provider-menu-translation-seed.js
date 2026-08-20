@@ -3,9 +3,10 @@
 // store instead of the provider's S["..."] resource. The sync therefore SEEDS that store from
 // the PO catalogs - for every supported culture, every imported caption with a PO translation
 // gets a store entry, unless the tenant already has one (admin edits and promotions always
-// win). Without this, switching to es-ES showed an all-English sidebar even though the es PO
-// catalog translates every stock caption - the import is expected to carry the provider's
-// translations along with its items.
+// win). Without this, switching to es-ES showed a sidebar of raw invariant literals (the
+// S["..."] keys, English only by convention) even though the es PO catalog translates every
+// stock caption - the import is expected to carry the provider's translations along with its
+// items.
 //
 // Assertions run against both halves of the pipeline: the store itself (via GetStrings, the
 // JSON endpoint Orchard's own translations editor loads from) and the served sidebar (the
@@ -82,11 +83,16 @@ module.exports = async function run(page, ctx) {
       message: JSON.stringify(spanish.slice(0, 8)),
     });
 
-    const english = await sidebarTexts('en-US');
+    // en-US is a culture like any other: entries can be seeded or hand-written for it and
+    // would render exactly like es ones. This tenant's baseline just has none (upstream ships
+    // no en PO catalog, since the invariant keys happen to be written in English), so captions
+    // fall back to the invariant literals - which is what lets this assert that the es entries
+    // are culture-scoped and do not leak into en-US.
+    const underEn = await sidebarTexts('en-US');
     results.push({
-      name: 'sidebar-still-english-under-en',
-      pass: english.includes('Content') && !english.includes('Contenido'),
-      message: JSON.stringify(english.slice(0, 8)),
+      name: 'es-entries-do-not-leak-into-en',
+      pass: underEn.includes('Content') && !underEn.includes('Contenido'),
+      message: JSON.stringify(underEn.slice(0, 8)),
     });
   } finally {
     // Drop the culture cookie so later checks in the shared browser run under the default.

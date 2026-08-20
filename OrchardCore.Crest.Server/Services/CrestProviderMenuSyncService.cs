@@ -34,8 +34,9 @@ namespace Crest.Services;
 /// <c>IDataLocalizer</c> needs to hold a tenant-level translation of its caption.
 ///
 /// <para>
-/// Items are matched across runs on <c>MenuItem.Text.Name</c> - the untranslated literal a
-/// provider passed to <c>S["..."]</c>, which is what OrchardCore's own
+/// Items are matched across runs on <c>MenuItem.Text.Name</c> - the invariant literal a
+/// provider passed to <c>S["..."]</c> (the localization key itself, English only by
+/// convention), which is what OrchardCore's own
 /// <c>NavigationManager.Merge</c> matches on and therefore does not vary by culture - qualified
 /// by the item's position in the tree so that two identically-captioned items under different
 /// parents stay distinct. The match key is held in this service's own document rather than on
@@ -84,8 +85,16 @@ public sealed class CrestProviderMenuSyncService(
     /// re-running matches existing nodes and leaves their captions, icons, ordering and any
     /// other tenant edits alone.
     /// </summary>
+    /// <param name="actionContext">Supplies the <c>IUrlHelper</c> that resolves provider route
+    /// values into hrefs.</param>
+    /// <param name="reseedMissingTranslations">When <c>true</c> (the on-demand endpoint), a
+    /// caption/culture pair whose translation is absent from the store is re-seeded from the PO
+    /// catalog even if it was seeded before - an admin invoking the sync by hand is asking for
+    /// restoration. The automatic per-shell pass leaves such pairs alone: an absent entry that
+    /// was seen before means someone deleted it, and refilling it would overwrite that intent.
+    /// </param>
     /// <returns>A summary of what changed, for logging and for the on-demand endpoint.</returns>
-    public async Task<CrestProviderMenuSyncResult> SyncAsync(ActionContext actionContext)
+    public async Task<CrestProviderMenuSyncResult> SyncAsync(ActionContext actionContext, bool reseedMissingTranslations = false)
     {
         // Built from the navigation providers only. Once the import exists, the admin menu
         // coordinator contributes the imported nodes to the same "admin" menu, so reading the
@@ -110,7 +119,7 @@ public sealed class CrestProviderMenuSyncService(
         // Every match key seen in this pass, so anything left over can be marked disabled below.
         var seen = new HashSet<string>(StringComparer.Ordinal);
 
-        // Every untranslated caption imported in this pass, for the PO seeding below.
+        // Every invariant caption imported in this pass, for the PO seeding below.
         var captions = new HashSet<string>(StringComparer.Ordinal);
 
         // The root level is the menu's own AdminNode list; every level below it is a node's
@@ -142,16 +151,22 @@ public sealed class CrestProviderMenuSyncService(
             entry.Enabled = false;
         }
 
+        // Runs on every pass, not only when the menu changed: adding a supported culture is
+        // invisible to the menu diff above, yet is exactly when that culture's captions need
+        // seeding. With the seen-pair tracking a pass that finds nothing new costs set lookups
+        // only - no PO catalogs are loaded at all.
+        var (seeded, seedStateChanged) = await SeedCaptionTranslationsAsync(captions, state, reseedMissingTranslations);
+        result.SeededTranslations = seeded;
+
         if (result.HasChanges)
         {
             await adminMenuService.SaveAsync(menu);
-            await documents.UpdateAsync(state);
         }
 
-        // Runs on every pass, not only when the menu changed: adding a supported culture is
-        // invisible to the menu diff above, yet is exactly when that culture's captions need
-        // seeding.
-        result.SeededTranslations = await SeedCaptionTranslationsAsync(captions);
+        if (result.HasChanges || seedStateChanged)
+        {
+            await documents.UpdateAsync(state);
+        }
 
         return result;
     }
@@ -165,7 +180,8 @@ public sealed class CrestProviderMenuSyncService(
     /// Importing a provider item moves its caption out of PO's reach: the rendered item carries
     /// the node's raw literal and resolves through <c>IDataLocalizer</c> (the tenant store), not
     /// through the provider's <c>S["..."]</c> resource. Without seeding, a tenant whose PO files
-    /// translate "Content" to "Contenido" would render English until someone re-entered that
+    /// translate "Content" to "Contenido" would render the invariant literal (the raw
+    /// <c>S["..."]</c> key, English only by convention) until someone re-entered that
     /// translation by hand - the import is expected to carry the provider's translations along
     /// with its items.
     ///
@@ -179,21 +195,42 @@ public sealed class CrestProviderMenuSyncService(
     /// Because seeding never overwrites, a later PO update only reaches cultures/captions that
     /// were never seeded - a seeded value is tenant data from the moment it is written, editable
     /// in the Translations editor and indistinguishable from a hand-entered one.
+    ///
+    /// <para>
+    /// Every caption/culture pair this pass seeds - or finds already translated - is recorded in
+    /// the sync document as seen. The automatic pass seeds only never-seen pairs, so a
+    /// translation an admin deliberately deleted stays deleted across shell restarts instead of
+    /// being refilled from PO; passing <c>force</c> (the on-demand endpoint) seeds any missing
+    /// pair regardless, which is also what restores seeds lost to the Translations editor's
+    /// wholesale save. The tracking doubles as the fast path: once every pair is seen, the pass
+    /// loads no PO catalogs at all.
+    /// </para>
     /// </remarks>
-    private async Task<int> SeedCaptionTranslationsAsync(IReadOnlyCollection<string> captions)
+    private async Task<(int Seeded, bool StateChanged)> SeedCaptionTranslationsAsync(
+        IReadOnlyCollection<string> captions,
+        CrestProviderMenuSyncDocument state,
+        bool force)
     {
         if (captions.Count == 0)
         {
-            return 0;
+            return (0, false);
         }
 
         var context = DataLocalizationContext.AdminMenu(ImportedMenuName);
         var cultures = await localizationService.GetSupportedCulturesAsync();
         var document = await translationsManager.GetTranslationsDocumentAsync();
         var seeded = 0;
+        var stateChanged = false;
 
         foreach (var culture in cultures)
         {
+            if (!state.SeededCaptions.TryGetValue(culture, out var seenList))
+            {
+                state.SeededCaptions[culture] = seenList = [];
+            }
+
+            var seen = seenList.ToHashSet(StringComparer.Ordinal);
+
             var existing = document.Translations.TryGetValue(culture, out var current)
                 ? current.ToList()
                 : [];
@@ -203,7 +240,20 @@ public sealed class CrestProviderMenuSyncService(
                 .Select(entry => entry.Key)
                 .ToHashSet(StringComparer.Ordinal);
 
-            var wanted = captions.Where(caption => !present.Contains(caption)).ToHashSet(StringComparer.Ordinal);
+            // A caption that already has a translation is the tenant's, however it got there -
+            // marking it seen means its later deletion is respected exactly like a seeded one's.
+            foreach (var caption in captions)
+            {
+                if (present.Contains(caption) && seen.Add(caption))
+                {
+                    seenList.Add(caption);
+                    stateChanged = true;
+                }
+            }
+
+            var wanted = captions
+                .Where(caption => !present.Contains(caption) && (force || !seen.Contains(caption)))
+                .ToHashSet(StringComparer.Ordinal);
             if (wanted.Count == 0)
             {
                 continue;
@@ -220,6 +270,12 @@ public sealed class CrestProviderMenuSyncService(
                 });
                 added = true;
                 seeded++;
+
+                if (seen.Add(caption))
+                {
+                    seenList.Add(caption);
+                    stateChanged = true;
+                }
             }
 
             if (added)
@@ -235,7 +291,7 @@ public sealed class CrestProviderMenuSyncService(
             logger.LogInformation("Seeded {Count} admin menu caption translations from the PO catalogs.", seeded);
         }
 
-        return seeded;
+        return (seeded, stateChanged);
     }
 
     private List<(string Caption, string Translation)> ResolvePoTranslations(string cultureName, HashSet<string> wanted)
@@ -394,7 +450,7 @@ public sealed class CrestProviderMenuSyncService(
     }
 
     /// <summary>
-    /// Folds sibling items sharing an untranslated caption into one, the way
+    /// Folds sibling items sharing an invariant caption into one, the way
     /// <c>NavigationManager.Merge</c> does, so that providers contributing into a shared branch
     /// produce a single imported node rather than one per contributor.
     /// </summary>
@@ -487,7 +543,7 @@ public sealed class CrestProviderMenuSyncService(
                 continue;
             }
 
-            // Text.Name is the untranslated literal; Text.Value is this request's translation.
+            // Text.Name is the invariant literal (the key); Text.Value is this request's translation.
             // Matching on the former is what keeps the import stable when the admin's culture
             // changes between two syncs.
             var matchKey = BuildMatchKey(parentKey, source);
@@ -582,7 +638,7 @@ public sealed class CrestProviderMenuSyncService(
     }
 
     /// <summary>
-    /// The identity an imported item is matched by across syncs: its untranslated caption,
+    /// The identity an imported item is matched by across syncs: its invariant caption,
     /// qualified by its parent's key so two items captioned the same under different parents do
     /// not collide. Returns <c>null</c> for an item with no usable literal, which is left
     /// un-imported rather than given an unstable key.
@@ -702,9 +758,16 @@ public sealed class CrestProviderMenuSyncService(
 public sealed class CrestProviderMenuSyncDocument : Document
 {
     /// <summary>
-    /// Match key (parent path + untranslated caption) to the node it was imported as.
+    /// Match key (parent path + invariant caption) to the node it was imported as.
     /// </summary>
     public Dictionary<string, CrestProviderMenuSyncEntry> Entries { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Per culture: every caption whose translation the seeding pass has ever written or found
+    /// already present. An absent store entry for a seen pair means someone deleted it, and the
+    /// automatic pass will not refill it - see <c>SeedCaptionTranslationsAsync</c>.
+    /// </summary>
+    public Dictionary<string, List<string>> SeededCaptions { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 public sealed class CrestProviderMenuSyncEntry

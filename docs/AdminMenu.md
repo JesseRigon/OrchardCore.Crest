@@ -54,8 +54,9 @@ no tenant admin can edit. Importing them gives each item a `UniqueId` (which the
 builders copy onto `MenuItem.Id`) and a `MenuName`, which is the context `IDataLocalizer` needs
 to hold a tenant-level translation.
 
-Items are matched across runs on `MenuItem.Text.Name` — the untranslated `S["..."]` literal that
-OrchardCore's own `NavigationManager.Merge` matches on, so it does not vary by culture —
+Items are matched across runs on `MenuItem.Text.Name` — the invariant `S["..."]` literal (the
+localization key, written in English only by convention) that OrchardCore's own
+`NavigationManager.Merge` matches on, so it does not vary by culture —
 qualified by the item's parent path so identically-captioned items under different parents stay
 distinct. The match key lives in Crest's own document, leaving `AdminNode` exactly as OrchardCore
 defines it.
@@ -84,8 +85,13 @@ tenant translation store (`IDataLocalizer`), not through the provider's own `S["
 resource — so the sync *seeds* that store from the PO catalogs: for every supported culture,
 every imported caption whose PO catalog carries a translation gets a store entry. Seeding never
 overwrites — a translation the tenant already has (edited in the Translations editor or promoted
-from a rename) always wins — and it re-runs on every sync, so adding a supported culture seeds
-that culture on the next shell start (or `sync-providers` call). PO entries are keyed by
+from a rename) always wins — and each caption/culture pair is seeded **at most once**: the sync
+document tracks every pair it has seeded or found already translated, so a translation an admin
+deliberately deleted stays deleted across shell restarts instead of being refilled from PO
+(`sync-providers` is the exception — invoking it by hand refills anything missing, which is also
+the recovery path for the lossy-save trap below). Adding a supported culture seeds that culture
+on the next shell start or `sync-providers` call; a pass with nothing new loads no PO catalogs
+at all. PO entries are keyed by
 contributing class, which merging erases, so the seed matches the caption across the whole
 catalog and takes the most common translation when contexts disagree. The result: every
 imported caption is a first-class, per-tenant-editable entry in Orchard's own translations
@@ -94,26 +100,58 @@ pre-filled with what PO would have shown. One consequence to know: because seede
 tenant data from the moment they are written, a later PO catalog update only reaches
 cultures/captions that were never seeded.
 
-Crest's sidebar and app manifest resolve these captions through `IDataLocalizer` per request
-culture at serialization time — the same resolution TheAdmin's `NavigationItemText.cshtml`
-performs at render time — so both admins agree on what a caption looks like in any culture.
-Items with no owning menu resolve under the generic "Admin Menus" context, as upstream does.
+Crest's sidebar and app manifest resolve these captions against the tenant translation store
+per request culture at serialization time — the same place in the pipeline where TheAdmin's
+`NavigationItemText.cshtml` resolves at render time — through `CrestMenuCaptionResolver`,
+which fixes two defects a bare `IDataLocalizer` lookup carries:
 
-**Additive over upstream: the "New" branch reads "Content Types" translations.** Upstream
-renders the New branch's content type captions under the generic "Admin Menus" context, which
-no provider populates with type names — so a content type translated in the Translations
-editor ("Content Types" group) shows translated on every content-editing surface yet
-untranslated in the very menu that creates it. Crest closes that seam: an ownerless caption
-with no "Admin Menus" translation falls back to the same caption's "Content Types"
-translation, so one translation covers every surface a type name appears on.
+**Merge drops `MenuName`.** `NavigationManager.Merge` folds a provider item and its imported
+node into one; the node's values win via priority, but the *surviving instance* is whichever
+came first in provider registration order, and Merge's copy list omits `MenuName`
+(fruitful's `plans/upstream-orchard-proposals.md` #7). An item that survived as the provider's
+instance would resolve under the generic "Admin Menus" context and miss its stored
+translation — per caption, decided by module registration order. The resolver restores the
+owning menu from the surviving `Id`, which for a merged pair is the node's `UniqueId`.
 
-**Known upstream trap: the Translations editor's Save is lossy for deep captions.** Orchard's
+**No default context.** Contexts are strict namespaces: a translation stored under one is
+invisible to a lookup under any other, and upstream falls back to the invariant literal even
+when the culture translates the same caption elsewhere. The resolver walks outward instead —
+the exact menu context, then parent contexts by stripping `':'` segments
+(`Admin Menus:Primary Navigation` → `Admin Menus`), and finally the culture's best entry for
+the caption anywhere in the store (contexts under "Admin Menus" preferred, then the most
+common value, ordinally tie-broken). The invariant literal renders only when the request
+culture holds no translation of the caption at all; an entry in the exact context always
+wins, so pinning a caption in the Translations editor overrides every fallback. Each step
+checks the specific culture before its parents (`es-ES`, then `es`).
+
+This subsumes the earlier special-cased "New"-branch fallback: a content type translated in
+the Translations editor ("Content Types" group) is simply the best alternative for its New
+menu caption, which no "Admin Menus" context translates — one translation covers every
+surface a type name appears on.
+
+**The Crest translations editor.** `/Admin/DataLocalization` (and `/Index`) render Crest's own
+Blazor translations page instead of the stock one — the routes shadow the stock URLs, so the
+imported "Translations" menu link and the Localization page's "Edit translations" button land
+on it unchanged. Same functionality as the stock page (per-culture, grouped, permission-aware:
+`ManageTranslations` or the per-culture permission to edit, `ViewDynamicTranslations` to view),
+with two deliberate differences backed by `api/crest/translations`: reads include **orphaned**
+entries (stored translations no provider currently enumerates — a disabled feature's strings,
+an old key after a source string changed — flagged "stored only", editable and deletable), and
+the save **merges**: only the rows the page displayed are replaced (blank deletes), everything
+else in the store is carried over untouched. Nothing the page never showed can be destroyed by
+saving.
+
+**Closed upstream trap: the Translations editor's Save was lossy for deep captions.** Orchard's
 `Save` replaces a culture's whole translation list with what the editor enumerated, and the
 stock admin node localization providers enumerate *top-level* nodes only — so saving from the
-Translations editor silently deletes stored translations for child-node captions (including
-seeded ones). The sync's seeding re-creates any that go missing on the next shell start or
-`sync-providers` call, but a tenant's *hand-edited* child-caption translation does not come
-back by itself. Fixing this needs the enumeration made recursive (upstream PR material).
+Translations editor silently deleted stored translations for child-node captions (including
+seeded ones). Crest registers `CrestAdminMenuChildCaptionDataLocalizationProvider`, which
+enumerates every admin menu's below-root captions (roots stay upstream's, avoiding duplicate
+rows) — making child captions visible and editable in the editor, and keeping their stored
+values in the list Save round-trips instead of dropping them. The underlying upstream gaps are
+logged in fruitful's `plans/upstream-orchard-proposals.md` (#2 non-recursive enumeration,
+#3 wholesale save). Should a translation still go missing, `sync-providers` refills any seeded
+entry on demand.
 
 **Timing.** The import runs once per shell, on the first request that reads the admin menu. It
 cannot run earlier: `INavigationManager.BuildMenuAsync` resolves each item's `Href` through
@@ -140,16 +178,18 @@ Two mechanisms supply that key, and `NavigationItem.Key` prefers the first:
   `AdminNode.UniqueId` (a GUID assigned when the node is created, unaffected by later edits)
   onto `MenuItem.Id`, so DB-backed Admin Menu nodes have a stable identity that survives a
   caption being rewritten.
-- `TextKey` — `MenuItem.Text.Name`, the untranslated literal a provider passed to `S["..."]`.
-  This is what Orchard's own `NavigationManager.Merge` matches on, so it does not vary by
-  culture. It is the fallback for items contributed by providers that set no `Id`.
+- `TextKey` — `MenuItem.Text.Name`, the invariant literal a provider passed to `S["..."]` —
+  the localization key itself, English only by convention. This is what Orchard's own
+  `NavigationManager.Merge` matches on, so it does not vary by culture. It is the fallback for
+  items contributed by providers that set no `Id`.
 
 ## Renames are per culture
 
 A rename is a translation of one caption, not a change of identity, so it is recorded against
 the culture the admin was viewing when they typed it (`DisplayTextByCulture`). Renaming an item
-under `es-ES` leaves its English caption alone, and resolution falls back through the parent
-culture (`es-ES`, then `es`) before the provider's own caption is used.
+under `es-ES` leaves every other culture's caption alone (each keeps its own translation, or
+the invariant literal when none exists), and resolution falls back through the parent culture
+(`es-ES`, then `es`) before the provider's own caption is used.
 
 A rename recorded this way applies only inside Crest's sidebar. The **Save as this tenant's
 translation** action next to a renamed item promotes it into the tenant's translation store —

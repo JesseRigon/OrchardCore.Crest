@@ -1,0 +1,189 @@
+@page "/DataLocalization"
+@page "/DataLocalization/Index"
+@using Crest.Admin.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The Crest translations editor. Replaces the stock DataLocalization page (which these
+   routes previously reached through the legacy frame): same functionality - per-culture,
+   grouped, permission-aware editing of the tenant translation store - but reads include
+   orphaned entries and the save merges instead of replacing the culture wholesale, so
+   nothing this page never displayed can be destroyed by saving. See docs/AdminMenu.md. *@
+
+<CrestStack Gap="1rem" class="translations-page" data-testid="translations-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Translations_Heading", "Translations")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Translations_HeadingDescription", "Tenant-level translations of dynamic data: admin menu captions, content type names, permissions. These override module-shipped translations at render time.")" />
+        </div>
+        <CrestButton Text="@T.T("Translations_Save", "Save")" Icon="save" Disabled="@(IsSaving || Model is null || !Model.CanEdit)" Click="SaveAsync" />
+    </CrestStack>
+
+    @if (IsLoading)
+    {
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Model is null)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T.T("Translations_Unavailable", "Translations are unavailable - no culture you may view is configured for this tenant.")</CrestAlert>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
+        }
+
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.75rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+            <div class="translations-page__culture-picker">
+                <CrestLabel Text="@T.T("Translations_CultureLabel", "Culture")" />
+                <CrestDropDown TValue="string"
+                               Data="Model.Cultures"
+                               Value="@Model.Culture"
+                               ValueChanged="ChangeCultureAsync"
+                               TextProperty="@nameof(CrestTranslationCulture.Label)"
+                               ValueProperty="@nameof(CrestTranslationCulture.Value)"
+                               class="translations-page__culture-dropdown" />
+            </div>
+            <div class="translations-page__filter">
+                <CrestLabel Text="@T.T("Translations_FilterLabel", "Filter")" />
+                <CrestTextBox @bind-Value="Filter" @bind-Value:event="oninput" Placeholder="@T.T("Translations_FilterPlaceholder", "Filter by text or translation")" Style="width: 100%;" />
+            </div>
+        </CrestStack>
+
+        @if (!Model.CanEdit)
+        {
+            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("Translations_ReadOnly", "You can view this culture's translations but not edit them.")</CrestAlert>
+        }
+
+        @foreach (var group in Groups)
+        {
+            var visible = VisibleRows(group);
+            if (visible.Count == 0) { continue; }
+            <CrestCard @key="group.Name">
+                <CrestStack Gap="0.5rem">
+                    <CrestText TextStyle="TextStyle.Subtitle1" Text="@group.Name" />
+                    @foreach (var row in visible)
+                    {
+                        <div class="translations-page__row" @key="@($"{row.Context}|{row.Key}")">
+                            <div class="translations-page__source">
+                                <span class="translations-page__key">@row.Key</span>
+                                @if (row.Orphan)
+                                {
+                                    <CrestBadge BadgeStyle="BadgeStyle.Warning" Text="@T.T("Translations_OrphanBadge", "stored only")" title="@T.T("Translations_OrphanTitle", "Nothing currently lists this string (its feature may be disabled or its source text changed). The stored translation still applies where the string renders; clear it to delete it.")" />
+                                }
+                            </div>
+                            <CrestTextBox Value="@row.Value" ValueChanged="@((string? value) => row.Value = value ?? string.Empty)" Placeholder="@row.Key" Disabled="@(!Model.CanEdit || IsSaving)" Style="width: 100%;" aria-label="@row.Key" />
+                        </div>
+                    }
+                </CrestStack>
+            </CrestCard>
+        }
+    }
+</CrestStack>
+
+@code {
+    private CrestTranslations? Model;
+    private List<EditableGroup> Groups = [];
+    private bool IsLoading = true;
+    private bool IsSaving;
+    private string? ErrorMessage;
+    private string? Filter;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync(null);
+        IsLoading = false;
+    }
+
+    private async Task LoadAsync(string? culture)
+    {
+        try
+        {
+            ErrorMessage = null;
+            Model = await Api.Crest.Rest.Translations.GetAsync(culture);
+            Groups = Model?.Groups
+                .Select(group => new EditableGroup(
+                    group.Name,
+                    group.Strings.Select(s => new EditableRow(s.Context, s.Key, s.Orphan) { Value = s.Value }).ToList()))
+                .ToList() ?? [];
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task ChangeCultureAsync(string culture)
+    {
+        IsLoading = true;
+        await LoadAsync(culture);
+        IsLoading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Model is null || !Model.CanEdit) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            // EVERY loaded row is posted, filtered or not - the filter only affects what is
+            // shown. The server treats the posted set as "displayed": blank values delete,
+            // and anything outside the set (which this page never loaded) is preserved.
+            var entries = Groups
+                .SelectMany(group => group.Rows)
+                .Select(row => new CrestTranslationSaveEntry(row.Context, row.Key, row.Value))
+                .ToArray();
+
+            var saved = await Api.Crest.Rest.Translations.SaveAsync(new CrestTranslationsSaveModel(Model.Culture, entries));
+            if (saved is null)
+            {
+                throw new InvalidOperationException(T.T("Translations_SaveFailedMessage", "Orchard did not save the translations. Verify your permission to manage this culture."));
+            }
+
+            Model = saved;
+            Groups = saved.Groups
+                .Select(group => new EditableGroup(
+                    group.Name,
+                    group.Strings.Select(s => new EditableRow(s.Context, s.Key, s.Orphan) { Value = s.Value }).ToList()))
+                .ToList();
+            Notifications.Notify(NotificationSeverity.Success, T.T("Translations_Heading", "Translations"), T.T("Translations_SavedMessage", "The translations were saved for this culture."));
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private List<EditableRow> VisibleRows(EditableGroup group)
+    {
+        if (string.IsNullOrWhiteSpace(Filter))
+        {
+            return group.Rows;
+        }
+
+        return group.Rows
+            .Where(row =>
+                row.Key.Contains(Filter, StringComparison.OrdinalIgnoreCase) ||
+                row.Value.Contains(Filter, StringComparison.OrdinalIgnoreCase) ||
+                group.Name.Contains(Filter, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private sealed record EditableGroup(string Name, List<EditableRow> Rows);
+
+    private sealed class EditableRow(string context, string key, bool orphan)
+    {
+        public string Context { get; } = context;
+        public string Key { get; } = key;
+        public bool Orphan { get; } = orphan;
+        public string Value { get; set; } = string.Empty;
+    }
+}
