@@ -8,18 +8,18 @@
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem" data-testid="user-editor-page">
-    <CrestText TextStyle="TextStyle.H4" Text="@(IsNew ? T.T("UserEditor_AddHeading", "Add User") : T.T("UserEditor_EditHeading", "Edit User"))" />
+    <CrestText TextStyle="TextStyle.H4" Text="@(IsNew ? T["Add User"] : T["Edit User"])" />
     @if (Model is null) { <CrestProgressBar Mode="ProgressBarMode.Indeterminate" /> }
     else
     {
-        <CrestLabel Text="@T.T("UserEditor_UsernameLabel", "Username")" Component="username" /><CrestTextBox Name="username" @bind-Value="Model.UserName" Style="width:100%" />
-        <CrestLabel Text="@T.T("UserEditor_EmailLabel", "Email")" Component="email" /><CrestTextBox Name="email" @bind-Value="Model.Email" Style="width:100%" />
-        <CrestLabel Text="@T.T("UserEditor_PhoneNumberLabel", "Phone number")" Component="phone" /><CrestTextBox Name="phone" @bind-Value="Model.PhoneNumber" Style="width:100%" />
-        <CrestLabel Text="@(IsNew ? T.T("UserEditor_PasswordLabel", "Password") : T.T("UserEditor_NewPasswordLabel", "New password (leave blank to retain)"))" Component="password" /><CrestPassword Name="password" @bind-Value="Model.Password" Style="width:100%" />
-        <CrestCheckBox @bind-Value="Model.EmailConfirmed" Name="email-confirmed" /><label for="email-confirmed"> @T.T("UserEditor_EmailConfirmedLabel", "Email confirmed")</label><br />
-        <CrestCheckBox @bind-Value="Model.IsEnabled" Name="user-enabled" /><label for="user-enabled"> @T.T("UserEditor_EnabledLabel", "Enabled")</label>
-        <CrestLabel Text="@T.T("UserEditor_RolesLabel", "Roles (comma-separated)")" Component="roles" /><CrestTextBox Name="roles" @bind-Value="Roles" Style="width:100%" />
-        <CrestStack Orientation="Orientation.Horizontal"><CrestButton Text="@T.T("UserEditor_SaveButton", "Save")" Icon="save" Click="SaveAsync" /><CrestButton Text="@T.T("UserEditor_CancelButton", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="Cancel" /></CrestStack>
+        <CrestLabel Text="@T["User Name"]" Component="username" /><CrestTextBox Name="username" @bind-Value="Model.UserName" Style="width:100%" />
+        <CrestLabel Text="@T["Email"]" Component="email" /><CrestTextBox Name="email" @bind-Value="Model.Email" Style="width:100%" />
+        <CrestLabel Text="@T["Phone Number"]" Component="phone" /><CrestTextBox Name="phone" @bind-Value="Model.PhoneNumber" Style="width:100%" />
+        <CrestLabel Text="@(IsNew ? T["Password"] : T["New password (leave blank to retain)"])" Component="password" /><CrestPassword Name="password" @bind-Value="Model.Password" Style="width:100%" />
+        <CrestCheckBox @bind-Value="Model.EmailConfirmed" Name="email-confirmed" /><label for="email-confirmed"> @T["Email confirmed"]</label><br />
+        <CrestCheckBox @bind-Value="Model.IsEnabled" Name="user-enabled" /><label for="user-enabled"> @T["Enabled"]</label>
+        <CrestLabel Text="@T["Roles (comma-separated)"]" Component="roles" /><CrestTextBox Name="roles" @bind-Value="Roles" Style="width:100%" />
+        <CrestStack Orientation="Orientation.Horizontal"><CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" /><CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Cancel" /></CrestStack>
         @if (!string.IsNullOrWhiteSpace(Error)) { <CrestText Style="color: var(--rz-danger)">@Error</CrestText> }
     }
 </CrestStack>
@@ -43,7 +43,7 @@
         Error = null;
         Model.Roles = (Roles ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var saved = IsNew ? await Api.Crest.Rest.Users.CreateAsync(Model) : await Api.Crest.Rest.Users.SaveAsync(Id!, Model);
-        if (saved is null) { Error = T.T("UserEditor_SaveFailedMessage", "The user could not be saved. Check the supplied values."); return; }
+        if (saved is null) { Error = T["The user could not be saved. Check the supplied values."]; return; }
         Navigation.NavigateTo("Users/Index");
     }
     private void Cancel() => Navigation.NavigateTo("Users/Index");

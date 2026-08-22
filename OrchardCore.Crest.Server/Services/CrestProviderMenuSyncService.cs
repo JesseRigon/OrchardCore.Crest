@@ -99,7 +99,7 @@ public sealed class CrestProviderMenuSyncService(
         // Built from the navigation providers only. Once the import exists, the admin menu
         // coordinator contributes the imported nodes to the same "admin" menu, so reading the
         // merged tree here would re-import this service's own output on every pass.
-        var built = await BuildProviderOnlyMenuAsync(actionContext);
+        var (built, captionSources) = await BuildProviderOnlyMenuAsync(actionContext);
         var state = await documents.GetOrCreateMutableAsync();
         var list = await adminMenuService.LoadAdminMenuListAsync();
 
@@ -126,7 +126,7 @@ public sealed class CrestProviderMenuSyncService(
         // MenuItem list. Bridged with a temporary view here, then written back, so SyncLevel
         // itself only has to deal with one collection type.
         var rootItems = menu.MenuItems.Cast<MenuItem>().ToList();
-        await SyncLevelAsync(built.ToList(), rootItems, parentKey: null, state, seen, captions, result);
+        await SyncLevelAsync(built.ToList(), rootItems, parentKey: null, state, seen, captions, captionSources, result);
 
         menu.MenuItems.Clear();
         menu.MenuItems.AddRange(rootItems.OfType<AdminNode>());
@@ -163,7 +163,7 @@ public sealed class CrestProviderMenuSyncService(
             await adminMenuService.SaveAsync(menu);
         }
 
-        if (result.HasChanges || seedStateChanged)
+        if (result.HasChanges || seedStateChanged || result.ProvenanceRefreshed > 0)
         {
             await documents.UpdateAsync(state);
         }
@@ -219,6 +219,7 @@ public sealed class CrestProviderMenuSyncService(
         var context = DataLocalizationContext.AdminMenu(ImportedMenuName);
         var cultures = await localizationService.GetSupportedCulturesAsync();
         var document = await translationsManager.GetTranslationsDocumentAsync();
+        var sourcesByCaption = BuildSourcesByCaption(state);
         var seeded = 0;
         var stateChanged = false;
 
@@ -260,7 +261,7 @@ public sealed class CrestProviderMenuSyncService(
             }
 
             var added = false;
-            foreach (var (caption, translation) in ResolvePoTranslations(culture, wanted))
+            foreach (var (caption, translation) in ResolvePoTranslations(culture, wanted, sourcesByCaption))
             {
                 existing.Add(new Translation
                 {
@@ -294,53 +295,61 @@ public sealed class CrestProviderMenuSyncService(
         return (seeded, stateChanged);
     }
 
-    private List<(string Caption, string Translation)> ResolvePoTranslations(string cultureName, HashSet<string> wanted)
+    /// <summary>
+    /// Per-caption union of every entry's recorded source contexts, first-recorded order
+    /// preserved. Seeding (and the editor's placeholders) key on the bare caption, so the
+    /// per-item lists blur into a union here - the one consumer where that is inherent.
+    /// </summary>
+    internal static Dictionary<string, List<string>> BuildSourcesByCaption(CrestProviderMenuSyncDocument state)
     {
-        var results = new List<(string, string)>();
-
-        // Specific culture first (es-ES), then its parents (es): a caption resolved at a more
-        // specific level is removed from the wanted set so a parent catalog cannot override it.
-        for (var culture = CultureInfo.GetCultureInfo(cultureName);
-             wanted.Count > 0 && !string.IsNullOrEmpty(culture.Name);
-             culture = culture.Parent)
+        var sources = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (var entry in state.Entries.Values)
         {
-            var dictionary = localizationManager.GetDictionary(culture);
-            var candidates = new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal);
-
-            // Translations directly, not the dictionary's own enumerator: that enumerator
-            // rebuilds each record with the composite "context|messageid" string as the message
-            // id (CultureDictionaryRecordKey's implicit string conversion), which would never
-            // match a bare caption.
-            foreach (var (key, translations) in dictionary.Translations)
+            if (string.IsNullOrEmpty(entry.Caption) || entry.SourceContexts.Count == 0)
             {
-                var messageId = key.MessageId;
-                if (!wanted.Contains(messageId))
-                {
-                    continue;
-                }
-
-                var value = translations is { Length: > 0 } ? translations[0] : null;
-                if (string.IsNullOrWhiteSpace(value) || string.Equals(value, messageId, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                if (!candidates.TryGetValue(messageId, out var counts))
-                {
-                    candidates[messageId] = counts = new Dictionary<string, int>(StringComparer.Ordinal);
-                }
-
-                counts[value] = counts.TryGetValue(value, out var count) ? count + 1 : 1;
+                continue;
             }
 
-            foreach (var (caption, counts) in candidates)
+            if (!sources.TryGetValue(entry.Caption, out var list))
             {
-                var best = counts
-                    .OrderByDescending(pair => pair.Value)
-                    .ThenBy(pair => pair.Key, StringComparer.Ordinal)
-                    .First().Key;
-                results.Add((caption, best));
-                wanted.Remove(caption);
+                sources[entry.Caption] = list = [];
+            }
+
+            foreach (var context in entry.SourceContexts)
+            {
+                if (!list.Contains(context, StringComparer.Ordinal))
+                {
+                    list.Add(context);
+                }
+            }
+        }
+
+        return sources;
+    }
+
+    private List<(string Caption, string Translation)> ResolvePoTranslations(
+        string cultureName,
+        HashSet<string> wanted,
+        IReadOnlyDictionary<string, List<string>> sourcesByCaption)
+    {
+        // Shared with the caption resolver's live PO layer and the translations editor's
+        // fallback placeholders (CrestPoTranslationLookup), so a seeded value, a
+        // live-resolved value and an editor placeholder can never disagree: recorded
+        // source contexts first (authority order), then *.AdminMenu contexts, then
+        // most-common, ordinally tie-broken; specific culture beats parent; empty and
+        // identity entries are skipped.
+        var results = new List<(string, string)>();
+        var indexes = CrestPoTranslationLookup.BuildCultureChainIndexes(
+            localizationManager, CultureInfo.GetCultureInfo(cultureName));
+
+        foreach (var caption in wanted)
+        {
+            sourcesByCaption.TryGetValue(caption, out var sourceContexts);
+            var value = CrestPoTranslationLookup.Resolve(
+                indexes, caption, CrestPoTranslationLookup.AdminMenuContextSuffix, sourceContexts);
+            if (value is not null)
+            {
+                results.Add((caption, value));
             }
         }
 
@@ -365,15 +374,31 @@ public sealed class CrestProviderMenuSyncService(
     /// most providers declare their target as MVC route values, and the node needs the resolved
     /// URL - resolved by Orchard's own <c>IUrlHelper</c>, never assembled by hand.
     /// </remarks>
-    private async Task<List<MenuItem>> BuildProviderOnlyMenuAsync(ActionContext actionContext)
+    // One provenance candidate: which provider class declared an item, with the inputs
+    // upstream Merge's value-authority ladder consults.
+    private sealed record CaptionSourceCandidate(string Context, int Priority, bool HasPosition, int ProviderIndex);
+
+    /// <summary>
+    /// Builds each provider into its OWN builder (concatenation order equals the shared-builder
+    /// order NavigationManager uses, so downstream behaviour is identical) - which is the only
+    /// point in the whole pipeline where "which class declared this item" still exists. That
+    /// provider type name IS the PO msgctxt, so it is recorded per match key here and persisted
+    /// on the sync entries as <see cref="CrestProviderMenuSyncEntry.SourceContexts"/>, ordered
+    /// by the same authority ladder Merge applies to values (priority desc, position-presence,
+    /// registration order). Merging then destroys the information, as it always did.
+    /// </summary>
+    private async Task<(List<MenuItem> Items, Dictionary<string, List<string>> SourcesByMatchKey)> BuildProviderOnlyMenuAsync(ActionContext actionContext)
     {
-        var builder = new NavigationBuilder();
+        var items = new List<MenuItem>();
+        var candidates = new Dictionary<string, List<CaptionSourceCandidate>>(StringComparer.Ordinal);
+        var providerIndex = 0;
 
         foreach (var provider in navigationProviders)
         {
+            var providerBuilder = new NavigationBuilder();
             try
             {
-                await provider.BuildNavigationAsync("admin", builder);
+                await provider.BuildNavigationAsync("admin", providerBuilder);
             }
             catch (Exception e)
             {
@@ -381,13 +406,54 @@ public sealed class CrestProviderMenuSyncService(
                 // the rest of the menu being imported.
                 logger.LogError(e, "An exception occurred while building the admin menu for import.");
             }
+
+            var providerItems = providerBuilder.Build();
+            PruneAdminMenuNodeItems(providerItems);
+            RecordCaptionSources(providerItems, parentKey: null, provider.GetType().FullName!, providerIndex, candidates);
+            items.AddRange(providerItems);
+            providerIndex++;
         }
 
-        var items = builder.Build();
-        PruneAdminMenuNodeItems(items);
         MergeByCaption(items);
         ComputeHrefs(items, actionContext);
-        return items;
+
+        var sources = candidates.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value
+                .OrderByDescending(candidate => candidate.Priority)
+                .ThenByDescending(candidate => candidate.HasPosition)
+                .ThenBy(candidate => candidate.ProviderIndex)
+                .Select(candidate => candidate.Context)
+                .Distinct(StringComparer.Ordinal)
+                .ToList(),
+            StringComparer.Ordinal);
+
+        return (items, sources);
+    }
+
+    private static void RecordCaptionSources(
+        List<MenuItem> list,
+        string? parentKey,
+        string context,
+        int providerIndex,
+        Dictionary<string, List<CaptionSourceCandidate>> candidates)
+    {
+        foreach (var item in list)
+        {
+            var key = BuildMatchKey(parentKey, item);
+            if (key is null)
+            {
+                continue;
+            }
+
+            if (!candidates.TryGetValue(key, out var list2))
+            {
+                candidates[key] = list2 = [];
+            }
+
+            list2.Add(new CaptionSourceCandidate(context, item.Priority, item.Position is not null, providerIndex));
+            RecordCaptionSources(item.Items, key, context, providerIndex, candidates);
+        }
     }
 
     /// <summary>
@@ -530,6 +596,7 @@ public sealed class CrestProviderMenuSyncService(
         CrestProviderMenuSyncDocument state,
         HashSet<string> seen,
         HashSet<string> captions,
+        IReadOnlyDictionary<string, List<string>> captionSources,
         CrestProviderMenuSyncResult result)
     {
         foreach (var source in sourceItems)
@@ -608,6 +675,20 @@ public sealed class CrestProviderMenuSyncService(
                 }
 
                 entry.Enabled = true;
+
+                // Provenance refreshes every sync: the declarer set tracks feature
+                // enablement and provider changes, and a stale record must not outlive them.
+                // Set-if-different, and counted separately from HasChanges: a provenance
+                // refresh must persist the state document without forcing a menu save.
+                var refreshedCaption = source.Text!.Name;
+                var refreshedSources = captionSources.TryGetValue(matchKey, out var recorded) ? recorded : [];
+                if (!string.Equals(entry.Caption, refreshedCaption, StringComparison.Ordinal)
+                    || !entry.SourceContexts.SequenceEqual(refreshedSources, StringComparer.Ordinal))
+                {
+                    entry.Caption = refreshedCaption;
+                    entry.SourceContexts = refreshedSources;
+                    result.ProvenanceRefreshed++;
+                }
             }
 
             // The default icon is resolved NOW, from the provider item's original slug Id and
@@ -627,13 +708,15 @@ public sealed class CrestProviderMenuSyncService(
                     UniqueId = node.UniqueId,
                     Enabled = true,
                     Url = (node as LinkAdminNode)?.LinkUrl,
+                    Caption = source.Text!.Name,
+                    SourceContexts = captionSources.TryGetValue(matchKey, out var newSources) ? newSources : [],
                 };
                 result.Added++;
             }
 
             // node.Items itself, never a filtered copy: SyncLevel appends newly imported
             // children, and appending to a projection would silently discard them.
-            await SyncLevelAsync(source.Items, node.Items, matchKey, state, seen, captions, result);
+            await SyncLevelAsync(source.Items, node.Items, matchKey, state, seen, captions, captionSources, result);
         }
     }
 
@@ -787,6 +870,24 @@ public sealed class CrestProviderMenuSyncEntry
     /// the node itself is kept so re-enabling restores the tenant's overrides.
     /// </summary>
     public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// The item's invariant caption (Text.Name), duplicated out of the match key - which
+    /// concatenates the parent path without a separator, so the leaf caption is not
+    /// recoverable from it. Lets consumers group entries by caption (the translations
+    /// editor's per-caption source union).
+    /// </summary>
+    public string? Caption { get; set; }
+
+    /// <summary>
+    /// PO msgctxt provenance: the full type names of the navigation provider classes that
+    /// declared this item, ordered by upstream Merge's value-authority ladder (priority
+    /// desc, position-presence, registration order) - so the first context whose PO catalog
+    /// translates the caption yields exactly the translation upstream's merge would have
+    /// displayed. Refreshed on every sync; multiple sources are the norm for shared group
+    /// captions ("Settings" has ~32 declarers).
+    /// </summary>
+    public List<string> SourceContexts { get; set; } = [];
 }
 
 public sealed class CrestProviderMenuSyncResult
@@ -805,5 +906,12 @@ public sealed class CrestProviderMenuSyncResult
     public int SeededTranslations { get; set; }
 
     [JsonIgnore]
+    /// <summary>
+    /// Entries whose recorded caption/source-context provenance was refreshed this pass.
+    /// Persists the state document but, like seeding, never forces a menu save - hence
+    /// excluded from <see cref="HasChanges"/>.
+    /// </summary>
+    public int ProvenanceRefreshed { get; set; }
+
     public bool HasChanges => MenuCreated || Added > 0 || Disabled > 0 || Reenabled > 0 || Updated > 0;
 }

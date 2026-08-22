@@ -9,10 +9,10 @@
 <CrestStack Gap="1rem" data-testid="roles-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Roles_Heading", "Roles")" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Roles_Description", "Browse Orchard roles and their system and administrator status.")" />
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Roles"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Browse Orchard roles and their system and administrator status."]" />
         </CrestStack>
-        <CrestButton Text="@T.T("Roles_Refresh", "Refresh")" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+        <CrestButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
     </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -23,7 +23,7 @@
     <CrestRow Gap="1rem">
         <CrestColumn Size="12" SizeLG="4">
             <CrestModelList TItem="Role"
-                            Title="@T.T("Roles_ListTitle", "Roles")"
+                            Title="@T["Roles"]"
                             Items="@AllRoles"
                             SelectedKey="@SelectedRoleName"
                             KeySelector="@(role => role.Name)"
@@ -33,7 +33,7 @@
                             Select="SelectRoleAsync"
                             ShowCreate="false"
                             IsBusy="@IsLoading"
-                            EmptyText="@T.T("Roles_EmptyText", "No roles are available.")" />
+                            EmptyText="@T["No roles are available."]" />
         </CrestColumn>
         <CrestColumn Size="12" SizeLG="8">
             @if (IsLoading)
@@ -42,7 +42,7 @@
             }
             else if (SelectedRole is null)
             {
-                <CrestCard><CrestText Text="@T.T("Roles_SelectPrompt", "Select a role to inspect its Orchard status.")" /></CrestCard>
+                <CrestCard><CrestText Text="@T["Select a role to inspect its Orchard status."]" /></CrestCard>
             }
             else
             {
@@ -50,20 +50,20 @@
                     <CrestStack Gap="1rem">
                         <CrestStack Gap="0.25rem">
                             <CrestText TextStyle="TextStyle.H5" Text="@SelectedRole.Name" />
-                            <CrestText TextStyle="TextStyle.Body2" Text="@(string.IsNullOrWhiteSpace(SelectedRole.Description) ? T.T("Roles_NoDescription", "No role description has been set.") : SelectedRole.Description)" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="@(string.IsNullOrWhiteSpace(SelectedRole.Description) ? T["No role description has been set."] : SelectedRole.Description)" />
                         </CrestStack>
                         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                            <CrestBadge Text="@(SelectedRole.IsSystem ? T.T("Roles_SystemRoleBadge", "System role") : T.T("Roles_CustomRoleBadge", "Custom role"))" BadgeStyle="@(SelectedRole.IsSystem ? BadgeStyle.Info : BadgeStyle.Secondary)" />
+                            <CrestBadge Text="@(SelectedRole.IsSystem ? T["System role"] : T["Custom role"])" BadgeStyle="@(SelectedRole.IsSystem ? BadgeStyle.Info : BadgeStyle.Secondary)" />
                             @if (SelectedRole.IsAdmin)
                             {
-                                <CrestBadge Text="@T.T("Roles_AdministratorBadge", "Administrator")" BadgeStyle="BadgeStyle.Success" />
+                                <CrestBadge Text="@T["Administrator"]" BadgeStyle="BadgeStyle.Success" />
                             }
                         </CrestStack>
                         @if (SelectedRole.IsSystem)
                         {
-                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("Roles_SystemRoleHint", "System roles are managed by Orchard and cannot be deleted.")</CrestAlert>
+                            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["System roles are managed by Orchard and cannot be deleted."]</CrestAlert>
                         }
-                        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("Roles_PermissionsComingSoonHint", "Role permissions will be added with the dedicated permission editor so they retain Orchard’s effective-permission behavior.")</CrestAlert>
+                        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["Role permissions will be added with the dedicated permission editor so they retain Orchard’s effective-permission behavior."]</CrestAlert>
                     </CrestStack>
                 </CrestCard>
             }

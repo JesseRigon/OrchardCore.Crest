@@ -26,10 +26,10 @@
         <CrestStack Gap="1rem">
                     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                         <CrestStack Gap="0.25rem">
-                            <CrestText TextStyle="TextStyle.H4" Text="@T.T("AdminMenus_Title", "Admin Menus")" />
-                            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("AdminMenus_Description", "Manage Orchard admin menu nodes with drag-and-drop ordering and a parent-node fallback selector.")" />
+                            <CrestText TextStyle="TextStyle.H4" Text="@T["Admin Menus"]" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage Orchard admin menu nodes with drag-and-drop ordering and a parent-node fallback selector."]" />
                         </CrestStack>
-                        <CrestButton Text="@T.T("AdminMenus_Refresh", "Refresh")" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
+                        <CrestButton Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
                     </CrestStack>
 
                     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -43,7 +43,7 @@
                     {
                         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
                             <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                            <CrestText Text="@T.T("AdminMenus_Loading", "Loading admin menus...")" />
+                            <CrestText Text="@T["Loading admin menus..."]" />
                         </CrestStack>
                     }
                     else
@@ -52,24 +52,24 @@
                             <CrestColumn Size="12" SizeLG="4">
                                 <CrestCard>
                                     <CrestStack Gap="0.75rem">
-                                        <CrestText TextStyle="TextStyle.H6" Text="@T.T("AdminMenus_MenusHeading", "Menus")" />
+                                        <CrestText TextStyle="TextStyle.H6" Text="@T["Menus"]" />
                                         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                                            <CrestTextBox @bind-Value="MenuSearch" Placeholder="@T.T("AdminMenus_SearchPlaceholder", "Search menus...")" Style="width: 100%;" />
+                                            <CrestTextBox @bind-Value="MenuSearch" Placeholder="@T["Search menus..."]" Style="width: 100%;" />
                                             <div class="admin-menu-actions">
-                                                <CrestButton Icon="add" ButtonStyle="ButtonStyle.Primary" Click="ToggleCreateMenuPopover" Disabled="@IsBusy" title="@T.T("AdminMenus_AddMenuTitle", "Add menu")" />
+                                                <CrestButton Icon="add" ButtonStyle="ButtonStyle.Primary" Click="ToggleCreateMenuPopover" Disabled="@IsBusy" title="@T["Add menu"]" />
                                                 @if (IsCreateMenuOpen)
                                                 {
                                                     <div class="admin-menu-actions__popover" role="menu">
-                                                        <CrestButton Text="@T.T("AdminMenus_AdminMenuOption", "Admin Menu")" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.Admin))" />
-                                                        <CrestButton Text="@T.T("AdminMenus_LocalMenuOption", "Local Menu")" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.Local))" />
-                                                        <CrestButton Text="@T.T("AdminMenus_UserProfileMenuOption", "User Profile Menu")" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.User))" />
+                                                        <CrestButton Text="@T["Admin Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.Admin))" />
+                                                        <CrestButton Text="@T["Local Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.Local))" />
+                                                        <CrestButton Text="@T["User Profile Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.User))" />
                                                     </div>
                                                 }
                                             </div>
                                         </CrestStack>
                                         @if (FilteredMenus.Length == 0)
                                         {
-                                            <CrestText Text="@T.T("AdminMenus_NoneFound", "No admin menus found.")" />
+                                            <CrestText Text="@T["No admin menus found."]" />
                                         }
                                         else
                                         {
@@ -80,20 +80,20 @@
                                                         @if (RenamingMenuId == menu.Id)
                                                         {
                                                             <CrestTextBox @bind-Value="MenuRenameText" class="admin-menu-list-item__rename-input" @oninput="UpdateMenuRenameText" @onkeydown="HandleMenuRenameKeyDownAsync" />
-                                                            <CrestButton Size="ButtonSize.Small" Icon="check" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Text" Click="SaveMenuRenameAsync" Disabled="@IsBusy" title="@T.T("AdminMenus_SaveMenuNameTitle", "Save menu name")" />
-                                                            <CrestButton Size="ButtonSize.Small" Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="CancelMenuRename" Disabled="@IsBusy" title="@T.T("AdminMenus_CancelRenameTitle", "Cancel rename")" />
+                                                            <CrestButton Size="ButtonSize.Small" Icon="check" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Text" Click="SaveMenuRenameAsync" Disabled="@IsBusy" title="@T["Save menu name"]" />
+                                                            <CrestButton Size="ButtonSize.Small" Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="CancelMenuRename" Disabled="@IsBusy" title="@T["Cancel rename"]" />
                                                         }
                                                         else
                                                         {
-                                                            <CrestButton Text="@(menu.IsDefault ? string.Format(T.T("AdminMenus_BuiltInFormat", "{0} (Built In)"), menu.Name) : $"{menu.Name}{PlacementSuffix(menu)}")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
-                                                            <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@T.T("AdminMenus_RenameMenuTitle", "Rename menu")" />
+                                                            <CrestButton Text="@(menu.IsDefault ? T["{0} (Built In)", menu.Name] : $"{menu.Name}{PlacementSuffix(menu)}")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => SelectMenu(menu.Id))" Style="justify-content: flex-start; flex: 1; min-width: 0;" />
+                                                            <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@T["Rename menu"]" />
                                                             @if (CanConvert(menu))
                                                             {
-                                                                <CrestButton Size="ButtonSize.Small" Icon="swap_horiz" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ConvertMenuAsync(menu))" Disabled="@IsBusy" title="@(menu.Placement == CrestMenuPlacement.Admin ? T.T("AdminMenus_ConvertToLocalTitle", "Convert to Local Menu") : T.T("AdminMenus_ConvertToAdminTitle", "Convert to Admin Menu"))" />
+                                                                <CrestButton Size="ButtonSize.Small" Icon="swap_horiz" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ConvertMenuAsync(menu))" Disabled="@IsBusy" title="@(menu.Placement == CrestMenuPlacement.Admin ? T["Convert to Local Menu"] : T["Convert to Admin Menu"])" />
                                                             }
-                                                            <CrestButton Size="ButtonSize.Small" Icon="@(menu.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@(menu.Enabled ? T.T("AdminMenus_HideMenuTitle", "Hide menu") : T.T("AdminMenus_ShowMenuTitle", "Show menu"))" />
-                                                            <CrestButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@T.T("AdminMenus_DuplicateMenuTitle", "Duplicate menu")" />
-                                                            <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@T.T("AdminMenus_DeleteMenuTitle", "Delete menu")" />
+                                                            <CrestButton Size="ButtonSize.Small" Icon="@(menu.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@(menu.Enabled ? T["Hide menu"] : T["Show menu"])" />
+                                                            <CrestButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@T["Duplicate menu"]" />
+                                                            <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@T["Delete menu"]" />
                                                         }
                                                     </div>
                                                 }
@@ -107,7 +107,7 @@
                                 @if (SelectedMenu is null)
                                 {
                                     <CrestCard>
-                                        <CrestText Text="@T.T("AdminMenus_SelectPrompt", "Select an admin menu to edit its nodes.")" />
+                                        <CrestText Text="@T["Select an admin menu to edit its nodes."]" />
                                     </CrestCard>
                                 }
                                 else
@@ -118,24 +118,24 @@
                                                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                                                     <CrestStack Gap="0.2rem">
                                                         <CrestText TextStyle="TextStyle.H5" Text="@SelectedMenu.Name" />
-                                                        <CrestText TextStyle="TextStyle.Caption" Text="@T.T("AdminMenus_DragHint", "Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child. Admin menus support up to 4 tiers.")" />
+                                                        <CrestText TextStyle="TextStyle.Caption" Text="@T["Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child. Admin menus support up to 4 tiers."]" />
                                                     </CrestStack>
                                                     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-menu-toolbar-actions">
                                                         @if (SelectedMenu.IsDefault)
                                                         {
-                                                            <CrestButton Text="@T.T("AdminMenus_ExportJson", "Export JSON")" Icon="download" ButtonStyle="ButtonStyle.Light" Click="ExportLayoutAsync" Disabled="@(IsBusy || IsExportingLayout)" />
-                                                            <CrestButton Text="@T.T("AdminMenus_PruneJson", "Prune JSON")" Icon="cleaning_services" ButtonStyle="ButtonStyle.Light" Click="PruneOverridesAsync" Disabled="@(IsBusy || IsPruningOverrides)" />
+                                                            <CrestButton Text="@T["Export JSON"]" Icon="download" ButtonStyle="ButtonStyle.Light" Click="ExportLayoutAsync" Disabled="@(IsBusy || IsExportingLayout)" />
+                                                            <CrestButton Text="@T["Prune JSON"]" Icon="cleaning_services" ButtonStyle="ButtonStyle.Light" Click="PruneOverridesAsync" Disabled="@(IsBusy || IsPruningOverrides)" />
                                                         }
-                                                        <CrestButton Text="@(AllNodesCollapsed ? T.T("AdminMenus_ExpandAll", "Expand All") : T.T("AdminMenus_CollapseAll", "Collapse All"))" Icon="@(AllNodesCollapsed ? "unfold_more" : "unfold_less")" ButtonStyle="ButtonStyle.Light" Click="ToggleCollapseAll" Disabled="@(IsBusy || SelectedMenu.Nodes.Length == 0)" />
+                                                        <CrestButton Text="@(AllNodesCollapsed ? T["Expand All"] : T["Collapse All"])" Icon="@(AllNodesCollapsed ? "unfold_more" : "unfold_less")" ButtonStyle="ButtonStyle.Light" Click="ToggleCollapseAll" Disabled="@(IsBusy || SelectedMenu.Nodes.Length == 0)" />
                                                         <div class="admin-menu-actions">
-                                                            <CrestButton Text="@T.T("AdminMenus_Add", "Add")" Icon="add" Click="ToggleAddMenu" Disabled="@IsBusy" />
+                                                            <CrestButton Text="@T["Add"]" Icon="add" Click="ToggleAddMenu" Disabled="@IsBusy" />
                                                             @if (IsAddMenuOpen)
                                                             {
                                                                 <div class="admin-menu-actions__popover" role="menu">
-                                                                    <CrestButton Text="@T.T("AdminMenus_NodeOption", "Node")" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="AddNodeFromMenu" />
+                                                                    <CrestButton Text="@T["Node"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="AddNodeFromMenu" />
                                                                     @if (SelectedMenu.IsDefault)
                                                                     {
-                                                                        <CrestButton Text="@T.T("AdminMenus_SeparatorOption", "Separator")" Icon="horizontal_rule" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="AddRootSeparatorFromMenuAsync" />
+                                                                        <CrestButton Text="@T["Separator"]" Icon="horizontal_rule" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="AddRootSeparatorFromMenuAsync" />
                                                                     }
                                                                 </div>
                                                             }
@@ -143,7 +143,7 @@
                                                         @if (SelectedMenu.IsDefault)
                                                         {
                                                             <div class="admin-menu-actions">
-                                                                <CrestButton Icon="settings" ButtonStyle="ButtonStyle.Light" Click="TogglePrimaryNavMenuSettings" title="@T.T("AdminMenus_PrimaryNavSettingsTitle", "Primary navigation settings")" />
+                                                                <CrestButton Icon="settings" ButtonStyle="ButtonStyle.Light" Click="TogglePrimaryNavMenuSettings" title="@T["Primary navigation settings"]" />
                                                                 @if (IsPrimaryNavMenuSettingsOpen)
                                                                 {
                                                                     @PrimaryNavMenuSettingsFlyout()
@@ -157,17 +157,17 @@
                                                     @if (SelectedMenu.IsDefault)
                                                     {
                                                         <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                                                            @T.T("AdminMenus_BuiltInSidebarHint", "Sidebar (Built In) is the generated Orchard admin menu plus Crest layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar. Add node creates lightweight placeholder groups only.")
+                                                            @T["Sidebar (Built In) is the generated Orchard admin menu plus Crest layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar. Add node creates lightweight placeholder groups only."]
                                                         </CrestAlert>
                                                     }
                                                     @if (EditingModel is not null && EditingNodeId is null)
                                                     {
-                                                        @NodeEditor(T.T("AdminMenus_AddNodeTitle", "Add admin menu node"), EditingModel)
+                                                        @NodeEditor(T["Add admin menu node"], EditingModel)
                                                     }
                                                     @if (SelectedMenu.Nodes.Length == 0)
                                                     {
                                                         <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                                                            @T.T("AdminMenus_NoNodesYet", "This admin menu does not have any nodes yet.")
+                                                            @T["This admin menu does not have any nodes yet."]
                                                         </CrestAlert>
                                                     }
                                                     else
@@ -212,16 +212,16 @@
     // initializer execution (constructor runs before [Inject] properties are assigned).
     private CollapseIconPositionOption[] CollapseIconPositionOptions =>
     [
-        new(Crest.Admin.Api.PrimaryNavMenuCollapseIconPosition.OutsideBottomRight, T.T("AdminMenus_OutsideBottomRightOption", "Outside, bottom-right")),
-        new(Crest.Admin.Api.PrimaryNavMenuCollapseIconPosition.InsideBottomLeft, T.T("AdminMenus_InsideBottomLeftOption", "Inside, bottom-left")),
+        new(Crest.Admin.Api.PrimaryNavMenuCollapseIconPosition.OutsideBottomRight, T["Outside, bottom-right"]),
+        new(Crest.Admin.Api.PrimaryNavMenuCollapseIconPosition.InsideBottomLeft, T["Inside, bottom-left"]),
     ];
 
     private readonly DragDropManager DragDrop = new();
     private readonly HashSet<string> CollapsedNodeIds = [];
     private NodeTypeOption[] NodeTypes =>
     [
-        new(LinkNodeType, T.T("AdminMenus_LinkTypeLabel", "Link")),
-        new(PlaceholderNodeType, T.T("AdminMenus_PlaceholderTypeLabel", "Placeholder")),
+        new(LinkNodeType, T["Link"]),
+        new(PlaceholderNodeType, T["Placeholder"]),
     ];
 
     private AdminMenusState State { get; set; } = AdminMenusState.Empty;
@@ -231,7 +231,7 @@
         ? State.Menus
         : State.Menus.Where(menu => menu.Name.Contains(MenuSearch, StringComparison.OrdinalIgnoreCase)).ToArray();
     private AdminMenuSummary? SelectedMenu => State.Menus.FirstOrDefault(menu => menu.Id == SelectedMenuId) ?? State.Menus.FirstOrDefault();
-    private NodeTypeOption[] AvailableNodeTypes => SelectedMenu?.IsDefault == true ? [new(PlaceholderNodeType, T.T("AdminMenus_PlaceholderTypeLabel", "Placeholder"))] : NodeTypes;
+    private NodeTypeOption[] AvailableNodeTypes => SelectedMenu?.IsDefault == true ? [new(PlaceholderNodeType, T["Placeholder"])] : NodeTypes;
     private bool AllNodesCollapsed => SelectedMenu is not null && Flatten(SelectedMenu.Nodes).Where(node => node.Items.Length > 0).All(node => CollapsedNodeIds.Contains(node.Id));
     private bool IsEditingNewBranch => IsNewBranchNode(EditingNodeId);
     private bool IsLoading { get; set; } = true;
@@ -271,7 +271,7 @@
             var options = new List<ParentOption>();
             if (CanPlaceNodeUnder(EditingNodeId, null))
             {
-                options.Add(new ParentOption(string.Empty, T.T("AdminMenus_RootLevelPlaceholder", "Root level")));
+                options.Add(new ParentOption(string.Empty, T["Root level"]));
             }
 
             options.AddRange(Flatten(SelectedMenu.Nodes)
@@ -399,15 +399,15 @@
             var result = await Api.Crest.Rest.AdminMenus.ExportLayoutAsync();
             if (result is null)
             {
-                Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_ExportFailedTitle", "Primary navigation export failed"), T.T("AdminMenus_ExportUnavailable", "The development export endpoint was not available or rejected the request."));
+                Notifications.Notify(NotificationSeverity.Error, T["Primary navigation export failed"], T["The development export endpoint was not available or rejected the request."]);
                 return;
             }
 
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_ExportedTitle", "Primary navigation exported"), string.Format(T.T("AdminMenus_ExportedMessageFormat", "{0} saved with {1} layout items, {2} custom items, and {3} separators."), result.File, result.ItemCount, result.CustomItemCount, result.SeparatorCount));
+            Notifications.Notify(NotificationSeverity.Success, T["Primary navigation exported"], T["{0} saved with {1} layout items, {2} custom items, and {3} separators.", result.File, result.ItemCount, result.CustomItemCount, result.SeparatorCount]);
         }
         catch (Exception ex)
         {
-            Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_ExportFailedTitle", "Primary navigation export failed"), ex.Message);
+            Notifications.Notify(NotificationSeverity.Error, T["Primary navigation export failed"], ex.Message);
         }
         finally
         {
@@ -427,11 +427,11 @@
         try
         {
             await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.PruneOverridesAsync(SelectedMenu.Id));
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_PrunedTitle", "Layout overrides cleaned up"), T.T("AdminMenus_PrunedMessage", "Removed any saved overrides that no longer match a current menu item."));
+            Notifications.Notify(NotificationSeverity.Success, T["Layout overrides cleaned up"], T["Removed any saved overrides that no longer match a current menu item."]);
         }
         catch (Exception ex)
         {
-            Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_PruneFailedTitle", "Cleanup failed"), ex.Message);
+            Notifications.Notify(NotificationSeverity.Error, T["Cleanup failed"], ex.Message);
         }
         finally
         {
@@ -473,8 +473,8 @@
 
     private string PlacementSuffix(AdminMenuSummary menu) => menu.Placement switch
     {
-        CrestMenuPlacement.Local => " " + T.T("AdminMenus_LocalSuffix", "(Local)"),
-        CrestMenuPlacement.User => " " + T.T("AdminMenus_UserProfileSuffix", "(User Profile)"),
+        CrestMenuPlacement.Local => " " + T["(Local)"],
+        CrestMenuPlacement.User => " " + T["(User Profile)"],
         _ => string.Empty,
     };
 
@@ -498,7 +498,7 @@
         {
             State = new([.. State.Menus, menu]);
             SelectedMenuId = menu.Id;
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_CreatedTitle", "Admin menu created"), name);
+            Notifications.Notify(NotificationSeverity.Success, T["Admin menu created"], name);
         }
     }
 
@@ -509,7 +509,7 @@
         if (converted is not null)
         {
             State = new([.. State.Menus.Select(m => m.Id == converted.Id ? converted : m)]);
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_ConvertedTitle", "Menu converted"), converted.Name);
+            Notifications.Notify(NotificationSeverity.Success, T["Menu converted"], converted.Name);
         }
     }
 
@@ -573,12 +573,12 @@
             State = new(State.Menus.Select(existing => existing.Id == updated.Id ? updated : existing).ToArray());
             SelectedMenuId = updated.Id;
             CancelMenuRename();
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_RenamedTitle", "Admin menu renamed"), updated.Name);
+            Notifications.Notify(NotificationSeverity.Success, T["Admin menu renamed"], updated.Name);
             await DisplayManager.RefreshAdminMenuAsync();
         }
         else
         {
-            Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_RenameFailedTitle", "Admin menu rename failed"), T.T("AdminMenus_RenameFailedMessage", "The server could not update the menu name."));
+            Notifications.Notify(NotificationSeverity.Error, T["Admin menu rename failed"], T["The server could not update the menu name."]);
         }
 
         IsBusy = false;
@@ -590,7 +590,7 @@
         if (updated is not null)
         {
             State = new(State.Menus.Select(existing => existing.Id == updated.Id ? updated : existing).ToArray());
-            Notifications.Notify(NotificationSeverity.Success, updated.Enabled ? T.T("AdminMenus_ShownTitle", "Admin menu shown") : T.T("AdminMenus_HiddenTitle", "Admin menu hidden"), updated.Name);
+            Notifications.Notify(NotificationSeverity.Success, updated.Enabled ? T["Admin menu shown"] : T["Admin menu hidden"], updated.Name);
             await DisplayManager.RefreshAdminMenuAsync();
         }
     }
@@ -602,7 +602,7 @@
         {
             State = new([.. State.Menus, copy]);
             SelectedMenuId = copy.Id;
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_DuplicatedTitle", "Admin menu duplicated"), copy.Name);
+            Notifications.Notify(NotificationSeverity.Success, T["Admin menu duplicated"], copy.Name);
         }
     }
 
@@ -612,7 +612,7 @@
         {
             State = new(State.Menus.Where(existing => existing.Id != menu.Id).ToArray());
             SelectedMenuId = State.Menus.FirstOrDefault()?.Id;
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_DeletedTitle", "Admin menu deleted"), menu.Name);
+            Notifications.Notify(NotificationSeverity.Success, T["Admin menu deleted"], menu.Name);
             await DisplayManager.RefreshAdminMenuAsync();
         }
     }
@@ -621,7 +621,7 @@
         <div class="admin-menu-node @(IsMoveLockedNode(node) ? "admin-menu-node--locked" : null)">
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
-                    <span class="admin-menu-node__handle" draggable="@(!IsMoveLockedNode(node) ? "true" : "false")" title="@(IsMoveLockedNode(node) ? T.T("AdminMenus_FixedPositionTitle", "The New menu branch has a fixed position") : T.T("AdminMenus_DragToMoveTitle", "Drag to move"))">
+                    <span class="admin-menu-node__handle" draggable="@(!IsMoveLockedNode(node) ? "true" : "false")" title="@(IsMoveLockedNode(node) ? T["The New menu branch has a fixed position"] : T["Drag to move"])">
                         <CrestIcon IconKey="iconify.mdi/current/default/drag" />
                     </span>
                     @if (node.Items.Length > 0)
@@ -632,7 +632,7 @@
                                       Variant="Variant.Text"
                                       class="admin-menu-node__collapse"
                                       Click="@(() => ToggleCollapsed(node.Id))"
-                                      title="@T.T("AdminMenus_ExpandCollapseTitle", "Expand/collapse")" />
+                                      title="@T["Expand/collapse"]" />
                     }
                     else
                     {
@@ -663,7 +663,7 @@
                                     <CrestButton Size="ButtonSize.Small"
                                                  Icon="translate"
                                                  ButtonStyle="ButtonStyle.Light"
-                                                 title="@T.T("AdminMenus_PromoteRenameTitle", "Save as this tenant's translation")"
+                                                 title="@T["Save as this tenant's translation"]"
                                                  Click="@(() => PromoteRenameAsync(node))"
                                                  Disabled="@IsBusy" />
                                 }
@@ -671,11 +671,11 @@
                             <CrestBadge Text="@NodeTypeLabel(node.Type)" BadgeStyle="BadgeStyle.Info" />
                             @if (!node.Enabled)
                             {
-                                <CrestBadge Text="@T.T("AdminMenus_DisabledBadge", "Disabled")" BadgeStyle="BadgeStyle.Warning" />
+                                <CrestBadge Text="@T["Disabled"]" BadgeStyle="BadgeStyle.Warning" />
                             }
                             @if (IsMoveLockedNode(node))
                             {
-                                <CrestBadge Text="@T.T("AdminMenus_FixedBadge", "Fixed")" BadgeStyle="BadgeStyle.Secondary" />
+                                <CrestBadge Text="@T["Fixed"]" BadgeStyle="BadgeStyle.Secondary" />
                             }
                         </CrestStack>
                         <CrestText TextStyle="TextStyle.Caption" Text="@NodeMeta(node)" />
@@ -685,7 +685,7 @@
                 <CrestStack Orientation="Orientation.Horizontal" Gap="0.35rem">
                     @if (SelectedMenu?.IsDefault == true)
                     {
-                        <CrestButton Size="ButtonSize.Small" Icon="horizontal_rule" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => AddSeparatorAfterNodeAsync(node))" Disabled="@(IsBusy || IsNewBranchNode(node))" title="@T.T("AdminMenus_AddSeparatorAfterTitle", "Add separator after this item")" />
+                        <CrestButton Size="ButtonSize.Small" Icon="horizontal_rule" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => AddSeparatorAfterNodeAsync(node))" Disabled="@(IsBusy || IsNewBranchNode(node))" title="@T["Add separator after this item"]" />
                     }
                     <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditOrRenameNode(node))" Disabled="@(IsBusy || !CanEditNode(node))" />
                     <CrestButton Size="ButtonSize.Small" Icon="@(node.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Click="@(() => ToggleNodeAsync(node))" Disabled="@IsBusy" />
@@ -696,7 +696,7 @@
 
         @if (EditingModel is not null && EditingNodeId == node.Id)
         {
-            @NodeEditor(string.Format(T.T("AdminMenus_EditNodeFormat", "Edit admin menu node: {0}"), node.Text), EditingModel)
+            @NodeEditor(T["Edit admin menu node: {0}", node.Text], EditingModel)
         }
 
         @if (node.Items.Length > 0 && !IsCollapsed(node.Id))
@@ -713,14 +713,14 @@
     private RenderFragment SeparatorItem(AdminMenuSeparatorSummary separator) => @<li class="admin-menu-tree__item" data-entry-id="@separator.Id" data-entry-type="separator" data-locked="false">
         <div class="admin-menu-separator">
             <div class="admin-menu-separator__content">
-                <span class="admin-menu-node__handle" draggable="true" title="@T.T("AdminMenus_DragToMoveTitle", "Drag to move")">
+                <span class="admin-menu-node__handle" draggable="true" title="@T["Drag to move"]">
                     <CrestIcon IconKey="iconify.mdi/current/default/drag" />
                 </span>
                 <span class="admin-menu-node__spacer"></span>
-                <CrestText TextStyle="TextStyle.Subtitle2" Text="@T.T("AdminMenus_SeparatorLabel", "Separator")" />
+                <CrestText TextStyle="TextStyle.Subtitle2" Text="@T["Separator"]" />
                 <span class="admin-menu-separator__line"></span>
             </div>
-            <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteSeparatorAsync(separator))" Disabled="@IsBusy" title="@T.T("AdminMenus_RemoveSeparatorTitle", "Remove separator")" />
+            <CrestButton Size="ButtonSize.Small" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="@(() => DeleteSeparatorAsync(separator))" Disabled="@IsBusy" title="@T["Remove separator"]" />
         </div>
     </li>;
 
@@ -923,38 +923,38 @@
         await ApplyMenuResultAsync(await Api.Crest.Rest.AdminMenus.CreateSeparatorAsync(SelectedMenu.Id, new(node.ParentId, node.Order + 1)));
     }
 
-    private RenderFragment PrimaryNavMenuSettingsFlyout() => @<div class="admin-menu-settings" role="dialog" aria-label="@T.T("AdminMenus_PrimaryNavSettingsTitle", "Primary navigation settings")">
+    private RenderFragment PrimaryNavMenuSettingsFlyout() => @<div class="admin-menu-settings" role="dialog" aria-label="@T["Primary navigation settings"]">
         <CrestStack Gap="1rem">
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                <CrestText TextStyle="TextStyle.H6" Text="@T.T("AdminMenus_PrimaryNavSettingsTitle", "Primary navigation settings")" />
-                <CrestButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => IsPrimaryNavMenuSettingsOpen = false)" title="@T.T("AdminMenus_CloseSettingsTitle", "Close settings")" />
+                <CrestText TextStyle="TextStyle.H6" Text="@T["Primary navigation settings"]" />
+                <CrestButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => IsPrimaryNavMenuSettingsOpen = false)" title="@T["Close settings"]" />
             </CrestStack>
 
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                 <CrestCheckBox TValue="bool" @bind-Value="PrimaryNavMenuSettingsModel.Collapsible" />
-                <CrestLabel Text="@T.T("AdminMenus_AllowCollapseLabel", "Allow collapse/hover expand")" />
+                <CrestLabel Text="@T["Allow collapse/hover expand"]" />
             </CrestStack>
 
             <div class="admin-menu-settings__field">
-                <CrestLabel Text="@T.T("AdminMenus_CollapseTogglePositionLabel", "Collapse/expand toggle position")" />
+                <CrestLabel Text="@T["Collapse/expand toggle position"]" />
                 <CrestDropDown Data="@CollapseIconPositionOptions" @bind-Value="PrimaryNavMenuSettingsModel.CollapseIconPosition" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
             </div>
 
             <div class="admin-menu-settings__field">
-                <CrestLabel Text="@T.T("AdminMenus_ExpansionSpeedLabel", "Expansion speed (ms)")" />
+                <CrestLabel Text="@T["Expansion speed (ms)"]" />
                 <CrestInputNumericMath Value="@PrimaryNavMenuExpansionMilliseconds"
                                        ValueChanged="@SetPrimaryNavMenuExpansionMilliseconds"
                                        Style="width: 100%;" />
             </div>
 
-            <CrestText TextStyle="TextStyle.Subtitle2" Text="@T.T("AdminMenus_TierIndentationLabel", "Tier indentation")" />
+            <CrestText TextStyle="TextStyle.Subtitle2" Text="@T["Tier indentation"]" />
             <div class="admin-menu-settings__grid">
                 @for (var index = 0; index < 3; index++)
                 {
                     var currentIndex = index;
                     var tier = currentIndex + 1;
                     <div class="admin-menu-settings__field" @key="@($"indent-{currentIndex}")">
-                        <CrestLabel Text="@(string.Format(T.T("AdminMenus_TierFormat", "Tier {0}"), tier))" />
+                        <CrestLabel Text="@(T["Tier {0}", tier])" />
                         <CrestInputMeasurement Value="@GetTierIndentValue(currentIndex)"
                                                ValueChanged="@(value => SetTierIndentValue(currentIndex, value))"
                                                Unit="@GetTierIndentUnit(currentIndex)"
@@ -964,7 +964,7 @@
                 }
             </div>
 
-            <CrestText TextStyle="TextStyle.Subtitle2" Text="@T.T("AdminMenus_GeneratedSeparatorsLabel", "Generated separators")" />
+            <CrestText TextStyle="TextStyle.Subtitle2" Text="@T["Generated separators"]" />
             <div class="admin-menu-settings__grid">
                 @for (var index = 0; index < 3; index++)
                 {
@@ -972,30 +972,30 @@
                     var tier = currentIndex + 1;
                     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.4rem" @key="@($"separator-{currentIndex}")">
                         <CrestCheckBox TValue="bool" Value="@GetTierSeparator(currentIndex)" Change="@(value => SetTierSeparator(currentIndex, value))" />
-                        <CrestLabel Text="@(string.Format(T.T("AdminMenus_TierFormat", "Tier {0}"), tier))" />
+                        <CrestLabel Text="@(T["Tier {0}", tier])" />
                     </CrestStack>
                 }
             </div>
 
-            <CrestText TextStyle="TextStyle.Subtitle2" Text="@T.T("AdminMenus_TierBackgroundsLabel", "Tier backgrounds")" />
+            <CrestText TextStyle="TextStyle.Subtitle2" Text="@T["Tier backgrounds"]" />
             <div class="admin-menu-settings__grid">
                 @for (var index = 0; index < 4; index++)
                 {
                     var currentIndex = index;
                     var tier = currentIndex + 1;
                     <div class="admin-menu-settings__field" @key="@($"background-{currentIndex}")">
-                        <CrestLabel Text="@(string.Format(T.T("AdminMenus_TierFormat", "Tier {0}"), tier))" />
+                        <CrestLabel Text="@(T["Tier {0}", tier])" />
                         <input type="color" class="admin-menu-settings__color" value="@GetTierColor(currentIndex)" @onchange="@(args => SetTierBackground(currentIndex, args.Value?.ToString()))" />
                     </div>
                 }
             </div>
 
-            <CrestText TextStyle="TextStyle.Subtitle2" Text="@T.T("AdminMenus_TierBaseSizeLabel", "Tier base size")" />
+            <CrestText TextStyle="TextStyle.Subtitle2" Text="@T["Tier base size"]" />
             <div class="admin-menu-settings__grid">
                 @for (var index = 0; index < 3; index++)
                 {
                     var currentIndex = index;
-                    var label = currentIndex == 2 ? T.T("AdminMenus_TierThreeFourLabel", "Tier 3-4") : string.Format(T.T("AdminMenus_TierFormat", "Tier {0}"), currentIndex + 1);
+                    var label = currentIndex == 2 ? T["Tier 3-4"] : T["Tier {0}", currentIndex + 1];
                     <div class="admin-menu-settings__field" @key="@($"base-{currentIndex}")">
                         <CrestLabel Text="@label" />
                         <CrestInputMeasurement Value="@GetTierBaseSizeValue(currentIndex)"
@@ -1008,8 +1008,8 @@
             </div>
 
             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
-                <CrestButton Text="@T.T("AdminMenus_Save", "Save")" Icon="save" Click="SavePrimaryNavMenuSettingsAsync" Disabled="@IsBusy" />
-                <CrestButton Text="@T.T("AdminMenus_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="@(() => { SyncPrimaryNavMenuSettingsModel(); IsPrimaryNavMenuSettingsOpen = false; })" Disabled="@IsBusy" />
+                <CrestButton Text="@T["Save"]" Icon="save" Click="SavePrimaryNavMenuSettingsAsync" Disabled="@IsBusy" />
+                <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => { SyncPrimaryNavMenuSettingsModel(); IsPrimaryNavMenuSettingsOpen = false; })" Disabled="@IsBusy" />
             </CrestStack>
         </CrestStack>
     </div>;
@@ -1057,57 +1057,57 @@
             <CrestStack Gap="1rem">
                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                     <CrestText TextStyle="TextStyle.H6" Text="@title" />
-                    <CrestButton Text="@T.T("AdminMenus_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" ButtonType="ButtonType.Button" />
+                    <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" ButtonType="ButtonType.Button" />
                 </CrestStack>
 
                 <CrestRow Gap="1rem">
                     <CrestColumn Size="12" SizeMD="6">
-                        <CrestLabel Text="@T.T("AdminMenus_NodeTypeLabel", "Node type")" />
+                        <CrestLabel Text="@T["Node type"]" />
                         <CrestDropDown TValue="string" Data="@AvailableNodeTypes" TextProperty="Text" ValueProperty="Value" @bind-Value="model.Type" Disabled="@(EditingNodeId is not null || SelectedMenu?.IsDefault == true)" Style="width: 100%;" />
                     </CrestColumn>
                     <CrestColumn Size="12" SizeMD="6">
-                        <CrestLabel Text="@T.T("AdminMenus_ParentNodeLabel", "Parent Node")" />
-                        <CrestDropDown TValue="string" Data="@ParentOptions" TextProperty="Text" ValueProperty="Value" @bind-Value="model.ParentNodeId" Placeholder="@T.T("AdminMenus_RootLevelPlaceholder", "Root level")" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
+                        <CrestLabel Text="@T["Parent Node"]" />
+                        <CrestDropDown TValue="string" Data="@ParentOptions" TextProperty="Text" ValueProperty="Value" @bind-Value="model.ParentNodeId" Placeholder="@T["Root level"]" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </CrestColumn>
                 </CrestRow>
 
                 <CrestRow Gap="1rem">
                     <CrestColumn Size="12" SizeMD="6">
-                        <CrestLabel Text="@T.T("AdminMenus_TextLabel", "Text")" />
+                        <CrestLabel Text="@T["Text"]" />
                         <CrestTextBox @bind-Value="model.Text" Name="Text" Style="width: 100%;" />
                         <CrestRequiredValidator Component="Text" />
                     </CrestColumn>
                     <CrestColumn Size="12" SizeMD="6">
-                        <CrestLabel Text="@T.T("AdminMenus_UrlLabel", "Url")" />
-                        <CrestTextBox @bind-Value="model.Url" Disabled="@(SelectedMenu?.IsDefault == true || model.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? T.T("AdminMenus_BuiltInPlaceholdersHint", "Sidebar (Built In) placeholders do not link") : "/MyPage")" Style="width: 100%;" />
+                        <CrestLabel Text="@T["Url"]" />
+                        <CrestTextBox @bind-Value="model.Url" Disabled="@(SelectedMenu?.IsDefault == true || model.Type != LinkNodeType)" Placeholder="@(SelectedMenu?.IsDefault == true ? T["Sidebar (Built In) placeholders do not link"] : "/MyPage")" Style="width: 100%;" />
                     </CrestColumn>
                 </CrestRow>
 
                 <CrestRow Gap="1rem">
                     <CrestColumn Size="12" SizeMD="4">
-                        <CrestLabel Text="@T.T("AdminMenus_IconLabel", "Icon")" />
+                        <CrestLabel Text="@T["Icon"]" />
                         <IconSelector @bind-Value="model.IconClass" />
                     </CrestColumn>
                     <CrestColumn Size="12" SizeMD="4">
-                        <CrestLabel Text="@T.T("AdminMenus_PriorityLabel", "Priority")" />
+                        <CrestLabel Text="@T["Priority"]" />
                         <CrestNumeric TValue="int" @bind-Value="model.Priority" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </CrestColumn>
                     <CrestColumn Size="12" SizeMD="4">
-                        <CrestLabel Text="@T.T("AdminMenus_PositionLabel", "Position")" />
-                        <CrestNumeric TValue="int?" @bind-Value="model.Position" Placeholder="@T.T("AdminMenus_AppendPlaceholder", "Append")" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
+                        <CrestLabel Text="@T["Position"]" />
+                        <CrestNumeric TValue="int?" @bind-Value="model.Position" Placeholder="@T["Append"]" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </CrestColumn>
                 </CrestRow>
 
                 <CrestRow Gap="1rem">
                     <CrestColumn Size="12">
-                        <CrestLabel Text="@T.T("AdminMenus_PermissionsLabel", "Permissions")" />
-                        <CrestTextBox @bind-Value="model.PermissionNamesText" Placeholder="@T.T("AdminMenus_PermissionsPlaceholder", "Permission names, comma-separated")" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
+                        <CrestLabel Text="@T["Permissions"]" />
+                        <CrestTextBox @bind-Value="model.PermissionNamesText" Placeholder="@T["Permission names, comma-separated"]" Disabled="@IsEditingNewBranch" Style="width: 100%;" />
                     </CrestColumn>
                 </CrestRow>
 
                 <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                    <CrestButton Text="@T.T("AdminMenus_Save", "Save")" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsBusy" />
-                    <CrestButton Text="@T.T("AdminMenus_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" ButtonType="ButtonType.Button" />
+                    <CrestButton Text="@T["Save"]" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsBusy" />
+                    <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelEdit" ButtonType="ButtonType.Button" />
                 </CrestStack>
             </CrestStack>
         </CrestTemplateForm>
@@ -1155,7 +1155,7 @@
         if (result is not null)
         {
             CancelRename();
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_ItemRenamedTitle", "Primary navigation item renamed"), T.T("AdminMenus_ItemRenamedMessage", "The primary navigation display text was updated."));
+            Notifications.Notify(NotificationSeverity.Success, T["Primary navigation item renamed"], T["The primary navigation display text was updated."]);
         }
 
         IsBusy = false;
@@ -1181,15 +1181,15 @@
         {
             Notifications.Notify(
                 NotificationSeverity.Success,
-                T.T("AdminMenus_RenamePromotedTitle", "Saved as a tenant translation"),
-                T.T("AdminMenus_RenamePromotedMessage", "This caption now applies everywhere in the current culture, not only in this sidebar."));
+                T["Saved as a tenant translation"],
+                T["This caption now applies everywhere in the current culture, not only in this sidebar."]);
         }
         else
         {
             Notifications.Notify(
                 NotificationSeverity.Warning,
-                T.T("AdminMenus_RenamePromoteFailedTitle", "Could not save the translation"),
-                T.T("AdminMenus_RenamePromoteFailedMessage", "Only captions from an admin menu can be saved as tenant translations, and doing so needs permission to manage translations."));
+                T["Could not save the translation"],
+                T["Only captions from an admin menu can be saved as tenant translations, and doing so needs permission to manage translations."]);
         }
 
         IsBusy = false;
@@ -1212,7 +1212,7 @@
         if (!editingNewBranch && IsNewBranchNode(model.ParentNodeId))
         {
             CancelEdit();
-            Notifications.Notify(NotificationSeverity.Warning, T.T("AdminMenus_ItemFixedTitle", "Admin menu item fixed"), T.T("AdminMenus_ItemFixedMessage", "The New menu branch has a fixed structure. Text and icon overrides are allowed, but layout changes are not."));
+            Notifications.Notify(NotificationSeverity.Warning, T["Admin menu item fixed"], T["The New menu branch has a fixed structure. Text and icon overrides are allowed, but layout changes are not."]);
             return;
         }
 
@@ -1232,7 +1232,7 @@
         if (result is not null)
         {
             CancelEdit();
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_NodeSavedTitle", "Admin menu saved"), T.T("AdminMenus_NodeSavedMessage", "The admin menu node was saved."));
+            Notifications.Notify(NotificationSeverity.Success, T["Admin menu saved"], T["The admin menu node was saved."]);
         }
 
         IsBusy = false;
@@ -1272,7 +1272,7 @@
     {
         if (menu is null)
         {
-            Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_UpdateFailedTitle", "Admin menu update failed"), T.T("AdminMenus_UpdateFailedMessage", "The server could not update the admin menu."));
+            Notifications.Notify(NotificationSeverity.Error, T["Admin menu update failed"], T["The server could not update the admin menu."]);
             return;
         }
 
@@ -1306,7 +1306,7 @@
         if (result is not null)
         {
             IsPrimaryNavMenuSettingsOpen = false;
-            Notifications.Notify(NotificationSeverity.Success, T.T("AdminMenus_SettingsSavedTitle", "Primary navigation settings saved"), T.T("AdminMenus_SettingsSavedMessage", "The primary navigation settings were updated."));
+            Notifications.Notify(NotificationSeverity.Success, T["Primary navigation settings saved"], T["The primary navigation settings were updated."]);
         }
 
         IsBusy = false;
@@ -1485,14 +1485,14 @@
 
     private void ShowTierLimitError()
     {
-        ErrorMessage = string.Format(T.T("AdminMenus_DepthLimitFormat", "Admin menus support a maximum of {0} tiers. Move the item to a higher level before saving."), MaxMenuTiers);
-        Notifications.Notify(NotificationSeverity.Error, T.T("AdminMenus_DepthLimitTitle", "Admin menu depth limit"), ErrorMessage);
+        ErrorMessage = T["Admin menus support a maximum of {0} tiers. Move the item to a higher level before saving.", MaxMenuTiers];
+        Notifications.Notify(NotificationSeverity.Error, T["Admin menu depth limit"], ErrorMessage);
     }
 
     private string NodeTypeLabel(string type) => type switch
     {
-        LinkNodeType => T.T("AdminMenus_LinkTypeLabel", "Link"),
-        PlaceholderNodeType => T.T("AdminMenus_PlaceholderTypeLabel", "Placeholder"),
+        LinkNodeType => T["Link"],
+        PlaceholderNodeType => T["Placeholder"],
         _ => type,
     };
 
@@ -1506,23 +1506,23 @@
 
         if (!string.IsNullOrWhiteSpace(node.IconClass))
         {
-            parts.Add(string.Format(T.T("AdminMenus_IconMetaFormat", "Icon: {0}"), node.IconClass));
+            parts.Add(T["Icon: {0}", node.IconClass]);
         }
 
         if (node.PermissionNames.Length > 0)
         {
-            parts.Add(string.Format(T.T("AdminMenus_PermissionsMetaFormat", "Permissions: {0}"), string.Join(", ", node.PermissionNames)));
+            parts.Add(T["Permissions: {0}", string.Join(", ", node.PermissionNames)]);
         }
 
-        return parts.Count == 0 ? T.T("AdminMenus_NoLinkMetadata", "No link metadata") : string.Join(" · ", parts);
+        return parts.Count == 0 ? T["No link metadata"] : string.Join(" · ", parts);
     }
 
     private string NodeIconTitle(AdminMenuNodeSummary node)
     {
         var iconKey = node.Icon?.Key;
         return string.IsNullOrWhiteSpace(iconKey)
-            ? T.T("AdminMenus_NoIconAssigned", "No icon assigned")
-            : string.Format(T.T("AdminMenus_IconMetaFormat", "Icon: {0}"), iconKey);
+            ? T["No icon assigned"]
+            : T["Icon: {0}", iconKey];
     }
 
     public async ValueTask DisposeAsync()

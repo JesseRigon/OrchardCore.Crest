@@ -10,7 +10,7 @@
 @using Microsoft.AspNetCore.Components
 
 <CrestStack Gap="1rem" data-testid="security-headers-page">
-    <CrestText TextStyle="TextStyle.H4" Text="@T.T("SecurityHeaders_Heading", "Security Headers")" />
+    <CrestText TextStyle="TextStyle.H4" Text="@T["Security Headers"]" />
 
     @if (Model is null)
     {
@@ -20,41 +20,41 @@
     {
         @if (Model.FromConfiguration)
         {
-            <CrestAlert AlertStyle="AlertStyle.Warning">@T.T("SecurityHeaders_FromConfigurationWarning", "Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source.")</CrestAlert>
+            <CrestAlert AlertStyle="AlertStyle.Warning">@T["Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source."]</CrestAlert>
         }
 
         <CrestMainContentTabs data-testid="security-headers-tabs">
-            <CrestTabsItem Text="@T.T("SecurityHeaders_CspTab", "Content Security Policy")">
+            <CrestTabsItem Text="@T["Content Security Policy"]">
                 <CrestStack Gap="1rem" class="pt-3">
                     <CrestCheckBox @bind-Value="EnableSandbox" Name="enable-sandbox" />
-                    <label for="enable-sandbox">@T.T("SecurityHeaders_EnableSandboxLabel", "Enable sandbox")</label>
-                    <CrestText TextStyle="TextStyle.Body2" Text="@T.T("SecurityHeaders_SandboxDescription", "Enables a sandbox for the requested resource, similar to the iframe sandbox attribute.")" />
+                    <label for="enable-sandbox">@T["Enable Sandbox"]</label>
+                    <CrestText TextStyle="TextStyle.Body2" Text="@T["Enables a sandbox for the requested resource similar to the iframe sandbox attribute."]" />
                     <CrestCheckBox @bind-Value="UpgradeInsecureRequests" Name="upgrade-insecure-requests" />
-                    <label for="upgrade-insecure-requests">@T.T("SecurityHeaders_UpgradeInsecureRequestsLabel", "Upgrade insecure requests")</label>
+                    <label for="upgrade-insecure-requests">@T["Upgrade Insecure Requests"]</label>
                     <CrestDataGrid Data="ContentSecurityPolicies" TItem="SecurityPolicyOption" AllowPaging="false" AllowSorting="false">
                         <Columns>
-                            <CrestDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="@T.T("SecurityHeaders_DirectiveColumn", "Directive")" />
-                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="@T.T("SecurityHeaders_AllowedSourcesColumn", "Allowed sources")">
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="@T["Directive"]" />
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="@T["Allowed sources"]">
                                 <Template Context="option">
                                     <CrestTextBox Value="@GetContentSecurityPolicy(option.Key)" Change="@(value => SetContentSecurityPolicy(option.Key, value?.ToString()))" Style="width: 100%;" Placeholder="'self' https://cdn.example.com" />
                                 </Template>
                             </CrestDataGridColumn>
                         </Columns>
                     </CrestDataGrid>
-                    <CrestText TextStyle="TextStyle.Body2" Text="@T.T("SecurityHeaders_CspDescription", "Controls the resources the browser is allowed to load for a page.")" />
+                    <CrestText TextStyle="TextStyle.Body2" Text="@T["Controls the resources the browser is allowed to load for a page."]" />
                 </CrestStack>
             </CrestTabsItem>
-            <CrestTabsItem Text="@T.T("SecurityHeaders_PermissionsPolicyTab", "Permissions Policy")">
+            <CrestTabsItem Text="@T["Permissions Policy"]">
                 <CrestStack Gap="1rem" class="pt-3">
                     <CrestDataGrid Data="PermissionsPolicies" TItem="SecurityPolicyOption" AllowPaging="false" AllowSorting="false">
                         <Columns>
-                            <CrestDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="@T.T("SecurityHeaders_FeatureColumn", "Feature")" />
-                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="@T.T("SecurityHeaders_AllowedByColumn", "Allowed by")">
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Property="Label" Title="@T["Feature"]" />
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="@T["Allowed by"]">
                                 <Template Context="option">
                                     <CrestDropDown TValue="string" Value="@GetPermissionOrigin(option.Key)" Change="@(value => SetPermissionOrigin(option.Key, value?.ToString() ?? "()"))" Data="PermissionOriginOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
                                 </Template>
                             </CrestDataGridColumn>
-                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="@T.T("SecurityHeaders_AdditionalOriginsColumn", "Additional origins")">
+                            <CrestDataGridColumn TItem="SecurityPolicyOption" Title="@T["Additional origins"]">
                                 <Template Context="option">
                                     @if (GetPermissionOrigin(option.Key) == "self")
                                     {
@@ -64,21 +64,21 @@
                             </CrestDataGridColumn>
                         </Columns>
                     </CrestDataGrid>
-                    <CrestText TextStyle="TextStyle.Body2" Text="@T.T("SecurityHeaders_PermissionsPolicyDescription", "Controls which browser features and APIs are available to this site.")" />
+                    <CrestText TextStyle="TextStyle.Body2" Text="@T["Controls which browser features and APIs are available to this site."]" />
                 </CrestStack>
             </CrestTabsItem>
-            <CrestTabsItem Text="@T.T("SecurityHeaders_ReferrerPolicyTab", "Referrer Policy")">
+            <CrestTabsItem Text="@T["Referrer Policy"]">
                 <CrestStack Gap="1rem" class="pt-3">
-                    <CrestFormField Text="@T.T("SecurityHeaders_ReferrerPolicyFieldLabel", "Referrer policy")" Style="width: 100%; max-width: 42rem;">
+                    <CrestFormField Text="@T["Referrer Policy"]" Style="width: 100%; max-width: 42rem;">
                         <CrestDropDown TValue="string" @bind-Value="ReferrerPolicy" Data="ReferrerPolicyOptions" TextProperty="Label" ValueProperty="Value" Style="width: 100%;" />
                     </CrestFormField>
-                    <CrestText TextStyle="TextStyle.Body2" Text="@T.T("SecurityHeaders_ReferrerPolicyDescription", "Controls how much referrer information the browser includes when navigating away from a page.")" />
+                    <CrestText TextStyle="TextStyle.Body2" Text="@T["Controls how much referrer information the browser includes when navigating away from a page."]" />
                 </CrestStack>
             </CrestTabsItem>
         </CrestMainContentTabs>
 
         <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-            <CrestButton Text="@T.T("SecurityHeaders_Save", "Save")" Click="SaveAsync" />
+            <CrestButton Text="@T["Save"]" Click="SaveAsync" />
         </CrestStack>
     }
 </CrestStack>
@@ -109,34 +109,34 @@
     // assigned) - see AdminMenus.razor's CollapseIconPositionOptions for the same rationale.
     private SecurityPolicyOption[] ContentSecurityPolicies =>
     [
-        new("base-uri", T.T("SecurityHeaders_BaseUriOption", "Base URI")), new("child-src", T.T("SecurityHeaders_ChildSourceOption", "Child source")), new("connect-src", T.T("SecurityHeaders_ConnectSourceOption", "Connect source")),
-        new("default-src", T.T("SecurityHeaders_DefaultSourceOption", "Default source")), new("font-src", T.T("SecurityHeaders_FontSourceOption", "Font source")), new("form-action", T.T("SecurityHeaders_FormActionOption", "Form action")),
-        new("frame-ancestors", T.T("SecurityHeaders_FrameAncestorsOption", "Frame ancestors")), new("frame-src", T.T("SecurityHeaders_FrameSourceOption", "Frame source")), new("img-src", T.T("SecurityHeaders_ImageSourceOption", "Image source")),
-        new("manifest-src", T.T("SecurityHeaders_ManifestSourceOption", "Manifest source")), new("media-src", T.T("SecurityHeaders_MediaSourceOption", "Media source")), new("object-src", T.T("SecurityHeaders_ObjectSourceOption", "Object source")),
-        new("script-src", T.T("SecurityHeaders_ScriptSourceOption", "Script source")), new("style-src", T.T("SecurityHeaders_StyleSourceOption", "Style source")),
+        new("base-uri", T["Base URI"]), new("child-src", T["Child Source"]), new("connect-src", T["Connect Source"]),
+        new("default-src", T["Default Source"]), new("font-src", T["Font Source"]), new("form-action", T["Form Action"]),
+        new("frame-ancestors", T["Frame Ancestors"]), new("frame-src", T["Frame Source"]), new("img-src", T["Image Source"]),
+        new("manifest-src", T["Manifest Source"]), new("media-src", T["Media Source"]), new("object-src", T["Object Source"]),
+        new("script-src", T["Script Source"]), new("style-src", T["Style Source"]),
     ];
 
     private SecurityPolicyOption[] PermissionsPolicies =>
     [
-        new("accelerometer", T.T("SecurityHeaders_AccelerometerOption", "Accelerometer")), new("ambient-light-sensor", T.T("SecurityHeaders_AmbientLightSensorOption", "Ambient light sensor")), new("autoplay", T.T("SecurityHeaders_AutoplayOption", "Autoplay")),
-        new("battery", T.T("SecurityHeaders_BatteryOption", "Battery")), new("camera", T.T("SecurityHeaders_CameraOption", "Camera")), new("display-capture", T.T("SecurityHeaders_DisplayCaptureOption", "Display capture")), new("document-domain", T.T("SecurityHeaders_DocumentDomainOption", "Document domain")),
-        new("encrypted-media", T.T("SecurityHeaders_EncryptedMediaOption", "Encrypted media")), new("fullscreen", T.T("SecurityHeaders_FullScreenOption", "Full screen")), new("gamepad", T.T("SecurityHeaders_GamePadOption", "Game pad")),
-        new("geolocation", T.T("SecurityHeaders_GeolocationOption", "Geolocation")), new("gyroscope", T.T("SecurityHeaders_GyroscopeOption", "Gyroscope")), new("layout-animations", T.T("SecurityHeaders_LayoutAnimationsOption", "Layout animations")),
-        new("legacy-image-format", T.T("SecurityHeaders_LegacyImageFormatOption", "Legacy image format")), new("magnetometer", T.T("SecurityHeaders_MagnetometerOption", "Magnetometer")), new("microphone", T.T("SecurityHeaders_MicrophoneOption", "Microphone")),
-        new("midi", T.T("SecurityHeaders_MidiOption", "MIDI")), new("oversized-images", T.T("SecurityHeaders_OversizedImagesOption", "Oversized images")), new("payment", T.T("SecurityHeaders_PaymentOption", "Payment")),
-        new("picture-in-picture", T.T("SecurityHeaders_PictureInPictureOption", "Picture in picture")), new("publickey-credentials-get", T.T("SecurityHeaders_PublicKeyRetrievalOption", "Public key retrieval")),
-        new("speaker-selection", T.T("SecurityHeaders_SpeakerSelectionOption", "Speaker selection")), new("screen-wake-lock", T.T("SecurityHeaders_ScreenWakeLockOption", "Screen wake lock")),
-        new("sync-xhr", T.T("SecurityHeaders_SynchronousXhrOption", "Synchronous XML HTTP request")), new("unoptimized-images", T.T("SecurityHeaders_UnoptimizedImagesOption", "Unoptimized images")),
-        new("unsized-media", T.T("SecurityHeaders_UnsizedMediaOption", "Unsized media")), new("usb", T.T("SecurityHeaders_UsbOption", "USB")), new("web-share", T.T("SecurityHeaders_WebShareOption", "Web share")), new("xr-spatial-tracking", T.T("SecurityHeaders_WebXrOption", "Web XR")),
+        new("accelerometer", T["Accelerometer"]), new("ambient-light-sensor", T["Ambient Light Sensor"]), new("autoplay", T["Autoplay"]),
+        new("battery", T["Battery"]), new("camera", T["Camera"]), new("display-capture", T["Display Capture"]), new("document-domain", T["Document Domain"]),
+        new("encrypted-media", T["Encrypted Media"]), new("fullscreen", T["Full Screen"]), new("gamepad", T["Game Pad"]),
+        new("geolocation", T["Geolocation"]), new("gyroscope", T["Gyroscope"]), new("layout-animations", T["Layout Animations"]),
+        new("legacy-image-format", T["Legacy ImageFormat"]), new("magnetometer", T["Magnetometer"]), new("microphone", T["Microphone"]),
+        new("midi", T["Midi"]), new("oversized-images", T["Oversized Images"]), new("payment", T["Payment"]),
+        new("picture-in-picture", T["Picture In Picture"]), new("publickey-credentials-get", T["Public Key Retrieval"]),
+        new("speaker-selection", T["Speaker Selection"]), new("screen-wake-lock", T["Screen Wake Lock"]),
+        new("sync-xhr", T["Synchronous XML Http Request"]), new("unoptimized-images", T["Unoptimized Images"]),
+        new("unsized-media", T["Unsized Media"]), new("usb", T["USB"]), new("web-share", T["Web Share"]), new("xr-spatial-tracking", T["Web XR"]),
     ];
 
-    private NamedOption[] PermissionOriginOptions => [new("()", T.T("SecurityHeaders_NoneOption", "None")), new("*", T.T("SecurityHeaders_AnyOption", "Any")), new("self", T.T("SecurityHeaders_SelfOption", "Self"))];
+    private NamedOption[] PermissionOriginOptions => [new("()", T["None"]), new("*", T["Any"]), new("self", T["Self"])];
     private NamedOption[] ReferrerPolicyOptions =>
     [
-        new("no-referrer", T.T("SecurityHeaders_NoReferrerOption", "No referrer")), new("no-referrer-when-downgrade", T.T("SecurityHeaders_NoReferrerWhenDowngradeOption", "No referrer when downgrade")),
-        new("origin", T.T("SecurityHeaders_OriginOption", "Origin")), new("origin-when-cross-origin", T.T("SecurityHeaders_OriginWhenCrossOriginOption", "Origin when cross origin")), new("same-origin", T.T("SecurityHeaders_SameOriginOption", "Same origin")),
-        new("strict-origin", T.T("SecurityHeaders_StrictOriginOption", "Strict origin")), new("strict-origin-when-cross-origin", T.T("SecurityHeaders_StrictOriginWhenCrossOriginOption", "Strict origin when cross origin")),
-        new("unsafe-url", T.T("SecurityHeaders_UnsafeUrlOption", "Unsafe URL")),
+        new("no-referrer", T["No referrer"]), new("no-referrer-when-downgrade", T["No referrer when downgrade"]),
+        new("origin", T["Origin"]), new("origin-when-cross-origin", T["Origin when cross origin"]), new("same-origin", T["Same origin"]),
+        new("strict-origin", T["Strict origin"]), new("strict-origin-when-cross-origin", T["Strict origin when cross origin"]),
+        new("unsafe-url", T["Unsafe URL"]),
     ];
 
     protected override async Task OnInitializedAsync()
@@ -193,15 +193,15 @@
             // save from a no-op. Match the feedback every other settings page gives.
             Notifications.Notify(
                 NotificationSeverity.Success,
-                T.T("SecurityHeaders_SavedTitle", "Security headers saved"),
-                T.T("SecurityHeaders_SavedMessage", "The security header settings were updated."));
+                T["Security headers saved"],
+                T["The security header settings were updated."]);
         }
         catch (Exception)
         {
             Notifications.Notify(
                 NotificationSeverity.Error,
-                T.T("SecurityHeaders_SaveFailedTitle", "Security headers not saved"),
-                T.T("SecurityHeaders_SaveFailedMessage", "The security header settings could not be updated."));
+                T["Security headers not saved"],
+                T["The security header settings could not be updated."]);
         }
     }
 

@@ -23,7 +23,7 @@
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="admin-titlebar__left">
         <CrestAvatar ImageUrl="@TitleBarSettings.TenantAvatarImageUrl"
                      FallbackText="@TenantInitial"
-                     AriaLabel="@string.Format(T.T("AdminTitleBar_TenantAvatarAriaLabelFormat", "{0} tenant"), SelectedTenantName)"
+                     AriaLabel="@T["{0} tenant", SelectedTenantName]"
                      BackgroundColor="var(--crest-color-accent-1, #2f6f4e)"
                      ForegroundColor="var(--crest-color-on-accent-1, #fff)"
                      Shape="@TenantAvatarShape"
@@ -61,14 +61,14 @@
                             Template="CultureOptionTemplate"
                             FooterTemplate="CultureFooterTemplate"
                             AllowFiltering="true"
-                            FilterPlaceholder="@T.T("AdminTitleBar_FilterCulturesPlaceholder", "Filter cultures")"
+                            FilterPlaceholder="@T["Filter cultures"]"
                             class="admin-titlebar__culture-selector"
                             Style="color: var(--crest-color-accent-1, #2f6f4e); border-color: transparent;" />
         }
 
         @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
         {
-            <button type="button" class="admin-titlebar__icon-button" @onclick="ToggleThemeAsync" title="@T.T("AdminTitleBar_ToggleThemeTitle", "Toggle dark/light mode")" aria-label="@T.T("AdminTitleBar_ToggleThemeTitle", "Toggle dark/light mode")">
+            <button type="button" class="admin-titlebar__icon-button" @onclick="ToggleThemeAsync" title="@T["Toggle dark/light mode"]" aria-label="@T["Toggle dark/light mode"]">
                 <OrchardIcon IconKey="@ThemeToggleIcon" Size="1.25rem" />
             </button>
         }
@@ -82,7 +82,7 @@
            localStorage, so this can never be a server-defined nav item), "Sign in as
            another user", then Logout. See plans/user-localization.md's "User Profile
            Menu" section. *@
-        <CrestProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="@T.T("AdminTitleBar_OpenUserMenuAriaLabel", "Open user menu")" Click="OnProfileMenuItemClickedAsync">
+        <CrestProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="@T["Open user menu"]" Click="OnProfileMenuItemClickedAsync">
             <Template>
                 <CrestAvatar FallbackText="@UserInitials"
                              AriaLabel="@UserName"
@@ -116,9 +116,9 @@
                         </ul>
                     </li>
                 }
-                <CrestProfileMenuItem Text="@T.T("AdminTitleBar_SignInAsAnotherUser", "Sign in as another user")" Value="switch-user" />
-                <CrestProfileMenuItem Text="@T.T("AdminTitleBar_Settings", "Settings")" Path="Profile/Settings" />
-                <CrestProfileMenuItem Text="@T.T("AdminTitleBar_Logout", "Logout")" Value="logout" class="admin-titlebar__profile-separator" />
+                <CrestProfileMenuItem Text="@T["Sign in as another user"]" Value="switch-user" />
+                <CrestProfileMenuItem Text="@T["Settings"]" Path="Profile/Settings" />
+                <CrestProfileMenuItem Text="@T["Log out"]" Value="logout" class="admin-titlebar__profile-separator" />
             </ChildContent>
         </CrestProfileMenu>
     </CrestStack>
@@ -132,8 +132,8 @@
         ? tenants
         : DisplayManager?.Manifest?.Tenant is { } tenant ? [tenant] : [];
 
-    private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? T.T("AdminTitleBar_TenantFallback", "Tenant");
-    private string UserName => DisplayManager?.User.UserName ?? T.T("AdminTitleBar_UserFallback", "User");
+    private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? T["Tenant"];
+    private string UserName => DisplayManager?.User.UserName ?? T["User"];
     // Static SSR: IsActive resolves Navigation.Uri against Navigation.BaseUri, and
     // during prerender Uri is the server-side rewritten request path (not the
     // browser URL) while BaseUri is the site root (not this shell's <base href>),
@@ -197,7 +197,7 @@
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "admin-titlebar__culture-footer");
         builder.OpenComponent<CrestButton>(2);
-        builder.AddAttribute(3, nameof(CrestButton.Text), T.T("AdminTitleBar_SaveAsDefault", "Save as default"));
+        builder.AddAttribute(3, nameof(CrestButton.Text), T["Save as default"]);
         builder.AddAttribute(4, nameof(CrestButton.Icon), "bookmark");
         builder.AddAttribute(5, nameof(CrestButton.ButtonStyle), ButtonStyle.Light);
         builder.AddAttribute(6, nameof(CrestButton.Size), ButtonSize.Small);
@@ -365,8 +365,8 @@
             var saved = await Api.Crest.Rest.Localization.SetMyCultureAsync(new CrestUserCulture(SelectedCulture));
             Notifications.Notify(
                 saved is null ? NotificationSeverity.Error : NotificationSeverity.Success,
-                T.T("AdminTitleBar_DefaultLanguageTitle", "Default language"),
-                saved is null ? T.T("AdminTitleBar_DefaultLanguageSaveFailed", "Unable to save your default language.") : T.T("AdminTitleBar_DefaultLanguageSaved", "Saved as your default language."));
+                T["Default language"],
+                saved is null ? T["Unable to save your default language."] : T["Saved as your default language."]);
         }
         finally
         {

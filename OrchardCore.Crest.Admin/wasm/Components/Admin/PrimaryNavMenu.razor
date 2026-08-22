@@ -22,11 +22,11 @@
     <div class="primary-nav-menu__content">
         @if (DisplayManager is null)
         {
-            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("PrimaryNavMenu_DisplayManagerUnavailable", "Display manager is unavailable.")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Display manager is unavailable."]" />
         }
         else if (Menu is null)
         {
-            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("PrimaryNavMenu_LoadingAdminMenu", "Loading admin menu...")" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Loading admin menu..."]" />
         }
         else
         {
@@ -41,7 +41,7 @@
                     }
 
                     <span class="crest-panel-menu__text-rail primary-nav-menu__filter-input-rail">
-                        <CrestTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="@T.T("PrimaryNavMenu_SearchMenuPlaceholder", "Search Menu")" Style="width: 100%;" />
+                        <CrestTextBox @bind-Value="MenuFilter" @oninput="UpdateMenuFilter" Placeholder="@T["Search Menu"]" Style="width: 100%;" />
                     </span>
 
                     @if (HasQuickAddItems)
@@ -61,13 +61,13 @@
                         </span>
                         <span class="rz-navigation-item-text crest-panel-menu__text-rail">@QuickAddTitle</span>
                     </span>
-                    @RenderChromeIcon(QuickAddSource?.Icon, "primary-nav-menu__quickadd-add-icon", string.Format(T.T("PrimaryNavMenu_OpenQuickAddFormat", "Open {0}"), QuickAddTitle))
+                    @RenderChromeIcon(QuickAddSource?.Icon, "primary-nav-menu__quickadd-add-icon", T["Open {0}", QuickAddTitle])
                 </button>
             }
 
             <CrestPanelMenu Items="VisiblePanelMenuItems"
                             Class="primary-nav-menu__menu"
-                            AriaLabel="@T.T("PrimaryNavMenu_AdminNavigationAriaLabel", "Admin navigation")"
+                            AriaLabel="@T["Admin navigation"]"
                             ExpandedItemKeys="ExpandedItemKeys"
                             ExpansionVersion="ExpansionVersion"
                             ExpandedChanged="SetExpanded"
@@ -88,7 +88,7 @@
 
             @if (VisibleMenuItems.Length == 0)
             {
-                <CrestText TextStyle="TextStyle.Body2" Text="@T.T("PrimaryNavMenu_NoItemsReturned", "No admin menu items returned.")" />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["No admin menu items returned."]" />
             }
 
         }
@@ -121,7 +121,7 @@
             </div>
             <CrestPanelMenu Items="QuickAddPanelMenuItems"
                             Class="primary-nav-menu__menu primary-nav-menu__quickadd-menu"
-                            AriaLabel="@T.T("PrimaryNavMenu_QuickAddAriaLabel", "Quick Add")"
+                            AriaLabel="@T["Quick Add"]"
                             ExpandedItemKeys="ExpandedItemKeys"
                             ExpansionVersion="ExpansionVersion"
                             ExpandedChanged="SetExpanded"
@@ -201,9 +201,9 @@
     private DisplayMenuItem? QuickAddSource => CurrentMenuModel?.QuickAddSource;
     private DisplayMenuItem[] QuickAddItems => CurrentMenuModel?.QuickAddItems ?? [];
     private bool HasQuickAddItems => QuickAddItems.Length > 0;
-    private string QuickAddTitle => string.IsNullOrWhiteSpace(QuickAddSource?.Text) ? T.T("PrimaryNavMenu_QuickAddAriaLabel", "Quick Add") : QuickAddSource.Text;
-    private string NavToggleLabel => IsPinnedExpanded ? T.T("PrimaryNavMenu_CollapseNavigation", "Collapse navigation") : T.T("PrimaryNavMenu_KeepNavigationExpanded", "Keep navigation expanded");
-    private string CloseQuickAddLabel => string.Format(T.T("PrimaryNavMenu_CloseQuickAddFormat", "Close {0}"), QuickAddTitle);
+    private string QuickAddTitle => string.IsNullOrWhiteSpace(QuickAddSource?.Text) ? T["Quick Add"] : QuickAddSource.Text;
+    private string NavToggleLabel => IsPinnedExpanded ? T["Collapse navigation"] : T["Keep navigation expanded"];
+    private string CloseQuickAddLabel => T["Close {0}", QuickAddTitle];
     private DisplayMenuItem[] PrimaryNavMenuMenuItems => CurrentMenuModel?.PrimaryNavMenuItems ?? [];
     private DisplayMenuItem[] VisibleMenuItems => CurrentMenuModel?.VisibleMenuItems ?? [];
     private CrestPanelMenuItem[] VisiblePanelMenuItems => CurrentMenuModel?.VisiblePanelMenuItems ?? [];

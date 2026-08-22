@@ -1,4 +1,5 @@
 using System.Globalization;
+using Crest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.DataLocalization.Models;
@@ -34,7 +35,9 @@ namespace Crest.Controllers;
 public sealed class CrestTranslationsController(
     IAuthorizationService authorization,
     ILocalizationService localizationService,
+    ILocalizationManager localizationManager,
     IEnumerable<ILocalizationDataProvider> localizationDataProviders,
+    OrchardCore.Documents.IDocumentManager<CrestProviderMenuSyncDocument> syncDocuments,
     TranslationsManager translationsManager) : ControllerBase
 {
     [HttpGet]
@@ -120,6 +123,16 @@ public sealed class CrestTranslationsController(
         var document = fresh
             ? await translationsManager.LoadTranslationsDocumentAsync()
             : await translationsManager.GetTranslationsDocumentAsync();
+
+        // The PO layer under the store: rows without a stored value surface what would
+        // actually render (the shipped catalog translation) as Fallback, so the editor
+        // shows the same thing the menu does. Menu-caption rows get the recorded source
+        // contexts first (unioned per caption - rows have no item identity), then the
+        // *.AdminMenu tier, mirroring the caption resolver.
+        var poIndexes = CrestPoTranslationLookup.BuildCultureChainIndexes(
+            localizationManager, CultureInfo.GetCultureInfo(culture));
+        var sourcesByCaption = CrestProviderMenuSyncService.BuildSourcesByCaption(
+            await syncDocuments.GetOrCreateImmutableAsync());
         // First-wins on duplicate (context, key) pairs rather than ToDictionary's throw - a
         // store that somehow holds duplicates must degrade to showing one row, not 500 the
         // whole editor (the stock controller's exact failure mode; the merge-save then
@@ -147,7 +160,13 @@ public sealed class CrestTranslationsController(
                 }
 
                 stored.TryGetValue(key, out var entry);
-                rows.Add(new CrestTranslationString(descriptor.Context, descriptor.Name, entry?.Value ?? string.Empty, Orphan: false));
+                var value = entry?.Value ?? string.Empty;
+                rows.Add(new CrestTranslationString(
+                    descriptor.Context,
+                    descriptor.Name,
+                    value,
+                    Orphan: false,
+                    Fallback: value.Length > 0 ? null : ResolvePoFallback(poIndexes, sourcesByCaption, descriptor.Context, descriptor.Name)));
             }
         }
 
@@ -192,6 +211,22 @@ public sealed class CrestTranslationsController(
         return [.. cultures];
     }
 
+    private static string? ResolvePoFallback(
+        IReadOnlyList<Dictionary<string, List<(string Context, string Value)>>> poIndexes,
+        IReadOnlyDictionary<string, List<string>> sourcesByCaption,
+        string context,
+        string key)
+    {
+        var isMenuCaption = context.StartsWith(
+            OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(null), StringComparison.OrdinalIgnoreCase);
+
+        return CrestPoTranslationLookup.Resolve(
+            poIndexes,
+            key,
+            isMenuCaption ? CrestPoTranslationLookup.AdminMenuContextSuffix : null,
+            isMenuCaption && sourcesByCaption.TryGetValue(key, out var sourceContexts) ? sourceContexts : null);
+    }
+
     private static string MakeKey(string context, string key) => $"{context}|{key}";
 }
 
@@ -208,7 +243,11 @@ public sealed record CrestTranslationGroup(string Name, CrestTranslationString[]
 /// <param name="Orphan">A stored entry no provider currently enumerates - e.g. its feature is
 /// disabled, or its source string changed. Still applied at render time by IDataLocalizer;
 /// editable and deletable here like any other row.</param>
-public sealed record CrestTranslationString(string Context, string Key, string Value, bool Orphan);
+/// <param name="Fallback">For rows without a stored value: the shipped PO translation that
+/// actually renders (resolution is store edit -> PO -> invariant literal), shown as the
+/// input's placeholder. Deleting a stored value reveals this layer rather than the raw
+/// literal; saving the key itself as the value pins the literal over it.</param>
+public sealed record CrestTranslationString(string Context, string Key, string Value, bool Orphan, string? Fallback = null);
 
 public sealed record CrestTranslationsSaveModel(string Culture, CrestTranslationSaveEntry[]? Translations);
 

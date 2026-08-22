@@ -8,12 +8,12 @@ msgstr ""
 # same directory for the full explanation.
 #: OrchardCore.Crest.Admin/wasm/Pages/AdminMenus.razor
 msgctxt "Crest.Admin.Client"
-msgid "AdminMenus_Loading"
+msgid "Loading admin menus..."
 msgstr "Admin-Menüs werden geladen..."
 
 #: OrchardCore.Crest.Admin/wasm/Pages/AdminMenus.razor
 msgctxt "Crest.Admin.Client"
-msgid "AdminMenus_NoneFound"
+msgid "No admin menus found."
 msgstr "Keine Admin-Menüs gefunden."
 
 # Representative sample added 2026-08-07 covering phase 6's newly-converted files
@@ -21,90 +21,90 @@ msgstr "Keine Admin-Menüs gefunden."
 # CrestApiLocalizer -> rendered UI pipeline end-to-end without translating every key.
 #: OrchardCore.Crest.Admin/wasm/Pages/Login.razor
 msgctxt "Crest.Admin.Client"
-msgid "Login_SignedInAsFormat"
+msgid "Signed in as {0}"
 msgstr "Angemeldet als {0}"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Login.razor
 msgctxt "Crest.Admin.Client"
-msgid "Login_Logout"
+msgid "Log out"
 msgstr "Abmelden"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Login.razor
 msgctxt "Crest.Admin.Client"
-msgid "Login_UsernamePlaceholder"
+msgid "Username or email"
 msgstr "Benutzername oder E-Mail"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Login.razor
 msgctxt "Crest.Admin.Client"
-msgid "Login_PasswordPlaceholder"
+msgid "Password"
 msgstr "Passwort"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Login.razor
 msgctxt "Crest.Admin.Client"
-msgid "Login_Submit"
+msgid "Log in"
 msgstr "Anmelden"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Profile.razor
 msgctxt "Crest.Admin.Client"
-msgid "Profile_AccountTagline"
+msgid "Your account."
 msgstr "Ihr Konto."
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Profile.razor
 msgctxt "Crest.Admin.Client"
-msgid "Profile_AccountHeading"
+msgid "Account"
 msgstr "Konto"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Profile.razor
 msgctxt "Crest.Admin.Client"
-msgid "Profile_UsernameLabel"
+msgid "User Name"
 msgstr "Benutzername"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Profile.razor
 msgctxt "Crest.Admin.Client"
-msgid "Profile_SettingsButton"
+msgid "Settings"
 msgstr "Einstellungen"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Menus.razor
 msgctxt "Crest.Admin.Client"
-msgid "Menus_Title"
+msgid "Menus"
 msgstr "Menüs"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Menus.razor
 msgctxt "Crest.Admin.Client"
-msgid "Menus_NewMenu"
+msgid "New menu"
 msgstr "Neues Menü"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Indexes.razor
 msgctxt "Crest.Admin.Client"
-msgid "Indexes_Title"
+msgid "Indexes"
 msgstr "Indizes"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Indexes.razor
 msgctxt "Crest.Admin.Client"
-msgid "Indexes_Rebuild"
+msgid "Rebuild"
 msgstr "Neu erstellen"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Templates.razor
 msgctxt "Crest.Admin.Client"
-msgid "Templates_Title"
+msgid "Templates"
 msgstr "Vorlagen"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Templates.razor
 msgctxt "Crest.Admin.Client"
-msgid "Templates_NewTemplate"
+msgid "New template"
 msgstr "Neue Vorlage"
 
 #: OrchardCore.Crest.Admin/wasm/Pages/Templates.razor
 msgctxt "Crest.Admin.Client"
-msgid "Templates_Save"
+msgid "Save"
 msgstr "Speichern"
 
 #: OrchardCore.Crest.Admin/wasm/DisplayManagement/AdminStatus.razor
 msgctxt "Crest.Admin.Client"
-msgid "AdminStatus_Title"
+msgid "Crest Admin"
 msgstr "Crest Admin"
 
 #: OrchardCore.Crest.Admin/wasm/DisplayManagement/AdminStatus.razor
 msgctxt "Crest.Admin.Client"
-msgid "AdminStatus_SignedInAsFormat"
+msgid "Signed in as {0}"
 msgstr "Angemeldet als {0}"

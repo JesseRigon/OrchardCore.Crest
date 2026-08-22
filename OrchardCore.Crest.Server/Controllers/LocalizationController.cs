@@ -1,8 +1,11 @@
 using System.Globalization;
+using Crest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using OrchardCore.DataLocalization.Services;
 using OrchardCore.Environment.Shell;
 using OrchardCore.Entities;
 using OrchardCore.Localization;
@@ -22,7 +25,8 @@ public sealed class CrestLocalizationController(
     IAuthorizationService authorization,
     ILocalizationService localizationService,
     UserManager<IUser> userManager,
-    ILocalizationManager localizationManager) : ControllerBase
+    ILocalizationManager localizationManager,
+    IServiceProvider serviceProvider) : ControllerBase
 {
     // Crest.Admin (Blazor WASM) has no server-side round trip per render, so it cannot
     // use IStringLocalizer<T> directly the way server-rendered Razor/CRM.AdminMenu.cs
@@ -31,14 +35,24 @@ public sealed class CrestLocalizationController(
     // was explicitly rejected for .Admin's own UI strings: those need to be editable the
     // same way any other translatable content is - via OrchardCore's normal localization
     // tooling (.po files) - without a recompile/redeploy. So instead: this endpoint
-    // exposes the resolved .po catalog for a requested culture, scoped to a fixed
-    // CrestClientStringsContext, and the client (see Crest.Admin.Theme.ApiLocalizer)
+    // exposes a resolved per-culture dictionary and the client (CrestApiLocalizer)
     // fetches and caches it, plugging into the same Localizer/ILocalizer seam
     // OrchardCore.Crest.Components already defines for exactly this kind of override.
+    //
+    // Client string keys are INVARIANT LITERALS (T["Some text"], native Orchard style),
+    // so the same literal a Crest page uses is also the msgid every shipped module
+    // catalog uses for that string. The dictionary is therefore layered per key,
+    // mirroring the menu caption chain (docs/localization.mmd): stored edit (tenant
+    // translation store, this context) -> PO (an entry under this context first, then
+    // the most common translation of the literal across ALL shipped catalogs, so
+    // upstream's own translations cover Crest pages for free) -> miss, where the client
+    // renders the literal itself. Each layer resolves es-ES before es.
     public const string ClientStringsContext = "Crest.Admin.Client";
 
+    private static readonly string[] ClientContextPreference = [ClientStringsContext];
+
     [HttpGet("strings")]
-    public ActionResult<Dictionary<string, string>> GetStrings(string culture)
+    public async Task<ActionResult<Dictionary<string, string>>> GetStringsAsync(string culture)
     {
         if (string.IsNullOrWhiteSpace(culture))
         {
@@ -57,34 +71,59 @@ public sealed class CrestLocalizationController(
 
         var strings = new Dictionary<string, string>(StringComparer.Ordinal);
 
-        // A region-specific .po file (e.g. es-MX.po) is optional, not required - most
-        // translation content is realistically maintained per-language, not per-region
-        // (see plans/user-localization.md). ILocalizationManager.GetDictionary does not
-        // itself fall back from a region culture to its parent language, so without this,
-        // a tenant supporting "es-MX" would silently render English fallback text for
-        // every key unless a translator maintained an es-MX.po file byte-for-byte
-        // identical to es.po. Fill from the parent language first (base layer), then
-        // overlay the requested culture's own dictionary so a region-specific override
-        // still wins when one actually exists.
-        if (!cultureInfo.IsNeutralCulture && cultureInfo.Parent is { Name.Length: > 0 } parent)
+        // PO layer: every literal any shipped catalog translates for this culture chain,
+        // resolved with the client context preferred over the flat most-common pool.
+        // BuildIndex already skips empty and identity entries, so untranslated msgids
+        // never mask the client-side literal fallback.
+        var chainIndexes = CrestPoTranslationLookup.BuildCultureChainIndexes(localizationManager, cultureInfo);
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var index in chainIndexes)
         {
-            MergeClientStrings(strings, localizationManager.GetDictionary(parent));
+            keys.UnionWith(index.Keys);
         }
 
-        MergeClientStrings(strings, localizationManager.GetDictionary(cultureInfo));
-
-        return Ok(strings);
-    }
-
-    private static void MergeClientStrings(Dictionary<string, string> strings, CultureDictionary dictionary)
-    {
-        foreach (var (key, values) in dictionary.Translations)
+        foreach (var key in keys)
         {
-            if (string.Equals(key.Context, ClientStringsContext, StringComparison.Ordinal) && values.Length > 0)
+            if (CrestPoTranslationLookup.Resolve(chainIndexes, key, null, ClientContextPreference) is { } value)
             {
-                strings[key.MessageId] = values[0];
+                strings[key] = value;
             }
         }
+
+        // Store layer on top (stored edit -> PO -> literal; delete walks down): entries
+        // the Translations editor holds under the client context, parent culture first so
+        // a region-specific edit still wins. Storing the literal itself as the value pins
+        // the literal over a shipped PO translation.
+        var translationsManager = serviceProvider.GetService<TranslationsManager>();
+        if (translationsManager is not null)
+        {
+            var document = await translationsManager.GetTranslationsDocumentAsync();
+            var chain = new List<string>();
+            for (var current = cultureInfo; !string.IsNullOrEmpty(current.Name); current = current.Parent)
+            {
+                chain.Add(current.Name);
+            }
+
+            chain.Reverse();
+            foreach (var name in chain)
+            {
+                if (!document.Translations.TryGetValue(name, out var entries))
+                {
+                    continue;
+                }
+
+                foreach (var entry in entries)
+                {
+                    if (string.Equals(entry.Context, ClientStringsContext, StringComparison.OrdinalIgnoreCase)
+                        && !string.IsNullOrWhiteSpace(entry.Value))
+                    {
+                        strings[entry.Key] = entry.Value;
+                    }
+                }
+            }
+        }
+
+        return Ok(strings);
     }
 
     // Self-service: the current user's own stored default culture

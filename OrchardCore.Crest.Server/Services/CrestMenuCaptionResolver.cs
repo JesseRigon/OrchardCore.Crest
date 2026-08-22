@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.AdminMenu.Models;
 using OrchardCore.AdminMenu.Services;
 using OrchardCore.DataLocalization.Services;
+using OrchardCore.Localization;
 using OrchardCore.Navigation;
 
 namespace Crest.Services;
@@ -53,7 +54,11 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
 
     // Most-specific culture first (es-ES, then es): caption -> its entries in that culture.
     private List<ILookup<string, (string Context, string Value)>>? _cultureIndexes;
+    private List<Dictionary<string, List<(string Context, string Value)>>>? _poIndexes;
     private Dictionary<string, string>? _menuNameByNodeId;
+    // PO tier 0 provenance: node UniqueId -> the declaring provider classes' full type
+    // names, recorded at sync time in Merge's value-authority order.
+    private Dictionary<string, List<string>>? _sourceContextsByNodeId;
     private bool _loaded;
 
     public async Task EnsureLoadedAsync()
@@ -99,6 +104,33 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
 
             _menuNameByNodeId = map;
         }
+
+        // The PO layer of the resolution hierarchy (store edit -> PO -> invariant
+        // literal). The dictionaries are parsed once per shell and cached by the
+        // manager, so this is index construction over cached data, not file IO.
+        var localizationManager = serviceProvider.GetService<ILocalizationManager>();
+        if (localizationManager is not null)
+        {
+            _poIndexes = CrestPoTranslationLookup.BuildCultureChainIndexes(
+                localizationManager, CultureInfo.CurrentUICulture);
+        }
+
+        // Tier 0 provenance for the PO layer, recorded by the provider-menu sync.
+        var syncDocuments = serviceProvider.GetService<OrchardCore.Documents.IDocumentManager<CrestProviderMenuSyncDocument>>();
+        if (syncDocuments is not null)
+        {
+            var syncState = await syncDocuments.GetOrCreateImmutableAsync();
+            var map = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            foreach (var entry in syncState.Entries.Values)
+            {
+                if (!string.IsNullOrEmpty(entry.UniqueId) && entry.SourceContexts.Count > 0)
+                {
+                    map.TryAdd(entry.UniqueId, entry.SourceContexts);
+                }
+            }
+
+            _sourceContextsByNodeId = map;
+        }
     }
 
     /// <param name="caption">The displayed caption - the same key upstream's admin looks up.</param>
@@ -107,7 +139,7 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
     /// <paramref name="menuName"/> - for a merged pair this is the node's UniqueId.</param>
     public string Resolve(string caption, string? menuName, string? itemId)
     {
-        if (string.IsNullOrEmpty(caption) || _cultureIndexes is not { Count: > 0 } indexes)
+        if (string.IsNullOrEmpty(caption))
         {
             return caption;
         }
@@ -120,49 +152,74 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
             menuName = owningMenu;
         }
 
-        // Exact context, then its parents by stripping ':'-separated segments.
-        var context = OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(
-            string.IsNullOrEmpty(menuName) ? null : menuName);
-        while (true)
+        if (_cultureIndexes is { Count: > 0 } indexes)
         {
-            foreach (var index in indexes)
+            // Exact context, then its parents by stripping ':'-separated segments.
+            var context = OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(
+                string.IsNullOrEmpty(menuName) ? null : menuName);
+            while (true)
             {
-                foreach (var (entryContext, value) in index[caption])
+                foreach (var index in indexes)
                 {
-                    if (string.Equals(entryContext, context, StringComparison.OrdinalIgnoreCase))
+                    foreach (var (entryContext, value) in index[caption])
                     {
-                        return value;
+                        if (string.Equals(entryContext, context, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return value;
+                        }
                     }
                 }
+
+                var separator = context.LastIndexOf(':');
+                if (separator < 0)
+                {
+                    break;
+                }
+
+                context = context[..separator];
             }
 
-            var separator = context.LastIndexOf(':');
-            if (separator < 0)
+            // The culture's best alternative, from the nearest culture that has any.
+            foreach (var index in indexes)
             {
-                break;
-            }
+                var candidates = index[caption].ToArray();
+                if (candidates.Length == 0)
+                {
+                    continue;
+                }
 
-            context = context[..separator];
+                var preferred = candidates
+                    .Where(candidate => candidate.Context.StartsWith(RootContext, StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
+
+                return (preferred.Length > 0 ? preferred : candidates)
+                    .GroupBy(candidate => candidate.Value, StringComparer.Ordinal)
+                    .OrderByDescending(group => group.Count())
+                    .ThenBy(group => group.Key, StringComparer.Ordinal)
+                    .First().Key;
+            }
         }
 
-        // The culture's best alternative, from the nearest culture that has any.
-        foreach (var index in indexes)
+        // The PO layer: shipped baseline below the store, so a caption no tenant entry
+        // covers still renders its catalog translation, and deleting a store entry
+        // reverts to the shipped value rather than the invariant literal (delete walks
+        // down the hierarchy - store edit -> PO -> literal). Tier 0 is the item's own
+        // recorded declarers (via its UniqueId), then *.AdminMenu contexts, then flat -
+        // see CrestPoTranslationLookup for the tiering.
+        if (_poIndexes is { Count: > 0 } poIndexes)
         {
-            var candidates = index[caption].ToArray();
-            if (candidates.Length == 0)
+            List<string>? sourceContexts = null;
+            if (!string.IsNullOrEmpty(itemId))
             {
-                continue;
+                _sourceContextsByNodeId?.TryGetValue(itemId, out sourceContexts);
             }
 
-            var preferred = candidates
-                .Where(candidate => candidate.Context.StartsWith(RootContext, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-            return (preferred.Length > 0 ? preferred : candidates)
-                .GroupBy(candidate => candidate.Value, StringComparer.Ordinal)
-                .OrderByDescending(group => group.Count())
-                .ThenBy(group => group.Key, StringComparer.Ordinal)
-                .First().Key;
+            var poValue = CrestPoTranslationLookup.Resolve(
+                poIndexes, caption, CrestPoTranslationLookup.AdminMenuContextSuffix, sourceContexts);
+            if (poValue is not null)
+            {
+                return poValue;
+            }
         }
 
         return caption;

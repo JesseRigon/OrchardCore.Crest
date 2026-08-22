@@ -5,8 +5,8 @@
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="0.25rem">
-    <CrestText TextStyle="TextStyle.H6" Text="@T.T("AdminStatus_Title", "Crest Admin")" />
-    <CrestText Text="@string.Format(T.T("AdminStatus_SignedInAsFormat", "Signed in as {0}"), UserName)" />
+    <CrestText TextStyle="TextStyle.H6" Text="@T["Crest Admin"]" />
+    <CrestText Text="@T["Signed in as {0}", UserName]" />
 </CrestStack>
 
 @code {

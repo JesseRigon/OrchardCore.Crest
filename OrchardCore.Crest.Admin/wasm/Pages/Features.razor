@@ -9,10 +9,10 @@
 <CrestStack Gap="1rem" data-testid="features-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Features_Heading", "Features")" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Features_Description", "Enable and disable Orchard features for this tenant.")" />
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Features"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Enable and disable Orchard features for this tenant."]" />
         </CrestStack>
-        <CrestButton Text="@T.T("Features_Refresh", "Refresh")" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+        <CrestButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
     </CrestStack>
 
     @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -24,23 +24,23 @@
         <CrestStack Gap="0.85rem">
             <CrestRow Gap="0.75rem">
                 <CrestColumn Size="12" SizeMD="6">
-                    <CrestTextBox @bind-Value="SearchText" Placeholder="@T.T("Features_SearchPlaceholder", "Search name, ID, category, description, or dependency...")" Style="width: 100%;" data-testid="features-search" />
+                    <CrestTextBox @bind-Value="SearchText" Placeholder="@T["Search name, ID, category, description, or dependency..."]" Style="width: 100%;" data-testid="features-search" />
                 </CrestColumn>
                 <CrestColumn Size="12" SizeMD="3">
                     <CrestDropDown @bind-Value="StatusFilter" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" data-testid="features-status-filter" />
                 </CrestColumn>
                 <CrestColumn Size="12" SizeMD="3">
                     <CrestCheckBox @bind-Value="HideAlwaysEnabled" TValue="bool" />
-                    <CrestLabel Text="@T.T("Features_HideAlwaysEnabled", "Hide always enabled")" Style="margin-left: 0.45rem;" />
+                    <CrestLabel Text="@T["Hide always enabled"]" Style="margin-left: 0.45rem;" />
                 </CrestColumn>
             </CrestRow>
 
             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                <CrestText Text="@T.T("Features_BulkActions", "Bulk actions")" TextStyle="TextStyle.Subtitle2" />
-                <CrestButton Text="@T.T("Features_Enable", "Enable")" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => ApplyBulkAsync(BulkAction.Enable))" Disabled="@(!CanApplyBulk)" />
-                <CrestButton Text="@T.T("Features_Disable", "Disable")" Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => RequestBulkDisable())" Disabled="@(!CanApplyBulk)" />
-                <CrestButton Text="@T.T("Features_Toggle", "Toggle")" Icon="swap_horiz" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@(() => RequestBulkToggle())" Disabled="@(!CanApplyBulk)" />
-                <CrestText Text="@(string.Format(T.T("Features_ShowingCountFormat", "Showing {0} of {1} features"), FilteredFeatures.Length, AllFeatures.Length))" TextStyle="TextStyle.Caption" class="features-count" />
+                <CrestText Text="@T["Bulk Actions"]" TextStyle="TextStyle.Subtitle2" />
+                <CrestButton Text="@T["Enable"]" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => ApplyBulkAsync(BulkAction.Enable))" Disabled="@(!CanApplyBulk)" />
+                <CrestButton Text="@T["Disable"]" Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => RequestBulkDisable())" Disabled="@(!CanApplyBulk)" />
+                <CrestButton Text="@T["Toggle"]" Icon="swap_horiz" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@(() => RequestBulkToggle())" Disabled="@(!CanApplyBulk)" />
+                <CrestText Text="@(T["Showing {0} of {1} features", FilteredFeatures.Length, AllFeatures.Length])" TextStyle="TextStyle.Caption" class="features-count" />
             </CrestStack>
         </CrestStack>
     </CrestCard>
@@ -49,12 +49,12 @@
     {
         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
             <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-            <CrestText Text="@T.T("Features_Loading", "Loading features...")" />
+            <CrestText Text="@T["Loading features..."]" />
         </CrestStack>
     }
     else if (FilteredFeatures.Length == 0)
     {
-        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("Features_NoneFound", "Nothing here. The current search or filters returned no features.")</CrestAlert>
+        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["Nothing here. The current search or filters returned no features."]</CrestAlert>
     }
     else
     {
@@ -62,7 +62,7 @@
         {
             <section class="feature-group" data-testid="feature-category">
                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.65rem">
-                    <input type="checkbox" checked="@IsGroupSelected(group.Items)" @onchange="@((ChangeEventArgs args) => SelectGroup(group.Items, args.Value is true))" aria-label="@(string.Format(T.T("Features_SelectAllInCategoryFormat", "Select all features in {0}"), group.Category))" />
+                    <input type="checkbox" checked="@IsGroupSelected(group.Items)" @onchange="@((ChangeEventArgs args) => SelectGroup(group.Items, args.Value is true))" aria-label="@(T["Select all features in {0}", group.Category])" />
                     <CrestText TextStyle="TextStyle.H5" Text="@group.Category" />
                     <CrestBadge Text="@group.Items.Length.ToString()" BadgeStyle="BadgeStyle.Secondary" />
                 </CrestStack>
@@ -72,20 +72,20 @@
                     {
                         <CrestCard class="feature-card" data-feature-id="@feature.Id">
                             <div class="feature-card__selection">
-                                <input type="checkbox" checked="@SelectedIds.Contains(feature.Id)" @onchange="@((ChangeEventArgs args) => SelectFeature(feature.Id, args.Value is true))" aria-label="@(string.Format(T.T("Features_SelectFeatureFormat", "Select {0}"), feature.Name))" />
+                                <input type="checkbox" checked="@SelectedIds.Contains(feature.Id)" @onchange="@((ChangeEventArgs args) => SelectFeature(feature.Id, args.Value is true))" aria-label="@(T["Select {0}", feature.Name])" />
                             </div>
                             <CrestStack Gap="0.45rem" class="feature-card__content">
                                 <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                                     <CrestText TextStyle="TextStyle.H6" Text="@feature.Name" />
                                     <CrestText TextStyle="TextStyle.Caption" Text="@feature.Id" />
-                                    <CrestBadge Text="@(feature.Enabled ? T.T("Features_EnabledBadge", "Enabled") : T.T("Features_DisabledBadge", "Disabled"))" BadgeStyle="@(feature.Enabled ? BadgeStyle.Success : BadgeStyle.Light)" />
+                                    <CrestBadge Text="@(feature.Enabled ? T["Enabled"] : T["Disabled"])" BadgeStyle="@(feature.Enabled ? BadgeStyle.Success : BadgeStyle.Light)" />
                                     @if (feature.AlwaysEnabled)
                                     {
-                                        <CrestBadge Text="@T.T("Features_AlwaysEnabledBadge", "Always enabled")" BadgeStyle="BadgeStyle.Info" />
+                                        <CrestBadge Text="@T["Always enabled"]" BadgeStyle="BadgeStyle.Info" />
                                     }
                                     @if (feature.EnabledByDependencyOnly)
                                     {
-                                        <CrestBadge Text="@T.T("Features_DependencyOnlyBadge", "Dependency only")" BadgeStyle="BadgeStyle.Warning" />
+                                        <CrestBadge Text="@T["Dependency only"]" BadgeStyle="BadgeStyle.Warning" />
                                     }
                                 </CrestStack>
 
@@ -97,7 +97,7 @@
                                 @if (feature.Dependencies.Length > 0)
                                 {
                                     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.35rem" Wrap="FlexWrap.Wrap">
-                                        <CrestText Text="@T.T("Features_DependsOn", "Depends on:")" TextStyle="TextStyle.Caption" />
+                                        <CrestText Text="@T["Depends on:"]" TextStyle="TextStyle.Caption" />
                                         @foreach (var dependency in feature.Dependencies)
                                         {
                                             <CrestBadge Text="@DependencyName(dependency)" BadgeStyle="@(IsDependencyAvailable(dependency) ? BadgeStyle.Secondary : BadgeStyle.Danger)" />
@@ -109,11 +109,11 @@
                             <div class="feature-card__actions">
                                 @if (feature.Enabled)
                                 {
-                                    <CrestButton Text="@T.T("Features_Disable", "Disable")" Icon="block" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RequestDisable(feature))" Disabled="@(IsBusy || !CanDisable(feature))" />
+                                    <CrestButton Text="@T["Disable"]" Icon="block" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RequestDisable(feature))" Disabled="@(IsBusy || !CanDisable(feature))" />
                                 }
                                 else
                                 {
-                                    <CrestButton Text="@T.T("Features_Enable", "Enable")" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => SetFeatureAsync(feature, true))" Disabled="@(IsBusy || !CanEnable(feature))" />
+                                    <CrestButton Text="@T["Enable"]" Icon="check_circle" Size="ButtonSize.Small" Click="@(() => SetFeatureAsync(feature, true))" Disabled="@(IsBusy || !CanEnable(feature))" />
                                 }
                             </div>
                         </CrestCard>
@@ -140,8 +140,8 @@
                         </ul>
                     }
                     <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                        <CrestButton Text="@T.T("Features_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelConfirmation" />
-                        <CrestButton Text="@T.T("Features_Continue", "Continue")" ButtonStyle="ButtonStyle.Danger" Click="ConfirmAsync" Disabled="@IsBusy" />
+                        <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelConfirmation" />
+                        <CrestButton Text="@T["Continue"]" ButtonStyle="ButtonStyle.Danger" Click="ConfirmAsync" Disabled="@IsBusy" />
                     </CrestStack>
                 </CrestStack>
             </CrestCard>
@@ -162,7 +162,7 @@
     private string? ErrorMessage { get; set; }
     private ConfirmationModel? Confirmation { get; set; }
 
-    private FilterOption[] StatusOptions => [new("any", T.T("Features_AnyStatusOption", "Any status")), new("enabled", T.T("Features_EnabledOnlyOption", "Enabled only")), new("disabled", T.T("Features_DisabledOnlyOption", "Disabled only"))];
+    private FilterOption[] StatusOptions => [new("any", T["Any status"]), new("enabled", T["Enabled only"]), new("disabled", T["Disabled only"])];
 
     private Feature[] FilteredFeatures => AllFeatures
         .Where(feature => !HideAlwaysEnabled || !feature.AlwaysEnabled)
@@ -176,7 +176,7 @@
         .ToArray();
 
     private FeatureGroup[] GroupedFeatures => FilteredFeatures
-        .GroupBy(feature => string.IsNullOrWhiteSpace(feature.Category) ? T.T("Features_UncategorizedGroup", "Uncategorized") : feature.Category)
+        .GroupBy(feature => string.IsNullOrWhiteSpace(feature.Category) ? T["Uncategorized"] : feature.Category)
         .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
         .Select(group => new FeatureGroup(group.Key, group.OrderBy(feature => feature.Name, StringComparer.OrdinalIgnoreCase).ToArray()))
         .ToArray();
@@ -239,8 +239,8 @@
     private void RequestDisable(Feature feature)
     {
         Confirmation = new(
-            string.Format(T.T("Features_DisableConfirmTitleFormat", "Disable {0}?"), feature.Name),
-            T.T("Features_DisableConfirmMessage", "Disabling a feature can also disable features that depend on it."),
+            T["Disable {0}?", feature.Name],
+            T["Disabling a feature can also disable features that depend on it."],
             EnabledDependentNames(feature),
             () => SetFeatureAsync(feature, false));
     }
@@ -250,9 +250,9 @@
 
     private string BulkActionLabel(BulkAction action) => action switch
     {
-        BulkAction.Enable => T.T("Features_Enable", "Enable"),
-        BulkAction.Disable => T.T("Features_Disable", "Disable"),
-        _ => T.T("Features_Toggle", "Toggle"),
+        BulkAction.Enable => T["Enable"],
+        BulkAction.Disable => T["Disable"],
+        _ => T["Toggle"],
     };
 
     private void RequestBulk(BulkAction action)
@@ -260,8 +260,8 @@
         var selected = AllFeatures.Where(feature => SelectedIds.Contains(feature.Id)).ToArray();
         var dependents = selected.SelectMany(EnabledDependentNames).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
         Confirmation = new(
-            string.Format(T.T("Features_BulkConfirmTitleFormat", "{0} {1} features?"), BulkActionLabel(action), selected.Length),
-            T.T("Features_BulkConfirmMessage", "Feature changes can recycle the tenant and affect dependent features."),
+            T["{0} {1} features?", BulkActionLabel(action), selected.Length],
+            T["Feature changes can recycle the tenant and affect dependent features."],
             dependents,
             () => ApplyBulkAsync(action));
     }
@@ -284,8 +284,8 @@
             var succeeded = enable
                 ? await Api.Crest.Rest.Features.EnableAsync(feature.Id)
                 : await Api.Crest.Rest.Features.DisableAsync(feature.Id);
-            if (!succeeded) throw new InvalidOperationException(string.Format(T.T("Features_ActionFailedFormat", "Orchard could not {0} {1}."), enable ? T.T("Features_EnableVerb", "enable") : T.T("Features_DisableVerb", "disable"), feature.Name));
-            Notifications.Notify(NotificationSeverity.Success, T.T("Features_Heading", "Features"), string.Format(T.T("Features_ChangedFormat", "{0} was {1}."), feature.Name, enable ? T.T("Features_EnabledPastTense", "enabled") : T.T("Features_DisabledPastTense", "disabled")));
+            if (!succeeded) throw new InvalidOperationException(T["Orchard could not {0} {1}.", enable ? T["Enable"] : T["Disable"], feature.Name]);
+            Notifications.Notify(NotificationSeverity.Success, T["Features"], T["{0} was {1}.", feature.Name, enable ? T["Enabled"] : T["Disabled"]]);
             await LoadAsync();
         }
         catch (Exception ex)
@@ -312,7 +312,7 @@
                 if (!enable && feature.Enabled && CanDisable(feature)) await Api.Crest.Rest.Features.DisableAsync(feature.Id);
             }
             SelectedIds.Clear();
-            Notifications.Notify(NotificationSeverity.Success, T.T("Features_Heading", "Features"), string.Format(T.T("Features_BulkAppliedFormat", "Applied {0} to {1} selected features."), BulkActionLabel(action).ToLowerInvariant(), selected.Length));
+            Notifications.Notify(NotificationSeverity.Success, T["Features"], T["Applied {0} to {1} selected features.", BulkActionLabel(action).ToLowerInvariant(), selected.Length]);
             await LoadAsync();
         }
         catch (Exception ex)

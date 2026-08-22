@@ -5,7 +5,9 @@
 // (a silent no-op click), leaving the page on /login. Every login helper below waits
 // for the button to actually become enabled first.
 async function clickLoginButton(page) {
-  const button = page.locator('button:has-text("Login")');
+  // "Log in" matches upstream's msgid (the literal-key alignment); a translated
+  // culture may render e.g. "Iniciar sesión", so fall back to the form's sole submit.
+  const button = page.locator('form button[type="submit"], button:has-text("Log in")').first();
   await button.waitFor({ state: 'visible', timeout: 10000 });
   await page.waitForFunction(
     (el) => !el.disabled,

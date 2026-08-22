@@ -1,0 +1,68 @@
+flowchart TD
+
+%% Menu caption resolution - the full display stack for one admin menu item, per request
+%% culture. Implemented by CrestMenuCaptionResolver + CrestPoTranslationLookup (shared with
+%% the provider-menu seeder and the Translations editor's Fallback placeholders, so all
+%% three always agree). The rename overlay is applied after resolution by
+%% CrestAdminMenuLayoutService.ApplyAsync. "Delete walks down": removing an entry at any
+%% layer reveals the next one - never a suppression. To force the invariant literal over a
+%% shipped PO value, store the literal itself as the value ("pin to literal").
+%%
+%% Every store/PO step checks the specific culture before its parents (es-ES, then es).
+%% Tier 0 of the PO layer: recorded per-item source contexts, authority-ladder ordered
+%% (priority, position-presence, registration order), captured by the sync's per-provider
+%% shadow build and persisted on the sync document's entries (SourceContexts).
+%%
+%% The WASM client's own UI strings (T["Some text"] literals) resolve through the same
+%% layer order - store edit (context Crest.Admin.Client) -> PO (client context, else
+%% most-common across all catalogs) -> the literal itself - server-side in
+%% CrestLocalizationController.GetStringsAsync, shipped to CrestApiLocalizer as one
+%% per-culture dictionary. Same shape, no per-item identity tiers.
+%%
+%% PO layer provenance (see localization.md "Where translations come from"): the layer
+%% reads TWO kinds of catalog files, merged by ILocalizationManager -
+%%   - the root Localization/ MIRROR: a committed snapshot of OrchardCore.Translations
+%%     (Crowdin-sourced, upstream msgids only). Read-only; a package refresh clobbers
+%%     hand edits. Only this half ever changes when upstream/Crowdin ships new work.
+%%   - module-local Localization/{culture}.po files (Crest.Server etc.): the PRIVATE
+%%     lane. Crowdin never sees or touches these; air-gap safe. Entries under
+%%     msgctxt "Crest.Admin.Client" outrank the mirror for the same literal, and the
+%%     store above outranks both - so upstream updates only fill gaps you never
+%%     claimed, and pin-to-literal vetoes a shipped translation entirely.
+%% Literal fidelity: matching is case-sensitive; a literal inherits upstream work only
+%% when it equals upstream's msgid byte-for-byte - fix drifted literals, never loosen
+%% matching.
+
+    caption["MenuItem caption<br/>invariant literal = Text.Name<br/>(identity is separate: UniqueId -> MenuItem.Id)"]
+
+    caption --> overlay{"Per-culture rename overlay?<br/>DisplayTextByCulture[culture]<br/>layout doc, keyed by UniqueId"}
+    overlay -- "yes" --> showRename["display the rename<br/>(topmost layer - shadows everything)"]
+    overlay -- "no" --> s1
+
+    subgraph store["LAYER 1 - tenant translation store (tenant intent, editable in /Admin/DataLocalization)"]
+        s1{"exact menu context<br/>'Admin Menus:{menu}'"}
+        s1 -- "miss" --> s2{"parent contexts<br/>strip ':' segments -> 'Admin Menus'"}
+        s2 -- "miss" --> s3{"best in culture<br/>any context; prefer 'Admin Menus*',<br/>then most common, ordinal tie-break"}
+    end
+
+    s1 -- "hit" --> show["display the value"]
+    s2 -- "hit" --> show
+    s3 -- "hit" --> show
+    s3 -- "miss" --> p0
+
+    subgraph po["LAYER 2 - shipped PO catalogs (deploy-time baseline; msgctxt = declaring class, unrecoverable post-merge)"]
+        p0{"tier 0: the item's RECORDED<br/>source contexts, in upstream's<br/>authority order - first hit wins"}
+        p0 -- "miss / no record<br/>(e.g. hand-made node)" --> p1{"tier 1: any '*.AdminMenu' context<br/>(naming convention of<br/>navigation provider classes)"}
+        p1 -- "miss" --> p2{"tier 2: flat most-common,<br/>ordinal tie-break<br/>(empty + identity entries never count)"}
+    end
+
+    p0 -- "hit" --> show
+    p1 -- "hit" --> show
+    p2 -- "hit" --> show
+    p2 -- "miss" --> literal["LAYER 3 - display the invariant literal itself<br/>(English only by convention; 'en' is just another translation)"]
+
+    show -.-> del["delete a store entry =><br/>resolution walks DOWN to PO, then literal"]
+    literal -.-> pin["pin to literal: store value == key<br/>beats a shipped PO translation"]
+
+    consumers["consumers of this exact chain:<br/>sidebar + app manifest (CrestMenuCaptionResolver)<br/>seeder (CrestProviderMenuSyncService)<br/>editor Fallback placeholders (CrestTranslationsController)"]
+    consumers -.-> caption

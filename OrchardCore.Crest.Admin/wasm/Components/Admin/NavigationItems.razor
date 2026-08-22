@@ -5,7 +5,7 @@
 
 @if (Items.Length == 0)
 {
-    <CrestText TextStyle="TextStyle.Body2" Text="@T.T("NavigationItems_NoneReturned", "No menu items returned.")" />
+    <CrestText TextStyle="TextStyle.Body2" Text="@T["No menu items returned."]" />
 }
 else
 {
@@ -33,8 +33,8 @@ else
     private string GetDetails(NavigationItem item)
     {
         var href = !string.IsNullOrWhiteSpace(item.Href) ? item.Href : item.Url;
-        var position = !string.IsNullOrWhiteSpace(item.Position) ? string.Format(T.T("NavigationItems_PositionFormat", "position: {0}"), item.Position) : null;
-        var id = !string.IsNullOrWhiteSpace(item.Id) ? string.Format(T.T("NavigationItems_IdFormat", "id: {0}"), item.Id) : null;
+        var position = !string.IsNullOrWhiteSpace(item.Position) ? T["position: {0}", item.Position] : null;
+        var id = !string.IsNullOrWhiteSpace(item.Id) ? T["id: {0}", item.Id] : null;
 
         return string.Join(" · ", new[] { href, position, id }.Where(value => !string.IsNullOrWhiteSpace(value)));
     }

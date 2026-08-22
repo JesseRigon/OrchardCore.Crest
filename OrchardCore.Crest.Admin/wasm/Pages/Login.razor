@@ -14,15 +14,15 @@
 
     @if (DisplayManager.IsAuthenticated)
     {
-        <CrestText Text="@string.Format(T.T("Login_SignedInAsFormat", "Signed in as {0}"), DisplayManager.User.UserName)" />
-        <CrestButton Text="@T.T("Login_Logout", "Logout")" Click="LogoutAsync" Disabled="@DisplayManager.IsBusy" />
+        <CrestText Text="@T["Signed in as {0}", DisplayManager.User.UserName]" />
+        <CrestButton Text="@T["Log out"]" Click="LogoutAsync" Disabled="@DisplayManager.IsBusy" />
     }
     else
     {
         <CrestTemplateForm TItem="LoginForm" Data="@_login" Submit="@((LoginForm form) => LoginAsync(form))">
             <CrestStack Gap="0.75rem" Style="max-width: 22rem;">
-                <CrestTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="@T.T("Login_UsernamePlaceholder", "Username or email")" />
-                <CrestPassword Name="Password" @bind-Value="_login.Password" Placeholder="@T.T("Login_PasswordPlaceholder", "Password")" />
+                <CrestTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="@T["Username or email"]" />
+                <CrestPassword Name="Password" @bind-Value="_login.Password" Placeholder="@T["Password"]" />
                 <CrestCheckBox @bind-Value="_login.RememberMe" />
                 @* Disabled until interactive: the statically prerendered form carries the
                    middleware's INTERNAL composed URL (PathBase "/Login" + Path "/login") as
@@ -30,7 +30,7 @@
                    native GET to "/Login/login?UserName=...&Password=..." - a 404 that leaks
                    the password into the URL, history and server logs. A disabled sole submit
                    button also blocks the Enter-key implicit submission for that window. *@
-                <CrestButton ButtonType="ButtonType.Submit" Text="@T.T("Login_Submit", "Login")" Disabled="@(DisplayManager.IsBusy || !RendererInfo.IsInteractive)" />
+                <CrestButton ButtonType="ButtonType.Submit" Text="@T["Log in"]" Disabled="@(DisplayManager.IsBusy || !RendererInfo.IsInteractive)" />
                 @if (DisplayManager.ErrorMessage is not null)
                 {
                     <CrestText TextStyle="TextStyle.Caption" Text="@DisplayManager.ErrorMessage" />

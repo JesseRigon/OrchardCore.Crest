@@ -10,12 +10,12 @@
 <CrestStack Gap="1rem" data-testid="content-items-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="@T.T("ContentItems_Heading", "Content Items")" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("ContentItems_Description", "Browse, filter, publish, unpublish, and remove Orchard content items.")" />
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Content Items"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Browse, filter, publish, unpublish, and remove Orchard content items."]" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-            <CrestButton Text="@T.T("ContentItems_NewContent", "New content")" Icon="add" Click="StartCreate" Disabled="@(IsBusy || CreatableTypes.Length == 0)" />
-            <CrestButton Text="@T.T("ContentItems_Refresh", "Refresh")" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
+            <CrestButton Text="@T["New content"]" Icon="add" Click="StartCreate" Disabled="@(IsBusy || CreatableTypes.Length == 0)" />
+            <CrestButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
         </CrestStack>
     </CrestStack>
 
@@ -26,10 +26,10 @@
 
     <CrestCard>
         <CrestRow Gap="0.75rem">
-            <CrestColumn Size="12" SizeMD="5"><CrestTextBox @bind-Value="SearchText" @oninput="OnSearchInput" Placeholder="@T.T("ContentItems_SearchPlaceholder", "Search content titles...")" Style="width: 100%;" /></CrestColumn>
+            <CrestColumn Size="12" SizeMD="5"><CrestTextBox @bind-Value="SearchText" @oninput="OnSearchInput" Placeholder="@T["Search content titles..."]" Style="width: 100%;" /></CrestColumn>
             <CrestColumn Size="12" SizeMD="3"><CrestDropDown @bind-Value="SelectedContentType" Data="ContentTypeOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></CrestColumn>
             <CrestColumn Size="12" SizeMD="2"><CrestDropDown @bind-Value="SelectedStatus" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></CrestColumn>
-            <CrestColumn Size="12" SizeMD="2"><CrestText Text="@(string.Format(T.T("ContentItems_TotalItemsFormat", "{0:n0} items"), Result.Total))" TextStyle="TextStyle.Caption" Style="line-height: 2.5rem;" /></CrestColumn>
+            <CrestColumn Size="12" SizeMD="2"><CrestText Text="@(T["{0:n0} items", Result.Total])" TextStyle="TextStyle.Caption" Style="line-height: 2.5rem;" /></CrestColumn>
         </CrestRow>
     </CrestCard>
 
@@ -39,50 +39,50 @@
     }
     else if (Result.Items.Length == 0)
     {
-        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("ContentItems_NoResults", "No content items match the current filters.")</CrestAlert>
+        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["No content items match the current filters."]</CrestAlert>
     }
     else
     {
         <CrestDataGrid Data="@Result.Items" TItem="ContentItem" AllowPaging="false" Responsive="true" data-testid="content-items-grid">
             <Columns>
-                <CrestDataGridColumn TItem="ContentItem" Title="@T.T("ContentItems_TitleColumn", "Title")">
+                <CrestDataGridColumn TItem="ContentItem" Title="@T["Title"]">
                     <Template Context="item"><CrestText TextStyle="TextStyle.Subtitle2" Text="@item.DisplayText" /><CrestText TextStyle="TextStyle.Caption" Text="@item.ContentItemId" /></Template>
                 </CrestDataGridColumn>
-                <CrestDataGridColumn TItem="ContentItem" Title="@T.T("ContentItems_TypeColumn", "Type")"><Template Context="item">@item.ContentType</Template></CrestDataGridColumn>
-                <CrestDataGridColumn TItem="ContentItem" Title="@T.T("ContentItems_StatusColumn", "Status")"><Template Context="item"><CrestBadge Text="@(item.Published ? T.T("ContentItems_PublishedBadge", "Published") : T.T("ContentItems_DraftBadge", "Draft"))" BadgeStyle="@(item.Published ? BadgeStyle.Success : BadgeStyle.Warning)" /></Template></CrestDataGridColumn>
-                <CrestDataGridColumn TItem="ContentItem" Title="@T.T("ContentItems_ModifiedColumn", "Modified")"><Template Context="item">@(item.ModifiedUtc?.ToLocalTime().ToString("g") ?? T.T("ContentItems_ModifiedEmpty", "—"))</Template></CrestDataGridColumn>
-                <CrestDataGridColumn TItem="ContentItem" Title="@T.T("ContentItems_ActionsColumn", "Actions")" Sortable="false" Filterable="false" Width="15rem">
+                <CrestDataGridColumn TItem="ContentItem" Title="@T["Type"]"><Template Context="item">@item.ContentType</Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="ContentItem" Title="@T["Status"]"><Template Context="item"><CrestBadge Text="@(item.Published ? T["Published"] : T["Draft"])" BadgeStyle="@(item.Published ? BadgeStyle.Success : BadgeStyle.Warning)" /></Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="ContentItem" Title="@T["Modified"]"><Template Context="item">@(item.ModifiedUtc?.ToLocalTime().ToString("g") ?? T["—"])</Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="ContentItem" Title="@T["Actions"]" Sortable="false" Filterable="false" Width="15rem">
                     <Template Context="item">
                         <CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem">
                             @if (item.Published)
                             {
-                                <CrestButton Icon="unpublished" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T.T("ContentItems_UnpublishTitle", "Unpublish")" Click="@(() => ChangePublicationAsync(item, false))" Disabled="@IsBusy" />
+                                <CrestButton Icon="unpublished" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Unpublish"]" Click="@(() => ChangePublicationAsync(item, false))" Disabled="@IsBusy" />
                             }
                             else
                             {
-                                <CrestButton Icon="publish" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T.T("ContentItems_PublishTitle", "Publish")" Click="@(() => ChangePublicationAsync(item, true))" Disabled="@IsBusy" />
+                                <CrestButton Icon="publish" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Publish"]" Click="@(() => ChangePublicationAsync(item, true))" Disabled="@IsBusy" />
                             }
-                            <CrestButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T.T("ContentItems_EditTitle", "Edit")" Click="@(() => Edit(item))" Disabled="@IsBusy" />
-                            <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small" title="@T.T("ContentItems_DeleteTitle", "Delete")" Click="@(() => RequestDelete(item))" Disabled="@IsBusy" />
+                            <CrestButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Edit"]" Click="@(() => Edit(item))" Disabled="@IsBusy" />
+                            <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Delete"]" Click="@(() => RequestDelete(item))" Disabled="@IsBusy" />
                         </CrestStack>
                     </Template>
                 </CrestDataGridColumn>
             </Columns>
         </CrestDataGrid>
         <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Gap="0.75rem">
-            <CrestButton Text="@T.T("ContentItems_Previous", "Previous")" ButtonStyle="ButtonStyle.Light" Click="PreviousPageAsync" Disabled="@(IsBusy || Result.Page <= 1)" />
-            <CrestText Text="@(string.Format(T.T("ContentItems_PageOfFormat", "Page {0} of {1}"), Result.Page, PageCount))" />
-            <CrestButton Text="@T.T("ContentItems_Next", "Next")" ButtonStyle="ButtonStyle.Light" Click="NextPageAsync" Disabled="@(IsBusy || Result.Page >= PageCount)" />
+            <CrestButton Text="@T["Previous"]" ButtonStyle="ButtonStyle.Light" Click="PreviousPageAsync" Disabled="@(IsBusy || Result.Page <= 1)" />
+            <CrestText Text="@(T["Page {0} of {1}", Result.Page, PageCount])" />
+            <CrestButton Text="@T["Next"]" ButtonStyle="ButtonStyle.Light" Click="NextPageAsync" Disabled="@(IsBusy || Result.Page >= PageCount)" />
         </CrestStack>
     }
 
     @if (CreateDialogOpen)
     {
-        <div class="content-items-dialog-backdrop"><CrestCard class="content-items-dialog"><CrestStack Gap="1rem"><CrestText TextStyle="TextStyle.H5" Text="@T.T("ContentItems_CreateContentHeading", "Create content")" /><CrestDropDown @bind-Value="CreateContentType" Data="CreatableTypes" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /><CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><CrestButton Text="@T.T("ContentItems_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CloseCreate" /><CrestButton Text="@T.T("ContentItems_Continue", "Continue")" Click="Create" Disabled="@string.IsNullOrWhiteSpace(CreateContentType)" /></CrestStack></CrestStack></CrestCard></div>
+        <div class="content-items-dialog-backdrop"><CrestCard class="content-items-dialog"><CrestStack Gap="1rem"><CrestText TextStyle="TextStyle.H5" Text="@T["Create Content"]" /><CrestDropDown @bind-Value="CreateContentType" Data="CreatableTypes" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /><CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CloseCreate" /><CrestButton Text="@T["Continue"]" Click="Create" Disabled="@string.IsNullOrWhiteSpace(CreateContentType)" /></CrestStack></CrestStack></CrestCard></div>
     }
     @if (DeleteCandidate is not null)
     {
-        <div class="content-items-dialog-backdrop"><CrestCard class="content-items-dialog"><CrestStack Gap="1rem"><CrestText TextStyle="TextStyle.H5" Text="@T.T("ContentItems_DeleteConfirmHeading", "Delete content item?")" /><CrestText Text="@(string.Format(T.T("ContentItems_DeleteConfirmMessageFormat", "This permanently removes {0}."), DeleteCandidate.DisplayText))" /><CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><CrestButton Text="@T.T("ContentItems_Cancel", "Cancel")" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><CrestButton Text="@T.T("ContentItems_Delete", "Delete")" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></CrestStack></CrestStack></CrestCard></div>
+        <div class="content-items-dialog-backdrop"><CrestCard class="content-items-dialog"><CrestStack Gap="1rem"><CrestText TextStyle="TextStyle.H5" Text="@T["Delete content item?"]" /><CrestText Text="@(T["This permanently removes {0}.", DeleteCandidate.DisplayText])" /><CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><CrestButton Text="@T["Delete"]" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></CrestStack></CrestStack></CrestCard></div>
     }
 </CrestStack>
 
@@ -101,8 +101,8 @@
     private ContentItem? DeleteCandidate { get; set; }
     private CancellationTokenSource? SearchCancellation;
 
-    private FilterOption[] StatusOptions => [new("latest", T.T("ContentItems_LatestStatusOption", "Latest")), new("published", T.T("ContentItems_PublishedStatusOption", "Published")), new("draft", T.T("ContentItems_UnpublishedStatusOption", "Unpublished"))];
-    private FilterOption[] ContentTypeOptions => [new(string.Empty, T.T("ContentItems_AllContentTypesOption", "All content types")), .. ContentTypes.Select(type => new FilterOption(type.Name, type.DisplayName))];
+    private FilterOption[] StatusOptions => [new("latest", T["Latest"]), new("published", T["Published"]), new("draft", T["Unpublished"])];
+    private FilterOption[] ContentTypeOptions => [new(string.Empty, T["All content types"]), .. ContentTypes.Select(type => new FilterOption(type.Name, type.DisplayName))];
     private FilterOption[] CreatableTypes => ContentTypes.Select(type => new FilterOption(type.Name, type.DisplayName)).ToArray();
     private int PageCount => Math.Max(1, (int)Math.Ceiling(Result.Total / (double)Result.PageSize));
 
@@ -142,7 +142,7 @@
     private async Task ChangePublicationAsync(ContentItem item, bool publish)
     {
         IsSaving = true;
-        try { var result = publish ? await Api.Crest.Rest.Content.Items.PublishAsync(item.ContentItemId) : await Api.Crest.Rest.Content.Items.UnpublishAsync(item.ContentItemId); if (!result) throw new InvalidOperationException(T.T("ContentItems_LifecycleChangeRejected", "Orchard did not accept the content lifecycle change.")); Notifications.Notify(NotificationSeverity.Success, T.T("ContentItems_NotificationTitle", "Content items"), string.Format(T.T("ContentItems_PublicationChangedFormat", "{0} was {1}. "), item.DisplayText, publish ? T.T("ContentItems_PublishedState", "published") : T.T("ContentItems_UnpublishedState", "unpublished"))); await LoadAsync(); }
+        try { var result = publish ? await Api.Crest.Rest.Content.Items.PublishAsync(item.ContentItemId) : await Api.Crest.Rest.Content.Items.UnpublishAsync(item.ContentItemId); if (!result) throw new InvalidOperationException(T["Orchard did not accept the content lifecycle change."]); Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} was {1}. ", item.DisplayText, publish ? T["Published"] : T["Unpublished"]]); await LoadAsync(); }
         catch (Exception ex) { ErrorMessage = ex.Message; }
         finally { IsSaving = false; }
     }
@@ -151,7 +151,7 @@
     {
         if (DeleteCandidate is null) return;
         IsSaving = true;
-        try { if (!await Api.Crest.Rest.Content.Items.DeleteAsync(DeleteCandidate.ContentItemId)) throw new InvalidOperationException(T.T("ContentItems_DeleteRejected", "Orchard did not accept the delete request.")); Notifications.Notify(NotificationSeverity.Success, T.T("ContentItems_NotificationTitle", "Content items"), string.Format(T.T("ContentItems_DeletedFormat", "{0} was deleted."), DeleteCandidate.DisplayText)); DeleteCandidate = null; await LoadAsync(); }
+        try { if (!await Api.Crest.Rest.Content.Items.DeleteAsync(DeleteCandidate.ContentItemId)) throw new InvalidOperationException(T["Orchard did not accept the delete request."]); Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} was deleted.", DeleteCandidate.DisplayText]); DeleteCandidate = null; await LoadAsync(); }
         catch (Exception ex) { ErrorMessage = ex.Message; }
         finally { IsSaving = false; }
     }

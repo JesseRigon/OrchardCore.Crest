@@ -11,7 +11,7 @@
 @if (!DisplayManager.IsInitialized)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
-        <CrestText Text="@T.T("CrestAppContainer_Loading", "Loading...")" />
+        <CrestText Text="@T["Loading..."]" />
     </CrestStack>
 }
 else if (DisplayManager.IsAuthenticated)
@@ -25,7 +25,7 @@ else if (DisplayManager.IsAuthenticated)
                 </Sidebar>
                 @if (IsPrimaryNavMenuOpen)
                 {
-                    <button type="button" class="admin-dashboard__backdrop" aria-label="@T.T("CrestAppContainer_CloseNavMenuAriaLabel", "Close navigation menu")" @onclick="ClosePrimaryNavMenu"></button>
+                    <button type="button" class="admin-dashboard__backdrop" aria-label="@T["Close navigation menu"]" @onclick="ClosePrimaryNavMenu"></button>
                 }
                 <main class="admin-dashboard__main" @onclick="ClosePrimaryNavMenu">
                     @ChildContent

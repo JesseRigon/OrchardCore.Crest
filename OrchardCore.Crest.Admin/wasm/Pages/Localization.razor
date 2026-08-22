@@ -11,12 +11,12 @@
 <CrestStack Gap="1rem" class="localization-page" data-testid="localization-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <div>
-            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Localization_Heading", "Cultures")" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Localization_HeadingDescription", "Choose the tenant cultures Orchard serves and the default culture used when no request culture is selected.")" />
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Cultures"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Choose the tenant cultures Orchard serves and the default culture used when no request culture is selected."]" />
         </div>
         @if (HasDynamicTranslations)
         {
-            <CrestButton Text="@T.T("Localization_EditTranslations", "Edit translations")" Icon="translate" ButtonStyle="ButtonStyle.Light" Click="OpenTranslations" />
+            <CrestButton Text="@T["Edit translations"]" Icon="translate" ButtonStyle="ButtonStyle.Light" Click="OpenTranslations" />
         }
     </CrestStack>
 
@@ -26,7 +26,7 @@
     }
     else if (Model is null)
     {
-        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T.T("Localization_Unavailable", "Localization settings are unavailable for this tenant.")</CrestAlert>
+        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["Localization settings are unavailable for this tenant."]</CrestAlert>
     }
     else
     {
@@ -37,12 +37,12 @@
 
         <CrestCard>
             <CrestStack Gap="0.75rem">
-                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T.T("Localization_SupportedCulturesHeading", "Supported cultures")" />
-                <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Localization_SupportedCulturesDescription", "These are the valid .NET/BCP 47 cultures Orchard passes to its request-localization pipeline.")" />
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Supported cultures"]" />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["These are the valid .NET/BCP 47 cultures Orchard passes to its request-localization pipeline."]" />
 
                 @if (SupportedCultureOptions.Length == 0)
                 {
-                    <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T.T("Localization_AtLeastOneCultureRequired", "At least one culture is required.")</CrestAlert>
+                    <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["At least one culture is required."]</CrestAlert>
                 }
                 else
                 {
@@ -52,9 +52,9 @@
                             <div class="localization-page__culture-card" @key="culture.Value">
                                 <div>
                                     <div class="localization-page__culture-name">@DisplayCultureName(culture)</div>
-                                    <div class="localization-page__culture-code">@(string.IsNullOrEmpty(culture.Value) ? T.T("Localization_InvariantCulture", "Invariant culture") : culture.Value)</div>
+                                    <div class="localization-page__culture-code">@(string.IsNullOrEmpty(culture.Value) ? T["Invariant culture"] : culture.Value)</div>
                                 </div>
-                                <CrestButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" title="@T.T("Localization_RemoveCultureTitle", "Remove culture")" aria-label="@string.Format(T.T("Localization_RemoveCultureAriaLabelFormat", "Remove {0}"), DisplayCultureName(culture))" Disabled="@(SupportedCultureOptions.Length == 1 || IsSaving)" Click="@(() => RemoveCulture(culture.Value))" />
+                                <CrestButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" title="@T["Remove culture"]" aria-label="@T["Remove {0}", DisplayCultureName(culture)]" Disabled="@(SupportedCultureOptions.Length == 1 || IsSaving)" Click="@(() => RemoveCulture(culture.Value))" />
                             </div>
                         }
                     </div>
@@ -62,73 +62,73 @@
 
                 <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
                     <div class="localization-page__add-picker">
-                        <CrestLabel Text="@T.T("Localization_AddStandardCultureLabel", "Add a standard culture")" />
+                        <CrestLabel Text="@T["Add a standard culture"]" />
                         <CrestDropDown TValue="string"
                                         Data="AvailableCultureOptions"
                                         Value="@SelectedCultureToAdd"
                                         ValueChanged="SelectCultureToAddAsync"
                                         TextProperty="@nameof(CrestCulture.Label)"
                                         ValueProperty="@nameof(CrestCulture.Value)"
-                                        Placeholder="@T.T("Localization_ChooseACulturePlaceholder", "Choose a culture")"
+                                        Placeholder="@T["Choose a culture"]"
                                         AllowFiltering="true"
-                                        FilterPlaceholder="@T.T("Localization_FilterCulturesPlaceholder", "Filter cultures")"
+                                        FilterPlaceholder="@T["Filter cultures"]"
                                         class="localization-page__culture-dropdown" />
                     </div>
-                    <CrestButton Text="@T.T("Localization_AddCulture", "Add culture")" Icon="add" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(SelectedCultureToAdd))" Click="AddSelectedCultureAsync" />
+                    <CrestButton Text="@T["Add culture"]" Icon="add" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(SelectedCultureToAdd))" Click="AddSelectedCultureAsync" />
                 </CrestStack>
 
                 <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
                     <div class="localization-page__add-picker">
-                        <CrestLabel Text="@T.T("Localization_AddCustomCultureCodeLabel", "Add a valid custom culture code")" />
-                        <CrestTextBox @bind-Value="CustomCultureCode" Placeholder="@T.T("Localization_CustomCultureExamplePlaceholder", "Example: en-GB")" Style="width: 100%;" Disabled="@IsSaving" />
+                        <CrestLabel Text="@T["Add a valid custom culture code"]" />
+                        <CrestTextBox @bind-Value="CustomCultureCode" Placeholder="@T["Example: en-GB"]" Style="width: 100%;" Disabled="@IsSaving" />
                     </div>
-                    <CrestButton Text="@T.T("Localization_AddCustomCulture", "Add custom culture")" Icon="add" ButtonStyle="ButtonStyle.Light" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(CustomCultureCode))" Click="AddCustomCultureAsync" />
+                    <CrestButton Text="@T["Add custom culture"]" Icon="add" ButtonStyle="ButtonStyle.Light" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(CustomCultureCode))" Click="AddCustomCultureAsync" />
                 </CrestStack>
-                <CrestText TextStyle="TextStyle.Caption" Text="@T.T("Localization_CustomCultureHint", "Custom entries must be culture names recognized by .NET/BCP 47. Orchard stores them in tenant localization settings and validates them again on save.")" />
+                <CrestText TextStyle="TextStyle.Caption" Text="@T["Custom entries must be culture names recognized by .NET/BCP 47. Orchard stores them in tenant localization settings and validates them again on save."]" />
             </CrestStack>
         </CrestCard>
 
         <CrestCard>
             <CrestStack Gap="0.75rem">
-                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T.T("Localization_DefaultCultureHeading", "Default culture")" />
-                <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Localization_DefaultCultureDescription", "This is used when a request does not select one of the supported cultures.")" />
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Default culture"]" />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["This is used when a request does not select one of the supported cultures."]" />
                 <CrestDropDown TValue="string"
                                 Data="SupportedCultureOptions"
                                 Value="@Model.DefaultCulture"
                                 ValueChanged="SelectDefaultCultureAsync"
                                 TextProperty="@nameof(CrestCulture.Label)"
                                 ValueProperty="@nameof(CrestCulture.Value)"
-                                Placeholder="@T.T("Localization_ChooseDefaultCulturePlaceholder", "Choose the default culture")"
+                                Placeholder="@T["Choose the default culture"]"
                                 AllowFiltering="true"
-                                FilterPlaceholder="@T.T("Localization_FilterSupportedCulturesPlaceholder", "Filter supported cultures")"
+                                FilterPlaceholder="@T["Filter supported cultures"]"
                                 class="localization-page__culture-dropdown" />
                 <div>
                     <CrestCheckBox @bind-Value="Model.FallBackToParentCulture" Name="fallback-to-parent" Disabled="@IsSaving" />
-                    <label for="fallback-to-parent"> @T.T("Localization_FallBackToParentCultures", "Fall back to parent cultures")</label>
+                    <label for="fallback-to-parent"> @T["Fall back to parent culture(s)"]</label>
                 </div>
             </CrestStack>
         </CrestCard>
 
         <CrestCard>
             <CrestStack Gap="0.75rem">
-                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T.T("Localization_AdminDefaultCultureHeading", "Admin default culture")" />
-                <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Localization_AdminDefaultCultureDescription", "Optional. Only applies to the admin area — a signed-in user's own language preference or an explicit session choice still takes priority here. Leave unset to use the default culture above everywhere, including the admin area.")" />
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Admin default culture"]" />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["Optional. Only applies to the admin area — a signed-in user's own language preference or an explicit session choice still takes priority here. Leave unset to use the default culture above everywhere, including the admin area."]" />
                 <CrestDropDown TValue="string"
                                 Data="AdminDefaultCultureOptions"
                                 Value="@Model.AdminDefaultCulture"
                                 ValueChanged="SelectAdminDefaultCultureAsync"
                                 TextProperty="@nameof(CrestCulture.Label)"
                                 ValueProperty="@nameof(CrestCulture.Value)"
-                                Placeholder="@T.T("Localization_NoAdminOverridePlaceholder", "No admin-specific override")"
+                                Placeholder="@T["No admin-specific override"]"
                                 AllowClear="true"
                                 AllowFiltering="true"
-                                FilterPlaceholder="@T.T("Localization_FilterSupportedCulturesPlaceholder", "Filter supported cultures")"
+                                FilterPlaceholder="@T["Filter supported cultures"]"
                                 class="localization-page__culture-dropdown" />
             </CrestStack>
         </CrestCard>
 
         <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-            <CrestButton Text="@T.T("Localization_Save", "Save")" Icon="save" Disabled="@(IsSaving || SupportedCultureOptions.Length == 0)" Click="SaveAsync" />
+            <CrestButton Text="@T["Save"]" Icon="save" Disabled="@(IsSaving || SupportedCultureOptions.Length == 0)" Click="SaveAsync" />
         </CrestStack>
     }
 </CrestStack>
@@ -248,12 +248,12 @@
             var saved = await Api.Crest.Rest.Localization.SaveAsync(Model);
             if (saved is null)
             {
-                throw new InvalidOperationException(T.T("Localization_SaveFailedMessage", "Orchard did not save the culture settings. Verify custom culture codes and your permission to manage cultures."));
+                throw new InvalidOperationException(T["Orchard did not save the culture settings. Verify custom culture codes and your permission to manage cultures."]);
             }
 
             Model = saved;
             EnsureDefaultCulture();
-            Notifications.Notify(NotificationSeverity.Success, T.T("Localization_Heading", "Cultures"), T.T("Localization_SavedMessage", "Orchard culture settings were saved. The tenant reloads these settings for new requests."));
+            Notifications.Notify(NotificationSeverity.Success, T["Cultures"], T["Orchard culture settings were saved. The tenant reloads these settings for new requests."]);
         }
         catch (Exception exception)
         {
@@ -289,7 +289,7 @@
 
     private CrestCulture ToCulture(string value) => Model?.AvailableCultures.FirstOrDefault(culture =>
         string.Equals(culture.Value, value, StringComparison.OrdinalIgnoreCase))
-        ?? new CrestCulture(value, string.IsNullOrEmpty(value) ? T.T("Localization_InvariantCulture", "Invariant culture") : value, value);
+        ?? new CrestCulture(value, string.IsNullOrEmpty(value) ? T["Invariant culture"] : value, value);
 
     private static string DisplayCultureName(CrestCulture culture) => string.IsNullOrWhiteSpace(culture.NativeLabel)
         ? culture.Label

@@ -96,9 +96,12 @@ contributing class, which merging erases, so the seed matches the caption across
 catalog and takes the most common translation when contexts disagree. The result: every
 imported caption is a first-class, per-tenant-editable entry in Orchard's own translations
 editor (Configuration → Localization → Translations, under the "Primary Navigation" group),
-pre-filled with what PO would have shown. One consequence to know: because seeded values are
-tenant data from the moment they are written, a later PO catalog update only reaches
-cultures/captions that were never seeded.
+pre-filled with what PO would have shown. Since the caption resolver gained its live PO
+layer, seeding is no longer load-bearing for rendering — a never-seeded caption renders its
+PO translation anyway, and a deleted entry reverts to it. Seeding's remaining value is
+materializing PO values as editable store rows; the old caveat (a PO catalog update never
+reaches an already-seeded value) still applies to the *stored copy*, but deleting the stale
+entry now reverts the rendered caption to the updated PO value instead of the literal.
 
 Crest's sidebar and app manifest resolve these captions against the tenant translation store
 per request culture at serialization time — the same place in the pipeline where TheAdmin's
@@ -119,10 +122,27 @@ when the culture translates the same caption elsewhere. The resolver walks outwa
 the exact menu context, then parent contexts by stripping `':'` segments
 (`Admin Menus:Primary Navigation` → `Admin Menus`), and finally the culture's best entry for
 the caption anywhere in the store (contexts under "Admin Menus" preferred, then the most
-common value, ordinally tie-broken). The invariant literal renders only when the request
-culture holds no translation of the caption at all; an entry in the exact context always
-wins, so pinning a caption in the Translations editor overrides every fallback. Each step
-checks the specific culture before its parents (`es-ES`, then `es`).
+common value, ordinally tie-broken). An entry in the exact context always wins, so pinning a
+caption in the Translations editor overrides every fallback. Each step checks the specific
+culture before its parents (`es-ES`, then `es`).
+
+**The PO layer.** Below the store sits the shipped PO catalog: a caption no store entry
+covers resolves against the culture's PO catalogs (`CrestPoTranslationLookup`, shared with
+the seeder and the Translations editor), so the full hierarchy is **store edit → PO
+translation → invariant literal**, and *deleting* a stored entry reverts the caption to the
+shipped PO value rather than the raw literal — delete walks down the hierarchy. To force the
+literal over a shipped translation, save the caption itself as the value. PO `msgctxt`
+values are code-location scopes (contributing class names) — destroyed by merging, but
+**recorded before it**: the sync builds each provider into its own builder (the one point
+where "which class declared this item" still exists) and persists each entry's declarers
+(`SourceContexts`), ordered by Merge's own value-authority ladder (priority,
+position-presence, registration order). Matching then tiers: (0) the item's recorded source
+contexts, first hit wins — the PO layer reproduces exactly the translation upstream's merge
+would have displayed; (1) any `msgctxt` ending `.AdminMenu` (upstream's navigation-provider
+naming convention), for items with no record such as hand-made nodes; (2) the most common
+value, ordinally tie-broken. Empty and identity entries never count. The invariant literal
+renders only when no layer anywhere holds a translation. `docs/localization.mmd` diagrams
+the whole chain.
 
 This subsumes the earlier special-cased "New"-branch fallback: a content type translated in
 the Translations editor ("Content Types" group) is simply the best alternative for its New

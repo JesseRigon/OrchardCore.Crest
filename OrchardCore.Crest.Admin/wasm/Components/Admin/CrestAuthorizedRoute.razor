@@ -25,20 +25,20 @@
 else if (!DisplayManager.IsInitialized)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
-        <CrestText Text="@T.T("CrestAuthorizedRoute_Loading", "Loading...")" />
+        <CrestText Text="@T["Loading..."]" />
     </CrestStack>
 }
 else if (!DisplayManager.IsAuthenticated)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
-        <CrestText Text="@T.T("CrestAuthorizedRoute_SignInRequired", "Sign in is required.")" />
+        <CrestText Text="@T["Sign in is required."]" />
     </CrestStack>
 }
 else if (!DisplayManager.IsRouteAuthorized(Navigation.Uri))
 {
     <CrestStack data-testid="crest-route-forbidden" Gap="0.5rem" Style="padding: 2rem;">
-        <CrestText TextStyle="TextStyle.H4" Text="@T.T("CrestAuthorizedRoute_AccessDenied", "Access denied")" />
-        <CrestText Text="@T.T("CrestAuthorizedRoute_NoPermission", "You do not have permission to access this admin page.")" />
+        <CrestText TextStyle="TextStyle.H4" Text="@T["Access denied"]" />
+        <CrestText Text="@T["You do not have permission to access this admin page."]" />
     </CrestStack>
 }
 else

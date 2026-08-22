@@ -1339,7 +1339,7 @@ public sealed record CrestTranslationCulture(string Value, string Label, bool Ca
 public sealed record CrestTranslationGroup(string Name, CrestTranslationString[] Strings);
 // Orphan: stored translation no provider currently enumerates (disabled feature, changed
 // source string) - still applied at render time, shown so it stays editable/deletable.
-public sealed record CrestTranslationString(string Context, string Key, string Value, bool Orphan);
+public sealed record CrestTranslationString(string Context, string Key, string Value, bool Orphan, string? Fallback = null);
 public sealed record CrestTranslationsSaveModel(string Culture, CrestTranslationSaveEntry[] Translations);
 public sealed record CrestTranslationSaveEntry(string Context, string Key, string? Value);
 public sealed record CrestIndex(string Id,string? Name,string? Provider,string? IndexName,string? Type,string? CreatedUtc);

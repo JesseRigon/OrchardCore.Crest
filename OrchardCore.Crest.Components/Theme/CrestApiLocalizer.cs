@@ -10,8 +10,10 @@ namespace Crest.Components.Theme;
 // content in Orchard. Instead this fetches the resolved .po catalog (see
 // CrestLocalizationController.GetStrings, server-side) for the active culture and plugs
 // into the SAME Localizer/ILocalizer extension seam OrchardCore.Crest.Components already
-// defines - callers use the identical Localize(nameof(...)) pattern Crest.Components' own
-// validators use, just resolved against this catalog instead of a compiled resource.
+// defines. Keys are invariant literals (T["Some text"], native Orchard style - see
+// docs/localization.md): the literal is simultaneously the key and the fallback, so an
+// untranslated string renders itself, and the same literal shares its translation with
+// every other pipeline keyed on it (store, shipped module .po catalogs).
 //
 // This only overrides caller-specific string keys (see plans/user-localization.md phase
 // 5/6) - it deliberately does NOT shadow Crest.Components' existing CrestStrings keys, so
@@ -65,15 +67,22 @@ public sealed class CrestApiLocalizer(HttpClient http) : ILocalizer
             : null;
     }
 
-    // Convenience entry point for plain @page-routed Razor components (not
+    // Native Orchard-style lookup for plain @page-routed Razor components (not
     // CrestComponent-derived, so they have no Localize(key) instance method to call).
-    // Inject CrestApiLocalizer directly and call T("SomeKey", "English fallback text") -
-    // the fallback is both the compiled default AND the string a translator sees as the
-    // source text to translate from.
-    public string T(string key, string fallback) =>
-        _activeCultureName is { } culture && _cache.TryGetValue(culture, out var strings) && strings.TryGetValue(key, out var value)
+    // Inject CrestApiLocalizer as T and write T["Some text"] - the invariant literal IS
+    // the translation key, exactly like S["..."] in server-side Orchard code, and doubles
+    // as the rendered fallback when the culture holds no translation for it. Identity is
+    // never carried by these literals (menu items keep UniqueId for that); they are purely
+    // translation keys.
+    public string this[string text] =>
+        _activeCultureName is { } culture && _cache.TryGetValue(culture, out var strings) && strings.TryGetValue(text, out var value)
             ? value
-            : fallback;
+            : text;
+
+    // Format-string form, mirroring S["Signed in as {0}", name]: the literal is resolved
+    // first, then formatted with the current culture.
+    public string this[string text, params object?[] args] =>
+        string.Format(CultureInfo.CurrentCulture, this[text], args);
 
     // Cookie/credential inclusion is configured once, at HttpClient registration time
     // (see Crest.Admin/wasm/Program.cs's CrestAntiforgeryHandler-wrapped HttpClient), not

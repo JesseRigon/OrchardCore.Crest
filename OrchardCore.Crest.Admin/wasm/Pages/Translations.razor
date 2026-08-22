@@ -15,10 +15,10 @@
 <CrestStack Gap="1rem" class="translations-page" data-testid="translations-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <div>
-            <CrestText TextStyle="TextStyle.H4" Text="@T.T("Translations_Heading", "Translations")" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T.T("Translations_HeadingDescription", "Tenant-level translations of dynamic data: admin menu captions, content type names, permissions. These override module-shipped translations at render time.")" />
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Translations"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Tenant-level translations of dynamic data: admin menu captions, content type names, permissions. These override module-shipped translations at render time."]" />
         </div>
-        <CrestButton Text="@T.T("Translations_Save", "Save")" Icon="save" Disabled="@(IsSaving || Model is null || !Model.CanEdit)" Click="SaveAsync" />
+        <CrestButton Text="@T["Save"]" Icon="save" Disabled="@(IsSaving || Model is null || !Model.CanEdit)" Click="SaveAsync" />
     </CrestStack>
 
     @if (IsLoading)
@@ -27,7 +27,7 @@
     }
     else if (Model is null)
     {
-        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T.T("Translations_Unavailable", "Translations are unavailable - no culture you may view is configured for this tenant.")</CrestAlert>
+        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["Translations are unavailable - no culture you may view is configured for this tenant."]</CrestAlert>
     }
     else
     {
@@ -38,7 +38,7 @@
 
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.75rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
             <div class="translations-page__culture-picker">
-                <CrestLabel Text="@T.T("Translations_CultureLabel", "Culture")" />
+                <CrestLabel Text="@T["Culture"]" />
                 <CrestDropDown TValue="string"
                                Data="Model.Cultures"
                                Value="@Model.Culture"
@@ -48,14 +48,14 @@
                                class="translations-page__culture-dropdown" />
             </div>
             <div class="translations-page__filter">
-                <CrestLabel Text="@T.T("Translations_FilterLabel", "Filter")" />
-                <CrestTextBox @bind-Value="Filter" @bind-Value:event="oninput" Placeholder="@T.T("Translations_FilterPlaceholder", "Filter by text or translation")" Style="width: 100%;" />
+                <CrestLabel Text="@T["Filter"]" />
+                <CrestTextBox @bind-Value="Filter" @bind-Value:event="oninput" Placeholder="@T["Filter by text or translation"]" Style="width: 100%;" />
             </div>
         </CrestStack>
 
         @if (!Model.CanEdit)
         {
-            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T.T("Translations_ReadOnly", "You can view this culture's translations but not edit them.")</CrestAlert>
+            <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["You can view this culture's translations but not edit them."]</CrestAlert>
         }
 
         @foreach (var group in Groups)
@@ -72,10 +72,10 @@
                                 <span class="translations-page__key">@row.Key</span>
                                 @if (row.Orphan)
                                 {
-                                    <CrestBadge BadgeStyle="BadgeStyle.Warning" Text="@T.T("Translations_OrphanBadge", "stored only")" title="@T.T("Translations_OrphanTitle", "Nothing currently lists this string (its feature may be disabled or its source text changed). The stored translation still applies where the string renders; clear it to delete it.")" />
+                                    <CrestBadge BadgeStyle="BadgeStyle.Warning" Text="@T["stored only"]" title="@T["Nothing currently lists this string (its feature may be disabled or its source text changed). The stored translation still applies where the string renders; clear it to delete it."]" />
                                 }
                             </div>
-                            <CrestTextBox Value="@row.Value" ValueChanged="@((string? value) => row.Value = value ?? string.Empty)" Placeholder="@row.Key" Disabled="@(!Model.CanEdit || IsSaving)" Style="width: 100%;" aria-label="@row.Key" />
+                            <CrestTextBox Value="@row.Value" ValueChanged="@((string? value) => row.Value = value ?? string.Empty)" Placeholder="@(row.Fallback ?? row.Key)" Disabled="@(!Model.CanEdit || IsSaving)" Style="width: 100%;" aria-label="@row.Key" />
                         </div>
                     }
                 </CrestStack>
@@ -107,7 +107,7 @@
             Groups = Model?.Groups
                 .Select(group => new EditableGroup(
                     group.Name,
-                    group.Strings.Select(s => new EditableRow(s.Context, s.Key, s.Orphan) { Value = s.Value }).ToList()))
+                    group.Strings.Select(s => new EditableRow(s.Context, s.Key, s.Orphan, s.Fallback) { Value = s.Value }).ToList()))
                 .ToList() ?? [];
         }
         catch (Exception exception)
@@ -141,16 +141,16 @@
             var saved = await Api.Crest.Rest.Translations.SaveAsync(new CrestTranslationsSaveModel(Model.Culture, entries));
             if (saved is null)
             {
-                throw new InvalidOperationException(T.T("Translations_SaveFailedMessage", "Orchard did not save the translations. Verify your permission to manage this culture."));
+                throw new InvalidOperationException(T["Orchard did not save the translations. Verify your permission to manage this culture."]);
             }
 
             Model = saved;
             Groups = saved.Groups
                 .Select(group => new EditableGroup(
                     group.Name,
-                    group.Strings.Select(s => new EditableRow(s.Context, s.Key, s.Orphan) { Value = s.Value }).ToList()))
+                    group.Strings.Select(s => new EditableRow(s.Context, s.Key, s.Orphan, s.Fallback) { Value = s.Value }).ToList()))
                 .ToList();
-            Notifications.Notify(NotificationSeverity.Success, T.T("Translations_Heading", "Translations"), T.T("Translations_SavedMessage", "The translations were saved for this culture."));
+            Notifications.Notify(NotificationSeverity.Success, T["Translations"], T["The translations were saved for this culture."]);
         }
         catch (Exception exception)
         {
@@ -179,11 +179,15 @@
 
     private sealed record EditableGroup(string Name, List<EditableRow> Rows);
 
-    private sealed class EditableRow(string context, string key, bool orphan)
+    private sealed class EditableRow(string context, string key, bool orphan, string? fallback)
     {
         public string Context { get; } = context;
         public string Key { get; } = key;
         public bool Orphan { get; } = orphan;
+        // The shipped PO translation that renders when no value is stored (resolution
+        // is store edit -> PO -> invariant literal) - surfaced as the placeholder so
+        // the editor shows what the menu actually displays.
+        public string? Fallback { get; } = fallback;
         public string Value { get; set; } = string.Empty;
     }
 }
