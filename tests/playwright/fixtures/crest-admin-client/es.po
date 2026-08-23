@@ -2379,3 +2379,6 @@ msgctxt "Crest.Admin.Client"
 msgid "{0} · {1} parts"
 msgstr "{0} · {1} partes"
 
+msgctxt "Fruitful.Parties.Navigation.AdminMenu"
+msgid "Parties"
+msgstr "Terceros"
