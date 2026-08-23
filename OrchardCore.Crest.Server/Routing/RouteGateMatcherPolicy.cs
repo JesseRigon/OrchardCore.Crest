@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Routing; // MatcherPolicy itself lives directly in this namespace
 using Microsoft.AspNetCore.Routing.Matching; // IEndpointSelectorPolicy/CandidateSet live here
 using Microsoft.Extensions.Logging;
-using Crest; // CrestBlazorHosting.ShellBasePathItem
+using Crest.Extensions; // CrestBlazorHosting.ShellBasePathItem
 
 namespace Crest.Routing;
 

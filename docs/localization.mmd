@@ -24,11 +24,13 @@ flowchart TD
 %%   - the root Localization/ MIRROR: a committed snapshot of OrchardCore.Translations
 %%     (Crowdin-sourced, upstream msgids only). Read-only; a package refresh clobbers
 %%     hand edits. Only this half ever changes when upstream/Crowdin ships new work.
-%%   - module-local Localization/{culture}.po files (Crest.Server etc.): the PRIVATE
-%%     lane. Crowdin never sees or touches these; air-gap safe. Entries under
-%%     msgctxt "Crest.Admin.Client" outrank the mirror for the same literal, and the
-%%     store above outranks both - so upstream updates only fill gaps you never
-%%     claimed, and pin-to-literal vetoes a shipped translation entirely.
+%%   - HOST-owned catalogs (fruitful: Localization/{culture}/Fruitful.Admin.po /
+%%     Fruitful.Site.po; host modules like Accounting may use module-local files): the
+%%     PRIVATE lane. By ruling (2026-08-22) Crest itself ships NO translation content -
+%%     literals only, stock-localized. Crowdin never sees or touches these; air-gap
+%%     safe. Entries under msgctxt "Crest.Admin.Client" outrank the mirror for the same
+%%     literal, and the store above outranks both - so upstream updates only fill gaps
+%%     you never claimed, and pin-to-literal vetoes a shipped translation entirely.
 %% Literal fidelity: matching is case-sensitive; a literal inherits upstream work only
 %% when it equals upstream's msgid byte-for-byte - fix drifted literals, never loosen
 %% matching.

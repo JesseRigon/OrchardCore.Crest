@@ -26,7 +26,7 @@ module.exports = async function run(page, ctx) {
     message: response.ok() ? `tenants=${catalog?.tenants?.length ?? 0}` : `catalog request failed: ${response.status()}`,
   });
 
-  const blazorPageTextCount = await tenants.getByText('Manage tenants from the default Orchard tenant.', { exact: true }).count();
+  const blazorPageTextCount = await tenants.getByText('Manage the tenants of this installation.', { exact: true }).count();
   results.push({
     name: 'renders-blazor-tenant-page',
     pass: blazorPageTextCount === 1,

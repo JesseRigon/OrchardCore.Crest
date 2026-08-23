@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OrchardCore.Admin;
 using OrchardCore.Environment.Extensions;
+using Crest.Middlewares;
 
 namespace Crest.Routing;
 

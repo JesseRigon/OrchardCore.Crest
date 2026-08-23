@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
+using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
@@ -19,5 +20,3 @@ public sealed class CrestAntiforgeryController(IAntiforgery antiforgery) : Contr
         return Ok(new CrestAntiforgeryToken(tokens.HeaderName ?? "RequestVerificationToken", tokens.RequestToken ?? string.Empty));
     }
 }
-
-public sealed record CrestAntiforgeryToken(string HeaderName, string RequestToken);

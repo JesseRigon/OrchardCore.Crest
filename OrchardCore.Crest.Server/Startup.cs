@@ -1,6 +1,7 @@
-using Crest.Blazor;
-using Crest.Blazor.Drivers;
-using Crest.Blazor.Models;
+using Crest.Drivers;
+using Crest.Models;
+using Crest.ViewModels;
+using Crest.Migrations;
 using Crest.Components.Primitives;
 using OrchardCore.Crest.Components;
 using Microsoft.AspNetCore.Builder;
@@ -9,11 +10,14 @@ using Microsoft.AspNetCore.Routing;
 using Crest.Iconify;
 using Crest.Icons;
 using Crest.Services;
+using Crest.Navigation;
+using Crest.Middlewares;
+using Crest.Endpoints;
+using Crest.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
-using Crest.Blazor.Migrations;
 using OrchardCore.ContentManagement;
 using OrchardCore.ContentManagement.Display.ContentDisplay;
 using OrchardCore.Data.Migration;
@@ -364,7 +368,7 @@ public sealed class TenantMediaIconsStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<IIconProvider, TenantMediaIconProvider>();
-        services.AddScoped<IPermissionProvider, Security.CrestIconPermissions>();
+        services.AddScoped<IPermissionProvider, Permissions.CrestIconPermissions>();
     }
 }
 

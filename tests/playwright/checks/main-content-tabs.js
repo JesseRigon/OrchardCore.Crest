@@ -8,7 +8,7 @@ module.exports = async function run(page, ctx) {
 
   const pages = [
     ['/Admin/Settings/SecurityHeaders', ['Content Security Policy', 'Permissions Policy', 'Referrer Policy']],
-    ['/Admin/Settings/admin', ['Admin', 'Site Map']],
+    ['/Admin/Settings/admin', ['Admin', 'Sitemap']],
     ['/Admin/Settings/general', ['General', 'Resources', 'Cache']],
   ];
 

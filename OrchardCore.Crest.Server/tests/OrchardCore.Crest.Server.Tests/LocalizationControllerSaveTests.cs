@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json.Nodes;
 using Crest.Controllers;
+using Crest.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -14,6 +15,7 @@ using OrchardCore.Localization;
 using OrchardCore.Settings;
 using OrchardCore.Users;
 using Xunit;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.Server.Tests;
 
@@ -73,8 +75,12 @@ public sealed class LocalizationControllerSaveTests
         var userManager = Substitute.For<UserManager<IUser>>(
             Substitute.For<IUserStore<IUser>>(), null!, null!, null!, null!, null!, null!, null!, null!);
         var localizationManager = Substitute.For<ILocalizationManager>();
+        // GetStringsAsync resolves optional services (TranslationsManager, PO lookup)
+        // through this provider with null guards; the Save paths never touch it, so an
+        // empty provider keeps these tests honest about what Save depends on.
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        var controller = new CrestLocalizationController(sites, releases, authorization, localizationService, userManager, localizationManager)
+        var controller = new CrestLocalizationController(sites, releases, authorization, localizationService, userManager, localizationManager, serviceProvider)
         {
             ControllerContext = new ControllerContext
             {

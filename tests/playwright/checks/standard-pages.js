@@ -31,12 +31,12 @@ module.exports = async function run(page, ctx) {
 
   results.push(await checkPage(page, ctx, '/Admin/Menus', {
     heading: 'Menus',
-    texts: ['Manage standard Orchard site menus', 'Refresh'],
+    texts: ['Manage site menus and nested menu items', 'Refresh'],
   }));
 
   results.push(await checkPage(page, ctx, '/Admin/Settings/admin', {
-    heading: 'Admin Settings',
-    texts: ['Site Map', 'Enable theme toggler'],
+    heading: 'Admin settings',
+    texts: ['Sitemap', 'Enable theme toggler'],
   }));
 
   results.push(await checkPage(page, ctx, '/Admin/Settings/general', {

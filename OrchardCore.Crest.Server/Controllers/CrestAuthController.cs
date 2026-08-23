@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Users.Services;
+using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
@@ -55,6 +56,3 @@ public sealed class CrestAuthController(IUserService users) : ControllerBase
         return Ok(new AuthUser(false, null, []));
     }
 }
-
-public sealed record LoginRequest(string UserName, string Password, bool RememberMe);
-public sealed record AuthUser(bool IsAuthenticated, string? UserName, string[] Roles);

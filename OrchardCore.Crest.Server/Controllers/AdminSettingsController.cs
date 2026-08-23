@@ -4,6 +4,7 @@ using OrchardCore.Admin;
 using OrchardCore.Admin.Models;
 using OrchardCore.Entities;
 using OrchardCore.Settings;
+using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
@@ -56,9 +57,3 @@ public sealed class AdminSettingsController(
         return Ok(AdminSettingsDto.From(updated));
     }
 }
-
-public sealed record AdminSettingsUpdate(
-    bool DisplayThemeToggler,
-    bool DisplayMenuFilter,
-    bool DisplayNewMenu,
-    bool DisplayTitlesInTopbar);

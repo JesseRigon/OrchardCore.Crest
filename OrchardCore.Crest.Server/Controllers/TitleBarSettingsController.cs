@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Admin;
 using Crest.Services;
+using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
@@ -34,10 +35,3 @@ public sealed class TitleBarSettingsController(
         return Ok(CrestTitleBarSettingsDto.From(saved));
     }
 }
-
-public sealed record CrestTitleBarSettingsUpdate(
-    bool DisplayCultureLabel,
-    string? TenantAvatarImageUrl,
-    string TenantAvatarShape,
-    string? TenantAvatarClipPath,
-    string? TenantAvatarBorderRadius);

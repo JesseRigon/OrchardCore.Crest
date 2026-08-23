@@ -1,6 +1,6 @@
 using OrchardCore.Security.Permissions;
 
-namespace Crest.Security;
+namespace Crest.Permissions;
 
 public sealed class CrestIconPermissions : IPermissionProvider
 {

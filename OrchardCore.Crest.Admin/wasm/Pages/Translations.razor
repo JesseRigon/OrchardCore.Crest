@@ -141,7 +141,7 @@
             var saved = await Api.Crest.Rest.Translations.SaveAsync(new CrestTranslationsSaveModel(Model.Culture, entries));
             if (saved is null)
             {
-                throw new InvalidOperationException(T["Orchard did not save the translations. Verify your permission to manage this culture."]);
+                throw new InvalidOperationException(T["The translations could not be saved. Verify your permission to manage this culture."]);
             }
 
             Model = saved;

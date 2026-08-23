@@ -11,7 +11,7 @@
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
             <CrestText TextStyle="TextStyle.H4" Text="@T["Content Items"]" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T["Browse, filter, publish, unpublish, and remove Orchard content items."]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Browse, filter, publish, unpublish, and remove content items."]" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
             <CrestButton Text="@T["New content"]" Icon="add" Click="StartCreate" Disabled="@(IsBusy || CreatableTypes.Length == 0)" />
@@ -142,7 +142,7 @@
     private async Task ChangePublicationAsync(ContentItem item, bool publish)
     {
         IsSaving = true;
-        try { var result = publish ? await Api.Crest.Rest.Content.Items.PublishAsync(item.ContentItemId) : await Api.Crest.Rest.Content.Items.UnpublishAsync(item.ContentItemId); if (!result) throw new InvalidOperationException(T["Orchard did not accept the content lifecycle change."]); Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} was {1}. ", item.DisplayText, publish ? T["Published"] : T["Unpublished"]]); await LoadAsync(); }
+        try { var result = publish ? await Api.Crest.Rest.Content.Items.PublishAsync(item.ContentItemId) : await Api.Crest.Rest.Content.Items.UnpublishAsync(item.ContentItemId); if (!result) throw new InvalidOperationException(T["The publish state could not be changed."]); Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} was {1}. ", item.DisplayText, publish ? T["Published"] : T["Unpublished"]]); await LoadAsync(); }
         catch (Exception ex) { ErrorMessage = ex.Message; }
         finally { IsSaving = false; }
     }
@@ -151,7 +151,7 @@
     {
         if (DeleteCandidate is null) return;
         IsSaving = true;
-        try { if (!await Api.Crest.Rest.Content.Items.DeleteAsync(DeleteCandidate.ContentItemId)) throw new InvalidOperationException(T["Orchard did not accept the delete request."]); Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} was deleted.", DeleteCandidate.DisplayText]); DeleteCandidate = null; await LoadAsync(); }
+        try { if (!await Api.Crest.Rest.Content.Items.DeleteAsync(DeleteCandidate.ContentItemId)) throw new InvalidOperationException(T["The content item could not be deleted."]); Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} was deleted.", DeleteCandidate.DisplayText]); DeleteCandidate = null; await LoadAsync(); }
         catch (Exception ex) { ErrorMessage = ex.Message; }
         finally { IsSaving = false; }
     }

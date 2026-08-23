@@ -12,7 +12,7 @@
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <div>
             <CrestText TextStyle="TextStyle.H4" Text="@T["Cultures"]" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T["Choose the tenant cultures Orchard serves and the default culture used when no request culture is selected."]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Choose the cultures this site serves and the default culture used when no request culture is selected."]" />
         </div>
         @if (HasDynamicTranslations)
         {
@@ -38,7 +38,7 @@
         <CrestCard>
             <CrestStack Gap="0.75rem">
                 <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Supported cultures"]" />
-                <CrestText TextStyle="TextStyle.Body2" Text="@T["These are the valid .NET/BCP 47 cultures Orchard passes to its request-localization pipeline."]" />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["These are the valid .NET/BCP 47 cultures the site can serve."]" />
 
                 @if (SupportedCultureOptions.Length == 0)
                 {
@@ -84,7 +84,7 @@
                     </div>
                     <CrestButton Text="@T["Add custom culture"]" Icon="add" ButtonStyle="ButtonStyle.Light" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(CustomCultureCode))" Click="AddCustomCultureAsync" />
                 </CrestStack>
-                <CrestText TextStyle="TextStyle.Caption" Text="@T["Custom entries must be culture names recognized by .NET/BCP 47. Orchard stores them in tenant localization settings and validates them again on save."]" />
+                <CrestText TextStyle="TextStyle.Caption" Text="@T["Custom entries must be culture names recognized by .NET/BCP 47. They are validated again on save."]" />
             </CrestStack>
         </CrestCard>
 
@@ -248,12 +248,12 @@
             var saved = await Api.Crest.Rest.Localization.SaveAsync(Model);
             if (saved is null)
             {
-                throw new InvalidOperationException(T["Orchard did not save the culture settings. Verify custom culture codes and your permission to manage cultures."]);
+                throw new InvalidOperationException(T["The culture settings could not be saved. Verify custom culture codes and your permission to manage cultures."]);
             }
 
             Model = saved;
             EnsureDefaultCulture();
-            Notifications.Notify(NotificationSeverity.Success, T["Cultures"], T["Orchard culture settings were saved. The tenant reloads these settings for new requests."]);
+            Notifications.Notify(NotificationSeverity.Success, T["Cultures"], T["Culture settings were saved. New requests use the updated cultures."]);
         }
         catch (Exception exception)
         {

@@ -11,7 +11,7 @@
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
             <CrestText TextStyle="TextStyle.H4" Text="@T["Media Library"]" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage the current tenant's Orchard media files and folders."]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage this tenant's media files and folders."]" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
             <label class="rz-button rz-button-md rz-button-primary"><span class="rzi rzi-upload"></span> @T["Upload"]<InputFile hidden OnChange="UploadAsync" disabled="@IsBusy" /></label>
@@ -129,7 +129,7 @@
         try
         {
             var result = await Api.Crest.Rest.Media.CreateFolderAsync(Directory.Path, NewFolderName);
-            if (result is null) throw new InvalidOperationException(T["Orchard did not create the media folder."]);
+            if (result is null) throw new InvalidOperationException(T["The media folder could not be created."]);
             Directory = result;
             FolderDialogOpen = false;
             Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["Folder created."]);
@@ -148,7 +148,7 @@
         {
             await using var stream = file.OpenReadStream(100 * 1024 * 1024);
             var result = await Api.Crest.Rest.Media.UploadAsync(Directory.Path, file.Name, stream);
-            if (result is null) throw new InvalidOperationException(T["Orchard did not accept the media file."]);
+            if (result is null) throw new InvalidOperationException(T["The media file could not be uploaded."]);
             Directory = result;
             Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["{0} uploaded.", file.Name]);
         }
@@ -163,7 +163,7 @@
         ErrorMessage = null;
         try
         {
-            if (!await Api.Crest.Rest.Media.DeleteAsync(DeleteCandidate.Path)) throw new InvalidOperationException(T["Orchard did not delete the media file."]);
+            if (!await Api.Crest.Rest.Media.DeleteAsync(DeleteCandidate.Path)) throw new InvalidOperationException(T["The media file could not be deleted."]);
             Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["{0} deleted.", DeleteCandidate.Name]);
             DeleteCandidate = null;
             await LoadAsync();

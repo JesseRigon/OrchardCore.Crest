@@ -11,7 +11,7 @@
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
         <CrestStack Gap="0.25rem">
             <CrestText TextStyle="TextStyle.H4" Text="@T["Tenants"]" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage tenants from the default Orchard tenant."]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage the tenants of this installation."]" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
             <CrestButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
@@ -145,7 +145,7 @@
                 CancelConfirm();
                 await LoadAsync();
             }
-            else Notifications.Notify(NotificationSeverity.Error, T["Tenant action failed"], T["Orchard did not accept the requested tenant action."]);
+            else Notifications.Notify(NotificationSeverity.Error, T["Tenant action failed"], T["The requested tenant action could not be completed."]);
         }
         finally { IsSaving = false; }
     }

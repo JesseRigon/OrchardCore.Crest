@@ -27,7 +27,7 @@
                     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                         <CrestStack Gap="0.25rem">
                             <CrestText TextStyle="TextStyle.H4" Text="@T["Admin Menus"]" />
-                            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage Orchard admin menu nodes with drag-and-drop ordering and a parent-node fallback selector."]" />
+                            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage admin menu nodes with drag-and-drop ordering and a parent-node fallback selector."]" />
                         </CrestStack>
                         <CrestButton Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
                     </CrestStack>
@@ -157,7 +157,7 @@
                                                     @if (SelectedMenu.IsDefault)
                                                     {
                                                         <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                                                            @T["Sidebar (Built In) is the generated Orchard admin menu plus Crest layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar. Add node creates lightweight placeholder groups only."]
+                                                            @T["Sidebar (Built In) is the generated admin menu plus this tenant's layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar. Add node creates lightweight placeholder groups only."]
                                                         </CrestAlert>
                                                     }
                                                     @if (EditingModel is not null && EditingNodeId is null)

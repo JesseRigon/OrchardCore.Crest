@@ -180,10 +180,14 @@ Two independent mechanisms, by project:
     `ILocalizer`, exposes the `T["..."]` indexer, caches per culture, and renders the
     literal itself on a miss rather than throwing. Loaded whenever `DisplayManager`
     resolves a new culture. Convention: `@inject Crest.Components.Theme.CrestApiLocalizer T`.
-  - Crest-authored `.po` overrides for `Crest.Admin.Client` live under the owning
-    project's own `Localization/{culture}.po` (literal msgids, `msgctxt
-    "Crest.Admin.Client"`) — `ModularPoFileLocationProvider` checks each extension's own
-    `SubPath` first, so no global `/Localization/{culture}/*.po` entry is needed.
+  - **Translation content lives in the HOST, not in Crest** (ruling 2026-08-22): the
+    Crest repo ships literals only and stays as stock-localized as upstream makes it —
+    its aligned literals inherit whatever the host's catalogs provide. The host project
+    supplies editorial translations as its own distinctly-named files next to the
+    mirror (fruitful: `Localization/{culture}/Fruitful.Admin.po`, literal msgids,
+    `msgctxt "Crest.Admin.Client"`; front-site strings in `Fruitful.Site.po`). Distinct
+    filenames survive a mirror refresh. Host modules that are not part of Crest (e.g.
+    Accounting) may keep module-local `Localization/{culture}.po` inside the host repo.
 
 Excluded from the API-based mechanism: `OrchardCore.Crest.Workflows.Designer` (a
 vendored third-party package, not a Fruitful admin surface) and any currently-unreferenced

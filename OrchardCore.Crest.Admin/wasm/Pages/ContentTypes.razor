@@ -11,7 +11,7 @@
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
             <CrestText TextStyle="TextStyle.H4" Text="@T["Content Types"]" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T["Browse the current Orchard content definitions, their parts, and their fields."]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Browse the current content definitions, their parts, and their fields."]" />
         </CrestStack>
         <CrestButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
     </CrestStack>
@@ -43,7 +43,7 @@
             }
             else if (SelectedType is null)
             {
-                <CrestCard><CrestText Text="@T["Select a content type to inspect its Orchard definition."]" /></CrestCard>
+                <CrestCard><CrestText Text="@T["Select a content type to inspect its definition."]" /></CrestCard>
             }
             else
             {

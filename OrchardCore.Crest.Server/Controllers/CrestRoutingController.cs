@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Crest;
+using Crest.Middlewares;
+using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
@@ -19,5 +21,3 @@ public sealed class CrestRoutingController(IOptions<BlazorAdminThemeOptions> opt
     public ActionResult<CrestRoutingResponse> Get()
         => Ok(new CrestRoutingResponse(options.Value.AdminPath, options.Value.LoginPath));
 }
-
-public sealed record CrestRoutingResponse(string AdminPath, string LoginPath);

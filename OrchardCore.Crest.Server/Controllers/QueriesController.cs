@@ -2,6 +2,8 @@ using System.Text.Json.Nodes;
 using Crest.Services;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Queries;
+using QueriesPermissions = OrchardCore.Queries.Permissions;
+using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
@@ -13,7 +15,7 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
     [HttpGet]
     public async Task<ActionResult<CrestQueryCatalog>> ListAsync([FromQuery] string? search = null)
     {
-        var access = await requestAccess.AuthorizeAsync(User, Permissions.ManageQueries);
+        var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
 
         var queries = await access.GetRequiredService<IQueryManager>().ListQueriesAsync(new QueryContext { Name = search });
@@ -29,7 +31,7 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
     [HttpPost]
     public async Task<ActionResult<CrestQuery>> CreateAsync([FromBody] CrestQueryWrite write)
     {
-        var access = await requestAccess.AuthorizeAsync(User, Permissions.ManageQueries);
+        var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
         if (string.IsNullOrWhiteSpace(write.Name) || string.IsNullOrWhiteSpace(write.Source)) return BadRequest("A query name and source are required.");
 
@@ -47,7 +49,7 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
     [HttpPut("{name}")]
     public async Task<ActionResult<CrestQuery>> UpdateAsync(string name, [FromBody] CrestQueryWrite write)
     {
-        var access = await requestAccess.AuthorizeAsync(User, Permissions.ManageQueries);
+        var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
         if (string.IsNullOrWhiteSpace(write.Name) || string.IsNullOrWhiteSpace(write.Source)) return BadRequest("A query name and source are required.");
 
@@ -66,7 +68,7 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
     [HttpDelete("{name}")]
     public async Task<IActionResult> DeleteAsync(string name)
     {
-        var access = await requestAccess.AuthorizeAsync(User, Permissions.ManageQueries);
+        var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
         return await access.GetRequiredService<IQueryManager>().DeleteQueryAsync(name) ? NoContent() : NotFound();
     }
@@ -74,7 +76,7 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
     [HttpPost("delete")]
     public async Task<IActionResult> DeleteManyAsync([FromBody] CrestQueryNames request)
     {
-        var access = await requestAccess.AuthorizeAsync(User, Permissions.ManageQueries);
+        var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
         var names = request.Names?.Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? [];
         if (names.Length == 0) return BadRequest("Select at least one query.");
@@ -90,11 +92,3 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
         query.Properties = write.Properties?.DeepClone() as JsonObject ?? [];
     }
 }
-
-public sealed record CrestQueryCatalog(CrestQuery[] Queries, string[] Sources);
-public sealed record CrestQuery(string Name, string Source, string? Schema, bool ReturnContentItems, JsonObject Properties)
-{
-    public static CrestQuery From(Query query) => new(query.Name, query.Source, query.Schema, query.ReturnContentItems, query.Properties.DeepClone() as JsonObject ?? []);
-}
-public sealed record CrestQueryWrite(string Name, string Source, string? Schema, bool ReturnContentItems, JsonObject? Properties);
-public sealed record CrestQueryNames(string[]? Names);

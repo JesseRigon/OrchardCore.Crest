@@ -1,5 +1,5 @@
 using Crest.Icons;
-using Crest.Security;
+using Crest.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

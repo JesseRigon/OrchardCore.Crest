@@ -13,7 +13,7 @@
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
         <CrestStack Gap="0.25rem">
             <CrestText TextStyle="TextStyle.H4" Text="@T["Menus"]" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage standard Orchard site menus and nested menu items."]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage site menus and nested menu items."]" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
             <CrestButton Text="@T["New menu"]" Icon="add" Click="StartCreateMenu" Disabled="@IsBusy" />
@@ -77,7 +77,7 @@
                             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                                 <CrestStack Gap="0.2rem">
                                     <CrestText TextStyle="TextStyle.H5" Text="@SelectedMenu.Name" />
-                                    <CrestText TextStyle="TextStyle.Caption" Text="@T["Standard Orchard menu items. Link and HTML menu items are editable here; content-picker menu items should still be edited in the legacy Orchard editor for now."]" />
+                                    <CrestText TextStyle="TextStyle.Caption" Text="@T["Link and HTML menu items are editable here; content-picker menu items cannot be edited here yet."]" />
                                 </CrestStack>
                                 <CrestButton Text="@T["Add Menu Item"]" Icon="add" Click="StartCreateNode" Disabled="@(IsBusy || AvailableNodeTypes.Length == 0)" />
                             </CrestStack>

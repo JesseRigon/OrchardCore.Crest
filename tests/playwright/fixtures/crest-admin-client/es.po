@@ -1,3 +1,7 @@
+# Fruitful host-owned translations (moved out of the Crest submodule 2026-08-22:
+# Crest ships literals only and stays stock-localized; editorial translation
+# content is the HOST's. Distinct filename = never clobbered by a mirror refresh
+# of the OrchardCore.Translations package content around it.)
 msgid ""
 msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -114,3 +118,2264 @@ msgstr "Crest Admin"
 msgctxt "Crest.Admin.Client"
 msgid "Signed in as {0}"
 msgstr "Sesión iniciada como {0}"
+
+# Machine-assisted es coverage for every Crest.Admin.Client literal (2026-08-22)
+# - reviewed terminology per OrchardCore Crowdin conventions. Entries here outrank
+# the upstream mirror for the same literal (client-context tier).
+
+msgctxt "Crest.Admin.Client"
+msgid "(Local)"
+msgstr "(Local)"
+
+msgctxt "Crest.Admin.Client"
+msgid "(User Profile)"
+msgstr "(Perfil de usuario)"
+
+msgctxt "Crest.Admin.Client"
+msgid "1 query deleted."
+msgstr "1 consulta eliminada."
+
+msgctxt "Crest.Admin.Client"
+msgid "A content item identifier is required."
+msgstr "Se requiere un identificador de elemento de contenido."
+
+msgctxt "Crest.Admin.Client"
+msgid "A query name and source are required."
+msgstr "Se requieren un nombre y una fuente de consulta."
+
+msgctxt "Crest.Admin.Client"
+msgid "API base URL"
+msgstr "URL base de API"
+
+msgctxt "Crest.Admin.Client"
+msgid "API key header"
+msgstr "Encabezado de clave API"
+
+msgctxt "Crest.Admin.Client"
+msgid "Accelerometer"
+msgstr "Acelerómetro"
+
+msgctxt "Crest.Admin.Client"
+msgid "Accent 1"
+msgstr "Acento 1"
+
+msgctxt "Crest.Admin.Client"
+msgid "Accent 2"
+msgstr "Acento 2"
+
+msgctxt "Crest.Admin.Client"
+msgid "Access denied"
+msgstr "Acceso denegado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Add User"
+msgstr "Agregar usuario"
+
+msgctxt "Crest.Admin.Client"
+msgid "Add a standard culture"
+msgstr "Agregar una cultura estándar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Add a valid custom culture code"
+msgstr "Agregar un código de cultura personalizada válido"
+
+msgctxt "Crest.Admin.Client"
+msgid "Add admin menu node"
+msgstr "Agregar nodo de menú de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Add custom culture"
+msgstr "Agregar cultura personalizada"
+
+msgctxt "Crest.Admin.Client"
+msgid "Add menu"
+msgstr "Agregar menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Add separator after this item"
+msgstr "Agregar separador después de este elemento"
+
+msgctxt "Crest.Admin.Client"
+msgid "Additional origins"
+msgstr "Orígenes adicionales"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin"
+msgstr "Administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin Menu"
+msgstr "Menú de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin default culture"
+msgstr "Cultura predeterminada de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu created"
+msgstr "Menú de administración creado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu deleted"
+msgstr "Menú de administración eliminado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu depth limit"
+msgstr "Límite de profundidad del menú de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu duplicated"
+msgstr "Menú de administración duplicado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu hidden"
+msgstr "Menú de administración oculto"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu item fixed"
+msgstr "Elemento del menú de administración fijado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu rename failed"
+msgstr "Error al renombrar el menú de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu renamed"
+msgstr "Menú de administración renombrado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu saved"
+msgstr "Menú de administración guardado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu shown"
+msgstr "Menú de administración mostrado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menu update failed"
+msgstr "Error al actualizar el menú de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin menus support a maximum of {0} tiers. Move the item to a higher level before saving."
+msgstr "Los menús de administración admiten un máximo de {0} niveles. Mueva el elemento a un nivel superior antes de guardar."
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin navigation"
+msgstr "Navegación de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin settings sections"
+msgstr "Secciones de configuración de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin settings were updated."
+msgstr "La configuración de administración se ha actualizado."
+
+msgctxt "Crest.Admin.Client"
+msgid "Admin theme"
+msgstr "Tema de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Administrator"
+msgstr "Administrador"
+
+msgctxt "Crest.Admin.Client"
+msgid "All style packs"
+msgstr "Todos los paquetes de estilos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allow collapse/hover expand"
+msgstr "Permitir contraer/expandir al pasar el ratón"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allow user to be remembered during login"
+msgstr "Permitir que el usuario sea recordado durante el inicio de sesión"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allow user to change their email address"
+msgstr "Permitir que el usuario cambie su dirección de correo electrónico"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allow user to change their phone number"
+msgstr "Permitir que el usuario cambie su número de teléfono"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allow user to change their username"
+msgstr "Permitir que el usuario cambie su nombre de usuario"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allow users to remember client"
+msgstr "Permitir que los usuarios recuerden el cliente"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allowed by"
+msgstr "Permitido por"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allowed extensions"
+msgstr "Extensiones permitidas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allowed prefixes"
+msgstr "Prefijos permitidos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Allowed sources"
+msgstr "Orígenes permitidos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Always enabled"
+msgstr "Siempre habilitado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Ambient Light Sensor"
+msgstr "Sensor de luz ambiental"
+
+msgctxt "Crest.Admin.Client"
+msgid "Any status"
+msgstr "Cualquier estado"
+
+msgctxt "Crest.Admin.Client"
+msgid "App"
+msgstr "Aplicación"
+
+msgctxt "Crest.Admin.Client"
+msgid "Append"
+msgstr "Anexar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Applied {0} to {1} selected features."
+msgstr "Aplicado {0} a {1} características seleccionadas."
+
+msgctxt "Crest.Admin.Client"
+msgid "Apply"
+msgstr "Aplicar"
+
+msgctxt "Crest.Admin.Client"
+msgid "At least one culture is required."
+msgstr "Se requiere al menos una cultura."
+
+msgctxt "Crest.Admin.Client"
+msgid "Attached to {0} content type."
+msgstr "Adjunto a {0} tipo de contenido."
+
+msgctxt "Crest.Admin.Client"
+msgid "Attached to {0} content types."
+msgstr "Adjunto a {0} tipos de contenido."
+
+msgctxt "Crest.Admin.Client"
+msgid "Auto Orient"
+msgstr "Orientación automática"
+
+msgctxt "Crest.Admin.Client"
+msgid "Autoplay"
+msgstr "Reproducción automática"
+
+msgctxt "Crest.Admin.Client"
+msgid "Available"
+msgstr "Disponible"
+
+msgctxt "Crest.Admin.Client"
+msgid "Available alternatives"
+msgstr "Alternativas disponibles"
+
+msgctxt "Crest.Admin.Client"
+msgid "Base URI"
+msgstr "URI base"
+
+msgctxt "Crest.Admin.Client"
+msgid "Base url"
+msgstr "URL base"
+
+msgctxt "Crest.Admin.Client"
+msgid "Battery"
+msgstr "Batería"
+
+msgctxt "Crest.Admin.Client"
+msgid "Border radius"
+msgstr "Radio del borde"
+
+msgctxt "Crest.Admin.Client"
+msgid "Browse roles and their system and administrator status."
+msgstr "Explorar los roles y su estado de sistema y de administrador."
+
+msgctxt "Crest.Admin.Client"
+msgid "Browse icons or enter a search term."
+msgstr "Examinar iconos o introduzca un término de búsqueda."
+
+msgctxt "Crest.Admin.Client"
+msgid "Browse reusable content parts, their fields, and the content types that attach them."
+msgstr "Explorar las partes de contenido reutilizables, sus campos y los tipos de contenido que las adjuntan."
+
+msgctxt "Crest.Admin.Client"
+msgid "Browse the current content definitions, their parts, and their fields."
+msgstr "Explorar las definiciones de contenido actuales, sus partes y sus campos."
+
+msgctxt "Crest.Admin.Client"
+msgid "Browse, filter, publish, unpublish, and remove content items."
+msgstr "Explorar, filtrar, publicar, anular la publicación y eliminar elementos de contenido."
+
+msgctxt "Crest.Admin.Client"
+msgid "Browser cache"
+msgstr "Caché del navegador"
+
+msgctxt "Crest.Admin.Client"
+msgid "CSS/SVG clip-path, for example polygon(...) or url(#clip)"
+msgstr "CSS/SVG clip-path, por ejemplo polygon(...) o url(#clip)"
+
+msgctxt "Crest.Admin.Client"
+msgid "Cache"
+msgstr "Caché"
+
+msgctxt "Crest.Admin.Client"
+msgid "Cache Mode"
+msgstr "Modo de caché"
+
+msgctxt "Crest.Admin.Client"
+msgid "Calendar"
+msgstr "Calendario"
+
+msgctxt "Crest.Admin.Client"
+msgid "Camera"
+msgstr "Cámara"
+
+msgctxt "Crest.Admin.Client"
+msgid "Cancel rename"
+msgstr "Cancelar cambio de nombre"
+
+msgctxt "Crest.Admin.Client"
+msgid "Child Source"
+msgstr "Fuente secundaria"
+
+msgctxt "Crest.Admin.Client"
+msgid "Choose a culture"
+msgstr "Elegir una cultura"
+
+msgctxt "Crest.Admin.Client"
+msgid "Choose icon"
+msgstr "Elegir icono"
+
+msgctxt "Crest.Admin.Client"
+msgid "Choose the default culture"
+msgstr "Elegir la cultura predeterminada"
+
+msgctxt "Crest.Admin.Client"
+msgid "Choose the cultures this site serves and the default culture used when no request culture is selected."
+msgstr "Elija las culturas que sirve este sitio y la cultura predeterminada utilizada cuando no se selecciona una cultura de solicitud."
+
+msgctxt "Crest.Admin.Client"
+msgid "Classes: {0}"
+msgstr "Clases: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Cleanup failed"
+msgstr "Error en la limpieza"
+
+msgctxt "Crest.Admin.Client"
+msgid "Clear"
+msgstr "Limpiar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Clear icon"
+msgstr "Limpiar icono"
+
+msgctxt "Crest.Admin.Client"
+msgid "Close navigation menu"
+msgstr "Cerrar menú de navegación"
+
+msgctxt "Crest.Admin.Client"
+msgid "Close settings"
+msgstr "Cerrar configuración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Close {0}"
+msgstr "Cerrar {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Collapse All"
+msgstr "Contraer todo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Collapse navigation"
+msgstr "Contraer navegación"
+
+msgctxt "Crest.Admin.Client"
+msgid "Collapse/expand toggle position"
+msgstr "Posición del conmutador contraer/expandir"
+
+msgctxt "Crest.Admin.Client"
+msgid "Comma-separated permission names"
+msgstr "Nombres de permisos separados por comas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Confirm"
+msgstr "Confirmar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Connect Source"
+msgstr "Conectar fuente"
+
+msgctxt "Crest.Admin.Client"
+msgid "Content JSON is invalid: {0}"
+msgstr "El JSON de contenido no es válido: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Content Security Policy"
+msgstr "Política de seguridad de contenido"
+
+msgctxt "Crest.Admin.Client"
+msgid "Content document"
+msgstr "Documento de contenido"
+
+msgctxt "Crest.Admin.Client"
+msgid "Continue"
+msgstr "Continuar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Controls how much referrer information the browser includes when navigating away from a page."
+msgstr "Controla cuánta información de referencia incluye el navegador al navegar fuera de una página."
+
+msgctxt "Crest.Admin.Client"
+msgid "Controls the resources the browser is allowed to load for a page."
+msgstr "Controla los recursos que el navegador puede cargar para una página."
+
+msgctxt "Crest.Admin.Client"
+msgid "Controls which browser features and APIs are available to this site."
+msgstr "Controla qué características del navegador y APIs están disponibles para este sitio."
+
+msgctxt "Crest.Admin.Client"
+msgid "Convert to Admin Menu"
+msgstr "Convertir a menú de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Convert to Local Menu"
+msgstr "Convertir a menú local"
+
+msgctxt "Crest.Admin.Client"
+msgid "Could not save the translation"
+msgstr "No se pudo guardar la traducción"
+
+msgctxt "Crest.Admin.Client"
+msgid "Create content item"
+msgstr "Crear elemento de contenido"
+
+msgctxt "Crest.Admin.Client"
+msgid "Create menu"
+msgstr "Crear menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Base theme"
+msgstr "Tema base"
+
+msgctxt "Crest.Admin.Client"
+msgid "Current admin"
+msgstr "Administración actual"
+
+msgctxt "Crest.Admin.Client"
+msgid "Current admin theme"
+msgstr "Tema de administración actual"
+
+msgctxt "Crest.Admin.Client"
+msgid "Current site"
+msgstr "Sitio actual"
+
+msgctxt "Crest.Admin.Client"
+msgid "Current site theme"
+msgstr "Tema de sitio actual"
+
+msgctxt "Crest.Admin.Client"
+msgid "Current themes"
+msgstr "Temas actuales"
+
+msgctxt "Crest.Admin.Client"
+msgid "Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source."
+msgstr "Los valores actuales se proporcionan mediante configuración. Guardar actualiza la configuración de administración del tenant, no esa fuente de configuración."
+
+msgctxt "Crest.Admin.Client"
+msgid "Custom Iconify servers are remote-only and are not cached."
+msgstr "Los servidores de Iconify personalizados son solo remotos y no se almacenan en caché."
+
+msgctxt "Crest.Admin.Client"
+msgid "Custom entries must be culture names recognized by .NET/BCP 47. They are validated again on save."
+msgstr "Las entradas personalizadas deben ser nombres de cultura reconocidos por .NET/BCP 47. Se validan de nuevo al guardar."
+
+msgctxt "Crest.Admin.Client"
+msgid "Custom role"
+msgstr "Rol personalizado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Default Source"
+msgstr "Fuente predeterminada"
+
+msgctxt "Crest.Admin.Client"
+msgid "Default example provider. Uses the Iconify API contract and can point at the public API or a self-hosted compatible server."
+msgstr "Proveedor de ejemplo predeterminado. Utiliza el contrato de API de Iconify y puede apuntar a la API pública o a un servidor compatible alojado por el usuario."
+
+msgctxt "Crest.Admin.Client"
+msgid "Default language"
+msgstr "Idioma predeterminado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Default tenant"
+msgstr "Tenant predeterminado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Define reusable image transformations."
+msgstr "Definir transformaciones de imagen reutilizables."
+
+msgctxt "Crest.Admin.Client"
+msgid "Delete content item?"
+msgstr "¿Eliminar elemento de contenido?"
+
+msgctxt "Crest.Admin.Client"
+msgid "Delete file"
+msgstr "Eliminar archivo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Delete media file?"
+msgstr "¿Eliminar archivo de medios?"
+
+msgctxt "Crest.Admin.Client"
+msgid "Delete menu"
+msgstr "Eliminar menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Delete query {0}? This cannot be undone."
+msgstr "¿Eliminar consulta {0}? Esta acción no se puede deshacer."
+
+msgctxt "Crest.Admin.Client"
+msgid "Delete route override coming soon"
+msgstr "Eliminar anulación de ruta próximamente"
+
+msgctxt "Crest.Admin.Client"
+msgid "Delete selected ({0})"
+msgstr "Eliminar seleccionados ({0})"
+
+msgctxt "Crest.Admin.Client"
+msgid "Delete {0} selected queries? This cannot be undone."
+msgstr "¿Eliminar {0} consultas seleccionadas? Esta acción no se puede deshacer."
+
+msgctxt "Crest.Admin.Client"
+msgid "Dependency only"
+msgstr "Solo dependencia"
+
+msgctxt "Crest.Admin.Client"
+msgid "Depends on:"
+msgstr "Depende de:"
+
+msgctxt "Crest.Admin.Client"
+msgid "Design System"
+msgstr "Sistema de diseño"
+
+msgctxt "Crest.Admin.Client"
+msgid "Design system save failed"
+msgstr "Error al guardar el sistema de diseño"
+
+msgctxt "Crest.Admin.Client"
+msgid "Design system saved"
+msgstr "Sistema de diseño guardado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Determines whether caches are enabled or disabled."
+msgstr "Determina si los cachés están habilitados o deshabilitados."
+
+msgctxt "Crest.Admin.Client"
+msgid "Determines whether scripts and stylesheets load in their debuggable or minified form."
+msgstr "Determina si los scripts y las hojas de estilo se cargan en su forma depurable o minificada."
+
+msgctxt "Crest.Admin.Client"
+msgid "Directive"
+msgstr "Directiva"
+
+msgctxt "Crest.Admin.Client"
+msgid "Disable selected ({0})"
+msgstr "Deshabilitar seleccionados ({0})"
+
+msgctxt "Crest.Admin.Client"
+msgid "Disable {0}?"
+msgstr "¿Deshabilitar {0}?"
+
+msgctxt "Crest.Admin.Client"
+msgid "Disabled only"
+msgstr "Solo deshabilitado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Disabled — use minified version of resources"
+msgstr "Deshabilitado — usar versión minificada de recursos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Disabling a feature can also disable features that depend on it."
+msgstr "Deshabilitar una característica también puede deshabilitar las características que dependen de ella."
+
+msgctxt "Crest.Admin.Client"
+msgid "Display Capture"
+msgstr "Captura de pantalla"
+
+msgctxt "Crest.Admin.Client"
+msgid "Display culture label"
+msgstr "Mostrar etiqueta de cultura"
+
+msgctxt "Crest.Admin.Client"
+msgid "Display manager is unavailable."
+msgstr "El gestor de visualización no está disponible."
+
+msgctxt "Crest.Admin.Client"
+msgid "Document Domain"
+msgstr "Dominio del documento"
+
+msgctxt "Crest.Admin.Client"
+msgid "Documents"
+msgstr "Documentos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child. Admin menus support up to 4 tiers."
+msgstr "Arrastre por la manija. Suelte en el borde superior/inferior para reordenar, o en el centro para convertir el elemento en un hijo. Los menús de administración admiten hasta 4 niveles."
+
+msgctxt "Crest.Admin.Client"
+msgid "Drag to move"
+msgstr "Arrastrar para mover"
+
+msgctxt "Crest.Admin.Client"
+msgid "Duplicate menu"
+msgstr "Duplicar menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Edit the design tokens for this site."
+msgstr "Editar los tokens de diseño de este sitio."
+
+msgctxt "Crest.Admin.Client"
+msgid "Edit admin menu node: {0}"
+msgstr "Editar nodo de menú de administración: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Edit route permissions coming soon"
+msgstr "Editar permisos de ruta próximamente"
+
+msgctxt "Crest.Admin.Client"
+msgid "Edit the content document directly."
+msgstr "Editar el documento de contenido directamente."
+
+msgctxt "Crest.Admin.Client"
+msgid "Edit translations"
+msgstr "Editar traducciones"
+
+msgctxt "Crest.Admin.Client"
+msgid "Email confirmed"
+msgstr "Correo electrónico confirmado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Enable Iconify provider"
+msgstr "Habilitar proveedor de Iconify"
+
+msgctxt "Crest.Admin.Client"
+msgid "Enable Sandbox"
+msgstr "Habilitar sandbox"
+
+msgctxt "Crest.Admin.Client"
+msgid "Enable and disable features for this tenant."
+msgstr "Habilitar y deshabilitar características para este tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "Enable selected ({0})"
+msgstr "Habilitar seleccionados ({0})"
+
+msgctxt "Crest.Admin.Client"
+msgid "Enabled features: {0}"
+msgstr "Características habilitadas: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Enabled only"
+msgstr "Solo habilitado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Enabled with cache debug mode"
+msgstr "Habilitado con modo de depuración de caché"
+
+msgctxt "Crest.Admin.Client"
+msgid "Enabled — use debuggable version of resources"
+msgstr "Habilitado — usar versión depurable de recursos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Enables a sandbox for the requested resource similar to the iframe sandbox attribute."
+msgstr "Habilita un sandbox para el recurso solicitado similar al atributo de sandbox de iframe."
+
+msgctxt "Crest.Admin.Client"
+msgid "Encrypted Media"
+msgstr "Medios cifrados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Example: en-GB"
+msgstr "Ejemplo: en-GB"
+
+msgctxt "Crest.Admin.Client"
+msgid "Expand All"
+msgstr "Expandir todo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Expand/collapse"
+msgstr "Expandir/contraer"
+
+msgctxt "Crest.Admin.Client"
+msgid "Expand/collapse coming soon"
+msgstr "Expandir/contraer próximamente"
+
+msgctxt "Crest.Admin.Client"
+msgid "Expansion speed (ms)"
+msgstr "Velocidad de expansión (ms)"
+
+msgctxt "Crest.Admin.Client"
+msgid "Export JSON"
+msgstr "Exportar JSON"
+
+msgctxt "Crest.Admin.Client"
+msgid "External Login"
+msgstr "Inicio de sesión externo"
+
+msgctxt "Crest.Admin.Client"
+msgid "External login synchronization script"
+msgstr "Script de sincronización de inicio de sesión externo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Fall back to parent culture(s)"
+msgstr "Recurrir a la(s) cultura(s) principal(es)"
+
+msgctxt "Crest.Admin.Client"
+msgid "Feature"
+msgstr "Característica"
+
+msgctxt "Crest.Admin.Client"
+msgid "Feature changes can recycle the tenant and affect dependent features."
+msgstr "Los cambios de características pueden reciclar el tenant y afectar las características dependientes."
+
+msgctxt "Crest.Admin.Client"
+msgid "Feature hash: {0}"
+msgstr "Hash de característica: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Filter by text or translation"
+msgstr "Filtrar por texto o traducción"
+
+msgctxt "Crest.Admin.Client"
+msgid "Filter cultures"
+msgstr "Filtrar culturas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Filter supported cultures"
+msgstr "Filtrar culturas admitidas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Filters: {0}"
+msgstr "Filtros: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Fixed"
+msgstr "Fijo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Folder"
+msgstr "Carpeta"
+
+msgctxt "Crest.Admin.Client"
+msgid "Folder created."
+msgstr "Carpeta creada."
+
+msgctxt "Crest.Admin.Client"
+msgid "Font Source"
+msgstr "Fuente tipográfica"
+
+msgctxt "Crest.Admin.Client"
+msgid "Form Action"
+msgstr "Acción de formulario"
+
+msgctxt "Crest.Admin.Client"
+msgid "Frame Ancestors"
+msgstr "Antecesores de marco"
+
+msgctxt "Crest.Admin.Client"
+msgid "Frame Source"
+msgstr "Origen del marco"
+
+msgctxt "Crest.Admin.Client"
+msgid "From environment — disabled in Production, enabled otherwise"
+msgstr "Desde el entorno — deshabilitado en Producción, habilitado en otro caso"
+
+msgctxt "Crest.Admin.Client"
+msgid "From environment — enabled in Production, disabled otherwise"
+msgstr "Desde el entorno — habilitado en Producción, deshabilitado en otro caso"
+
+msgctxt "Crest.Admin.Client"
+msgid "Full Screen"
+msgstr "Pantalla completa"
+
+msgctxt "Crest.Admin.Client"
+msgid "Game Pad"
+msgstr "Mando"
+
+msgctxt "Crest.Admin.Client"
+msgid "General"
+msgstr "General"
+
+msgctxt "Crest.Admin.Client"
+msgid "General Settings"
+msgstr "Ajustes generales"
+
+msgctxt "Crest.Admin.Client"
+msgid "General settings sections"
+msgstr "Secciones de ajustes generales"
+
+msgctxt "Crest.Admin.Client"
+msgid "General settings were updated."
+msgstr "Se actualizaron los ajustes generales."
+
+msgctxt "Crest.Admin.Client"
+msgid "Generated separators"
+msgstr "Separadores generados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Geolocation"
+msgstr "Geolocalización"
+
+msgctxt "Crest.Admin.Client"
+msgid "Gyroscope"
+msgstr "Giroscopio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Hide always enabled"
+msgstr "Ocultar siempre habilitado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Hide menu"
+msgstr "Ocultar menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Host / prefix"
+msgstr "Host / prefijo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Html"
+msgstr "HTML"
+
+msgctxt "Crest.Admin.Client"
+msgid "Icon filters"
+msgstr "Filtros de icono"
+
+msgctxt "Crest.Admin.Client"
+msgid "Icon providers not saved"
+msgstr "Proveedores de icono no guardados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Icon providers saved"
+msgstr "Proveedores de icono guardados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Icon: {0}"
+msgstr "Icono: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Iconify"
+msgstr "Iconify"
+
+msgctxt "Crest.Admin.Client"
+msgid "Icons"
+msgstr "Iconos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Image Source"
+msgstr "Origen de imagen"
+
+msgctxt "Crest.Admin.Client"
+msgid "Inside, bottom-left"
+msgstr "Interior, inferior izquierdo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Invariant culture"
+msgstr "Cultura invariante"
+
+msgctxt "Crest.Admin.Client"
+msgid "Keep navigation expanded"
+msgstr "Mantener navegación expandida"
+
+msgctxt "Crest.Admin.Client"
+msgid "Last cache error: {0}"
+msgstr "Último error de caché: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Layout Animations"
+msgstr "Animaciones de diseño"
+
+msgctxt "Crest.Admin.Client"
+msgid "Layout overrides cleaned up"
+msgstr "Anulaciones de diseño limpiadas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API."
+msgstr "Deja los prefijos vacíos para buscar en todas las colecciones expuestas por la API compatible con Iconify configurada."
+
+msgctxt "Crest.Admin.Client"
+msgid "Leave unset to follow the tenant's default culture."
+msgstr "Deja sin establecer para seguir la cultura predeterminada del tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "Legacy ImageFormat"
+msgstr "ImageFormat heredado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Light Action"
+msgstr "Acción clara"
+
+msgctxt "Crest.Admin.Client"
+msgid "Load by handle"
+msgstr "Cargar por identificador"
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading admin menu..."
+msgstr "Cargando menú de administración..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading app manifest..."
+msgstr "Cargando manifiesto de aplicación..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading features..."
+msgstr "Cargando características..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading icon provider settings..."
+msgstr "Cargando ajustes del proveedor de iconos..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading icons..."
+msgstr "Cargando iconos..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading menus..."
+msgstr "Cargando menús..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading more..."
+msgstr "Cargando más..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading settings..."
+msgstr "Cargando ajustes..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading site settings..."
+msgstr "Cargando ajustes del sitio..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading themes..."
+msgstr "Cargando temas..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Loading..."
+msgstr "Cargando..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Local Menu"
+msgstr "Menú local"
+
+msgctxt "Crest.Admin.Client"
+msgid "Localization settings are unavailable for this tenant."
+msgstr "Los ajustes de localización no están disponibles para este tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "Magnetometer"
+msgstr "Magnetómetro"
+
+msgctxt "Crest.Admin.Client"
+msgid "Manage admin UI options and route access planning."
+msgstr "Gestionar las opciones de la interfaz de administración y la planificación de acceso a rutas."
+
+msgctxt "Crest.Admin.Client"
+msgid "Manage admin menu nodes with drag-and-drop ordering and a parent-node fallback selector."
+msgstr "Gestionar los nodos del menú de administración con ordenación de arrastrar y soltar y un selector de nodo primario de respaldo."
+
+msgctxt "Crest.Admin.Client"
+msgid "Manage queries through the query sources enabled for this tenant."
+msgstr "Gestionar consultas a través de las fuentes de consulta habilitadas para este tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "Manage server-side icon providers used by the icon selector, admin menus, and icon packs."
+msgstr "Gestionar proveedores de iconos del lado del servidor utilizados por el selector de iconos, menús de administración y paquetes de iconos."
+
+msgctxt "Crest.Admin.Client"
+msgid "Manage site menus and nested menu items."
+msgstr "Gestionar los menús del sitio y los elementos de menú anidados."
+
+msgctxt "Crest.Admin.Client"
+msgid "Manage site, resource, and cache settings."
+msgstr "Gestionar la configuración del sitio, de recursos y de caché."
+
+msgctxt "Crest.Admin.Client"
+msgid "Manage the tenants of this installation."
+msgstr "Gestionar los tenants de esta instalación."
+
+msgctxt "Crest.Admin.Client"
+msgid "Manage this tenant's media files and folders."
+msgstr "Gestionar los archivos y carpetas de medios de este tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "Manifest Source"
+msgstr "Origen del manifiesto"
+
+msgctxt "Crest.Admin.Client"
+msgid "Max page size"
+msgstr "Tamaño máximo de página"
+
+msgctxt "Crest.Admin.Client"
+msgid "Max paged count"
+msgstr "Recuento máximo paginado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Media Source"
+msgstr "Origen de medios"
+
+msgctxt "Crest.Admin.Client"
+msgid "Media URL path"
+msgstr "Ruta de URL de medios"
+
+msgctxt "Crest.Admin.Client"
+msgid "Menu converted"
+msgstr "Menú convertido"
+
+msgctxt "Crest.Admin.Client"
+msgid "Menu deleted"
+msgstr "Menú eliminado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Menu name"
+msgstr "Nombre del menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Microphone"
+msgstr "Micrófono"
+
+msgctxt "Crest.Admin.Client"
+msgid "Midi"
+msgstr "MIDI"
+
+msgctxt "Crest.Admin.Client"
+msgid "Modified"
+msgstr "Modificado"
+
+msgctxt "Crest.Admin.Client"
+msgid "New content"
+msgstr "Contenido nuevo"
+
+msgctxt "Crest.Admin.Client"
+msgid "New folder"
+msgstr "Carpeta nueva"
+
+msgctxt "Crest.Admin.Client"
+msgid "New media profile"
+msgstr "Perfil de medios nuevo"
+
+msgctxt "Crest.Admin.Client"
+msgid "New password (leave blank to retain)"
+msgstr "Contraseña nueva (dejar en blanco para mantener)"
+
+msgctxt "Crest.Admin.Client"
+msgid "New profile"
+msgstr "Perfil nuevo"
+
+msgctxt "Crest.Admin.Client"
+msgid "New query"
+msgstr "Consulta nueva"
+
+msgctxt "Crest.Admin.Client"
+msgid "No admin menu items returned."
+msgstr "No se devolvieron elementos del menú de administración."
+
+msgctxt "Crest.Admin.Client"
+msgid "No admin theme selected"
+msgstr "Sin tema de administración seleccionado"
+
+msgctxt "Crest.Admin.Client"
+msgid "No admin-specific override"
+msgstr "Sin anulación específica de administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "No content items match the current filters."
+msgstr "Ningún elemento de contenido coincide con los filtros actuales."
+
+msgctxt "Crest.Admin.Client"
+msgid "No content parts are attached to the available types."
+msgstr "Ninguna parte de contenido está asociada a los tipos disponibles."
+
+msgctxt "Crest.Admin.Client"
+msgid "No content types are available."
+msgstr "No hay tipos de contenido disponibles."
+
+msgctxt "Crest.Admin.Client"
+msgid "No content types returned."
+msgstr "No se devolvieron tipos de contenido."
+
+msgctxt "Crest.Admin.Client"
+msgid "No fields are defined on this part."
+msgstr "Ningún campo está definido en esta parte."
+
+msgctxt "Crest.Admin.Client"
+msgid "No icon assigned"
+msgstr "Sin icono asignado"
+
+msgctxt "Crest.Admin.Client"
+msgid "No icons found."
+msgstr "No se encontraron iconos."
+
+msgctxt "Crest.Admin.Client"
+msgid "No link metadata"
+msgstr "Sin metadatos de enlace"
+
+msgctxt "Crest.Admin.Client"
+msgid "No menu items returned."
+msgstr "No se devolvieron elementos de menú."
+
+msgctxt "Crest.Admin.Client"
+msgid "No queries match this filter."
+msgstr "Ninguna consulta coincide con este filtro."
+
+msgctxt "Crest.Admin.Client"
+msgid "No referrer"
+msgstr "Sin referencia"
+
+msgctxt "Crest.Admin.Client"
+msgid "No referrer when downgrade"
+msgstr "Sin referencia al degradar"
+
+msgctxt "Crest.Admin.Client"
+msgid "No role description has been set."
+msgstr "No se ha establecido descripción de rol."
+
+msgctxt "Crest.Admin.Client"
+msgid "No roles are available."
+msgstr "No hay roles disponibles."
+
+msgctxt "Crest.Admin.Client"
+msgid "No routes were discovered for the admin site map."
+msgstr "No se descubrieron rutas para el mapa del sitio de administración."
+
+msgctxt "Crest.Admin.Client"
+msgid "No site theme selected"
+msgstr "Sin tema de sitio seleccionado"
+
+msgctxt "Crest.Admin.Client"
+msgid "No standard menus found."
+msgstr "No se encontraron menús estándar."
+
+msgctxt "Crest.Admin.Client"
+msgid "No tenants match this filter."
+msgstr "Ningún tenant coincide con este filtro."
+
+msgctxt "Crest.Admin.Client"
+msgid "Node"
+msgstr "Nodo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Node type"
+msgstr "Tipo de nodo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Not initialized"
+msgstr "No inicializado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Nothing currently lists this string (its feature may be disabled or its source text changed). The stored translation still applies where the string renders; clear it to delete it."
+msgstr "Nada enumera actualmente esta cadena (su característica puede estar deshabilitada o su texto de origen ha cambiado). La traducción almacenada aún se aplica donde se renderiza la cadena; bórrala para eliminarla."
+
+msgctxt "Crest.Admin.Client"
+msgid "Nothing here. The current search or filters returned no features."
+msgstr "Nada aquí. La búsqueda o los filtros actuales no devolvieron características."
+
+msgctxt "Crest.Admin.Client"
+msgid "Number of recovery codes to generate"
+msgstr "Número de códigos de recuperación a generar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Object Source"
+msgstr "Origen de objeto"
+
+msgctxt "Crest.Admin.Client"
+msgid "Only captions from an admin menu can be saved as tenant translations, and doing so needs permission to manage translations."
+msgstr "Solo los títulos de un menú de administración se pueden guardar como traducciones de tenant, y esto requiere permiso para gestionar traducciones."
+
+msgctxt "Crest.Admin.Client"
+msgid "Open full page"
+msgstr "Abrir página completa"
+
+msgctxt "Crest.Admin.Client"
+msgid "Open submenu"
+msgstr "Abrir submenú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Open user menu"
+msgstr "Abrir menú de usuario"
+
+msgctxt "Crest.Admin.Client"
+msgid "Open {0}"
+msgstr "Abrir {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Optional"
+msgstr "Opcional"
+
+msgctxt "Crest.Admin.Client"
+msgid "Optional border radius"
+msgstr "Radio de borde opcional"
+
+msgctxt "Crest.Admin.Client"
+msgid "Optional comma-separated list, for example mdi, lucide, material-symbols"
+msgstr "Lista opcional separada por comas, por ejemplo mdi, lucide, material-symbols"
+
+msgctxt "Crest.Admin.Client"
+msgid "Optional. Only applies to the admin area — a signed-in user's own language preference or an explicit session choice still takes priority here. Leave unset to use the default culture above everywhere, including the admin area."
+msgstr "Opcional. Solo se aplica al área de administración — la preferencia de idioma propia de un usuario conectado o una opción de sesión explícita aún tiene prioridad aquí. Deja sin establecer para usar la cultura predeterminada anterior en todas partes, incluida el área de administración."
+
+msgctxt "Crest.Admin.Client"
+msgid "Orchard could not {0} {1}."
+msgstr "Orchard no pudo {0} {1}."
+
+msgctxt "Crest.Admin.Client"
+msgid "Culture settings were saved. New requests use the updated cultures."
+msgstr "La configuración de culturas se guardó. Las nuevas solicitudes usan las culturas actualizadas."
+
+msgctxt "Crest.Admin.Client"
+msgid "The content item could not be saved."
+msgstr "No se pudo guardar el elemento de contenido."
+
+msgctxt "Crest.Admin.Client"
+msgid "The publish state could not be changed."
+msgstr "No se pudo cambiar el estado de publicación."
+
+msgctxt "Crest.Admin.Client"
+msgid "The content item could not be deleted."
+msgstr "No se pudo eliminar el elemento de contenido."
+
+msgctxt "Crest.Admin.Client"
+msgid "The media file could not be uploaded."
+msgstr "No se pudo cargar el archivo de medios."
+
+msgctxt "Crest.Admin.Client"
+msgid "The requested tenant action could not be completed."
+msgstr "No se pudo completar la acción de tenant solicitada."
+
+msgctxt "Crest.Admin.Client"
+msgid "The media folder could not be created."
+msgstr "No se pudo crear la carpeta de medios."
+
+msgctxt "Crest.Admin.Client"
+msgid "The media file could not be deleted."
+msgstr "No se pudo eliminar el archivo de medios."
+
+msgctxt "Crest.Admin.Client"
+msgid "The culture settings could not be saved. Verify custom culture codes and your permission to manage cultures."
+msgstr "No se pudo guardar la configuración de culturas. Verifique los códigos de cultura personalizados y su permiso para gestionar culturas."
+
+msgctxt "Crest.Admin.Client"
+msgid "The profile could not be saved."
+msgstr "No se pudo guardar el perfil."
+
+msgctxt "Crest.Admin.Client"
+msgid "The translations could not be saved. Verify your permission to manage this culture."
+msgstr "No se pudieron guardar las traducciones. Verifique su permiso para gestionar esta cultura."
+
+msgctxt "Crest.Admin.Client"
+msgid "Origin when cross origin"
+msgstr "Origen cuando origen cruzado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Outside, bottom-right"
+msgstr "Exterior, inferior derecho"
+
+msgctxt "Crest.Admin.Client"
+msgid "Oversized Images"
+msgstr "Imágenes de tamaño excesivo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Page title format"
+msgstr "Formato de título de página"
+
+msgctxt "Crest.Admin.Client"
+msgid "Page {0} of {1}"
+msgstr "Página {0} de {1}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Parent"
+msgstr "Padre"
+
+msgctxt "Crest.Admin.Client"
+msgid "Parent Node"
+msgstr "Nodo padre"
+
+msgctxt "Crest.Admin.Client"
+msgid "Parent: {0}"
+msgstr "Padre: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Payment"
+msgstr "Pago"
+
+msgctxt "Crest.Admin.Client"
+msgid "Permission names"
+msgstr "Nombres de permiso"
+
+msgctxt "Crest.Admin.Client"
+msgid "Permission names, comma-separated"
+msgstr "Nombres de permiso, separados por comas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Permissions Policy"
+msgstr "Política de permisos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Permissions: {0}"
+msgstr "Permisos: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Phone Number"
+msgstr "Número de teléfono"
+
+msgctxt "Crest.Admin.Client"
+msgid "Picture In Picture"
+msgstr "Imagen en imagen"
+
+msgctxt "Crest.Admin.Client"
+msgid "Preferences for your own account. These never affect other users or tenant-wide settings."
+msgstr "Preferencias para tu propia cuenta. Estos nunca afectan a otros usuarios o ajustes a nivel de tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "Prefixes"
+msgstr "Prefijos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Primary Action"
+msgstr "Acción principal"
+
+msgctxt "Crest.Admin.Client"
+msgid "Primary navigation export failed"
+msgstr "La exportación de navegación principal falló"
+
+msgctxt "Crest.Admin.Client"
+msgid "Primary navigation exported"
+msgstr "Navegación principal exportada"
+
+msgctxt "Crest.Admin.Client"
+msgid "Primary navigation item renamed"
+msgstr "Elemento de navegación principal renombrado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Primary navigation settings"
+msgstr "Ajustes de navegación principal"
+
+msgctxt "Crest.Admin.Client"
+msgid "Primary navigation settings saved"
+msgstr "Ajustes de navegación principal guardados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Profile deleted."
+msgstr "Perfil eliminado."
+
+msgctxt "Crest.Admin.Client"
+msgid "Profile name"
+msgstr "Nombre del perfil"
+
+msgctxt "Crest.Admin.Client"
+msgid "Profile saved."
+msgstr "Perfil guardado."
+
+msgctxt "Crest.Admin.Client"
+msgid "Provider"
+msgstr "Proveedor"
+
+msgctxt "Crest.Admin.Client"
+msgid "Provider metadata (JSON object)"
+msgstr "Metadatos del proveedor (objeto JSON)"
+
+msgctxt "Crest.Admin.Client"
+msgid "Provider metadata must be a JSON object."
+msgstr "Los metadatos del proveedor deben ser un objeto JSON."
+
+msgctxt "Crest.Admin.Client"
+msgid "Provider metadata must contain valid JSON."
+msgstr "Los metadatos del proveedor deben contener JSON válido."
+
+msgctxt "Crest.Admin.Client"
+msgid "Provider search preview"
+msgstr "Vista previa de búsqueda del proveedor"
+
+msgctxt "Crest.Admin.Client"
+msgid "Prune JSON"
+msgstr "Podar JSON"
+
+msgctxt "Crest.Admin.Client"
+msgid "Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache."
+msgstr "Los datos públicos de Iconify se sincronizan en App_Data, se comparten entre tenants y se buscan localmente de forma predeterminada. Los servidores personalizados de Iconify omiten esta caché."
+
+msgctxt "Crest.Admin.Client"
+msgid "Public Iconify local cache"
+msgstr "Caché local pública de Iconify"
+
+msgctxt "Crest.Admin.Client"
+msgid "Public Key Retrieval"
+msgstr "Recuperación de clave pública"
+
+msgctxt "Crest.Admin.Client"
+msgid "Publish after saving"
+msgstr "Publicar después de guardar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Publish/unpublish menu"
+msgstr "Menú publicar/no publicar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Queries deleted"
+msgstr "Consultas eliminadas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Query saved"
+msgstr "Consulta guardada"
+
+msgctxt "Crest.Admin.Client"
+msgid "Quick Add"
+msgstr "Agregar rápidamente"
+
+msgctxt "Crest.Admin.Client"
+msgid "Read-only media configuration provided by the host."
+msgstr "Configuración de medios de solo lectura proporcionada por el host."
+
+msgctxt "Crest.Admin.Client"
+msgid "Referrer Policy"
+msgstr "Política de referencia"
+
+msgctxt "Crest.Admin.Client"
+msgid "Refresh"
+msgstr "Actualizar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Reload"
+msgstr "Recargar"
+
+msgctxt "Crest.Admin.Client"
+msgid "Remote fallback"
+msgstr "Reserva remota"
+
+msgctxt "Crest.Admin.Client"
+msgid "Remove separator"
+msgstr "Eliminar separador"
+
+msgctxt "Crest.Admin.Client"
+msgid "Remove tenant {0}? This cannot be undone."
+msgstr "¿Eliminar tenant {0}? Esto no se puede deshacer."
+
+msgctxt "Crest.Admin.Client"
+msgid "Remove {0}"
+msgstr "Eliminar {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Removed any saved overrides that no longer match a current menu item."
+msgstr "Se eliminaron las anulaciones guardadas que ya no coinciden con un elemento de menú actual."
+
+msgctxt "Crest.Admin.Client"
+msgid "Rename menu"
+msgstr "Renombrar menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Rename menu: {0}"
+msgstr "Renombrar menú: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Require two-factor authentication"
+msgstr "Requerir autenticación de dos factores"
+
+msgctxt "Crest.Admin.Client"
+msgid "Reset Iconify defaults"
+msgstr "Restablecer valores predeterminados de Iconify"
+
+msgctxt "Crest.Admin.Client"
+msgid "Reset defaults"
+msgstr "Restablecer valores predeterminados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Resource Debug Mode"
+msgstr "Modo de depuración de recursos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Resources"
+msgstr "Recursos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Result"
+msgstr "Resultado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Result schema (optional)"
+msgstr "Esquema de resultado (opcional)"
+
+msgctxt "Crest.Admin.Client"
+msgid "Return Content Items"
+msgstr "Devolver elementos de contenido"
+
+msgctxt "Crest.Admin.Client"
+msgid "Role permissions will be added with the dedicated permission editor."
+msgstr "Los permisos de rol se agregarán con el editor de permisos dedicado."
+
+msgctxt "Crest.Admin.Client"
+msgid "Roles"
+msgstr "Roles"
+
+msgctxt "Crest.Admin.Client"
+msgid "Roles (comma-separated)"
+msgstr "Roles (separados por comas)"
+
+msgctxt "Crest.Admin.Client"
+msgid "Roles: {0}"
+msgstr "Roles: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Root"
+msgstr "Raíz"
+
+msgctxt "Crest.Admin.Client"
+msgid "Root level"
+msgstr "Nivel raíz"
+
+msgctxt "Crest.Admin.Client"
+msgid "Root: {0}"
+msgstr "Raíz: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up."
+msgstr "Marcador de posición para la gestión de acceso a rutas. Por ahora utiliza la presentación del editor de árbol de menú de administración; los editores de permisos de ruta y control de acceso se añadirán aquí cuando los requisitos se definan."
+
+msgctxt "Crest.Admin.Client"
+msgid "Route group • depth {0} • order {1}"
+msgstr "Grupo de ruta • profundidad {0} • orden {1}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Same origin"
+msgstr "Mismo origen"
+
+msgctxt "Crest.Admin.Client"
+msgid "Save as default"
+msgstr "Guardar como predeterminado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Save as this tenant's translation"
+msgstr "Guardar como traducción de este tenant"
+
+msgctxt "Crest.Admin.Client"
+msgid "Save menu name"
+msgstr "Guardar nombre del menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Save provider settings"
+msgstr "Guardar ajustes del proveedor"
+
+msgctxt "Crest.Admin.Client"
+msgid "Save settings"
+msgstr "Guardar ajustes"
+
+msgctxt "Crest.Admin.Client"
+msgid "Save site settings"
+msgstr "Guardar ajustes del sitio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Saved as a tenant translation"
+msgstr "Guardado como traducción de tenant"
+
+msgctxt "Crest.Admin.Client"
+msgid "Saved as your default language."
+msgstr "Guardado como su idioma predeterminado."
+
+msgctxt "Crest.Admin.Client"
+msgid "Screen Wake Lock"
+msgstr "Bloqueo de activación de pantalla"
+
+msgctxt "Crest.Admin.Client"
+msgid "Script Source"
+msgstr "Origen del script"
+
+msgctxt "Crest.Admin.Client"
+msgid "Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references."
+msgstr "Buscar en Iconify, iconos de tenant y proveedores de iconos habilitados. Los resultados se almacenan como referencias @api-provider:icon-prefix:icon-name."
+
+msgctxt "Crest.Admin.Client"
+msgid "Search Menu"
+msgstr "Buscar menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Search all icons..."
+msgstr "Buscar todos los iconos..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Search content titles..."
+msgstr "Buscar títulos de contenido..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Search menus..."
+msgstr "Buscar menús..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Search name, ID, category, description, or dependency..."
+msgstr "Buscar por nombre, ID, categoría, descripción o dependencia..."
+
+msgctxt "Crest.Admin.Client"
+msgid "Search name, host, or prefix"
+msgstr "Buscar por nombre, host o prefijo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Search query names"
+msgstr "Buscar nombres de consulta"
+
+msgctxt "Crest.Admin.Client"
+msgid "Search users"
+msgstr "Buscar usuarios"
+
+msgctxt "Crest.Admin.Client"
+msgid "Secondary Action"
+msgstr "Acción secundaria"
+
+msgctxt "Crest.Admin.Client"
+msgid "Security Headers"
+msgstr "Encabezados de seguridad"
+
+msgctxt "Crest.Admin.Client"
+msgid "Security headers not saved"
+msgstr "Encabezados de seguridad no guardados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Security headers saved"
+msgstr "Encabezados de seguridad guardados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Select a content part to inspect its field and type usage."
+msgstr "Seleccione una parte de contenido para inspeccionar su uso de campos y tipos."
+
+msgctxt "Crest.Admin.Client"
+msgid "Select a content type to inspect its definition."
+msgstr "Seleccione un tipo de contenido para inspeccionar su definición."
+
+msgctxt "Crest.Admin.Client"
+msgid "Select a role to inspect its status."
+msgstr "Seleccione un rol para inspeccionar su estado."
+
+msgctxt "Crest.Admin.Client"
+msgid "Select a standard menu to edit its items."
+msgstr "Seleccione un menú estándar para editar sus elementos."
+
+msgctxt "Crest.Admin.Client"
+msgid "Select all features in {0}"
+msgstr "Seleccionar todas las características en {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Select an admin menu to edit its nodes."
+msgstr "Seleccione un menú de administración para editar sus nodos."
+
+msgctxt "Crest.Admin.Client"
+msgid "Select the current site and admin themes, and enable or disable available themes."
+msgstr "Seleccionar los temas actuales del sitio y de administración, y habilitar o deshabilitar los temas disponibles."
+
+msgctxt "Crest.Admin.Client"
+msgid "Select {0}"
+msgstr "Seleccionar {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Selected icon: {0}"
+msgstr "Icono seleccionado: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Self"
+msgstr "Propio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Separator"
+msgstr "Separador"
+
+msgctxt "Crest.Admin.Client"
+msgid "Settings saved"
+msgstr "Ajustes guardados"
+
+msgctxt "Crest.Admin.Client"
+msgid "Show menu"
+msgstr "Mostrar menú"
+
+msgctxt "Crest.Admin.Client"
+msgid "Show the culture name beside its flag. The default is the flag icon only."
+msgstr "Mostrar el nombre de la cultura junto a su bandera. El predeterminado es solo el icono de bandera."
+
+msgctxt "Crest.Admin.Client"
+msgid "Showing {0} of {1} features"
+msgstr "Mostrando {0} de {1} características"
+
+msgctxt "Crest.Admin.Client"
+msgid "Sidebar (Built In) is the generated admin menu plus this tenant's layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar. Add node creates lightweight placeholder groups only."
+msgstr "Sidebar (Integrado) es el menú de administración generado más las modificaciones de diseño de este tenant. Arrastre elementos a cualquier lugar; mostrar/ocultar solo afecta a la barra lateral de este tenant. Agregar nodo solo crea grupos de marcador de posición ligeros."
+
+msgctxt "Crest.Admin.Client"
+msgid "Sidebar (Built In) placeholders do not link"
+msgstr "Los marcadores de posición de la barra lateral (integrada) no se vinculan"
+
+msgctxt "Crest.Admin.Client"
+msgid "Sign in as another user"
+msgstr "Iniciar sesión como otro usuario"
+
+msgctxt "Crest.Admin.Client"
+msgid "Sign in is required."
+msgstr "Se requiere iniciar sesión."
+
+msgctxt "Crest.Admin.Client"
+msgid "Site"
+msgstr "Sitio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Site CDN (Content Delivery Network) base url"
+msgstr "URL base de CDN (red de distribución de contenidos) del sitio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Site name"
+msgstr "Nombre del sitio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Site theme"
+msgstr "Tema del sitio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Sitemap"
+msgstr "Mapa del sitio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Some text"
+msgstr "Algún texto"
+
+msgctxt "Crest.Admin.Client"
+msgid "Source"
+msgstr "Origen"
+
+msgctxt "Crest.Admin.Client"
+msgid "Source commit: {0:u}"
+msgstr "Commit de origen: {0:u}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Speaker Selection"
+msgstr "Selección de altavoz"
+
+msgctxt "Crest.Admin.Client"
+msgid "Link and HTML menu items are editable here; content-picker menu items cannot be edited here yet."
+msgstr "Los elementos de menú de enlace y HTML se pueden editar aquí; los elementos de menú de selector de contenido aún no se pueden editar aquí."
+
+msgctxt "Crest.Admin.Client"
+msgid "Strict origin"
+msgstr "Origen estricto"
+
+msgctxt "Crest.Admin.Client"
+msgid "Strict origin when cross origin"
+msgstr "Origen estricto cuando hay origen cruzado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Style Source"
+msgstr "Origen del estilo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Style packs"
+msgstr "Paquetes de estilo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Supported cultures"
+msgstr "Culturas compatibles"
+
+msgctxt "Crest.Admin.Client"
+msgid "Surface 1"
+msgstr "Superficie 1"
+
+msgctxt "Crest.Admin.Client"
+msgid "Surface 2"
+msgstr "Superficie 2"
+
+msgctxt "Crest.Admin.Client"
+msgid "Synchronous XML Http Request"
+msgstr "Solicitud HTTP XML síncrona"
+
+msgctxt "Crest.Admin.Client"
+msgid "System role"
+msgstr "Rol del sistema"
+
+msgctxt "Crest.Admin.Client"
+msgid "System roles are built in and cannot be deleted."
+msgstr "Los roles del sistema están integrados y no se pueden eliminar."
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant"
+msgstr "Tenant"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant action failed"
+msgstr "La acción del tenant falló"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant avatar image URL (optional)"
+msgstr "URL de la imagen de avatar del tenant (opcional)"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant avatar shape"
+msgstr "Forma de avatar del tenant"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant reload failed"
+msgstr "La recarga del tenant falló"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant reloaded"
+msgstr "Tenant recargado"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant-level translations of dynamic data: admin menu captions, content type names, permissions. These override module-shipped translations at render time."
+msgstr "Traducciones a nivel de tenant de datos dinámicos: títulos del menú de administración, nombres de tipos de contenido, permisos. Estos anulan las traducciones entregadas por módulos en tiempo de renderizado."
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant: {0} · State: {1} · Admin: {2}"
+msgstr "Tenant: {0} · Estado: {1} · Administración: {2}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenants"
+msgstr "Tenants"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tenant{0} {1}d"
+msgstr "Tenant{0} {1}d"
+
+msgctxt "Crest.Admin.Client"
+msgid "The Iconify provider settings were updated."
+msgstr "Los ajustes del proveedor Iconify se actualizaron."
+
+msgctxt "Crest.Admin.Client"
+msgid "The New menu branch has a fixed position"
+msgstr "La rama del menú Nuevo tiene una posición fija"
+
+msgctxt "Crest.Admin.Client"
+msgid "The New menu branch has a fixed structure. Text and icon overrides are allowed, but layout changes are not."
+msgstr "La rama del menú Nuevo tiene una estructura fija. Se permiten anulaciones de texto e icono, pero no se permiten cambios de diseño."
+
+msgctxt "Crest.Admin.Client"
+msgid "The admin menu node was saved."
+msgstr "El nodo del menú de administración se guardó."
+
+msgctxt "Crest.Admin.Client"
+msgid "The content document must be a JSON object."
+msgstr "El documento de contenido debe ser un objeto JSON."
+
+msgctxt "Crest.Admin.Client"
+msgid "The development export endpoint was not available or rejected the request."
+msgstr "El punto de conexión de exportación de desarrollo no estaba disponible o rechazó la solicitud."
+
+msgctxt "Crest.Admin.Client"
+msgid "The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server."
+msgstr "La caché de instalación/primera ejecución se clona del repositorio GitHub de conjuntos de iconos Iconify y se actualiza automáticamente una vez al día por el servidor."
+
+msgctxt "Crest.Admin.Client"
+msgid "The login settings could not be saved."
+msgstr "No se pudieron guardar los ajustes de inicio de sesión."
+
+msgctxt "Crest.Admin.Client"
+msgid "The primary navigation display text was updated."
+msgstr "Se actualizó el texto de visualización de navegación principal."
+
+msgctxt "Crest.Admin.Client"
+msgid "The primary navigation settings were updated."
+msgstr "Se actualizaron los ajustes de navegación principal."
+
+msgctxt "Crest.Admin.Client"
+msgid "The query could not be saved. Check the provider metadata and try again."
+msgstr "No se pudo guardar la consulta. Compruebe los metadatos del proveedor e intente de nuevo."
+
+msgctxt "Crest.Admin.Client"
+msgid "The requested content item was not found."
+msgstr "No se encontró el elemento de contenido solicitado."
+
+msgctxt "Crest.Admin.Client"
+msgid "The security header settings could not be updated."
+msgstr "No se pudieron actualizar los ajustes de encabezados de seguridad."
+
+msgctxt "Crest.Admin.Client"
+msgid "The security header settings were updated."
+msgstr "Se actualizaron los ajustes de encabezados de seguridad."
+
+msgctxt "Crest.Admin.Client"
+msgid "The server could not save the design tokens."
+msgstr "El servidor no pudo guardar los tokens de diseño."
+
+msgctxt "Crest.Admin.Client"
+msgid "The server could not update the admin menu."
+msgstr "El servidor no pudo actualizar el menú de administración."
+
+msgctxt "Crest.Admin.Client"
+msgid "The server could not update the menu name."
+msgstr "El servidor no pudo actualizar el nombre del menú."
+
+msgctxt "Crest.Admin.Client"
+msgid "The server rejected the provider settings."
+msgstr "El servidor rechazó los ajustes del proveedor."
+
+msgctxt "Crest.Admin.Client"
+msgid "The source and metadata are provider-neutral. Provider modules may store any metadata shape in the JSON object below."
+msgstr "El origen y los metadatos son neutrales con respecto al proveedor. Los módulos de proveedor pueden almacenar cualquier forma de metadatos en el objeto JSON a continuación."
+
+msgctxt "Crest.Admin.Client"
+msgid "The tenant design tokens were updated."
+msgstr "Se actualizaron los tokens de diseño del tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "The tenant state was updated."
+msgstr "Se actualizó el estado del tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "The theme action did not complete successfully."
+msgstr "La acción del tema no se completó correctamente."
+
+msgctxt "Crest.Admin.Client"
+msgid "The translations were saved for this culture."
+msgstr "Las traducciones se guardaron para esta cultura."
+
+msgctxt "Crest.Admin.Client"
+msgid "The user could not be saved. Check the supplied values."
+msgstr "No se pudo guardar el usuario. Compruebe los valores suministrados."
+
+msgctxt "Crest.Admin.Client"
+msgid "There are no alternate themes installed."
+msgstr "No hay temas alternativos instalados."
+
+msgctxt "Crest.Admin.Client"
+msgid "These are the valid .NET/BCP 47 cultures the site can serve."
+msgstr "Estas son las culturas .NET/BCP 47 válidas que el sitio puede servir."
+
+msgctxt "Crest.Admin.Client"
+msgid "This admin menu does not have any nodes yet."
+msgstr "Este menú de administración aún no tiene ningún nodo."
+
+msgctxt "Crest.Admin.Client"
+msgid "This caption now applies everywhere in the current culture, not only in this sidebar."
+msgstr "Este título ahora se aplica en todas partes en la cultura actual, no solo en esta barra lateral."
+
+msgctxt "Crest.Admin.Client"
+msgid "This folder is empty. Upload a file or create a folder to get started."
+msgstr "Esta carpeta está vacía. Cargue un archivo o cree una carpeta para comenzar."
+
+msgctxt "Crest.Admin.Client"
+msgid "This is the raw content JSON. Preserve fields you do not intend to change."
+msgstr "Este es el JSON de contenido sin procesar. Conserve los campos que no desee cambiar."
+
+msgctxt "Crest.Admin.Client"
+msgid "This is used when a request does not select one of the supported cultures."
+msgstr "Se utiliza cuando una solicitud no selecciona una de las culturas compatibles."
+
+msgctxt "Crest.Admin.Client"
+msgid "This menu does not have any items yet."
+msgstr "Este menú aún no tiene ningún elemento."
+
+msgctxt "Crest.Admin.Client"
+msgid "This permanently removes {0}."
+msgstr "Esto elimina permanentemente {0}."
+
+msgctxt "Crest.Admin.Client"
+msgid "This type has no attached parts."
+msgstr "Este tipo no tiene partes adjuntas."
+
+msgctxt "Crest.Admin.Client"
+msgid "This uses the same icon selector component as menu editors. Selecting an icon stores the normalized icon key."
+msgstr "Utiliza el mismo componente de selector de iconos que los editores de menú. Seleccionar un icono almacena la clave de icono normalizada."
+
+msgctxt "Crest.Admin.Client"
+msgid "Tier 3-4"
+msgstr "Nivel 3-4"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tier backgrounds"
+msgstr "Fondos de nivel"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tier base size"
+msgstr "Tamaño base del nivel"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tier indentation"
+msgstr "Indentación de nivel"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tier {0}"
+msgstr "Nivel {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Time zone ID"
+msgstr "ID de zona horaria"
+
+msgctxt "Crest.Admin.Client"
+msgid "Title bar"
+msgstr "Barra de título"
+
+msgctxt "Crest.Admin.Client"
+msgid "Toggle dark/light mode"
+msgstr "Alternar modo oscuro/claro"
+
+msgctxt "Crest.Admin.Client"
+msgid "Toggle route access coming soon"
+msgstr "Alternar acceso a rutas próximamente"
+
+msgctxt "Crest.Admin.Client"
+msgid "Tokenized query strings"
+msgstr "Cadenas de consulta tokenizadas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Translations"
+msgstr "Traducciones"
+
+msgctxt "Crest.Admin.Client"
+msgid "Translations are unavailable - no culture you may view is configured for this tenant."
+msgstr "Las traducciones no están disponibles: ninguna cultura que puede ver está configurada para este tenant."
+
+msgctxt "Crest.Admin.Client"
+msgid "Two-Factor Authentication"
+msgstr "Autenticación de dos factores"
+
+msgctxt "Crest.Admin.Client"
+msgid "USB"
+msgstr "USB"
+
+msgctxt "Crest.Admin.Client"
+msgid "Unable to load themes: {0}"
+msgstr "No se pueden cargar los temas: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "Unable to save your default culture."
+msgstr "No se puede guardar su cultura predeterminada."
+
+msgctxt "Crest.Admin.Client"
+msgid "Unable to save your default language."
+msgstr "No se puede guardar su idioma predeterminado."
+
+msgctxt "Crest.Admin.Client"
+msgid "Unoptimized Images"
+msgstr "Imágenes no optimizadas"
+
+msgctxt "Crest.Admin.Client"
+msgid "Unsafe URL"
+msgstr "URL no segura"
+
+msgctxt "Crest.Admin.Client"
+msgid "Unsized Media"
+msgstr "Medios sin tamaño"
+
+msgctxt "Crest.Admin.Client"
+msgid "Upgrade Insecure Requests"
+msgstr "Actualizar solicitudes no seguras"
+
+msgctxt "Crest.Admin.Client"
+msgid "Use a script to sync user properties from external provider claims"
+msgstr "Utilizar un script para sincronizar propiedades de usuario a partir de reclamaciones de proveedor externo"
+
+msgctxt "Crest.Admin.Client"
+msgid "Use as admin"
+msgstr "Usar como administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "Use as site"
+msgstr "Usar como sitio"
+
+msgctxt "Crest.Admin.Client"
+msgid "Use external provider for login."
+msgstr "Utilizar proveedor externo para iniciar sesión."
+
+msgctxt "Crest.Admin.Client"
+msgid "Use framework CDN (Content Delivery Network)"
+msgstr "Utilizar CDN (red de distribución de contenidos) del marco"
+
+msgctxt "Crest.Admin.Client"
+msgid "Use resources cache busting"
+msgstr "Utilizar invalidación de caché de recursos"
+
+msgctxt "Crest.Admin.Client"
+msgid "Use site theme for two-factor authentication pages"
+msgstr "Utilizar tema del sitio para páginas de autenticación de dos factores"
+
+msgctxt "Crest.Admin.Client"
+msgid "Use the tenant default"
+msgstr "Utilizar el predeterminado de tenant"
+
+msgctxt "Crest.Admin.Client"
+msgid "Used by content types"
+msgstr "Utilizado por tipos de contenido"
+
+msgctxt "Crest.Admin.Client"
+msgid "User Login Settings"
+msgstr "Ajustes de inicio de sesión del usuario"
+
+msgctxt "Crest.Admin.Client"
+msgid "User Profile Menu"
+msgstr "Menú de perfil del usuario"
+
+msgctxt "Crest.Admin.Client"
+msgid "Web Share"
+msgstr "Compartir web"
+
+msgctxt "Crest.Admin.Client"
+msgid "Web XR"
+msgstr "Web XR"
+
+msgctxt "Crest.Admin.Client"
+msgid "When enabled, Iconify appears in icon search and can resolve selected Iconify icon keys for response icon packs."
+msgstr "Cuando está habilitado, Iconify aparece en la búsqueda de iconos y puede resolver claves de iconos Iconify seleccionadas para paquetes de iconos de respuesta."
+
+msgctxt "Crest.Admin.Client"
+msgid "Whether a framework CDN is used for registered scripts and stylesheets, such as jQuery, or their local version"
+msgstr "Si se utiliza un CDN del marco para scripts y hojas de estilo registrados, como jQuery, o su versión local"
+
+msgctxt "Crest.Admin.Client"
+msgid "Whether cache busting (append a version) is used for scripts and stylesheets"
+msgstr "Si se utiliza la invalidación de caché (añadir una versión) para scripts y hojas de estilo"
+
+msgctxt "Crest.Admin.Client"
+msgid "You can view this culture's translations but not edit them."
+msgstr "Puede ver las traducciones de esta cultura pero no editarlas."
+
+msgctxt "Crest.Admin.Client"
+msgid "You do not have permission to access this admin page."
+msgstr "No tiene permiso para acceder a esta página de administración."
+
+msgctxt "Crest.Admin.Client"
+msgid "Your default language was saved."
+msgstr "Su idioma predeterminado se guardó."
+
+msgctxt "Crest.Admin.Client"
+msgid "Your default language. This is used whenever you sign in, unless you switch languages temporarily from the culture picker in the title bar."
+msgstr "Su idioma predeterminado. Se utiliza cada vez que inicia sesión, a menos que cambie temporalmente de idioma desde el selector de cultura en la barra de título."
+
+msgctxt "Crest.Admin.Client"
+msgid "admin"
+msgstr "administración"
+
+msgctxt "Crest.Admin.Client"
+msgid "alias:main-menu"
+msgstr "alias:main-menu"
+
+msgctxt "Crest.Admin.Client"
+msgid "id: {0}"
+msgstr "id: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "position: {0}"
+msgstr "posición: {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "site"
+msgstr "sitio"
+
+msgctxt "Crest.Admin.Client"
+msgid "stored only"
+msgstr "solo almacenado"
+
+msgctxt "Crest.Admin.Client"
+msgid "v{0}"
+msgstr "v{0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0:n0} items"
+msgstr "{0:n0} elementos"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} (Built In)"
+msgstr "{0} (integrado)"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} bytes"
+msgstr "{0} bytes"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} could not be reloaded."
+msgstr "{0} no se pudo recargar."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} days"
+msgstr "{0} días"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} deleted."
+msgstr "{0} eliminado."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} fields"
+msgstr "{0} campos"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} fields · {1} types"
+msgstr "{0} campos · {1} tipos"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} is now the current {1} theme."
+msgstr "{0} es ahora el tema {1} actual."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} matching icons"
+msgstr "{0} iconos coincidentes"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} parts"
+msgstr "{0} partes"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} preview"
+msgstr "vista previa de {0}"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} queries deleted."
+msgstr "{0} consultas eliminadas."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} saved with {1} layout items, {2} custom items, and {3} separators."
+msgstr "{0} guardado con {1} elementos de diseño, {2} elementos personalizados y {3} separadores."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} saved."
+msgstr "{0} guardado."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} tenant"
+msgstr "{0} tenant"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} uploaded."
+msgstr "{0} cargado."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} users"
+msgstr "{0} usuarios"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} was deleted."
+msgstr "{0} fue eliminado."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} was reloaded."
+msgstr "{0} fue recargado."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} was saved."
+msgstr "{0} fue guardado."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} was {1}."
+msgstr "{0} fue {1}."
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} was {1}. "
+msgstr "{0} fue {1}. "
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} {1} features?"
+msgstr "¿{0} {1} características?"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} {1} tenant{2}?"
+msgstr "¿{0} {1} tenant{2}?"
+
+msgctxt "Crest.Admin.Client"
+msgid "{0} · {1} parts"
+msgstr "{0} · {1} partes"
+

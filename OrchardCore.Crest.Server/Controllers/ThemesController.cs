@@ -8,6 +8,7 @@ using OrchardCore.Environment.Shell;
 using OrchardCore.Modules.Manifest;
 using OrchardCore.Themes;
 using OrchardCore.Themes.Services;
+using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
@@ -163,38 +164,4 @@ public sealed class ThemesController(
         .Any(tag => string.Equals(tag, ManifestConstants.AdminTag, StringComparison.OrdinalIgnoreCase));
 
     private static string GetThemeImageUrl(IFeatureInfo feature) => $"/{feature.Extension.Id}/Theme.png";
-}
-
-public sealed record ThemesState(
-    string? CurrentSiteThemeId,
-    string? CurrentAdminThemeId,
-    ThemeSummary? CurrentSiteTheme,
-    ThemeSummary? CurrentAdminTheme,
-    ThemeSummary[] Themes);
-
-public sealed record ThemeSummary(
-    string Id,
-    string Name,
-    string Description,
-    string Author,
-    string Website,
-    string Version,
-    string ExtensionId,
-    bool IsAdmin,
-    bool IsCurrent,
-    bool Enabled,
-    string PreviewImageUrl)
-{
-    public static ThemeSummary From(IFeatureInfo feature, bool isAdmin, bool enabled, bool isCurrent, string previewImageUrl) => new(
-        feature.Id,
-        feature.Name ?? feature.Id,
-        feature.Description ?? string.Empty,
-        feature.Extension.Manifest.Author ?? string.Empty,
-        feature.Extension.Manifest.Website ?? string.Empty,
-        feature.Extension.Manifest.Version ?? string.Empty,
-        feature.Extension.Id,
-        isAdmin,
-        isCurrent,
-        enabled,
-        previewImageUrl);
 }

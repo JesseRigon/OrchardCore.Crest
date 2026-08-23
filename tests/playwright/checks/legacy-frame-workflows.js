@@ -5,9 +5,9 @@
 module.exports = async function run(page, ctx) {
   async function assertNoNestedCrestShell(frame) {
     const nestedFrames = await frame.locator('iframe.legacy-admin-frame').count();
-    const nestedShellNotice = await frame.getByText('This Orchard admin page is running inside the Crest Admin shell.').count();
+    const nestedFrameWrapper = await frame.locator('.legacy-admin-frame-page').count();
     const nestedPrimaryNavMenu = await frame.locator('.primary-nav-menu').count();
-    return nestedFrames === 0 && nestedShellNotice === 0 && nestedPrimaryNavMenu === 0;
+    return nestedFrames === 0 && nestedFrameWrapper === 0 && nestedPrimaryNavMenu === 0;
   }
 
   const response = await page.goto(`${ctx.baseUrl}/Admin/Workflows/Types`, { waitUntil: 'networkidle' });
