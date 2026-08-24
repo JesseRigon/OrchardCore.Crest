@@ -46,6 +46,7 @@
     <!-- TranslationsManager, for promoting an admin menu rename into the tenant's
          translation store (the same store IDataLocalizer reads at render time). -->
     <PackageReference Include="OrchardCore.DataLocalization" />
+    <PackageReference Include="OrchardCore.ContentFields" />
     <PackageReference Include="OrchardCore.Contents" />
     <PackageReference Include="OrchardCore.FileStorage.Abstractions" />
     <PackageReference Include="OrchardCore.Features" />

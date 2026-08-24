@@ -11,6 +11,7 @@
     <PackageVersion Include="OrchardCore.AdminMenu" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.AdminMenu.Abstractions" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.ContentManagement" Version="3.0.2-local" />
+    <PackageVersion Include="OrchardCore.ContentFields" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Contents" Version="3.0.2-local" />
     <PackageVersion Include="YesSql.Abstractions" Version="6.0.0" />
     <PackageVersion Include="OrchardCore.DataLocalization" Version="3.0.2-local" />

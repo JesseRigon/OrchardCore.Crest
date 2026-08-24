@@ -20,6 +20,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
 using OrchardCore.ContentManagement;
 using OrchardCore.ContentManagement.Display.ContentDisplay;
+using OrchardCore.Data;
 using OrchardCore.Data.Migration;
 using OrchardCore.DisplayManagement;
 using OrchardCore.DisplayManagement.Theming;
@@ -262,6 +263,27 @@ public sealed class Startup : StartupBase
         services.AddContentPart<CrestBlazorComponentPart>();
         services.AddDataMigration<CrestBlazorComponentMigrations>();
 
+        // Option Lists - the tenant-editable enum system (see
+        // plans/fruitful-modules.md, Tier 0). Modules declare the sets they own and
+        // consume them by logical key; tenants relabel/reorder/hide at runtime.
+        services.AddContentPart<CrestOptionListPart>();
+        services.AddContentPart<CrestOptionPart>();
+        services.AddDataMigration<CrestOptionListMigrations>();
+        services.AddScoped<ICrestOptionListService, CrestOptionListService>();
+
+        // OptionPickerField: the reference mechanism for option sources. Providers keep
+        // the field ignorant of what it is picking (option lists today; users, content
+        // items and other entity sources later).
+        services.AddContentField<Fields.OptionPickerField>();
+        services.AddScoped<IOptionSourceProvider, OptionListSourceProvider>();
+        services.AddScoped<OptionPickerFieldKeyResolver>();
+
+        // Per-content-type index partitioning: modules register the high-volume types
+        // that get their own table, and the catch-all partition skips them.
+        services.AddSingleton<Indexing.CrestOptionIndexPartitions>();
+        services.AddDataMigration<Indexing.OptionPickerFieldIndexMigrations>();
+        services.AddScopedIndexProvider<Indexing.OptionPickerFieldIndexProvider>();
+
         // HtmlRenderer (used by CrestBlazorComponentShapeBindingResolver for Static SSR)
         // instantiates components via this same service provider, and component base
         // classes routinely have [Inject] IJSRuntime - without any registration, DI throws
@@ -301,10 +323,11 @@ public sealed class Startup : StartupBase
         // built its route table before the assembly was ever loaded.
         // Two naming conventions feed the route table: theme client assemblies
         // (*.Client - Site.Client, Admin.Client, the OrchardCore.Crest.Client entry)
-        // and module-contributed Blazor page libraries (*.BlazorWasm - e.g.
-        // Accounting.BlazorWasm, the same set Admin.Client's generated
-        // CrestModuleAssemblyRegistry loads browser-side; keep the two conventions in
-        // sync or a module's pages route in one runtime and 404 in the other).
+        // and module-contributed Blazor page libraries (*.BlazorWasm - any
+        // blazor-wasm/ project anywhere under modules/, the same set Admin.Client's
+        // generated CrestModuleAssemblyRegistry loads browser-side; keep the two
+        // conventions in sync or a module's pages route in one runtime and 404 in
+        // the other).
         foreach (var clientAssemblyPath in Directory.EnumerateFiles(AppContext.BaseDirectory, "*.Client.dll", SearchOption.TopDirectoryOnly)
             .Concat(Directory.EnumerateFiles(AppContext.BaseDirectory, "*.BlazorWasm.dll", SearchOption.TopDirectoryOnly)))
         {
@@ -369,6 +392,7 @@ public sealed class TenantMediaIconsStartup : StartupBase
     {
         services.AddScoped<IIconProvider, TenantMediaIconProvider>();
         services.AddScoped<IPermissionProvider, Permissions.CrestIconPermissions>();
+        services.AddScoped<IPermissionProvider, Permissions.CrestOptionListPermissions>();
     }
 }
 
