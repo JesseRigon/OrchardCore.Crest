@@ -50,8 +50,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
     <ProjectReference Include="..\..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />
-    <!-- Auto-import Crest component libraries contributed by Orchard modules. -->
-    <CrestModuleWasmProject Include="..\..\..\*\blazor-wasm\*.csproj" />
+    <!-- Auto-import Crest component libraries contributed by Orchard modules: ANY
+         blazor-wasm/ project anywhere under modules/, at any depth, so module
+         grouping (modules/<Group>/<Module>/blazor-wasm/) needs no glob change.
+         Crest's own tree is excluded - its theme client projects are referenced
+         explicitly above, and on case-insensitive matching a recursive pattern would
+         otherwise pull in this very project. -->
+    <CrestModuleWasmProject Include="..\..\..\**\blazor-wasm\*.csproj" Exclude="..\..\..\OrchardCore.Crest\**\*.csproj" />
     <ProjectReference Include="@(CrestModuleWasmProject)" />
   </ItemGroup>
 
