@@ -86,7 +86,6 @@
     private bool IsSaving { get; set; }
     private bool ConfirmDelete { get; set; }
     private string? Error { get; set; }
-    private CrestAntiforgeryToken? Token { get; set; }
     private CrestFormManager? FormManager { get; set; }
 
     private bool IsBusy => IsLoading || IsSaving;
@@ -120,7 +119,16 @@
         IsLoading = true;
         try
         {
-            Model = await Http.GetFromJsonAsync<CrestModel>($"api/crest/model/content-items/{Uri.EscapeDataString(ContentItemId)}?latest=true");
+            var item = await Http.GetFromJsonAsync<CrestContentItem>($"api/crest/content-items/{Uri.EscapeDataString(ContentItemId)}");
+            if (item?.Metadata is null && !string.IsNullOrWhiteSpace(item?.ContentType))
+            {
+                // The content-items API returns raw items; the definition-driven form
+                // derives its editor metadata from the content-type definition.
+                var definition = await Http.GetFromJsonAsync<JsonNode>($"api/crest/content-types/{Uri.EscapeDataString(item.ContentType)}");
+                item = item with { Metadata = CrestContentTypeMetadata.FromTypeDefinition(definition) };
+            }
+
+            Model = CrestModel.FromContentItem(item);
             DisplayText = Model?.ContentItem?.DisplayText;
             EditableContent = Model?.ContentItem?.Content?.DeepClone();
         }
@@ -150,7 +158,21 @@
             return;
         }
 
-        var saved = await SendJsonAsync<CrestModel>(HttpMethod.Put, $"api/crest/model/content-items/{Uri.EscapeDataString(ContentItemId)}", new UpdateCrestContentItemRequest(DisplayText, EditableContent?.DeepClone(), publish));
+        var contentType = Model?.ContentItem?.ContentType;
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            return;
+        }
+
+        var savedItem = await SendJsonAsync<CrestContentItem>(HttpMethod.Put, $"api/crest/content-items/{Uri.EscapeDataString(ContentItemId)}",
+            new UpdateCrestContentItemRequest(contentType, DisplayText, EditableContent?.DeepClone() as JsonObject, publish));
+        if (savedItem is { Metadata: null })
+        {
+            // Keep the already-derived editor metadata; the write response is raw.
+            savedItem = savedItem with { Metadata = Model?.ContentItem?.Metadata };
+        }
+
+        var saved = CrestModel.FromContentItem(savedItem);
         if (saved is not null)
         {
             Model = saved;
@@ -167,7 +189,17 @@
             return;
         }
 
-        var duplicate = await SendJsonAsync<CrestModel>(HttpMethod.Post, $"api/crest/model/content-items/{Uri.EscapeDataString(ContentItemId)}/duplicate", null);
+        // The content-items API has no duplicate endpoint: duplicate = create a new
+        // draft of the same type carrying a copy of the loaded content.
+        var source = Model?.ContentItem;
+        if (source?.ContentType is null)
+        {
+            return;
+        }
+
+        var duplicatedItem = await SendJsonAsync<CrestContentItem>(HttpMethod.Post, "api/crest/content-items",
+            new CreateCrestContentItemRequest(source.ContentType, $"{source.DisplayText} (copy)", EditableContent?.DeepClone() as JsonObject));
+        var duplicate = CrestModel.FromContentItem(duplicatedItem);
         if (duplicate is not null)
         {
             await Duplicated.InvokeAsync(duplicate);
@@ -187,7 +219,7 @@
             return;
         }
 
-        using var response = await SendAsync(HttpMethod.Delete, $"api/crest/model/content-items/{Uri.EscapeDataString(ContentItemId)}", null);
+        using var response = await SendAsync(HttpMethod.Delete, $"api/crest/content-items/{Uri.EscapeDataString(ContentItemId)}", null);
         if (response.IsSuccessStatusCode)
         {
             var deletedId = ContentItemId;
@@ -222,10 +254,10 @@
                 request.Content = JsonContent.Create(body);
             }
 
-            var token = await GetAntiforgeryTokenAsync();
-            request.Headers.Remove(token.HeaderName);
-            request.Headers.TryAddWithoutValidation(token.HeaderName, token.RequestToken);
-
+            // The antiforgery token is added by the HttpClient's own handler
+            // (CrestAntiforgeryHandler) for every unsafe request. Adding it here too
+            // produced a comma-joined pair of tokens in the header, which the server
+            // cannot parse - the request failed validation with a bodiless 400.
             var response = await Http.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
@@ -245,16 +277,4 @@
         }
     }
 
-    private async Task<CrestAntiforgeryToken> GetAntiforgeryTokenAsync()
-    {
-        if (Token is not null && !string.IsNullOrWhiteSpace(Token.RequestToken))
-        {
-            return Token;
-        }
-
-        Token = await Http.GetFromJsonAsync<CrestAntiforgeryToken>("api/crest/antiforgery/token")
-            ?? new CrestAntiforgeryToken("RequestVerificationToken", string.Empty);
-
-        return Token;
-    }
 }

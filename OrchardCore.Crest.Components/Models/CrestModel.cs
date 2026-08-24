@@ -8,6 +8,8 @@ public sealed record CrestModelSource(
     string Version,
     CrestModel[] Items);
 
+public sealed record CrestContentItemPage(CrestContentItem[] Items, int Total, int Page, int PageSize);
+
 public sealed record CrestModel(
     CrestContentItem? ContentItem,
     JsonNode? Content,
@@ -19,6 +21,11 @@ public sealed record CrestModel(
     Dictionary<string, CrestModelSource>? Sources = null,
     CrestShapeDiagnostic[]? Diagnostics = null)
 {
+    /// <summary>Wraps a content item returned by the api/crest/content-items API
+    /// into the shape the model-driven components consume.</summary>
+    public static CrestModel? FromContentItem(CrestContentItem? item) =>
+        item is null ? null : new(item, item.Content);
+
     public string? GetText(string partName, string fieldName)
     {
         return ContentItem?.Content?[partName]?[fieldName]?["Text"]?.GetValue<string>();
