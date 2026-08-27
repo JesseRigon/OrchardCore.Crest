@@ -46,6 +46,18 @@ public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocali
                 .LocalNav()
             ), priority: 1);
 
+        builder.Add(S["Configuration"], NavigationConstants.AdminMenuConfigurationPosition, configuration => configuration
+            .AddClass("configuration")
+            .Id("configuration")
+            .Add(S["Option Lists"], S["Option Lists"].PrefixPosition(), optionLists => optionLists
+                .AddClass("option-lists")
+                .AddClass("icon-class-@iconify:mdi:format-list-bulleted")
+                .Id("option-lists")
+                .Url($"{adminPath}/OptionLists")
+                .Permission(Crest.Permissions.CrestOptionListPermissions.ViewOptionLists)
+                .LocalNav()
+            ), priority: 1);
+
         return ValueTask.CompletedTask;
     }
 }

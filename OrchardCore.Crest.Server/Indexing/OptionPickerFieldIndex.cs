@@ -1,5 +1,6 @@
 using Crest.Fields;
 using Crest.Models;
+using Crest.Services;
 using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.ContentFields.Indexing.SQL;
 using OrchardCore.ContentManagement;
@@ -57,6 +58,7 @@ public abstract class OptionPickerFieldIndexProviderBase<TIndex>(IServiceProvide
 {
     private readonly HashSet<string> _ignoredTypes = [];
     private IContentDefinitionManager _contentDefinitionManager;
+    private OptionPickerFieldKeyResolver _keyResolver;
 
     /// <summary>The content types this partition indexes. An empty set means "every
     /// type not claimed by another partition".</summary>
@@ -104,11 +106,26 @@ public abstract class OptionPickerFieldIndexProviderBase<TIndex>(IServiceProvide
                     return null;
                 }
 
-                return fieldDefinitions
-                    .GetContentFields<OptionPickerField>(contentItem)
-                    .SelectMany(pair => (pair.Field.SelectedIds ?? [])
-                        .Where(id => !string.IsNullOrEmpty(id))
-                        .Select(id => new TIndex
+                var rows = new List<TIndex>();
+
+                foreach (var pair in fieldDefinitions.GetContentFields<OptionPickerField>(contentItem))
+                {
+                    var ids = (pair.Field.SelectedIds ?? []).Where(id => !string.IsNullOrEmpty(id)).ToArray();
+                    if (ids.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    // Resolved in ONE batched call per field: code compares keys, so
+                    // storing them here is what lets a query filter by key without
+                    // joining back through the source. Null where the source has no
+                    // key distinct from the id (users and other entity sources).
+                    _keyResolver ??= serviceProvider.GetRequiredService<OptionPickerFieldKeyResolver>();
+                    var keys = await _keyResolver.ResolveKeysAsync(pair.Field);
+
+                    for (var index = 0; index < ids.Length; index++)
+                    {
+                        rows.Add(new TIndex
                         {
                             Latest = contentItem.Latest,
                             Published = contentItem.Published,
@@ -118,11 +135,13 @@ public abstract class OptionPickerFieldIndexProviderBase<TIndex>(IServiceProvide
                             ContentPart = pair.Definition.ContentTypePartDefinition.Name,
                             ContentField = pair.Definition.Name,
                             SourceKey = pair.Field.SourceKey ?? string.Empty,
-                            SelectedId = id,
-                            // Resolved by a handler before save where the source can
-                            // supply a key; left null for id-identified sources.
-                            SelectedKey = null,
-                        }));
+                            SelectedId = ids[index],
+                            SelectedKey = index < keys.Count ? keys[index] : null,
+                        });
+                    }
+                }
+
+                return rows;
             });
     }
 

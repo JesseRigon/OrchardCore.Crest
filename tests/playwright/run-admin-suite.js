@@ -90,6 +90,9 @@ function buildSharedAdminChecks() {
     { name: 'localization-tab-scoping', fn: require('./checks/localization-tab-scoping') },
     { name: 'localization-new-tab-inheritance', fn: require('./checks/localization-new-tab-inheritance') },
     { name: 'localization-multi-user-switch', fn: require('./checks/localization-multi-user-switch') },
+    { name: 'option-lists-page', fn: require('./checks/option-lists-page') },
+    { name: 'option-dependent-filtering', fn: require('./checks/option-dependent-filtering') },
+    { name: 'option-source-scope', fn: require('./checks/option-source-scope') },
   ];
 }
 

@@ -1,5 +1,7 @@
 using Crest.Drivers;
+using Crest.Indexing;
 using Crest.Models;
+using YesSql.Indexes;
 using Crest.ViewModels;
 using Crest.Migrations;
 using Crest.Components.Primitives;
@@ -275,7 +277,19 @@ public sealed class Startup : StartupBase
         // the field ignorant of what it is picking (option lists today; users, content
         // items and other entity sources later).
         services.AddContentField<Fields.OptionPickerField>();
+        // Assignment scoping. AssignmentScopedTypes is a SINGLETON policy registry -
+        // which types are assignment-scoped is a deployment decision, declared once,
+        // not something a request can vary.
+        services.AddSingleton<AssignmentScopedTypes>();
+        services.AddScoped<ICrestAssignmentService, CrestAssignmentService>();
+        services.AddSingleton<IIndexProvider, CrestAssignmentIndexProvider>();
+        services.AddDataMigration<CrestAssignmentIndexMigrations>();
+        services.AddContentPart<CrestAssignmentPart>();
+
+        services.AddScoped<IOptionSourceScopeResolver, OptionSourceScopeResolver>();
         services.AddScoped<IOptionSourceProvider, OptionListSourceProvider>();
+        services.AddScoped<IOptionSourceProvider, UserOptionSourceProvider>();
+        services.AddScoped<IOptionSourceProvider, ContentItemOptionSourceProvider>();
         services.AddScoped<OptionPickerFieldKeyResolver>();
 
         // Per-content-type index partitioning: modules register the high-volume types

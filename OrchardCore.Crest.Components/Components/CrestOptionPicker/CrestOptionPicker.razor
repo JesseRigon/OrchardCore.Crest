@@ -1,0 +1,308 @@
+@namespace Crest.Components.Options
+@using System.Net.Http.Json
+@using Crest.Components.Models
+@using Crest.Components.Primitives
+@inject HttpClient Http
+
+@* Multi-column picker over any registered option source. What it DISPLAYS comes from
+   the field's configured columns, so the same component serves a one-column status
+   dropdown and a user picker showing name plus badge number. *@
+
+<div class="crest-option-picker">
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</CrestAlert>
+    }
+
+    <CrestDropDownDataGrid TValue="IEnumerable<string>"
+                           Data="@Rows"
+                           Value="@SelectedIds"
+                           Multiple="@Multiple"
+                           Chips="@Multiple"
+                           AllowFiltering="true"
+                           AllowClear="@(!Required)"
+                           Disabled="@Disabled"
+                           Placeholder="@Placeholder"
+                           TextProperty="@PrimaryColumnPath"
+                           ValueProperty="Id"
+                           LoadData="@OnLoadDataAsync"
+                           Change="@OnChangeAsync"
+                           Style="width: 100%;"
+                           data-testid="@TestId">
+        <Columns>
+            @foreach (var column in VisibleColumns)
+            {
+                <CrestDropDownDataGridColumn TItem="OptionPickerRow"
+                                             Property="@($"Values.{column.Path}")"
+                                             Title="@column.Label"
+                                             Width="@column.Width">
+                    <Template Context="row">
+                        @ReadValue(row, column.Path)
+                    </Template>
+                </CrestDropDownDataGridColumn>
+            }
+        </Columns>
+    </CrestDropDownDataGrid>
+</div>
+
+@code {
+    /// <summary>The source to draw from, e.g. "optionlist:transaction.status".</summary>
+    [Parameter, EditorRequired] public string SourceKey { get; set; } = string.Empty;
+
+    /// <summary>Columns to display, in order. Empty falls back to the source's own
+    /// default display column.</summary>
+    [Parameter] public IReadOnlyList<OptionPickerColumn> Columns { get; set; } = [];
+
+    [Parameter] public IReadOnlyList<string> SelectedIds { get; set; } = [];
+    [Parameter] public EventCallback<IReadOnlyList<string>> SelectedIdsChanged { get; set; }
+
+    [Parameter] public bool Multiple { get; set; }
+    [Parameter] public bool Required { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Placeholder { get; set; } = string.Empty;
+
+    /// <summary>Column paths the type-ahead searches. Empty lets the source decide.</summary>
+    [Parameter] public IReadOnlyList<string> SearchColumns { get; set; } = [];
+
+    /// <summary>
+    /// Which attachment this picker is: the server reads THIS field's configured
+    /// filters and applies them. Restrictions are deliberately NOT a parameter here -
+    /// a client that could send its own filters could query any source with any
+    /// predicate, so the client says what the USER entered and the server decides
+    /// what is allowed.
+    /// </summary>
+    [Parameter] public string? ContentType { get; set; }
+
+    /// <inheritdoc cref="ContentType" />
+    [Parameter] public string? FieldName { get; set; }
+
+    /// <summary>
+    /// Current values of the fields this picker depends on, keyed by the paths its
+    /// filters name in <c>ValueFrom</c>. Supplying a changed value is what re-runs a
+    /// dependent query - the editor passes this when a PARENT COMMITS, not on every
+    /// keystroke.
+    /// </summary>
+    [Parameter] public IReadOnlyDictionary<string, string[]>? EditorState { get; set; }
+
+    /// <summary>Raised when a parent change invalidated the selection and it was
+    /// cleared, so the editor can tell the user why.</summary>
+    [Parameter] public EventCallback<string> OnSelectionCleared { get; set; }
+
+    [Parameter] public string? TestId { get; set; }
+
+    private List<OptionPickerRow> Rows { get; set; } = [];
+    private string? Error { get; set; }
+
+    // The dependency values this picker last queried with. Comparing against it is how
+    // a parent's COMMITTED change is detected - re-querying on every render would
+    // re-fetch constantly, and per-keystroke is the type-ahead's job, not this.
+    private string? _lastEditorStateKey;
+
+    private IReadOnlyList<OptionPickerColumn> VisibleColumns =>
+        Columns.Count > 0 ? [.. Columns.Where(column => column.Visible)] : [DefaultColumn];
+
+    private static readonly OptionPickerColumn DefaultColumn = new("DisplayText", "Name", null, true, false);
+
+    private string PrimaryColumnPath => VisibleColumns.FirstOrDefault()?.Path ?? DefaultColumn.Path;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Rows for what is already selected, so the closed picker shows real values
+        // rather than raw ids. Batched into one request for every id.
+        if (SelectedIds.Count > 0 && !Rows.Any(row => SelectedIds.Contains(row.Id)))
+        {
+            await LoadSelectedAsync();
+        }
+
+        var stateKey = EditorStateKey();
+        if (_lastEditorStateKey is not null && _lastEditorStateKey != stateKey)
+        {
+            // A parent committed a new value. Whatever was offered is stale, and the
+            // current selection may no longer belong to the new parent.
+            await OnParentChangedAsync();
+        }
+
+        _lastEditorStateKey = stateKey;
+    }
+
+    /// <summary>
+    /// Handles a committed parent change: drop the cached rows, and ask the server
+    /// whether the current selection survives the new state. The server answers
+    /// because only it knows the attachment's filters.
+    /// </summary>
+    private async Task OnParentChangedAsync()
+    {
+        Rows = [];
+
+        if (SelectedIds.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/crest/option-sources/validate-selection", new
+            {
+                SourceKey,
+                ContentType,
+                FieldName,
+                SelectedIds,
+                EditorState,
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return;
+            }
+
+            var validation = await response.Content.ReadFromJsonAsync<OptionSelectionValidation>();
+            if (validation is null || validation.StillValid)
+            {
+                return;
+            }
+
+            // Clearing is not optional - keeping a child that contradicts its parent
+            // would let the document save an invalid pair. The setting only decides
+            // whether the user is told.
+            SelectedIds = [];
+            await SelectedIdsChanged.InvokeAsync([]);
+
+            if (validation.OnParentChange == "WarnThenClear")
+            {
+                await OnSelectionCleared.InvokeAsync(
+                    "The previous selection no longer applies and has been cleared.");
+            }
+        }
+        catch (Exception exception)
+        {
+            Error = exception.Message;
+        }
+    }
+
+    // A stable string for the current dependency values, so a change can be detected
+    // without holding a reference to a dictionary the parent may mutate in place.
+    private string EditorStateKey() =>
+        EditorState is null
+            ? string.Empty
+            : string.Join('|', EditorState
+                .OrderBy(entry => entry.Key, StringComparer.Ordinal)
+                .Select(entry => $"{entry.Key}={string.Join(',', entry.Value)}"));
+
+    private sealed record OptionSelectionValidation(bool StillValid, string OnParentChange);
+
+    private async Task LoadSelectedAsync()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/crest/option-sources/resolve", new
+            {
+                SourceKey,
+                Ids = SelectedIds,
+                Columns = RequestedColumns(),
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var rows = await response.Content.ReadFromJsonAsync<OptionPickerRow[]>() ?? [];
+                Merge(rows);
+            }
+        }
+        catch (Exception exception)
+        {
+            Error = exception.Message;
+        }
+    }
+
+    private async Task OnLoadDataAsync(LoadDataArgs args)
+    {
+        Error = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/crest/option-sources/query", new
+            {
+                SourceKey,
+                Columns = RequestedColumns(),
+                SearchText = args.Filter,
+                // The attachment identifies itself; the server loads its filters and
+                // resolves any ValueFrom against the state below.
+                ContentType,
+                FieldName,
+                EditorState,
+                SearchColumns,
+                Skip = args.Skip ?? 0,
+                Take = args.Top ?? 50,
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            var rows = await response.Content.ReadFromJsonAsync<OptionPickerRow[]>() ?? [];
+            Rows = [.. rows];
+
+            // Keep already-selected rows present even when the current filter excludes
+            // them, or the closed picker would blank out while the user searches.
+            await LoadSelectedIntoRowsAsync();
+        }
+        catch (Exception exception)
+        {
+            Error = exception.Message;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task LoadSelectedIntoRowsAsync()
+    {
+        var missing = SelectedIds.Where(id => !Rows.Any(row => row.Id == id)).ToArray();
+        if (missing.Length == 0)
+        {
+            return;
+        }
+
+        var response = await Http.PostAsJsonAsync("api/crest/option-sources/resolve", new
+        {
+            SourceKey,
+            Ids = missing,
+            Columns = RequestedColumns(),
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            Merge(await response.Content.ReadFromJsonAsync<OptionPickerRow[]>() ?? []);
+        }
+    }
+
+    private void Merge(IEnumerable<OptionPickerRow> rows)
+    {
+        foreach (var row in rows)
+        {
+            if (!Rows.Any(existing => existing.Id == row.Id))
+            {
+                Rows.Add(row);
+            }
+        }
+    }
+
+    private async Task OnChangeAsync(object? value)
+    {
+        var ids = value switch
+        {
+            IEnumerable<string> many => many.ToArray(),
+            string single => new[] { single },
+            _ => [],
+        };
+
+        SelectedIds = ids;
+        await SelectedIdsChanged.InvokeAsync(ids);
+    }
+
+    private string[] RequestedColumns() =>
+        Columns.Count > 0 ? [.. Columns.Select(column => column.Path)] : [DefaultColumn.Path];
+
+    private static string ReadValue(OptionPickerRow row, string path) =>
+        row.Values is not null && row.Values.TryGetValue(path, out var value) ? value ?? string.Empty : string.Empty;
+}

@@ -43,6 +43,11 @@ public sealed record OptionRow(string Id, IReadOnlyDictionary<string, string?> V
     /// <summary>Set for options a tenant hid: still resolvable for history, but not
     /// offered in pickers.</summary>
     public bool Hidden { get; init; }
+
+    // NOTE: there is deliberately no "redacted" row shape. A record the caller may not
+    // see is ABSENT from the result rather than returned hollow - a placeholder row
+    // still asserts that the reference resolves, which a caller can act on. The
+    // referencing item is then out of scope too (OptionSourceReferenceGuard).
 }
 
 /// <summary>A dropdown query: what to search, restrict, sort and return.</summary>

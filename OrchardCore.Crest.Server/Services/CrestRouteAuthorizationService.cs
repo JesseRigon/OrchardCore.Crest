@@ -106,6 +106,8 @@ public sealed class CrestRoutePermissionProvider : ICrestRoutePermissionProvider
         new("/Contents/ContentTypes/{ContentType}/Create", OrchardCore.Contents.CommonPermissions.EditContent),
         new("/Contents/ContentItems/{ContentItemId}/Edit", OrchardCore.Contents.CommonPermissions.EditContent),
         new("/ContentTypes/List", ContentTypesPermissions.ViewContentTypes),
+        new("/OptionLists", Crest.Permissions.CrestOptionListPermissions.ViewOptionLists),
+        new("/Configuration/OptionLists", Crest.Permissions.CrestOptionListPermissions.ViewOptionLists),
         new("/ContentTypes/ListParts", ContentTypesPermissions.ViewContentTypes),
         new("/Users/Index", UsersPermissions.ListUsers),
         new("/Users/Create", UsersPermissions.EditUsers),

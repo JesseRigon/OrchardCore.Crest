@@ -115,4 +115,8 @@
   <ItemGroup>
     <ProjectReference Include="..\OrchardCore.Crest.Client\OrchardCore.Crest.Client.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="OrchardCore.Crest.Server.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -14,6 +14,18 @@ public class OptionPickerFieldSettings : FieldSettings
 
     public bool Multiple { get; set; }
 
+    /// <summary>
+    /// Whether a value must be chosen for the document to be complete. Declared here
+    /// because stock field settings carry no shared Required flag - each field type
+    /// that needs one defines its own.
+    /// <para>
+    /// This is also what a DEPENDENT field derives its own requiredness from: if the
+    /// parent is required, the child is too, since a document cannot be complete with
+    /// the pair half-filled.
+    /// </para>
+    /// </summary>
+    public bool Required { get; set; }
+
     public string Placeholder { get; set; } = string.Empty;
 
     /// <summary>The columns this dropdown displays, in order. Empty means the
@@ -79,6 +91,41 @@ public class OptionFilter
     /// item state when querying.
     /// </summary>
     public string? ValueFrom { get; set; }
+
+    /// <summary>
+    /// What an EMPTY parent means. True: the child offers nothing until the parent is
+    /// chosen. False: the filter is skipped and the child offers everything.
+    /// <para>
+    /// A tenant choice rather than a framework ruling - requiring the parent is the
+    /// safer default (it cannot produce a child that contradicts a parent picked
+    /// afterwards), but plenty of screens legitimately want an unfiltered child until
+    /// someone narrows it.
+    /// </para>
+    /// </summary>
+    public bool RequireParentValue { get; set; } = true;
+
+    /// <summary>What happens to an already-selected child value that the new parent
+    /// invalidates. See <see cref="OptionParentChangeBehaviors"/>.</summary>
+    public string OnParentChange { get; set; } = OptionParentChangeBehaviors.WarnThenClear;
+
+    /// <summary>True when this filter draws its value from another field, and so has
+    /// to be re-resolved whenever that field commits.</summary>
+    public bool IsDependent => !string.IsNullOrWhiteSpace(ValueFrom);
+}
+
+/// <summary>
+/// How a dependent picker treats a selection that its parent has just invalidated.
+/// Clearing is not optional - keeping a contradictory pair would let the document
+/// save a child that does not belong to its parent - so the choice is only whether
+/// the user is told first.
+/// </summary>
+public static class OptionParentChangeBehaviors
+{
+    /// <summary>Tell the user the selection no longer applies, then clear it.</summary>
+    public const string WarnThenClear = "WarnThenClear";
+
+    /// <summary>Clear it without comment.</summary>
+    public const string SilentClear = "SilentClear";
 }
 
 public static class OptionFilterOperators

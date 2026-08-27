@@ -144,29 +144,43 @@ public sealed class CrestOptionListService(
     {
         var listItem = await RequireListItemAsync(listKey);
         var normalized = CrestOptionListRules.NormalizeKey(optionKey);
-        var listPart = listItem.As<CrestOptionListPart>()
-            ?? throw new InvalidOperationException($"Option list '{listKey}' has no option list part.");
+        // The mutation MUST happen inside Alter. As<T>() materializes a part from the
+        // item's JSON, so options fetched outside Alter are deserialized copies -
+        // changing them updates nothing, and the save silently succeeds having written
+        // the original values back.
+        ContentItem? option = null;
 
-        var option = listPart.Options.FirstOrDefault(candidate =>
-            CrestOptionListRules.KeyComparer.Equals(CrestOptionListRules.NormalizeKey(candidate.As<CrestOptionPart>()?.Key), normalized))
-            ?? throw new InvalidOperationException($"Option list '{listKey}' has no option '{optionKey}'.");
-
-        if (displayText is not null)
+        listItem.Alter<CrestOptionListPart>(part =>
         {
-            option.DisplayText = displayText;
-            option.Alter<ContentPart>("TitlePart", part => part.Content.Title = displayText);
-        }
+            option = part.Options.FirstOrDefault(candidate =>
+                CrestOptionListRules.KeyComparer.Equals(CrestOptionListRules.NormalizeKey(candidate.As<CrestOptionPart>()?.Key), normalized));
 
-        if (position is not null || hidden is not null)
-        {
-            option.Alter<CrestOptionPart>(part =>
+            if (option is null)
             {
-                part.Position = position ?? part.Position;
-                part.Hidden = hidden ?? part.Hidden;
-            });
+                return;
+            }
+
+            if (displayText is not null)
+            {
+                option.DisplayText = displayText;
+                option.Alter<ContentPart>("TitlePart", titlePart => titlePart.Content.Title = displayText);
+            }
+
+            if (position is not null || hidden is not null)
+            {
+                option.Alter<CrestOptionPart>(optionPart =>
+                {
+                    optionPart.Position = position ?? optionPart.Position;
+                    optionPart.Hidden = hidden ?? optionPart.Hidden;
+                });
+            }
+        });
+
+        if (option is null)
+        {
+            throw new InvalidOperationException($"Option list '{listKey}' has no option '{optionKey}'.");
         }
 
-        listItem.Alter<CrestOptionListPart>(part => part.Options = listPart.Options);
         await contentManager.UpdateAsync(listItem);
         await contentManager.PublishAsync(listItem);
         _byKey.Remove(CrestOptionListRules.NormalizeKey(listKey));
@@ -180,15 +194,41 @@ public sealed class CrestOptionListService(
 
         var sourceKey = CrestOptionSourceKeys.ForOptionList(CrestOptionListRules.NormalizeKey(listKey));
 
+        // WithField updates an EXISTING field's settings but keeps its original type,
+        // so converting a field that used to be (say) a TextField needs it removed
+        // first - otherwise the settings say "option picker" while the field is still
+        // text. Stored content is untouched by this: the field's own data stays in the
+        // item's document, which is what lets readers fall back to the previous shape
+        // for content written before the conversion.
+        var existing = await contentDefinitionManager.GetPartDefinitionAsync(contentType);
+        var current = existing?.Fields.FirstOrDefault(field =>
+            string.Equals(field.Name, fieldName, StringComparison.OrdinalIgnoreCase));
+
+        var position = current?.Settings?["ContentPartFieldSettings"]?["Position"]?.ToString();
+
+        if (current is not null && !string.Equals(current.FieldDefinition?.Name, nameof(OptionPickerField), StringComparison.Ordinal))
+        {
+            await contentDefinitionManager.AlterPartDefinitionAsync(contentType, part => part.RemoveField(fieldName));
+        }
+
         await contentDefinitionManager.AlterPartDefinitionAsync(contentType, part => part
-            .WithField(fieldName, field => field
-                .OfType(nameof(OptionPickerField))
-                .WithDisplayName(displayName ?? fieldName)
-                .MergeSettings<OptionPickerFieldSettings>(settings =>
+            .WithField(fieldName, field =>
+            {
+                field
+                    .OfType(nameof(OptionPickerField))
+                    .WithDisplayName(displayName ?? fieldName)
+                    .MergeSettings<OptionPickerFieldSettings>(settings =>
+                    {
+                        settings.SourceKey = sourceKey;
+                        settings.Multiple = false;
+                    });
+
+                // Keep the field where the editor already put it.
+                if (!string.IsNullOrWhiteSpace(position))
                 {
-                    settings.SourceKey = sourceKey;
-                    settings.Multiple = false;
-                })));
+                    field.WithPosition(position);
+                }
+            }));
     }
 
     private async Task<ContentItem?> FindListItemAsync(string normalizedKey)
