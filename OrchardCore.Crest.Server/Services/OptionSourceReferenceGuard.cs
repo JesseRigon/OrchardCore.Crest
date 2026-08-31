@@ -38,7 +38,7 @@ public static class OptionSourceReferenceGuard
     /// <param name="rootId">The item being tested.</param>
     /// <param name="getReferences">
     /// The ids this item points at. Only references that PARTICIPATE IN SCOPE belong
-    /// here - a reference to tenant configuration (an option list) is not a scope
+    /// here - a reference to tenant configuration (an content part list) is not a scope
     /// question and must not be included, or every document would depend on
     /// configuration visibility.
     /// </param>

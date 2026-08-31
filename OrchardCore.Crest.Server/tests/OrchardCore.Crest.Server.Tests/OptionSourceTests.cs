@@ -9,14 +9,14 @@ public class OptionSourceKeyTests
 {
     [Fact]
     public void Builds_a_qualified_key_for_an_option_list() =>
-        Assert.Equal("optionlist:pricing.modifier-kind", CrestOptionSourceKeys.ForOptionList("pricing.modifier-kind"));
+        Assert.Equal("contentpartlist:pricing.modifier-kind", CrestOptionSourceKeys.ForContentPartList("pricing.modifier-kind"));
 
     [Fact]
     public void Splits_provider_from_qualifier()
     {
-        var (provider, qualifier) = CrestOptionSourceKeys.Split("optionlist:pricing.side");
+        var (provider, qualifier) = CrestOptionSourceKeys.Split("contentpartlist:pricing.side");
 
-        Assert.Equal("optionlist", provider);
+        Assert.Equal("contentpartlist", provider);
         Assert.Equal("pricing.side", qualifier);
     }
 

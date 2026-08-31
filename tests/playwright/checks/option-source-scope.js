@@ -36,7 +36,7 @@ module.exports = async function run(page, ctx) {
     // over OptionSourceScope, since switching roles mid-suite would require a second
     // authenticated context.
     const queryAsAdmin = await post('/api/crest/option-sources/query', {
-      sourceKey: 'contentitem:OptionList',
+      sourceKey: 'contentitem:ContentPartList',
       columns: ['DisplayText', 'Owner'],
       take: 5,
     });
@@ -52,7 +52,7 @@ module.exports = async function run(page, ctx) {
     // shape anywhere in the payload.
     if (adminRows.length > 0) {
       const resolved = await post('/api/crest/option-sources/resolve', {
-        sourceKey: 'contentitem:OptionList',
+        sourceKey: 'contentitem:ContentPartList',
         ids: [adminRows[0].id],
         columns: ['DisplayText'],
       });
@@ -77,7 +77,7 @@ module.exports = async function run(page, ctx) {
     // An unknown id must simply not resolve - no row, no error, and above all no
     // fabricated placeholder that would imply the id exists.
     const unknown = await post('/api/crest/option-sources/resolve', {
-      sourceKey: 'contentitem:OptionList',
+      sourceKey: 'contentitem:ContentPartList',
       ids: ['definitely-not-a-real-content-item-id'],
       columns: ['DisplayText'],
     });
@@ -101,7 +101,7 @@ module.exports = async function run(page, ctx) {
       results.push({
         name: 'resolve-will-not-cross-content-types',
         pass: crossType.ok() && crossTypeRows.length === 0,
-        message: `HTTP ${crossType.status()}, rows=${crossTypeRows.length} (an OptionList id asked for as an Option)`,
+        message: `HTTP ${crossType.status()}, rows=${crossTypeRows.length} (an ContentPartList id asked for as an Option)`,
       });
     }
 
@@ -119,17 +119,17 @@ module.exports = async function run(page, ctx) {
       message: `HTTP ${unqualified.status()}, rows=${unqualifiedRows.length}`,
     });
 
-    // Option lists are tenant CONFIGURATION rather than per-user records, so they
+    // Content part lists are tenant CONFIGURATION rather than per-user records, so they
     // carry no ownership scope and stay readable.
-    const optionListSource = await post('/api/crest/option-sources/query', {
-      sourceKey: 'optionlist:transaction.status',
+    const contentPartListSource = await post('/api/crest/option-sources/query', {
+      sourceKey: 'contentpartlist:transaction.status',
       columns: ['DisplayText', 'Key'],
       take: 20,
     });
     results.push({
-      name: 'option-lists-are-not-owner-scoped',
-      pass: optionListSource.ok(),
-      message: `HTTP ${optionListSource.status()}`,
+      name: 'content-part-lists-are-not-owner-scoped',
+      pass: contentPartListSource.ok(),
+      message: `HTTP ${contentPartListSource.status()}`,
     });
   } catch (error) {
     results.push({ name: 'option-source-scope', pass: false, message: String(error) });

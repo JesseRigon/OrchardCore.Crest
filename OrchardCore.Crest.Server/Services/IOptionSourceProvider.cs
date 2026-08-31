@@ -4,13 +4,13 @@ namespace Crest.Services;
 
 /// <summary>
 /// A source an <see cref="Crest.Fields.OptionPickerField"/> can draw from. Providers
-/// keep the field itself ignorant of users, items or option lists, the same way
+/// keep the field itself ignorant of users, items or content part lists, the same way
 /// Crest.Icons hosts icon providers.
 /// </summary>
 public interface IOptionSourceProvider
 {
     /// <summary>Provider key matched against the first segment of a source key
-    /// ("optionlist" in "optionlist:pricing.side").</summary>
+    /// ("contentpartlist" in "contentpartlist:pricing.side").</summary>
     string Key { get; }
 
     /// <summary>
@@ -37,7 +37,7 @@ public sealed record OptionSourceColumnDescriptor(string Path, string Label, boo
 public sealed record OptionRow(string Id, IReadOnlyDictionary<string, string?> Values)
 {
     /// <summary>The technical key when the source has one distinct from the id
-    /// (Option Lists do; entity sources like users do not - their id IS the key).</summary>
+    /// (Content Part Lists do; entity sources like users do not - their id IS the key).</summary>
     public string? Key { get; init; }
 
     /// <summary>Set for options a tenant hid: still resolvable for history, but not

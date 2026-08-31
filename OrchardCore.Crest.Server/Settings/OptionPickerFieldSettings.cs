@@ -9,7 +9,7 @@ namespace Crest.Settings;
 /// </summary>
 public class OptionPickerFieldSettings : FieldSettings
 {
-    /// <summary>Which source to draw from, e.g. "optionlist:pricing.modifier-kind".</summary>
+    /// <summary>Which source to draw from, e.g. "contentpartlist:pricing.modifier-kind".</summary>
     public string SourceKey { get; set; } = string.Empty;
 
     public bool Multiple { get; set; }
@@ -41,7 +41,7 @@ public class OptionPickerFieldSettings : FieldSettings
     public string[] SearchColumns { get; set; } = [];
 
     /// <summary>Column paths to sort by. Empty means the provider's natural order
-    /// (for Option Lists: position, then display text).</summary>
+    /// (for Content Part Lists: position, then display text).</summary>
     public string[] SortColumns { get; set; } = [];
 
     /// <summary>Restrictions applied to what the dropdown offers. Evaluated by the

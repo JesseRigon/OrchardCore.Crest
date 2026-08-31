@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- The *.BlazorWasm suffix is a routing convention, not decoration: the server
+         loads and routes assemblies by it (Crest.Server Startup's client assembly
+         loading) and Admin.Client's generated CrestModuleAssemblyRegistry loads the
+         same set browser-side. -->
+    <AssemblyName>Crest.ContentPartLists.BlazorWasm</AssemblyName>
+    <RootNamespace>Crest.ContentPartLists.BlazorWasm</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Plain component-model packages, no WASM-only APIs - works under every host:
+       WASM, Blazor Server, and SSR (mirrors Fruitful.Parties.BlazorWasm). -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+  </ItemGroup>
+</Project>

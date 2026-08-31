@@ -10,7 +10,10 @@ namespace Crest.Services;
 /// </summary>
 public sealed class OptionPickerFieldKeyResolver(IEnumerable<IOptionSourceProvider> providers)
 {
-    private static readonly string[] KeyColumn = [OptionListSourceProvider.Columns.OptionKey];
+    // "Key" is part of the provider row contract (OptionRow.Key), not something owned
+    // by any single provider - the Option List provider moved to Crest.ContentPartLists, so
+    // the column name is spelled here rather than referenced from it.
+    private static readonly string[] KeyColumn = ["Key"];
 
     /// <summary>
     /// Keys for the field's selected ids, in the field's own order. Entries are null

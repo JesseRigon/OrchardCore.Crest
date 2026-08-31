@@ -7,15 +7,15 @@ namespace Crest.Models;
 /// </summary>
 public static class CrestOptionSourceKeys
 {
-    /// <summary>Provider key for tenant-editable Option Lists.</summary>
-    public const string OptionListProvider = "optionlist";
+    /// <summary>Provider key for tenant-editable Content Part Lists.</summary>
+    public const string ContentPartListProvider = "contentpartlist";
 
     /// <summary>Builds the source key for an Option List, e.g.
-    /// "optionlist:pricing.modifier-kind".</summary>
-    public static string ForOptionList(string listKey) => $"{OptionListProvider}:{listKey}";
+    /// "contentpartlist:pricing.modifier-kind".</summary>
+    public static string ForContentPartList(string listKey) => $"{ContentPartListProvider}:{listKey}";
 
     /// <summary>Splits a source key into its provider key and the provider-specific
-    /// remainder ("optionlist:pricing.side" -> "optionlist", "pricing.side").</summary>
+    /// remainder ("contentpartlist:pricing.side" -> "contentpartlist", "pricing.side").</summary>
     public static (string Provider, string Qualifier) Split(string? sourceKey)
     {
         var value = sourceKey?.Trim() ?? string.Empty;

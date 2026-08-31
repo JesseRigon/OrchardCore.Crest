@@ -47,7 +47,7 @@ public sealed record OptionSourceScope(
 
     /// <summary>
     /// Everything is viewable, so no predicate is needed. Used for sources that carry
-    /// no per-item authorization (option lists are tenant configuration, not records).
+    /// no per-item authorization (content part lists are tenant configuration, not records).
     /// </summary>
     public static readonly OptionSourceScope Unrestricted = new([], [], null) { IsUnrestricted = true };
 

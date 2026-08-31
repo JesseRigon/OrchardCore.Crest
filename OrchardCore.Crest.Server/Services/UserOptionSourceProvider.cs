@@ -58,8 +58,13 @@ public sealed class UserOptionSourceProvider(ISession session) : IOptionSourcePr
             ? query.SearchColumns
             : [Columns.UserName, Columns.Email]);
 
+        // Instance sort when requested; the provider's natural user-name order
+        // otherwise. The whole set is materialized above, so sorting precedes paging.
+        rows = query.SortColumns is { Count: > 0 }
+            ? OptionRowSorter.Apply(rows, query.SortColumns)
+            : rows.OrderBy(row => row.Values.TryGetValue(Columns.UserName, out var name) ? name : row.Id, StringComparer.OrdinalIgnoreCase);
+
         return [.. rows
-            .OrderBy(row => row.Values.TryGetValue(Columns.UserName, out var name) ? name : row.Id, StringComparer.OrdinalIgnoreCase)
             .Skip(query.Skip)
             .Take(query.Take)];
     }

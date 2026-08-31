@@ -1,17 +1,24 @@
 @page "/ContentTypes/List"
+@using System.Net.Http.Json
 @using Crest.Admin.Api
 @using Crest.Components.Model
 @using Crest.Components.Primitives
-@using Crest.Components.Primitives
 @inject IApi Api
+@inject HttpClient Http
+@inject NotificationService Notifications
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
+@* This screen manages which content types carry which PARTS, and the attachment's
+   instance settings (display name, description, position). Fields are deliberately
+   read-only here: they belong to the part definition and are edited on the Content
+   Parts screen, because a part is shared - a field change lands on every type
+   carrying it. *@
 <CrestStack Gap="1rem" data-testid="content-types-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
             <CrestText TextStyle="TextStyle.H4" Text="@T["Content Types"]" />
-            <CrestText TextStyle="TextStyle.Body2" Text="@T["Browse the current content definitions, their parts, and their fields."]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage which parts each content type carries. Fields live on the parts - edit them on the Content Parts screen."]" />
         </CrestStack>
         <CrestButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
     </CrestStack>
@@ -43,7 +50,7 @@
             }
             else if (SelectedType is null)
             {
-                <CrestCard><CrestText Text="@T["Select a content type to inspect its definition."]" /></CrestCard>
+                <CrestCard><CrestText Text="@T["Select a content type to manage its parts."]" /></CrestCard>
             }
             else
             {
@@ -57,11 +64,6 @@
                             <CrestButton Text="@T["Create content item"]" Icon="add" Size="ButtonSize.Small" Click="CreateContentItem" />
                         </CrestStack>
 
-                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                            <CrestBadge Text="@T["{0} parts", SelectedType.Parts.Length]" BadgeStyle="BadgeStyle.Info" />
-                            <CrestBadge Text="@T["{0} fields", FieldCount(SelectedType)]" BadgeStyle="BadgeStyle.Secondary" />
-                        </CrestStack>
-
                         @if (SelectedType.Parts.Length == 0)
                         {
                             <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["This type has no attached parts."]</CrestAlert>
@@ -70,17 +72,41 @@
                         {
                             @foreach (var part in SelectedType.Parts.OrderBy(part => part.Name, StringComparer.OrdinalIgnoreCase))
                             {
-                                <CrestFieldset Text="@part.Name" AllowCollapse="true" Collapsed="false" class="content-definition-part">
+                                var attachedName = part.Name;
+                                <CrestFieldset Text="@part.Name" AllowCollapse="true" Collapsed="true" class="content-definition-part">
                                     <CrestStack Gap="0.7rem">
-                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                                            <CrestBadge Text="@part.Part.Name" BadgeStyle="BadgeStyle.Secondary" />
-                                            <CrestBadge Text="@T["{0} fields", part.Part.Fields.Length]" BadgeStyle="BadgeStyle.Info" />
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap">
+                                            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                                                <CrestBadge Text="@part.Part.Name" BadgeStyle="BadgeStyle.Secondary" />
+                                                <CrestBadge Text="@T["{0} fields", part.Part.Fields.Length]" BadgeStyle="BadgeStyle.Info" />
+                                            </CrestStack>
+                                            <CrestButton Text="@T["Detach"]" Icon="link_off" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
+                                                         Click="@(() => DetachPartAsync(attachedName))" Disabled="@IsLoading" data-testid="detach-part" />
                                         </CrestStack>
-                                        @if (part.Part.Fields.Length == 0)
-                                        {
-                                            <CrestText TextStyle="TextStyle.Body2" Text="@T["No fields are defined on this part."]" />
-                                        }
-                                        else
+
+                                        @* The ATTACHMENT's instance settings - how this part presents
+                                           on THIS type. The part's fields stay shared. *@
+                                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" data-testid="part-attachment-settings">
+                                            <CrestFormField Text="@T["Display name"]">
+                                                <CrestTextBox Value="@AttachmentDraft(attachedName, "DisplayName", PartSetting(part, "DisplayName"))"
+                                                              ValueChanged="@(value => SetAttachmentDraft(attachedName, "DisplayName", value))"
+                                                              Disabled="@IsLoading" />
+                                            </CrestFormField>
+                                            <CrestFormField Text="@T["Description"]">
+                                                <CrestTextBox Value="@AttachmentDraft(attachedName, "Description", PartSetting(part, "Description"))"
+                                                              ValueChanged="@(value => SetAttachmentDraft(attachedName, "Description", value))"
+                                                              Disabled="@IsLoading" Style="min-width: 16rem;" />
+                                            </CrestFormField>
+                                            <CrestFormField Text="@T["Position"]">
+                                                <CrestTextBox Value="@AttachmentDraft(attachedName, "Position", PartSetting(part, "Position"))"
+                                                              ValueChanged="@(value => SetAttachmentDraft(attachedName, "Position", value))"
+                                                              Disabled="@IsLoading" Style="width: 5rem;" />
+                                            </CrestFormField>
+                                            <CrestButton Text="@T["Save"]" Icon="save" Size="ButtonSize.Small"
+                                                         Click="@(() => SaveAttachmentAsync(attachedName))" Disabled="@IsLoading" data-testid="save-part-attachment" />
+                                        </CrestStack>
+
+                                        @if (part.Part.Fields.Length > 0)
                                         {
                                             <div class="content-definition-fields">
                                                 @foreach (var field in part.Part.Fields.OrderBy(field => field.Name, StringComparer.OrdinalIgnoreCase))
@@ -91,11 +117,21 @@
                                                     </div>
                                                 }
                                             </div>
+                                            <CrestText TextStyle="TextStyle.Caption" Text="@T["Fields are shared by every type carrying this part - edit them on the Content Parts screen."]" />
                                         }
                                     </CrestStack>
                                 </CrestFieldset>
                             }
                         }
+
+                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                            <CrestFormField Text="@T["Attach part"]">
+                                <CrestDropDown @bind-Value="PartToAttach" TValue="string" Data="@AttachablePartChoices"
+                                               TextProperty="Label" ValueProperty="Value" Disabled="@IsLoading" Style="min-width: 14rem;" data-testid="attach-part-dropdown" />
+                            </CrestFormField>
+                            <CrestButton Text="@T["Attach"]" Icon="add_link" Size="ButtonSize.Small"
+                                         Click="AttachPartAsync" Disabled="@(IsLoading || string.IsNullOrWhiteSpace(PartToAttach))" data-testid="attach-part" />
+                        </CrestStack>
                     </CrestStack>
                 </CrestCard>
             }
@@ -105,13 +141,27 @@
 
 @code {
     private ContentType[] AllContentTypes { get; set; } = [];
+    private string[] AllPartNames { get; set; } = [];
     private string? SelectedTypeName { get; set; }
     private bool IsLoading { get; set; }
     private string? ErrorMessage { get; set; }
+    private string PartToAttach { get; set; } = string.Empty;
 
     private ContentType? SelectedType => AllContentTypes.FirstOrDefault(type => string.Equals(type.Name, SelectedTypeName, StringComparison.OrdinalIgnoreCase));
 
-    protected override Task OnInitializedAsync() => LoadAsync();
+    private sealed record Choice(string Label, string Value);
+    private sealed record PartDefinitionSummary(string Name);
+
+    private Choice[] AttachablePartChoices => SelectedType is null
+        ? []
+        : [.. AllPartNames
+            .Where(name => !SelectedType.Parts.Any(part => string.Equals(part.Name, name, StringComparison.OrdinalIgnoreCase)))
+            .Select(name => new Choice(name, name))];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
 
     private async Task LoadAsync()
     {
@@ -125,6 +175,9 @@
             SelectedTypeName = AllContentTypes.Any(type => string.Equals(type.Name, SelectedTypeName, StringComparison.OrdinalIgnoreCase))
                 ? SelectedTypeName
                 : AllContentTypes.FirstOrDefault()?.Name;
+
+            var parts = await Http.GetFromJsonAsync<PartDefinitionSummary[]>("api/crest/content-types/parts") ?? [];
+            AllPartNames = [.. parts.Select(part => part.Name)];
         }
         catch (Exception ex)
         {
@@ -139,6 +192,7 @@
     private Task SelectTypeAsync(ContentType contentType)
     {
         SelectedTypeName = contentType.Name;
+        AttachmentDrafts.Clear();
         return Task.CompletedTask;
     }
 
@@ -148,13 +202,97 @@
         || contentType.Parts.Any(part => part.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
             || part.Part.Fields.Any(field => field.Name.Contains(term, StringComparison.OrdinalIgnoreCase)));
 
-    private static int FieldCount(ContentType contentType) => contentType.Parts.Sum(part => part.Part.Fields.Length);
-
     private void CreateContentItem()
     {
         if (SelectedType is not null)
         {
             Navigation.NavigateTo($"Contents/ContentTypes/{Uri.EscapeDataString(SelectedType.Name)}/Create");
+        }
+    }
+
+    // The type-part attachment's stored settings live in the part attachment's
+    // Settings JSON under ContentTypePartSettings.
+    private static string PartSetting(ContentTypePart part, string key) =>
+        part.Settings?["ContentTypePartSettings"]?[key]?.ToString() ?? string.Empty;
+
+    // Draft buffer per (part, setting): the boxes re-render on every keystroke.
+    private Dictionary<string, string> AttachmentDrafts { get; } = new(StringComparer.Ordinal);
+
+    private string AttachmentDraft(string part, string key, string stored) =>
+        AttachmentDrafts.TryGetValue($"{part}{key}", out var draft) ? draft : stored;
+
+    private void SetAttachmentDraft(string part, string key, string? value) =>
+        AttachmentDrafts[$"{part}{key}"] = value ?? string.Empty;
+
+    private async Task SaveAttachmentAsync(string partName)
+    {
+        if (SelectedType is null)
+        {
+            return;
+        }
+
+        var part = SelectedType.Parts.FirstOrDefault(candidate => string.Equals(candidate.Name, partName, StringComparison.OrdinalIgnoreCase));
+        if (part is null)
+        {
+            return;
+        }
+
+        await SendAsync(
+            () => Http.PutAsJsonAsync($"api/crest/content-types/{Uri.EscapeDataString(SelectedType.Name)}/parts", new
+            {
+                Part = partName,
+                DisplayName = AttachmentDraft(partName, "DisplayName", PartSetting(part, "DisplayName")),
+                Description = AttachmentDraft(partName, "Description", PartSetting(part, "Description")),
+                Position = AttachmentDraft(partName, "Position", PartSetting(part, "Position")),
+            }),
+            T["Part settings saved."]);
+    }
+
+    private async Task AttachPartAsync()
+    {
+        if (SelectedType is null || string.IsNullOrWhiteSpace(PartToAttach))
+        {
+            return;
+        }
+
+        var partName = PartToAttach;
+        await SendAsync(
+            () => Http.PutAsJsonAsync($"api/crest/content-types/{Uri.EscapeDataString(SelectedType.Name)}/parts", new { Part = partName }),
+            T["Part attached."]);
+        PartToAttach = string.Empty;
+    }
+
+    private async Task DetachPartAsync(string partName)
+    {
+        if (SelectedType is null)
+        {
+            return;
+        }
+
+        await SendAsync(
+            () => Http.DeleteAsync($"api/crest/content-types/{Uri.EscapeDataString(SelectedType.Name)}/parts/{Uri.EscapeDataString(partName)}"),
+            T["Part detached."]);
+    }
+
+    private async Task SendAsync(Func<Task<HttpResponseMessage>> send, string successMessage)
+    {
+        ErrorMessage = null;
+        try
+        {
+            using var response = await send();
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, T["Content Types"], successMessage);
+            AttachmentDrafts.Clear();
+            await LoadAsync();
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
         }
     }
 }

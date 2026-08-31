@@ -71,7 +71,7 @@ public class OptionSourceScopeTests
     [Fact]
     public void Unrestricted_allows_everything()
     {
-        // Option lists are tenant CONFIGURATION rather than records, so they carry no
+        // Content part lists are tenant CONFIGURATION rather than records, so they carry no
         // per-item authorization.
         Assert.True(OptionSourceScope.Unrestricted.Allows("Anything", owner: "whoever"));
     }

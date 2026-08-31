@@ -265,16 +265,12 @@ public sealed class Startup : StartupBase
         services.AddContentPart<CrestBlazorComponentPart>();
         services.AddDataMigration<CrestBlazorComponentMigrations>();
 
-        // Option Lists - the tenant-editable enum system (see
-        // plans/fruitful-modules.md, Tier 0). Modules declare the sets they own and
-        // consume them by logical key; tenants relabel/reorder/hide at runtime.
-        services.AddContentPart<CrestOptionListPart>();
-        services.AddContentPart<CrestOptionPart>();
-        services.AddDataMigration<CrestOptionListMigrations>();
-        services.AddScoped<ICrestOptionListService, CrestOptionListService>();
+        // Content Part Lists themselves (parts, service, management API, screen) live in the
+        // Crest.ContentPartLists module - an opt-in feature. Only the provider-agnostic
+        // picker infrastructure stays here.
 
         // OptionPickerField: the reference mechanism for option sources. Providers keep
-        // the field ignorant of what it is picking (option lists today; users, content
+        // the field ignorant of what it is picking (content part lists today; users, content
         // items and other entity sources later).
         services.AddContentField<Fields.OptionPickerField>();
         // Assignment scoping. AssignmentScopedTypes is a SINGLETON policy registry -
@@ -287,7 +283,6 @@ public sealed class Startup : StartupBase
         services.AddContentPart<CrestAssignmentPart>();
 
         services.AddScoped<IOptionSourceScopeResolver, OptionSourceScopeResolver>();
-        services.AddScoped<IOptionSourceProvider, OptionListSourceProvider>();
         services.AddScoped<IOptionSourceProvider, UserOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, ContentItemOptionSourceProvider>();
         services.AddScoped<OptionPickerFieldKeyResolver>();
@@ -406,7 +401,7 @@ public sealed class TenantMediaIconsStartup : StartupBase
     {
         services.AddScoped<IIconProvider, TenantMediaIconProvider>();
         services.AddScoped<IPermissionProvider, Permissions.CrestIconPermissions>();
-        services.AddScoped<IPermissionProvider, Permissions.CrestOptionListPermissions>();
+        services.AddScoped<IPermissionProvider, Permissions.CrestContentPartListPermissions>();
     }
 }
 

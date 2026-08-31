@@ -29,7 +29,7 @@ namespace Crest.Indexing;
 public abstract class OptionPickerFieldIndexBase : ContentFieldIndex
 {
     /// <summary>Which source the picker drew from, e.g.
-    /// "optionlist:transaction.status".</summary>
+    /// "contentpartlist:transaction.status".</summary>
     public string SourceKey { get; set; }
 
     /// <summary>One row per selected id, so a multi-select is found by a plain

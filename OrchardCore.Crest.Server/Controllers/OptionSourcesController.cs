@@ -10,114 +10,24 @@ using OrchardCore.ContentManagement.Metadata.Models;
 
 namespace Crest.Controllers;
 
-// The management API behind Option Lists. The SCREENS live in Crest.Admin's wasm
-// pages; Fruitful modules only declare and consume sets, they never own these editors.
+// The provider-generic half of the picker API: rows, columns, dependencies and
+// selection validation for WHATEVER source a field is bound to (content part lists, users,
+// content items, ...). Lives in Crest.Server with the provider abstraction itself;
+// the Option List management CRUD lives in the Crest.ContentPartLists module.
 [ApiController]
 [AutoValidateAntiforgeryToken]
-[Route("api/crest/option-lists")]
-public sealed class OptionListsController(
-    ICrestOptionListService optionLists,
+[Route("api/crest/option-sources")]
+public sealed class OptionSourcesController(
     IEnumerable<IOptionSourceProvider> sourceProviders,
     IContentDefinitionManager contentDefinitionManager,
     IAuthorizationService authorizationService) : ControllerBase
 {
-    [HttpGet]
-    public async Task<ActionResult<CrestOptionListModel[]>> ListAsync()
-    {
-        if (!await CanViewAsync())
-        {
-            return Forbid();
-        }
-
-        return Ok((await optionLists.ListAsync(HttpContext.RequestAborted)).ToArray());
-    }
-
-    [HttpGet("{key}")]
-    public async Task<ActionResult<CrestOptionListModel>> GetAsync(string key)
-    {
-        if (!await CanViewAsync())
-        {
-            return Forbid();
-        }
-
-        var list = await optionLists.GetAsync(key, HttpContext.RequestAborted);
-        return list is null ? NotFound() : Ok(list);
-    }
-
-    /// <summary>The options an editor should offer: ordered, hidden ones dropped.</summary>
-    [HttpGet("{key}/selectable")]
-    public async Task<ActionResult<CrestOptionModel[]>> GetSelectableAsync(string key)
-    {
-        if (!await CanViewAsync())
-        {
-            return Forbid();
-        }
-
-        return Ok((await optionLists.GetSelectableAsync(key, HttpContext.RequestAborted)).ToArray());
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<CrestOptionListModel>> CreateAsync([FromBody] CreateOptionListRequest request)
-    {
-        if (!await CanManageAsync())
-        {
-            return Forbid();
-        }
-
-        try
-        {
-            return Ok(await optionLists.CreateListAsync(request.Key, request.DisplayText, HttpContext.RequestAborted));
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Problem(exception.Message, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    [HttpPost("{key}/options")]
-    public async Task<ActionResult<CrestOptionModel>> AddOptionAsync(string key, [FromBody] AddOptionRequest request)
-    {
-        if (!await CanManageAsync())
-        {
-            return Forbid();
-        }
-
-        try
-        {
-            return Ok(await optionLists.AddOptionAsync(key, request.Key, request.DisplayText, request.Position, HttpContext.RequestAborted));
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Problem(exception.Message, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    // The technical key is deliberately not updatable - it is the contract module
-    // code matches on. Tenants relabel, reorder and hide instead.
-    [HttpPut("{key}/options/{optionKey}")]
-    public async Task<ActionResult<CrestOptionModel>> UpdateOptionAsync(string key, string optionKey, [FromBody] UpdateOptionRequest request)
-    {
-        if (!await CanManageAsync())
-        {
-            return Forbid();
-        }
-
-        try
-        {
-            return Ok(await optionLists.UpdateOptionAsync(key, optionKey, request.DisplayText, request.Position, request.Hidden, HttpContext.RequestAborted));
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Problem(exception.Message, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
     /// <summary>
     /// Rows for a picker: whichever columns the caller asks for, from whichever
     /// source the field is bound to. This is the endpoint the option picker component
     /// queries as the user types.
     /// </summary>
-    [HttpPost("~/api/crest/option-sources/query")]
+    [HttpPost("query")]
     public async Task<ActionResult<OptionRow[]>> QuerySourceAsync([FromBody] OptionSourceQueryRequest request)
     {
         if (!await CanViewAsync())
@@ -147,14 +57,26 @@ public sealed class OptionListsController(
             return Ok(Array.Empty<OptionRow>());
         }
 
+        // Sort is an INSTANCE parameter: the request's explicit sort wins, else the
+        // attachment's configured SortColumns, else the provider's natural order.
+        // The sort columns are unioned into the requested columns so their values are
+        // materialized for the comparison, whether or not the picker displays them.
+        var settings = await GetFieldSettingsAsync(request.ContentType, request.FieldName);
+        var sortColumns = request.SortColumns is { Count: > 0 }
+            ? request.SortColumns
+            : settings?.SortColumns ?? [];
+        var columns = (request.Columns ?? [])
+            .Union(sortColumns, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
         var rows = await provider.QueryAsync(
             new OptionSourceQuery(
                 qualifier,
-                request.Columns ?? [],
+                columns,
                 request.SearchText,
                 resolution.Filters,
                 request.SearchColumns,
-                request.SortColumns,
+                sortColumns,
                 request.Skip,
                 Math.Clamp(request.Take, 1, 200)),
             HttpContext.RequestAborted);
@@ -167,7 +89,7 @@ public sealed class OptionListsController(
     /// is. The editor asks once when it renders, then re-queries when a watched field
     /// COMMITS - not on every keystroke.
     /// </summary>
-    [HttpGet("~/api/crest/option-sources/dependencies")]
+    [HttpGet("dependencies")]
     public async Task<ActionResult<OptionDependencyModel>> GetDependenciesAsync(
         [FromQuery] string contentType,
         [FromQuery] string fieldName)
@@ -200,7 +122,7 @@ public sealed class OptionListsController(
     /// behind clearing a child when its parent changes. Answered server-side because
     /// only the server knows the attachment's filters.
     /// </summary>
-    [HttpPost("~/api/crest/option-sources/validate-selection")]
+    [HttpPost("validate-selection")]
     public async Task<ActionResult<OptionSelectionValidationModel>> ValidateSelectionAsync(
         [FromBody] OptionSelectionValidationRequest request)
     {
@@ -234,6 +156,63 @@ public sealed class OptionListsController(
             stillValid,
             settings?.Filters.FirstOrDefault(filter => filter.IsDependent)?.OnParentChange
                 ?? OptionParentChangeBehaviors.WarnThenClear));
+    }
+
+    /// <summary>Rows for already-selected ids, so a picker can render what is
+    /// stored. Batched: one call for every id on the field.</summary>
+    [HttpPost("resolve")]
+    public async Task<ActionResult<OptionRow[]>> ResolveSourceAsync([FromBody] OptionSourceResolveRequest request)
+    {
+        if (!await CanViewAsync())
+        {
+            return Forbid();
+        }
+
+        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(request.SourceKey);
+        var provider = sourceProviders.FirstOrDefault(candidate =>
+            string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
+
+        if (provider is null)
+        {
+            return Problem($"There is no option source provider named '{providerKey}'.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var rows = await provider.GetByIdsAsync(qualifier, request.Ids ?? [], request.Columns ?? [], HttpContext.RequestAborted);
+        return Ok(rows.ToArray());
+    }
+
+    /// <summary>The columns a source can offer - drives the column picker in the
+    /// field's settings editor, so paths are never typed blind.</summary>
+    [HttpGet("{sourceKey}/columns")]
+    public async Task<ActionResult<OptionSourceColumnDescriptor[]>> DescribeColumnsAsync(string sourceKey)
+    {
+        if (!await CanViewAsync())
+        {
+            return Forbid();
+        }
+
+        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(sourceKey);
+        var provider = sourceProviders.FirstOrDefault(candidate =>
+            string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
+
+        if (provider is null)
+        {
+            return NotFound();
+        }
+
+        return Ok((await provider.DescribeColumnsAsync(qualifier, HttpContext.RequestAborted)).ToArray());
+    }
+
+    /// <summary>The registered sources a field can be bound to.</summary>
+    [HttpGet]
+    public async Task<ActionResult<string[]>> ListSourcesAsync()
+    {
+        if (!await CanViewAsync())
+        {
+            return Forbid();
+        }
+
+        return Ok(sourceProviders.Select(provider => provider.Key).Distinct(StringComparer.OrdinalIgnoreCase).Order().ToArray());
     }
 
     private async Task<OptionFilterResolution> ResolveFiltersAsync(
@@ -280,97 +259,11 @@ public sealed class OptionListsController(
     private static IReadOnlyDictionary<string, IReadOnlyList<string>>? ToEditorState(IReadOnlyDictionary<string, string[]>? state) =>
         state?.ToDictionary(entry => entry.Key, entry => (IReadOnlyList<string>)entry.Value, StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Rows for already-selected ids, so a picker can render what is
-    /// stored. Batched: one call for every id on the field.</summary>
-    [HttpPost("~/api/crest/option-sources/resolve")]
-    public async Task<ActionResult<OptionRow[]>> ResolveSourceAsync([FromBody] OptionSourceResolveRequest request)
-    {
-        if (!await CanViewAsync())
-        {
-            return Forbid();
-        }
-
-        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(request.SourceKey);
-        var provider = sourceProviders.FirstOrDefault(candidate =>
-            string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
-
-        if (provider is null)
-        {
-            return Problem($"There is no option source provider named '{providerKey}'.", statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        var rows = await provider.GetByIdsAsync(qualifier, request.Ids ?? [], request.Columns ?? [], HttpContext.RequestAborted);
-        return Ok(rows.ToArray());
-    }
-
-    /// <summary>The columns a source can offer - drives the column picker in the
-    /// field's settings editor, so paths are never typed blind.</summary>
-    [HttpGet("~/api/crest/option-sources/{sourceKey}/columns")]
-    public async Task<ActionResult<OptionSourceColumnDescriptor[]>> DescribeColumnsAsync(string sourceKey)
-    {
-        if (!await CanViewAsync())
-        {
-            return Forbid();
-        }
-
-        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(sourceKey);
-        var provider = sourceProviders.FirstOrDefault(candidate =>
-            string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
-
-        if (provider is null)
-        {
-            return NotFound();
-        }
-
-        return Ok((await provider.DescribeColumnsAsync(qualifier, HttpContext.RequestAborted)).ToArray());
-    }
-
-    /// <summary>The registered sources a field can be bound to.</summary>
-    [HttpGet("~/api/crest/option-sources")]
-    public async Task<ActionResult<string[]>> ListSourcesAsync()
-    {
-        if (!await CanViewAsync())
-        {
-            return Forbid();
-        }
-
-        return Ok(sourceProviders.Select(provider => provider.Key).Distinct(StringComparer.OrdinalIgnoreCase).Order().ToArray());
-    }
-
-    [HttpPost("{key}/attach")]
-    public async Task<IActionResult> AttachAsync(string key, [FromBody] AttachOptionListRequest request)
-    {
-        if (!await CanManageAsync())
-        {
-            return Forbid();
-        }
-
-        try
-        {
-            await optionLists.AttachToContentTypeAsync(key, request.ContentType, request.FieldName, request.DisplayName, HttpContext.RequestAborted);
-            return NoContent();
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Problem(exception.Message, statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    private Task<bool> CanViewAsync() => IsAuthorizedAsync(CrestOptionListPermissions.ViewOptionLists);
-
-    private Task<bool> CanManageAsync() => IsAuthorizedAsync(CrestOptionListPermissions.ManageOptionLists);
+    private Task<bool> CanViewAsync() => IsAuthorizedAsync(CrestContentPartListPermissions.ViewContentPartLists);
 
     private async Task<bool> IsAuthorizedAsync(OrchardCore.Security.Permissions.Permission permission) =>
         await authorizationService.AuthorizeAsync(User, permission);
 }
-
-public sealed record CreateOptionListRequest(string Key, string DisplayText);
-
-public sealed record AddOptionRequest(string Key, string DisplayText, int Position = 0);
-
-public sealed record UpdateOptionRequest(string? DisplayText, int? Position, bool? Hidden);
-
-public sealed record AttachOptionListRequest(string ContentType, string FieldName, string? DisplayName);
 
 /// <summary>
 /// A picker's request for rows.

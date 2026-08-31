@@ -15,9 +15,9 @@ module.exports = async function run(page, ctx) {
   const token = await tokenResponse.json();
   const headers = { [token.headerName || 'RequestVerificationToken']: token.requestToken };
 
-  // Unique per run and matched verbatim: repeat runs leave earlier probe data behind
-  // (there is still no delete endpoint), and a prefix match would read a previous
-  // run's list.
+  // Unique per run and matched verbatim: the probes delete themselves in the finally
+  // below, but a crashed earlier run can still leave data behind, and a prefix match
+  // would then read the wrong run's list.
   const stamp = Date.now();
   const parentListKey = `probe.dep.parent.${stamp}`;
   const childListKey = `probe.dep.child.${stamp}`;
@@ -29,11 +29,11 @@ module.exports = async function run(page, ctx) {
     // region they belong to as their Source value... except Source is provenance, not
     // domain data. So instead the child options are keyed so the filter can match on
     // the KEY, which is what code compares on anyway.
-    const parentCreated = await post('/api/crest/option-lists', {
+    const parentCreated = await post('/api/crest/content-part-lists', {
       key: parentListKey,
       displayText: `Probe regions ${stamp}`,
     });
-    const childCreated = await post('/api/crest/option-lists', {
+    const childCreated = await post('/api/crest/content-part-lists', {
       key: childListKey,
       displayText: `Probe cities ${stamp}`,
     });
@@ -44,14 +44,14 @@ module.exports = async function run(page, ctx) {
       message: `parent HTTP ${parentCreated.status()}, child HTTP ${childCreated.status()}`,
     });
 
-    await post(`/api/crest/option-lists/${parentListKey}/options`, { key: 'North', displayText: 'North', position: 0 });
-    await post(`/api/crest/option-lists/${parentListKey}/options`, { key: 'South', displayText: 'South', position: 1 });
+    await post(`/api/crest/content-part-lists/${parentListKey}/options`, { key: 'North', displayText: 'North', position: 0 });
+    await post(`/api/crest/content-part-lists/${parentListKey}/options`, { key: 'South', displayText: 'South', position: 1 });
 
     // Child options keyed by their parent so a filter on Key can select them.
-    await post(`/api/crest/option-lists/${childListKey}/options`, { key: 'North', displayText: 'Northtown', position: 0 });
-    await post(`/api/crest/option-lists/${childListKey}/options`, { key: 'South', displayText: 'Southport', position: 1 });
+    await post(`/api/crest/content-part-lists/${childListKey}/options`, { key: 'North', displayText: 'Northtown', position: 0 });
+    await post(`/api/crest/content-part-lists/${childListKey}/options`, { key: 'South', displayText: 'Southport', position: 1 });
 
-    const childSource = `optionlist:${childListKey}`;
+    const childSource = `contentpartlist:${childListKey}`;
 
     // --- Guarantee 1: the caller cannot smuggle in its own filters ---------------
     // The query request has no filter field at all. Posting one must be ignored
@@ -129,7 +129,7 @@ module.exports = async function run(page, ctx) {
     // already references it must still render.
     if (northOption) {
       await page.request.put(
-        `${ctx.baseUrl}/api/crest/option-lists/${childListKey}/options/North`,
+        `${ctx.baseUrl}/api/crest/content-part-lists/${childListKey}/options/North`,
         { headers, data: { displayText: null, position: null, hidden: true } },
       );
 
@@ -155,6 +155,11 @@ module.exports = async function run(page, ctx) {
     }
   } catch (error) {
     results.push({ name: 'dependent-filtering', pass: false, message: String(error) });
+  } finally {
+    // Tenant-created lists are deletable, so the probes clean themselves up.
+    for (const key of [parentListKey, childListKey]) {
+      await page.request.delete(`${ctx.baseUrl}/api/crest/content-part-lists/${key}`, { headers }).catch(() => {});
+    }
   }
 
   return results;

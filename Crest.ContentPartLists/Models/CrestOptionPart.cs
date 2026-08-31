@@ -29,12 +29,20 @@ public class CrestOptionPart : ContentPart
     /// <summary>Sort order within the set; ties fall back to display text.</summary>
     public int Position { get; set; }
 
+    /// <summary>
+    /// Flat, single-valued grouping label used by the Categorized sort. Never null:
+    /// an option without an explicit category belongs to
+    /// <see cref="CrestOptionCategories.Uncategorized"/>. No hierarchy - a category
+    /// is a label, not a tree.
+    /// </summary>
+    public string Category { get; set; } = CrestOptionCategories.Uncategorized;
+
     /// <summary>Back-reference to the owning Option List content item.</summary>
-    public string OptionListContentItemId { get; set; } = string.Empty;
+    public string ContentPartListContentItemId { get; set; } = string.Empty;
 }
 
 /// <summary>Provenance values for <see cref="CrestOptionPart.Source"/> and
-/// <see cref="CrestOptionListPart.Source"/>.</summary>
+/// <see cref="CrestContentPartListPart.Source"/>.</summary>
 public static class CrestOptionSources
 {
     /// <summary>Seeded by a module. Tenants may relabel or hide these, but the key
@@ -43,4 +51,12 @@ public static class CrestOptionSources
 
     /// <summary>Created by the tenant.</summary>
     public const string Tenant = "Tenant";
+}
+
+/// <summary>Category values for <see cref="CrestOptionPart.Category"/>.</summary>
+public static class CrestOptionCategories
+{
+    /// <summary>The default category every option belongs to until a tenant assigns
+    /// one. Stored as this invariant token; screens localize it for display.</summary>
+    public const string Uncategorized = "Uncategorized";
 }

@@ -103,7 +103,18 @@ public sealed class ContentItemOptionSourceProvider(
         if (plan.Residual.Count > 0)
         {
             rows = OptionFilterMatcher.Apply(rows, plan.Residual);
+            // The candidate set is materialized on this path, so the instance sort
+            // can apply before the page is taken.
+            rows = OptionRowSorter.Apply(rows, query.SortColumns);
             rows = rows.Skip(query.Skip).Take(query.Take);
+        }
+        else if (query.SortColumns is { Count: > 0 })
+        {
+            // Paging already happened in SQL (ordered by DisplayText), so a
+            // different sort can only be honored within the returned page. Correct
+            // cross-page sorting for arbitrary columns needs index pushdown - a
+            // recorded gap, not a silent one.
+            rows = OptionRowSorter.Apply(rows, query.SortColumns);
         }
 
         return [.. rows];

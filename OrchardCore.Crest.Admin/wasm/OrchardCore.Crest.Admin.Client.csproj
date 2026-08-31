@@ -57,6 +57,10 @@
          explicitly above, and on case-insensitive matching a recursive pattern would
          otherwise pull in this very project. -->
     <CrestModuleWasmProject Include="..\..\..\**\blazor-wasm\*.csproj" Exclude="..\..\..\OrchardCore.Crest\**\*.csproj" />
+    <!-- Crest's own opt-in modules sit inside the excluded tree, so they are added
+         back one by one - they participate in the same generated registry as host
+         module wasm libraries. -->
+    <CrestModuleWasmProject Include="..\..\Crest.ContentPartLists\blazor-wasm\Crest.ContentPartLists.BlazorWasm.csproj" />
     <ProjectReference Include="@(CrestModuleWasmProject)" />
   </ItemGroup>
 

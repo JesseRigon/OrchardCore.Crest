@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.ContentPartLists</AssemblyName>
+    <RootNamespace>Crest</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OrchardCore.ContentFields" />
+    <PackageReference Include="OrchardCore.ContentManagement" />
+    <PackageReference Include="OrchardCore.Contents" />
+    <PackageReference Include="OrchardCore.Data" />
+    <PackageReference Include="OrchardCore.Module.Targets" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The picker abstraction (IOptionSourceProvider, OptionRow,
+         CrestOptionSourceKeys) and OptionPickerField live in Crest.Server; this module
+         plugs Content Part Lists in as one provider among several. -->
+    <ProjectReference Include="../OrchardCore.Crest.Server/OrchardCore.Crest.csproj" />
+  </ItemGroup>
+</Project>

@@ -69,6 +69,9 @@
         <script src="@Asset("/_content/OrchardCore.Crest.Admin.Client/crest.theme.js")"></script>
         <script src="@Asset("/_content/OrchardCore.Crest.Components/crest.components.js")"></script>
         <script src="@Asset("/_content/OrchardCore.Crest.Admin.Client/crest.adminMenus.js")"></script>
+        @* Crest.ContentPartLists is opt-in, but its client assembly is always compiled
+           into the WASM payload, so its page's drag script loads with the shell. *@
+        <script src="@Asset("/_content/Crest.ContentPartLists.BlazorWasm/crest.contentPartLists.js")"></script>
         <script src="@Asset("/_content/OrchardCore.Crest.Icons/icons.js")"></script>
         <script src="@Asset("/_content/OrchardCore.Crest.Components/Radzen.Blazor.js")"></script>
     }
