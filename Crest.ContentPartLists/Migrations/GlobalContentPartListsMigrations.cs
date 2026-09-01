@@ -19,6 +19,13 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
 {
     public const string CountryCodesKey = "global.country-codes";
     public const string UnitsOfMeasureKey = "global.uom";
+    public const string PhoneCountryCodesKey = "global.phone-country-codes";
+    public const string PostalFormatsKey = "global.postal-formats";
+    public const string LanguagesKey = "global.languages";
+    public const string UsAreaCodesKey = "global.us-area-codes";
+    public const string SubdivisionsKey = "global.subdivisions";
+    public const string HonorificsKey = "global.honorifics";
+    public const string NameSuffixesKey = "global.name-suffixes";
 
     public Task<int> CreateAsync()
     {
@@ -34,7 +41,7 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
             await SeedGlobalListsAsync(service);
         });
 
-        return Task.FromResult(3);
+        return Task.FromResult(5);
     }
 
     // Tenants that enabled the feature before the data locks and the Mass/Temperature
@@ -55,7 +62,7 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
             await BackfillPositionsAsync(service);
         });
 
-        return Task.FromResult(3);
+        return Task.FromResult(5);
     }
 
     // Tenants seeded while every option carried Position 0: give the manual order
@@ -67,7 +74,46 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
         ShellScope.AddDeferredTask(async scope =>
             await BackfillPositionsAsync(scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>()));
 
-        return Task.FromResult(3);
+        return Task.FromResult(5);
+    }
+
+    // Tenants seeded before units carried plural labels: fill in each unit's plural
+    // where the tenant has not set one, leaving any tenant-authored plural alone.
+    public Task<int> UpdateFrom3Async()
+    {
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            var service = scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>();
+            var units = await service.GetAsync(UnitsOfMeasureKey);
+            if (units is null)
+            {
+                return;
+            }
+
+            foreach (var unit in UnitsOfMeasure)
+            {
+                var existing = units.Options.FirstOrDefault(option =>
+                    string.Equals(option.Key, unit.Code, StringComparison.OrdinalIgnoreCase));
+                if (existing is not null && existing.DisplayTextPlural is null)
+                {
+                    await service.UpdateOptionAsync(UnitsOfMeasureKey, unit.Code,
+                        displayText: null, position: null, hidden: null, category: null,
+                        displayTextPlural: unit.Plural);
+                }
+            }
+        });
+
+        return Task.FromResult(5);
+    }
+
+    // Tenants seeded before the wider reference-data lists existed: seed them.
+    // SeedGlobalListsAsync covers everything, adds-only.
+    public Task<int> UpdateFrom4Async()
+    {
+        ShellScope.AddDeferredTask(async scope =>
+            await SeedGlobalListsAsync(scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>()));
+
+        return Task.FromResult(5);
     }
 
     private static async Task BackfillPositionsAsync(ICrestContentPartListService contentPartLists)
@@ -124,11 +170,82 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
             [.. UnitsOfMeasure
                 .OrderBy(unit => unit.Category, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(unit => unit.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(unit => new CrestOptionSeed(unit.Code, unit.Name, Category: unit.Category))],
+                .Select(unit => new CrestOptionSeed(unit.Code, unit.Name, Category: unit.Category, DisplayTextPlural: unit.Plural))],
             DataLock: true));
+
+        // The wider reference-data lists (see GlobalReferenceData for sourcing and
+        // key/Value rationale). Everything code evaluates against - dial codes,
+        // postal patterns, language codes, area codes, subdivisions - is
+        // module-data-locked; the personal-name lists are not, since no logic reads
+        // them and tenants legitimately extend them freely.
+        var countryNames = Countries.ToDictionary(country => country.Code, country => country.Name, StringComparer.OrdinalIgnoreCase);
+        string CountryName(string code) => countryNames.TryGetValue(code, out var name) ? name : code;
+
+        // Keyed by COUNTRY (dial codes are not unique: +1 spans the NANP); the dial
+        // code is the machine Value. Labels reuse the country-code list's names, so
+        // the two lists start consistent.
+        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+            PhoneCountryCodesKey,
+            "Phone country codes",
+            [.. GlobalReferenceData.DialCodes
+                .OrderBy(entry => CountryName(entry.Code), StringComparer.OrdinalIgnoreCase)
+                .Select(entry => new CrestOptionSeed(entry.Code, CountryName(entry.Code), Value: entry.DialCode))],
+            DataLock: true));
+
+        // The enum-shaped answer to postal validation: per-country patterns, not
+        // postal codes themselves (those are reference DATA, out of scope here).
+        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+            PostalFormatsKey,
+            "Postal code formats",
+            [.. GlobalReferenceData.PostalFormats
+                .OrderBy(entry => CountryName(entry.Code), StringComparer.OrdinalIgnoreCase)
+                .Select(entry => new CrestOptionSeed(entry.Code, CountryName(entry.Code), Value: entry.Pattern))],
+            DataLock: true));
+
+        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+            LanguagesKey,
+            "Languages",
+            [.. GlobalReferenceData.Languages
+                .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(entry => new CrestOptionSeed(entry.Code, entry.Name))],
+            DataLock: true));
+
+        // Geographic US area codes, category = state. Overlays get added a few times
+        // a year; reseeds (adds-only) are the update path.
+        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+            UsAreaCodesKey,
+            "US area codes",
+            [.. GlobalReferenceData.UsAreaCodes
+                .OrderBy(entry => entry.State, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(entry => entry.Code, StringComparer.OrdinalIgnoreCase)
+                .Select(entry => new CrestOptionSeed(entry.Code, entry.Code, Category: entry.State))],
+            DataLock: true));
+
+        // ISO 3166-2, category = owning country's alpha-2 code (the seam a
+        // country->subdivision cascade filters on), Value = bare postal abbreviation.
+        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+            SubdivisionsKey,
+            "Country subdivisions",
+            [.. GlobalReferenceData.Subdivisions
+                .OrderBy(entry => entry.Country, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(entry => new CrestOptionSeed(entry.Code, entry.Name, Category: entry.Country, Value: entry.Abbreviation))],
+            DataLock: true));
+
+        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+            HonorificsKey,
+            "Honorifics",
+            [.. GlobalReferenceData.Honorifics
+                .Select(entry => new CrestOptionSeed(entry.Key, entry.Label))]));
+
+        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+            NameSuffixesKey,
+            "Name suffixes",
+            [.. GlobalReferenceData.NameSuffixes
+                .Select(entry => new CrestOptionSeed(entry.Key, entry.Label))]));
     }
 
-    private static readonly (string Code, string Name)[] Countries =
+    internal static readonly (string Code, string Name)[] Countries =
     [
         ("AD", "Andorra"), ("AE", "United Arab Emirates"), ("AF", "Afghanistan"), ("AG", "Antigua and Barbuda"),
         ("AI", "Anguilla"), ("AL", "Albania"), ("AM", "Armenia"), ("AO", "Angola"), ("AQ", "Antarctica"),
@@ -191,33 +308,35 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
         ("ZW", "Zimbabwe"),
     ];
 
-    private static readonly (string Code, string Name, string Category)[] UnitsOfMeasure =
+    // Name is the singular label; Plural is what a quantity greater than one reads
+    // ("3 Boxes"). Invariant-count units (Each, Dozen, Gross) repeat the singular.
+    private static readonly (string Code, string Name, string Plural, string Category)[] UnitsOfMeasure =
     [
         // Count
-        ("ea", "Each", "Count"), ("pr", "Pair", "Count"), ("dz", "Dozen", "Count"),
-        ("gro", "Gross", "Count"), ("bx", "Box", "Count"), ("cs", "Case", "Count"),
-        ("pk", "Pack", "Count"), ("plt", "Pallet", "Count"), ("rl", "Roll", "Count"),
-        ("st", "Set", "Count"),
+        ("ea", "Each", "Each", "Count"), ("pr", "Pair", "Pairs", "Count"), ("dz", "Dozen", "Dozen", "Count"),
+        ("gro", "Gross", "Gross", "Count"), ("bx", "Box", "Boxes", "Count"), ("cs", "Case", "Cases", "Count"),
+        ("pk", "Pack", "Packs", "Count"), ("plt", "Pallet", "Pallets", "Count"), ("rl", "Roll", "Rolls", "Count"),
+        ("st", "Set", "Sets", "Count"),
         // Mass
-        ("mg", "Milligram", "Mass"), ("g", "Gram", "Mass"), ("kg", "Kilogram", "Mass"),
-        ("t", "Metric ton", "Mass"), ("oz", "Ounce", "Mass"), ("lb", "Pound", "Mass"),
-        ("ton", "Short ton", "Mass"),
+        ("mg", "Milligram", "Milligrams", "Mass"), ("g", "Gram", "Grams", "Mass"), ("kg", "Kilogram", "Kilograms", "Mass"),
+        ("t", "Metric ton", "Metric tons", "Mass"), ("oz", "Ounce", "Ounces", "Mass"), ("lb", "Pound", "Pounds", "Mass"),
+        ("ton", "Short ton", "Short tons", "Mass"),
         // Volume
-        ("ml", "Milliliter", "Volume"), ("cl", "Centiliter", "Volume"), ("l", "Liter", "Volume"),
-        ("m3", "Cubic meter", "Volume"), ("floz", "Fluid ounce", "Volume"), ("pt", "Pint", "Volume"),
-        ("qt", "Quart", "Volume"), ("gal", "Gallon", "Volume"), ("ft3", "Cubic foot", "Volume"),
+        ("ml", "Milliliter", "Milliliters", "Volume"), ("cl", "Centiliter", "Centiliters", "Volume"), ("l", "Liter", "Liters", "Volume"),
+        ("m3", "Cubic meter", "Cubic meters", "Volume"), ("floz", "Fluid ounce", "Fluid ounces", "Volume"), ("pt", "Pint", "Pints", "Volume"),
+        ("qt", "Quart", "Quarts", "Volume"), ("gal", "Gallon", "Gallons", "Volume"), ("ft3", "Cubic foot", "Cubic feet", "Volume"),
         // Length
-        ("mm", "Millimeter", "Length"), ("cm", "Centimeter", "Length"), ("m", "Meter", "Length"),
-        ("km", "Kilometer", "Length"), ("in", "Inch", "Length"), ("ft", "Foot", "Length"),
-        ("yd", "Yard", "Length"), ("mi", "Mile", "Length"),
+        ("mm", "Millimeter", "Millimeters", "Length"), ("cm", "Centimeter", "Centimeters", "Length"), ("m", "Meter", "Meters", "Length"),
+        ("km", "Kilometer", "Kilometers", "Length"), ("in", "Inch", "Inches", "Length"), ("ft", "Foot", "Feet", "Length"),
+        ("yd", "Yard", "Yards", "Length"), ("mi", "Mile", "Miles", "Length"),
         // Area
-        ("m2", "Square meter", "Area"), ("ha", "Hectare", "Area"), ("ft2", "Square foot", "Area"),
-        ("ac", "Acre", "Area"),
+        ("m2", "Square meter", "Square meters", "Area"), ("ha", "Hectare", "Hectares", "Area"), ("ft2", "Square foot", "Square feet", "Area"),
+        ("ac", "Acre", "Acres", "Area"),
         // Time
-        ("s", "Second", "Time"), ("min", "Minute", "Time"), ("hr", "Hour", "Time"),
-        ("day", "Day", "Time"), ("wk", "Week", "Time"), ("mo", "Month", "Time"), ("yr", "Year", "Time"),
+        ("s", "Second", "Seconds", "Time"), ("min", "Minute", "Minutes", "Time"), ("hr", "Hour", "Hours", "Time"),
+        ("day", "Day", "Days", "Time"), ("wk", "Week", "Weeks", "Time"), ("mo", "Month", "Months", "Time"), ("yr", "Year", "Years", "Time"),
         // Temperature
-        ("cel", "Degree Celsius", "Temperature"), ("fah", "Degree Fahrenheit", "Temperature"),
-        ("kel", "Kelvin", "Temperature"),
+        ("cel", "Degree Celsius", "Degrees Celsius", "Temperature"), ("fah", "Degree Fahrenheit", "Degrees Fahrenheit", "Temperature"),
+        ("kel", "Kelvin", "Kelvins", "Temperature"),
     ];
 }

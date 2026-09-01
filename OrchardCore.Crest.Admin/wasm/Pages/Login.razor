@@ -9,7 +9,10 @@
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
-<CrestStack Gap="1rem" Style="padding: 2rem;">
+@* The login shell has no admin chrome, so the page owns the viewport: full-height
+   flex centering, both axes. *@
+<div style="min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+<CrestStack Gap="1rem" AlignItems="AlignItems.Center">
     <CrestText TextStyle="TextStyle.H3" Text="OrchardCore.Crest" />
 
     @if (DisplayManager.IsAuthenticated)
@@ -20,10 +23,25 @@
     else
     {
         <CrestTemplateForm TItem="LoginForm" Data="@_login" Submit="@((LoginForm form) => LoginAsync(form))">
-            <CrestStack Gap="0.75rem" Style="max-width: 22rem;">
+            <CrestStack Gap="0.75rem" Style="width: 22rem; max-width: 100%;">
                 <CrestTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="@T["Username or email"]" />
-                <CrestPassword Name="Password" @bind-Value="_login.Password" Placeholder="@T["Password"]" />
-                <CrestCheckBox @bind-Value="_login.RememberMe" />
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <CrestButton ButtonType="ButtonType.Button"
+                                 ButtonStyle="ButtonStyle.Light"
+                                 Icon="@(_showPassword ? "visibility_off" : "visibility")"
+                                 title="@(_showPassword ? T["Hide password"] : T["Show password"])"
+                                 aria-label="@(_showPassword ? T["Hide password"] : T["Show password"])"
+                                 Click="@(() => _showPassword = !_showPassword)"
+                                 data-testid="toggle-password" />
+                    <CrestPassword Name="Password" @bind-Value="_login.Password" Placeholder="@T["Password"]"
+                                   Reveal="@_showPassword" Style="flex: 1 1 auto;" />
+                </CrestStack>
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <CrestCheckBox @bind-Value="_login.RememberMe" Name="RememberMe" />
+                    @* Unchecked = a session auth cookie: signing in lasts only until the
+                       browser session ends. Checked = a persistent cookie. *@
+                    <label class="rz-label" for="RememberMe" style="margin: 0; cursor: pointer;">@T["Remember me"]</label>
+                </CrestStack>
                 @* Disabled until interactive: the statically prerendered form carries the
                    middleware's INTERNAL composed URL (PathBase "/Login" + Path "/login") as
                    its action and no method, so a submit before the runtime attaches is a
@@ -39,9 +57,11 @@
         </CrestTemplateForm>
     }
 </CrestStack>
+</div>
 
 @code {
     private LoginForm _login = new();
+    private bool _showPassword;
 
     [SupplyParameterFromQuery(Name = "switchUser")]
     public bool SwitchUser { get; set; }

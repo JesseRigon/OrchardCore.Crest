@@ -17,7 +17,9 @@ public sealed record CrestContentPartListModel(
 /// <summary>A single option. <paramref name="Key"/> is what code compares;
 /// <paramref name="DisplayText"/> is what humans read. <paramref name="Category"/>
 /// is never null - uncategorized options carry
-/// <see cref="CrestOptionCategories.Uncategorized"/>.</summary>
+/// <see cref="CrestOptionCategories.Uncategorized"/>.
+/// <paramref name="DisplayTextPlural"/> is null when the option has no distinct
+/// plural - readers fall back to <paramref name="DisplayText"/>.</summary>
 public sealed record CrestOptionModel(
     string ContentItemId,
     string Key,
@@ -25,11 +27,15 @@ public sealed record CrestOptionModel(
     string Source,
     bool Hidden,
     int Position,
-    string Category);
+    string Category,
+    string? DisplayTextPlural = null,
+    string? Value = null);
 
 /// <summary>A module's declaration of one option it ships in a set. A null
-/// <paramref name="Category"/> seeds as Uncategorized.</summary>
-public sealed record CrestOptionSeed(string Key, string DisplayText, int Position = 0, string? Category = null);
+/// <paramref name="Category"/> seeds as Uncategorized; a null
+/// <paramref name="DisplayTextPlural"/> means the singular label serves both; a null
+/// <paramref name="Value"/> means the key is the option's only machine datum.</summary>
+public sealed record CrestOptionSeed(string Key, string DisplayText, int Position = 0, string? Category = null, string? DisplayTextPlural = null, string? Value = null);
 
 /// <summary>A module's declaration of a set it owns, with its base options. The two
 /// lock flags are the developer's contract and are RE-ASSERTED on every reseed (they

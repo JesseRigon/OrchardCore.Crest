@@ -3,8 +3,11 @@
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 
-<CrestCard class="@CssClass" Style="@ComputedStyle">
-    <CrestStack Gap="0.75rem">
+@* The root is a plain div so the scoped stylesheet actually reaches it - a class on
+   a child component (CrestCard) never receives the CSS scope attribute. *@
+<div class="@CssClass" style="@ComputedStyle">
+<CrestCard class="crest-model-list__card">
+    <CrestStack Gap="0.75rem" class="crest-model-list__stack">
         <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem">
             <CrestText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@Title</CrestText>
             @if (ShowCreate)
@@ -62,6 +65,7 @@
         }
     </CrestStack>
 </CrestCard>
+</div>
 
 @code {
     [Parameter]

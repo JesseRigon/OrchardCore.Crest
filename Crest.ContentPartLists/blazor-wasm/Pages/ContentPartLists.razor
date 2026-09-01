@@ -1,5 +1,6 @@
 @page "/ContentTypes/ContentPartLists"
 @using System.Net.Http.Json
+@using Crest.Components.Model
 @using Crest.Components.Models
 @using Crest.Components.Options
 @using Crest.Components.Primitives
@@ -10,7 +11,9 @@
 @inject Microsoft.JSInterop.IJSRuntime Js
 @implements IAsyncDisposable
 
-<CrestStack Gap="1rem" data-testid="content-part-lists-page">
+@* Fills the admin content area: the page never scrolls as a whole - the left list's
+   items and the detail pane's body are the scrollable regions. *@
+<CrestStack Gap="1rem" data-testid="content-part-lists-page" Style="height: 100%;">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
             <CrestText TextStyle="TextStyle.H4" Text="@T["Content Part Lists"]" />
@@ -37,31 +40,37 @@
     }
     else
     {
-        <CrestRow Gap="1rem">
-            <CrestColumn Size="12" SizeMD="4">
-                <CrestCard>
-                    <CrestStack Gap="0.5rem" data-testid="content-part-list-index">
-                        @foreach (var list in Lists)
-                        {
-                            <CrestButton Text="@($"{list.DisplayText} ({list.Options.Length})")"
-                                         ButtonStyle="@(list.Key == SelectedKey ? ButtonStyle.Primary : ButtonStyle.Light)"
-                                         Variant="Variant.Flat"
-                                         Click="@(() => SelectList(list.Key))"
-                                         Style="justify-content: flex-start; width: 100%;" />
-                        }
-                    </CrestStack>
-                </CrestCard>
-            </CrestColumn>
+        @* Plain flex row, not CrestRow/CrestColumn: the master-detail region must
+           inherit the page's remaining height (flex: 1, min-height: 0) so the panes
+           can hand scrolling to their inner regions. *@
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; flex: 1 1 auto; min-height: 0; align-items: stretch;">
+            <div data-testid="content-part-list-index" style="flex: 0 1 350px; min-width: 16rem; min-height: 0; display: flex;">
+                <CrestModelList TItem="ContentPartListModel"
+                                Title="@T["Lists"]"
+                                Items="@Lists"
+                                SelectedKey="@SelectedKey"
+                                KeySelector="@(list => list.Key)"
+                                TextSelector="@(list => list.DisplayText)"
+                                DescriptionSelector="@(list => T["{0} options", list.Options.Length])"
+                                Select="@((ContentPartListModel list) => SelectListAsync(list))"
+                                ShowCreate="true"
+                                CreateText="@T["New"]"
+                                Create="StartCreateList"
+                                IsBusy="@IsLoading"
+                                MinWidth="16rem"
+                                MaxWidth="350px"
+                                EmptyText="@T["No content part lists yet."]" />
+            </div>
 
-            <CrestColumn Size="12" SizeMD="8">
+            <div style="flex: 1 1 480px; min-width: 0; min-height: 0; display: flex;">
                 @if (Selected is null)
                 {
                     <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["Select an content part list."]</CrestAlert>
                 }
                 else
                 {
-                    <CrestCard data-testid="content-part-list-detail">
-                        <CrestStack Gap="1rem">
+                    <CrestDetailPane TestId="content-part-list-detail" Style="flex: 1 1 auto;">
+                        <Header>
                             <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
                                 <CrestStack Gap="0.25rem">
                                     <CrestText TextStyle="TextStyle.H5" Text="@Selected.DisplayText" />
@@ -113,7 +122,8 @@
                                     </CrestStack>
                                 </CrestStack>
                             </CrestStack>
-
+                        </Header>
+                        <ChildContent>
                             <CrestDataGrid Data="@Selected.Options" TItem="OptionModel" AllowPaging="false" Responsive="true" class="content-part-list-grid" data-testid="option-grid">
                                 <Columns>
                                     <CrestDataGridColumn TItem="OptionModel" Title="@T["Position"]" Width="6rem">
@@ -142,10 +152,42 @@
                                                           Style="width: 100%;" />
                                         </Template>
                                     </CrestDataGridColumn>
+                                    <CrestDataGridColumn TItem="OptionModel" Title="@T["Plural label"]">
+                                        <Template Context="option">
+                                            @* Display-only like the singular label, so it stays editable
+                                               under a data lock. Blank = no distinct plural: readers fall
+                                               back to the singular, which the placeholder shows. *@
+                                            <CrestTextBox Value="@PluralDraft(option)"
+                                                          ValueChanged="@(value => OnPluralChanged(option, value))"
+                                                          Change="@(value => RepluralizeAsync(option, value))"
+                                                          Placeholder="@option.DisplayText"
+                                                          Disabled="@(IsBusy || SelectedEditLocked)"
+                                                          Style="width: 100%;" />
+                                        </Template>
+                                    </CrestDataGridColumn>
                                     <CrestDataGridColumn TItem="OptionModel" Title="@T["Key"]">
                                         @* The key is what code matches on, so it is shown but never editable -
                                            renaming the label is always safe, renaming the key would not be. *@
                                         <Template Context="option"><CrestText TextStyle="TextStyle.Caption" Text="@option.Key" /></Template>
+                                    </CrestDataGridColumn>
+                                    <CrestDataGridColumn TItem="OptionModel" Title="@T["Value"]">
+                                        <Template Context="option">
+                                            @if (SelectedDataLocked || SelectedEditLocked)
+                                            {
+                                                @* The machine value is machine surface, frozen by a data
+                                                   lock like category assignments - read-only, not disabled. *@
+                                                <CrestText TextStyle="TextStyle.Body2" Text="@(option.Value ?? "—")" />
+                                            }
+                                            else
+                                            {
+                                                @* Blank = the key is the option's only machine datum. *@
+                                                <CrestTextBox Value="@ValueDraft(option)"
+                                                              ValueChanged="@(value => OnValueChanged(option, value))"
+                                                              Change="@(value => RevalueAsync(option, value))"
+                                                              Disabled="@IsBusy"
+                                                              Style="width: 100%;" />
+                                            }
+                                        </Template>
                                     </CrestDataGridColumn>
                                     <CrestDataGridColumn TItem="OptionModel" Title="@T["Category"]">
                                         <Template Context="option">
@@ -189,6 +231,12 @@
                                     <CrestFormField Text="@T["Label"]">
                                         <CrestTextBox @bind-Value="NewOptionLabel" Placeholder="@T["Net 30"]" Disabled="@IsBusy" />
                                     </CrestFormField>
+                                    <CrestFormField Text="@T["Plural label (optional)"]">
+                                        <CrestTextBox @bind-Value="NewOptionPlural" Placeholder="@NewOptionLabel" Disabled="@IsBusy" />
+                                    </CrestFormField>
+                                    <CrestFormField Text="@T["Value (optional)"]">
+                                        <CrestTextBox @bind-Value="NewOptionValue" Disabled="@IsBusy" />
+                                    </CrestFormField>
                                     @if (SelectedDataLocked)
                                     {
                                         @* The category vocabulary is frozen under a data lock: tenant
@@ -207,11 +255,11 @@
                                     <CrestButton Text="@T["Add option"]" Icon="add" Click="AddOptionAsync" Disabled="@IsBusy" data-testid="add-option" />
                                 </CrestStack>
                             }
-                        </CrestStack>
-                    </CrestCard>
+                        </ChildContent>
+                    </CrestDetailPane>
                 }
-            </CrestColumn>
-        </CrestRow>
+            </div>
+        </div>
     }
 
     @if (IsCreatingList)
@@ -244,6 +292,8 @@
 
     private string NewOptionKey { get; set; } = string.Empty;
     private string NewOptionLabel { get; set; } = string.Empty;
+    private string NewOptionPlural { get; set; } = string.Empty;
+    private string NewOptionValue { get; set; } = string.Empty;
     private string NewOptionCategory { get; set; } = string.Empty;
     private string NewListKey { get; set; } = string.Empty;
     private string NewListName { get; set; } = string.Empty;
@@ -352,8 +402,16 @@
     {
         SelectedKey = key;
         LabelDrafts.Clear();
+        PluralDrafts.Clear();
+        ValueDrafts.Clear();
         CategoryDrafts.Clear();
         ConfirmingDelete = false;
+    }
+
+    private Task SelectListAsync(ContentPartListModel list)
+    {
+        SelectList(list.Key);
+        return Task.CompletedTask;
     }
 
     // Local edit buffer per option, keyed by option key. The grid re-renders on every
@@ -366,6 +424,67 @@
 
     private void OnLabelChanged(OptionModel option, string? value) =>
         LabelDrafts[option.Key] = value ?? string.Empty;
+
+    // Same buffering as labels, for the plural column. The saved value renders as
+    // empty when the option has no distinct plural (the placeholder shows the
+    // singular fallback).
+    private Dictionary<string, string> PluralDrafts { get; } = new(StringComparer.Ordinal);
+
+    private string PluralDraft(OptionModel option) =>
+        PluralDrafts.TryGetValue(option.Key, out var draft) ? draft : option.DisplayTextPlural ?? string.Empty;
+
+    private void OnPluralChanged(OptionModel option, string? value) =>
+        PluralDrafts[option.Key] = value ?? string.Empty;
+
+    private async Task RepluralizeAsync(OptionModel option, string? plural)
+    {
+        if (Selected is null || (plural ?? string.Empty) == (option.DisplayTextPlural ?? string.Empty))
+        {
+            return;
+        }
+
+        var listKey = Selected.Key;
+        await SendAsync(
+            // An empty string CLEARS the plural (back to the singular fallback);
+            // omitting the property would leave it unchanged instead.
+            () => Http.PutAsJsonAsync($"api/crest/content-part-lists/{Uri.EscapeDataString(listKey)}/options/{Uri.EscapeDataString(option.Key)}",
+                new { DisplayText = (string?)null, Position = (int?)null, Hidden = (bool?)null, DisplayTextPlural = plural ?? string.Empty }),
+            T["Plural label updated."],
+            async () =>
+            {
+                PluralDrafts.Remove(option.Key);
+                await LoadAsync();
+            });
+    }
+
+    // Same buffering for the machine-value column; blank clears back to "the key is
+    // the only datum". Editable only while the list is neither data- nor edit-locked.
+    private Dictionary<string, string> ValueDrafts { get; } = new(StringComparer.Ordinal);
+
+    private string ValueDraft(OptionModel option) =>
+        ValueDrafts.TryGetValue(option.Key, out var draft) ? draft : option.Value ?? string.Empty;
+
+    private void OnValueChanged(OptionModel option, string? value) =>
+        ValueDrafts[option.Key] = value ?? string.Empty;
+
+    private async Task RevalueAsync(OptionModel option, string? value)
+    {
+        if (Selected is null || (value ?? string.Empty) == (option.Value ?? string.Empty))
+        {
+            return;
+        }
+
+        var listKey = Selected.Key;
+        await SendAsync(
+            () => Http.PutAsJsonAsync($"api/crest/content-part-lists/{Uri.EscapeDataString(listKey)}/options/{Uri.EscapeDataString(option.Key)}",
+                new { DisplayText = (string?)null, Position = (int?)null, Hidden = (bool?)null, Value = value ?? string.Empty }),
+            T["Value updated."],
+            async () =>
+            {
+                ValueDrafts.Remove(option.Key);
+                await LoadAsync();
+            });
+    }
 
     // Same buffering as labels: the grid re-renders per keystroke, so category boxes
     // need a draft that shadows the saved value while typing.
@@ -407,12 +526,14 @@
         var listKey = Selected.Key;
         await SendAsync(
             () => Http.PostAsJsonAsync($"api/crest/content-part-lists/{Uri.EscapeDataString(listKey)}/options",
-                new { Key = NewOptionKey, DisplayText = NewOptionLabel, Position = Selected.Options.Length, Category = NewOptionCategory }),
+                new { Key = NewOptionKey, DisplayText = NewOptionLabel, Position = Selected.Options.Length, Category = NewOptionCategory, DisplayTextPlural = NewOptionPlural, Value = NewOptionValue }),
             T["Option added."],
             async () =>
             {
                 NewOptionKey = string.Empty;
                 NewOptionLabel = string.Empty;
+                NewOptionPlural = string.Empty;
+                NewOptionValue = string.Empty;
                 NewOptionCategory = string.Empty;
                 await LoadAsync();
             });

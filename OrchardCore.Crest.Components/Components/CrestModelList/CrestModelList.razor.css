@@ -1,11 +1,34 @@
+/* The pane itself never scrolls: it fills its container's height and hands the
+   overflow to the items region below the (fixed) title and search rows. The card and
+   the stack inside it are child components, so they are reached with ::deep from the
+   scoped root div. */
 .crest-model-list {
     min-width: var(--crest-model-list-min-width, 20rem);
     max-width: var(--crest-model-list-max-width, 26rem);
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.crest-model-list__items {
+.crest-model-list ::deep .crest-model-list__card {
+    flex: 1 1 auto;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* The card's single stack child carries the pane's full height down to the items. */
+.crest-model-list ::deep .crest-model-list__stack {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.crest-model-list ::deep .crest-model-list__items {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .crest-model-list__item {

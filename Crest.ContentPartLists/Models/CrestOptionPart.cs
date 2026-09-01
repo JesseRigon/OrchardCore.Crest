@@ -17,10 +17,27 @@ public class CrestOptionPart : ContentPart
     /// <summary>The technical key code switches on. Unique within its set.</summary>
     public string Key { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Optional SECOND machine datum for options whose key identifies them but does
+    /// not carry the data code needs (a dial code on a phone-country option, a regex
+    /// on a postal-format option). Null for pure enums - the key is their value.
+    /// Machine surface: frozen under a data lock exactly like Category, and never a
+    /// place for display text - labels stay freely renamable, this does not.
+    /// </summary>
+    public string? Value { get; set; }
+
     /// <summary>Where this option came from: <see cref="CrestOptionSources"/>.
     /// Version history shows THAT a module option was edited, but cannot tell
     /// module-shipped from tenant-created - hence this explicit field.</summary>
     public string Source { get; set; } = CrestOptionSources.Tenant;
+
+    /// <summary>
+    /// The label used when the option names more than one of something ("Boxes" to
+    /// DisplayText's "Box"). Null or empty means the option has no distinct plural
+    /// and readers fall back to DisplayText. Like DisplayText it is display-only,
+    /// tenant-editable and never part of the machine surface.
+    /// </summary>
+    public string? DisplayTextPlural { get; set; }
 
     /// <summary>Suppressed from pickers without being deleted, so historical content
     /// referencing this option stays resolvable.</summary>

@@ -42,13 +42,15 @@ public interface ICrestContentPartListService
 
     /// <summary>Adds a tenant-owned option to a set. Fails when the key is invalid or
     /// already used in that set. A null or blank category files the option under
-    /// Uncategorized.</summary>
-    Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, CancellationToken cancellationToken = default);
+    /// Uncategorized; a null or blank plural label means the singular serves both;
+    /// a null or blank machine value means the key is the option's only datum.</summary>
+    Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, string? displayTextPlural = null, string? value = null, CancellationToken cancellationToken = default);
 
-    /// <summary>Relabels, repositions, recategorizes, or hides/unhides an option.
-    /// Null leaves a value unchanged. The technical key is deliberately NOT editable
+    /// <summary>Relabels, repositions, recategorizes, revalues, or hides/unhides an
+    /// option. Null leaves a value unchanged (a BLANK plural label or machine value
+    /// clears it). The technical key is deliberately NOT editable
     /// here - it is the module's contract with code.</summary>
-    Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, CancellationToken cancellationToken = default);
+    Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, string? displayTextPlural = null, string? value = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Rewrites the list's MANUAL order: each option's Position becomes its index in

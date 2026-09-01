@@ -16,6 +16,14 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
         /// <summary>The tenant-editable label - the default display column.</summary>
         public const string DisplayText = "DisplayText";
 
+        /// <summary>The plural label; falls back to DisplayText when the option has
+        /// no distinct plural, so a picker rendering plurals always gets a value.</summary>
+        public const string DisplayTextPlural = "DisplayTextPlural";
+
+        /// <summary>The option's machine value (dial code, pattern, ...); null for
+        /// pure enums, whose key is their only datum. Frozen under a data lock.</summary>
+        public const string Value = "Value";
+
         /// <summary>The technical key code matches on.</summary>
         public const string OptionKey = "Key";
 
@@ -32,7 +40,9 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
         Task.FromResult<IReadOnlyList<OptionSourceColumnDescriptor>>(
         [
             new(Columns.DisplayText, "Label", IsDefaultDisplay: true),
+            new(Columns.DisplayTextPlural, "Label (plural)"),
             new(Columns.OptionKey, "Key"),
+            new(Columns.Value, "Value"),
             new(Columns.Source, "Source"),
             new(Columns.Category, "Category"),
         ]);
@@ -85,6 +95,8 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
                 Columns.OptionKey => option.Key,
                 Columns.Source => option.Source,
                 Columns.DisplayText => option.DisplayText,
+                Columns.DisplayTextPlural => option.DisplayTextPlural ?? option.DisplayText,
+                Columns.Value => option.Value,
                 Columns.Category => option.Category,
                 _ => null,
             };

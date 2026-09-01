@@ -85,7 +85,8 @@ public sealed record ContentPartListModel(
     OptionModel[] Options);
 
 /// <summary>A member of an content part list. Category is never null - options without an
-/// assigned category carry "Uncategorized".</summary>
+/// assigned category carry "Uncategorized". DisplayTextPlural is null when the option
+/// has no distinct plural (readers fall back to DisplayText).</summary>
 public sealed record OptionModel(
     string ContentItemId,
     string Key,
@@ -93,4 +94,6 @@ public sealed record OptionModel(
     string Source,
     bool Hidden,
     int Position,
-    string Category);
+    string Category,
+    string? DisplayTextPlural = null,
+    string? Value = null);

@@ -37,6 +37,15 @@ namespace Crest.Components.Primitives
         public bool ReadOnly { get; set; }
 
         /// <summary>
+        /// Gets or sets whether the entered value is shown in clear text instead of masked.
+        /// Bind this to a "show password" toggle; the input stays a single element so the
+        /// caret position and bound value survive the flip.
+        /// </summary>
+        /// <value><c>true</c> to show the value; otherwise, <c>false</c>. Default is <c>false</c>.</value>
+        [Parameter]
+        public bool Reveal { get; set; }
+
+        /// <summary>
         /// Gets or sets whether the component should update the bound value immediately as the user types (oninput event),
         /// rather than waiting for the input to lose focus (onchange event).
         /// This enables real-time value updates but may trigger more frequent change events.

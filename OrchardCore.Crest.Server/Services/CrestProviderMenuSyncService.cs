@@ -667,7 +667,8 @@ public sealed class CrestProviderMenuSyncService(
                 if (node is not null && string.IsNullOrWhiteSpace(GetNodeIconClass(node)))
                 {
                     var backfillIcon = ExtractIconClass(source)
-                        ?? await iconSourceStore.ResolveNavigationItemIconClassAsync(source.Id, [.. source.Classes]);
+                        ?? await iconSourceStore.ResolveNavigationItemIconClassAsync(source.Id, [.. source.Classes])
+                        ?? await iconSourceStore.ResolveNavigationItemIconClassAsync(source.Text?.Name, []);
                     if (!string.IsNullOrWhiteSpace(backfillIcon))
                     {
                         SetNodeIconClass(node, backfillIcon);
@@ -697,8 +698,12 @@ public sealed class CrestProviderMenuSyncService(
             // those lookup keys no longer exist on the rendered item (its Id is the UniqueId and
             // its classes are the node's), so an icon left to be resolved at render time would
             // simply be gone. Baked onto the node it becomes tenant data the editor can override.
+            // The INVARIANT caption (Text.Name - the msgid literal, same identity BuildMatchKey
+            // uses, never the translated text) is the last fallback: plenty of stock items
+            // (Templates among them) carry no Id and no classes at all.
             var iconClass = ExtractIconClass(source)
-                ?? await iconSourceStore.ResolveNavigationItemIconClassAsync(source.Id, [.. source.Classes]);
+                ?? await iconSourceStore.ResolveNavigationItemIconClassAsync(source.Id, [.. source.Classes])
+                ?? await iconSourceStore.ResolveNavigationItemIconClassAsync(source.Text?.Name, []);
 
             if (node is null)
             {

@@ -1,0 +1,41 @@
+@namespace Crest.Components.Model
+@using Crest.Components.Primitives
+
+@* The standard main-content structure for master-detail screens: the pane fills its
+   container and never scrolls itself. Header is the FIXED top region - a title, the
+   record's main settings, or nothing at all (it flattens away when absent); it may
+   scroll horizontally but never vertically. Body is the one scrollable region and
+   makes no assumptions about what it holds - grids, fieldsets, multiple sections.
+   The root is a plain div so the scoped stylesheet actually reaches it - a class on
+   a child component (CrestCard) never receives the CSS scope attribute. *@
+<div class="@CssClass" style="@Style" data-testid="@TestId">
+    <CrestCard class="crest-detail-pane__card">
+        @if (Header is not null)
+        {
+            <div class="crest-detail-pane__header">@Header</div>
+        }
+        <div class="crest-detail-pane__body">@ChildContent</div>
+    </CrestCard>
+</div>
+
+@code {
+    /// <summary>The fixed top region: title, badges, the record's main settings.
+    /// Omit it and the pane is body only.</summary>
+    [Parameter]
+    public RenderFragment? Header { get; set; }
+
+    /// <summary>The scrollable content below the header.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string? TestId { get; set; }
+
+    private string CssClass => string.Join(' ', new[] { "crest-detail-pane", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));
+}

@@ -11,7 +11,7 @@
    added or converted on AddressPart lands on every content type carrying it. The
    Content Types screen manages which types carry which parts (and the attachment's
    instance settings); it never edits fields. *@
-<CrestStack Gap="1rem" data-testid="content-parts-page">
+<CrestStack Gap="1rem" data-testid="content-parts-page" Style="height: 100%;">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
             <CrestText TextStyle="TextStyle.H4" Text="@T["Content Parts"]" />
@@ -25,8 +25,10 @@
         <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
     }
 
-    <CrestRow Gap="1rem">
-        <CrestColumn Size="12" SizeLG="4">
+    @* Standard master-detail structure: this region takes the page's remaining
+       height; the list's items and the detail pane's body do the scrolling. *@
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem; flex: 1 1 auto; min-height: 0; align-items: stretch;">
+        <div style="flex: 0 1 350px; min-width: 16rem; min-height: 0; display: flex;">
             <CrestModelList TItem="PartDefinition"
                             Title="@T["Content Parts"]"
                             Items="@Parts"
@@ -38,9 +40,11 @@
                             Select="SelectPartAsync"
                             ShowCreate="false"
                             IsBusy="@IsLoading"
+                            MinWidth="16rem"
+                            MaxWidth="350px"
                             EmptyText="@T["No content parts are defined."]" />
-        </CrestColumn>
-        <CrestColumn Size="12" SizeLG="8">
+        </div>
+        <div style="flex: 1 1 480px; min-width: 0; min-height: 0; display: flex;">
             @if (IsLoading)
             {
                 <CrestCard><CrestProgressBar Mode="ProgressBarMode.Indeterminate" /></CrestCard>
@@ -51,13 +55,14 @@
             }
             else
             {
-                <CrestCard data-testid="content-part-detail">
-                    <CrestStack Gap="1rem">
+                <CrestDetailPane TestId="content-part-detail" Style="flex: 1 1 auto;">
+                    <Header>
                         <CrestStack Gap="0.25rem">
                             <CrestText TextStyle="TextStyle.H5" Text="@SelectedPart.Name" />
                             <CrestText TextStyle="TextStyle.Body2" Text="@TypeUsageText(SelectedPart)" />
                         </CrestStack>
-
+                    </Header>
+                    <ChildContent>
                         <CrestFieldset Text="@T["Fields"]" AllowCollapse="true" Collapsed="false">
                             <CrestStack Gap="0.7rem">
                                 @if (SelectedPart.Part.Fields.Length == 0)
@@ -136,11 +141,11 @@
                                 </CrestStack>
                             }
                         </CrestFieldset>
-                    </CrestStack>
-                </CrestCard>
+                    </ChildContent>
+                </CrestDetailPane>
             }
-        </CrestColumn>
-    </CrestRow>
+        </div>
+    </div>
 </CrestStack>
 
 @code {

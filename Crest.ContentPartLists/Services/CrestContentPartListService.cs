@@ -120,7 +120,7 @@ public sealed class CrestContentPartListService(
             foreach (var addition in plan.Additions)
             {
                 var position = addition.Position != 0 ? addition.Position : nextPosition++;
-                await AppendOptionAsync(listItem, addition.Key, addition.DisplayText, position, CrestOptionSources.Module, addition.Category);
+                await AppendOptionAsync(listItem, addition.Key, addition.DisplayText, position, CrestOptionSources.Module, addition.Category, addition.DisplayTextPlural, addition.Value);
             }
 
             await contentManager.UpdateAsync(listItem);
@@ -146,7 +146,7 @@ public sealed class CrestContentPartListService(
         return ToModel(item);
     }
 
-    public async Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, CancellationToken cancellationToken = default)
+    public async Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, string? displayTextPlural = null, string? value = null, CancellationToken cancellationToken = default)
     {
         var listItem = await RequireListItemAsync(listKey);
         var validation = CrestContentPartListRules.ValidateKey(optionKey, ToModel(listItem).Options.Select(option => option.Key));
@@ -156,7 +156,7 @@ public sealed class CrestContentPartListService(
         }
 
         var normalized = CrestContentPartListRules.NormalizeKey(optionKey);
-        var option = await AppendOptionAsync(listItem, normalized, displayText, position, CrestOptionSources.Tenant, category);
+        var option = await AppendOptionAsync(listItem, normalized, displayText, position, CrestOptionSources.Tenant, category, displayTextPlural, value);
         await contentManager.UpdateAsync(listItem);
         await contentManager.PublishAsync(listItem);
         _byKey.Remove(CrestContentPartListRules.NormalizeKey(listKey));
@@ -164,7 +164,7 @@ public sealed class CrestContentPartListService(
         return ToOptionModel(option);
     }
 
-    public async Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, CancellationToken cancellationToken = default)
+    public async Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, string? displayTextPlural = null, string? value = null, CancellationToken cancellationToken = default)
     {
         var listItem = await RequireListItemAsync(listKey);
         var normalized = CrestContentPartListRules.NormalizeKey(optionKey);
@@ -190,7 +190,7 @@ public sealed class CrestContentPartListService(
                 option.Alter<ContentPart>("TitlePart", titlePart => titlePart.Content.Title = displayText);
             }
 
-            if (position is not null || hidden is not null || category is not null)
+            if (position is not null || hidden is not null || category is not null || displayTextPlural is not null || value is not null)
             {
                 option.Alter<CrestOptionPart>(optionPart =>
                 {
@@ -199,6 +199,15 @@ public sealed class CrestContentPartListService(
                     optionPart.Category = category is null
                         ? optionPart.Category
                         : CrestContentPartListRules.NormalizeCategory(category);
+                    // Null leaves the plural alone; a blank one CLEARS it (back to the
+                    // singular fallback) - there is no meaningful "empty plural".
+                    optionPart.DisplayTextPlural = displayTextPlural is null
+                        ? optionPart.DisplayTextPlural
+                        : (string.IsNullOrWhiteSpace(displayTextPlural) ? null : displayTextPlural.Trim());
+                    // Same null/blank contract for the machine value.
+                    optionPart.Value = value is null
+                        ? optionPart.Value
+                        : (string.IsNullOrWhiteSpace(value) ? null : value.Trim());
                 });
             }
         });
@@ -384,7 +393,7 @@ public sealed class CrestContentPartListService(
         return item;
     }
 
-    private async Task<ContentItem> AppendOptionAsync(ContentItem listItem, string key, string displayText, int position, string source, string? category = null)
+    private async Task<ContentItem> AppendOptionAsync(ContentItem listItem, string key, string displayText, int position, string source, string? category = null, string? displayTextPlural = null, string? value = null)
     {
         var option = await contentManager.NewAsync(CrestContentPartListMigrations.OptionContentType);
         option.DisplayText = displayText;
@@ -395,6 +404,8 @@ public sealed class CrestContentPartListService(
             part.Source = source;
             part.Position = position;
             part.Category = CrestContentPartListRules.NormalizeCategory(category);
+            part.DisplayTextPlural = string.IsNullOrWhiteSpace(displayTextPlural) ? null : displayTextPlural.Trim();
+            part.Value = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
             part.ContentPartListContentItemId = listItem.ContentItemId;
         });
 
@@ -427,6 +438,8 @@ public sealed class CrestContentPartListService(
             part?.Source ?? CrestOptionSources.Tenant,
             part?.Hidden ?? false,
             part?.Position ?? 0,
-            CrestContentPartListRules.NormalizeCategory(part?.Category));
+            CrestContentPartListRules.NormalizeCategory(part?.Category),
+            string.IsNullOrWhiteSpace(part?.DisplayTextPlural) ? null : part.DisplayTextPlural.Trim(),
+            string.IsNullOrWhiteSpace(part?.Value) ? null : part.Value.Trim());
     }
 }

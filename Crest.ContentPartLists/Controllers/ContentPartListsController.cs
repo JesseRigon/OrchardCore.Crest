@@ -116,7 +116,7 @@ public sealed class ContentPartListsController(
 
         try
         {
-            return Ok(await contentPartLists.AddOptionAsync(key, request.Key, request.DisplayText, request.Position, request.Category, HttpContext.RequestAborted));
+            return Ok(await contentPartLists.AddOptionAsync(key, request.Key, request.DisplayText, request.Position, request.Category, request.DisplayTextPlural, request.Value, HttpContext.RequestAborted));
         }
         catch (InvalidOperationException exception)
         {
@@ -214,17 +214,22 @@ public sealed class ContentPartListsController(
                 return LockedProblem("The list is locked for editing.");
             }
 
-            // The data lock freezes CATEGORY ASSIGNMENTS; relabel/hide/reposition are
-            // display-level and stay open.
+            // The data lock freezes the MACHINE surface - category assignments and
+            // machine values; relabel/hide/reposition are display-level and stay open.
             if (request.Category is not null && CrestContentPartListRules.LockActive(list.DataLock))
             {
                 return LockedProblem("This list's categories are locked and cannot be reassigned.");
+            }
+
+            if (request.Value is not null && CrestContentPartListRules.LockActive(list.DataLock))
+            {
+                return LockedProblem("This list's machine values are locked and cannot be changed.");
             }
         }
 
         try
         {
-            return Ok(await contentPartLists.UpdateOptionAsync(key, optionKey, request.DisplayText, request.Position, request.Hidden, request.Category, HttpContext.RequestAborted));
+            return Ok(await contentPartLists.UpdateOptionAsync(key, optionKey, request.DisplayText, request.Position, request.Hidden, request.Category, request.DisplayTextPlural, request.Value, HttpContext.RequestAborted));
         }
         catch (InvalidOperationException exception)
         {
@@ -270,9 +275,12 @@ public sealed class ContentPartListsController(
 
 public sealed record CreateContentPartListRequest(string Key, string DisplayText);
 
-public sealed record AddOptionRequest(string Key, string DisplayText, int Position = 0, string? Category = null);
+public sealed record AddOptionRequest(string Key, string DisplayText, int Position = 0, string? Category = null, string? DisplayTextPlural = null, string? Value = null);
 
-public sealed record UpdateOptionRequest(string? DisplayText, int? Position, bool? Hidden, string? Category = null);
+/// <summary>Null leaves a value unchanged; a BLANK DisplayTextPlural or Value clears
+/// it (plural falls back to the singular; a cleared Value means the key is the
+/// option's only machine datum).</summary>
+public sealed record UpdateOptionRequest(string? DisplayText, int? Position, bool? Hidden, string? Category = null, string? DisplayTextPlural = null, string? Value = null);
 
 /// <summary>Every option key in the desired manual order.</summary>
 public sealed record ReorderOptionsRequest(IReadOnlyList<string>? Keys);
