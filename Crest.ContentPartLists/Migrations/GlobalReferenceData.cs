@@ -389,4 +389,33 @@ internal static class GlobalReferenceData
         ("Jr", "Jr."), ("Sr", "Sr."), ("II", "II"), ("III", "III"), ("IV", "IV"), ("V", "V"),
         ("MD", "M.D."), ("PhD", "Ph.D."), ("Esq", "Esq."), ("CPA", "CPA"),
     ];
+
+    /// <summary>UN/CEFACT Recommendation 20 codes for the global.uom units. The
+    /// UNIT KEY is the key (the map's whole point is key→code lookup); the Rec 20
+    /// code is the machine Value. Package-type units (box, case, pack, pallet,
+    /// roll) are ABSENT: those belong to Recommendation 21's package codes, and
+    /// absence means "no Rec 20 code", never a borrowed one. Where Rec 20
+    /// distinguishes US/imperial variants (pint, quart, gallon, short ton) the US
+    /// code is used, matching the seed labels.</summary>
+    internal static readonly (string UnitKey, string Code)[] UomRec20Codes =
+    [
+        // Count
+        ("ea", "EA"), ("pr", "PR"), ("dz", "DZN"), ("gro", "GRO"), ("st", "SET"),
+        // Mass
+        ("mg", "MGM"), ("g", "GRM"), ("kg", "KGM"), ("t", "TNE"),
+        ("oz", "ONZ"), ("lb", "LBR"), ("ton", "STN"),
+        // Volume
+        ("ml", "MLT"), ("cl", "CLT"), ("l", "LTR"), ("m3", "MTQ"),
+        ("floz", "OZA"), ("pt", "PTL"), ("qt", "QTL"), ("gal", "GLL"), ("ft3", "FTQ"),
+        // Length
+        ("mm", "MMT"), ("cm", "CMT"), ("m", "MTR"), ("km", "KMT"),
+        ("in", "INH"), ("ft", "FOT"), ("yd", "YRD"), ("mi", "SMI"),
+        // Area
+        ("m2", "MTK"), ("ha", "HAR"), ("ft2", "FTK"), ("ac", "ACR"),
+        // Time
+        ("s", "SEC"), ("min", "MIN"), ("hr", "HUR"), ("day", "DAY"),
+        ("wk", "WEE"), ("mo", "MON"), ("yr", "ANN"),
+        // Temperature
+        ("cel", "CEL"), ("fah", "FAH"), ("kel", "KEL"),
+    ];
 }

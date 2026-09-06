@@ -708,6 +708,17 @@ public sealed class CrestProviderMenuSyncService(
             if (node is null)
             {
                 node = CreateNode(source, iconClass);
+
+                // Recreate under the RECORDED identity when the state knows this item
+                // but its node is gone - a mapping imported with a layout onto a fresh
+                // tenant, or a hand-deleted node. Every layout override, icon and
+                // rename is stored against the UniqueId, so minting a fresh guid here
+                // would orphan all of them; reusing the recorded one resolves them.
+                if (entry?.UniqueId is { Length: > 0 })
+                {
+                    node.UniqueId = entry.UniqueId;
+                }
+
                 targetNodes.Add(node);
                 state.Entries[matchKey] = new CrestProviderMenuSyncEntry
                 {

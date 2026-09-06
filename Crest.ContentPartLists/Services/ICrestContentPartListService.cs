@@ -43,14 +43,43 @@ public interface ICrestContentPartListService
     /// <summary>Adds a tenant-owned option to a set. Fails when the key is invalid or
     /// already used in that set. A null or blank category files the option under
     /// Uncategorized; a null or blank plural label means the singular serves both;
-    /// a null or blank machine value means the key is the option's only datum.</summary>
-    Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, string? displayTextPlural = null, string? value = null, CancellationToken cancellationToken = default);
+    /// a null or blank machine value means the key is the option's only datum.
+    /// <paramref name="fields"/> sets custom data field values by field name -
+    /// unknown field names fail.</summary>
+    Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, string? displayTextPlural = null, string? value = null, IReadOnlyDictionary<string, string?>? fields = null, CancellationToken cancellationToken = default);
 
     /// <summary>Relabels, repositions, recategorizes, revalues, or hides/unhides an
     /// option. Null leaves a value unchanged (a BLANK plural label or machine value
-    /// clears it). The technical key is deliberately NOT editable
+    /// clears it). <paramref name="fields"/> updates custom data field values by
+    /// field name with the same per-entry contract: a null dictionary touches
+    /// nothing, a blank entry clears that field, an unknown field name fails.
+    /// The technical key is deliberately NOT editable
     /// here - it is the module's contract with code.</summary>
-    Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, string? displayTextPlural = null, string? value = null, CancellationToken cancellationToken = default);
+    Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, string? displayTextPlural = null, string? value = null, IReadOnlyDictionary<string, string?>? fields = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sets the per-field lock designation for a custom data field on the list's
+    /// option content type (see <see cref="Crest.Settings.CrestOptionFieldSettings"/>):
+    /// true makes the field machine surface (frozen under the list's data lock),
+    /// false makes it display surface. Fails when the option type has no such field.
+    /// NOTE: like every service method, this trusts its caller - the controller
+    /// enforces who may change designations and when.
+    /// </summary>
+    Task<CrestContentPartListModel> SetOptionFieldLockAsync(string listKey, string fieldName, bool dataLocked, CancellationToken cancellationToken = default);
+
+    /// <summary>The content types eligible to serve as a list's option type: every
+    /// type carrying CrestOptionPart. The shared "Option" type is always among them.</summary>
+    Task<IReadOnlyList<string>> GetOptionContentTypesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Points the list at a dedicated option content type (per-list custom data
+    /// fields live on it). Fails when the type does not exist or lacks
+    /// CrestOptionPart, and when the list already holds options of another type -
+    /// existing option items keep their stored type, so retargeting a populated list
+    /// would orphan their data. Like every service method this trusts its caller;
+    /// the controller enforces permissions and the lock rules.
+    /// </summary>
+    Task<CrestContentPartListModel> SetOptionContentTypeAsync(string listKey, string contentType, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Rewrites the list's MANUAL order: each option's Position becomes its index in
@@ -76,8 +105,11 @@ public interface ICrestContentPartListService
     Task DeleteListAsync(string key, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Attaches a set to a content type as a TaxonomyField, so any type can reference
-    /// an Option List at runtime.
+    /// Attaches a set to a content type as an OptionPickerField, so any type can
+    /// reference an Option List at runtime. <paramref name="configure"/> lets the
+    /// caller shape the attachment's picker settings (filters for cascades, sort
+    /// columns, ...) after the defaults are applied; it runs on every (re)attach, so
+    /// migrations declare the settings idempotently.
     /// </summary>
-    Task AttachToContentTypeAsync(string listKey, string contentType, string fieldName, string? displayName = null, CancellationToken cancellationToken = default);
+    Task AttachToContentTypeAsync(string listKey, string contentType, string fieldName, string? displayName = null, Action<Crest.Settings.OptionPickerFieldSettings>? configure = null, CancellationToken cancellationToken = default);
 }

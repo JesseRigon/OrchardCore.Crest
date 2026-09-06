@@ -116,7 +116,7 @@ public sealed class ContentPartListsController(
 
         try
         {
-            return Ok(await contentPartLists.AddOptionAsync(key, request.Key, request.DisplayText, request.Position, request.Category, request.DisplayTextPlural, request.Value, HttpContext.RequestAborted));
+            return Ok(await contentPartLists.AddOptionAsync(key, request.Key, request.DisplayText, request.Position, request.Category, request.DisplayTextPlural, request.Value, request.Fields, HttpContext.RequestAborted));
         }
         catch (InvalidOperationException exception)
         {
@@ -225,11 +225,108 @@ public sealed class ContentPartListsController(
             {
                 return LockedProblem("This list's machine values are locked and cannot be changed.");
             }
+
+            // Custom fields freeze per the admin's designation: a DataLocked field is
+            // machine surface like Category/Value, the rest stay display surface.
+            if (request.Fields is { Count: > 0 } && CrestContentPartListRules.LockActive(list.DataLock))
+            {
+                var lockedField = (list.Fields ?? [])
+                    .FirstOrDefault(field => field.DataLocked && request.Fields.Keys.Any(name =>
+                        string.Equals(name, field.Name, StringComparison.OrdinalIgnoreCase)));
+                if (lockedField is not null)
+                {
+                    return LockedProblem($"The field '{lockedField.DisplayName}' is machine data on a locked list and cannot be changed.");
+                }
+            }
         }
 
         try
         {
-            return Ok(await contentPartLists.UpdateOptionAsync(key, optionKey, request.DisplayText, request.Position, request.Hidden, request.Category, request.DisplayTextPlural, request.Value, HttpContext.RequestAborted));
+            return Ok(await contentPartLists.UpdateOptionAsync(key, optionKey, request.DisplayText, request.Position, request.Hidden, request.Category, request.DisplayTextPlural, request.Value, request.Fields, HttpContext.RequestAborted));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Problem(exception.Message, statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    /// <summary>Sets a custom field's lock designation - whether it freezes with the
+    /// list's data lock (machine surface) or stays editable (display surface). The
+    /// designation is itself machine surface: while either lock is active it cannot
+    /// be changed, in either direction.</summary>
+    [HttpPut("{key}/fields/{fieldName}")]
+    public async Task<ActionResult<CrestContentPartListModel>> UpdateOptionFieldAsync(string key, string fieldName, [FromBody] UpdateOptionFieldRequest request)
+    {
+        if (!await CanManageAsync())
+        {
+            return Forbid();
+        }
+
+        var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
+        if (list is not null)
+        {
+            if (CrestContentPartListRules.LockActive(list.EditLock))
+            {
+                return LockedProblem("The list is locked for editing.");
+            }
+
+            if (CrestContentPartListRules.LockActive(list.DataLock))
+            {
+                return LockedProblem("This list's data is locked; field lock designations cannot be changed.");
+            }
+        }
+
+        try
+        {
+            return Ok(await contentPartLists.SetOptionFieldLockAsync(key, fieldName, request.DataLocked, HttpContext.RequestAborted));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Problem(exception.Message, statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    /// <summary>The content types eligible as a list's option type (they carry
+    /// CrestOptionPart). Drives the option-type dropdown on the management page.</summary>
+    [HttpGet("option-types")]
+    public async Task<ActionResult<IReadOnlyList<string>>> ListOptionContentTypesAsync()
+    {
+        if (!await CanManageAsync())
+        {
+            return Forbid();
+        }
+
+        return Ok(await contentPartLists.GetOptionContentTypesAsync(HttpContext.RequestAborted));
+    }
+
+    /// <summary>Points the list at a dedicated option content type. Machine surface:
+    /// refused while either lock is active, and refused by the service when the list
+    /// already holds options of another type.</summary>
+    [HttpPut("{key}/option-content-type")]
+    public async Task<ActionResult<CrestContentPartListModel>> UpdateOptionContentTypeAsync(string key, [FromBody] UpdateOptionContentTypeRequest request)
+    {
+        if (!await CanManageAsync())
+        {
+            return Forbid();
+        }
+
+        var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
+        if (list is not null)
+        {
+            if (CrestContentPartListRules.LockActive(list.EditLock))
+            {
+                return LockedProblem("The list is locked for editing.");
+            }
+
+            if (CrestContentPartListRules.LockActive(list.DataLock))
+            {
+                return LockedProblem("This list's data is locked; the option type cannot be changed.");
+            }
+        }
+
+        try
+        {
+            return Ok(await contentPartLists.SetOptionContentTypeAsync(key, request.ContentType, HttpContext.RequestAborted));
         }
         catch (InvalidOperationException exception)
         {
@@ -247,7 +344,7 @@ public sealed class ContentPartListsController(
 
         try
         {
-            await contentPartLists.AttachToContentTypeAsync(key, request.ContentType, request.FieldName, request.DisplayName, HttpContext.RequestAborted);
+            await contentPartLists.AttachToContentTypeAsync(key, request.ContentType, request.FieldName, request.DisplayName, cancellationToken: HttpContext.RequestAborted);
             return NoContent();
         }
         catch (InvalidOperationException exception)
@@ -275,12 +372,20 @@ public sealed class ContentPartListsController(
 
 public sealed record CreateContentPartListRequest(string Key, string DisplayText);
 
-public sealed record AddOptionRequest(string Key, string DisplayText, int Position = 0, string? Category = null, string? DisplayTextPlural = null, string? Value = null);
+public sealed record AddOptionRequest(string Key, string DisplayText, int Position = 0, string? Category = null, string? DisplayTextPlural = null, string? Value = null, Dictionary<string, string?>? Fields = null);
 
 /// <summary>Null leaves a value unchanged; a BLANK DisplayTextPlural or Value clears
 /// it (plural falls back to the singular; a cleared Value means the key is the
-/// option's only machine datum).</summary>
-public sealed record UpdateOptionRequest(string? DisplayText, int? Position, bool? Hidden, string? Category = null, string? DisplayTextPlural = null, string? Value = null);
+/// option's only machine datum). Fields carries custom data field edits by field
+/// name, with the same per-entry contract: absent = untouched, blank = cleared.</summary>
+public sealed record UpdateOptionRequest(string? DisplayText, int? Position, bool? Hidden, string? Category = null, string? DisplayTextPlural = null, string? Value = null, Dictionary<string, string?>? Fields = null);
+
+/// <summary>The per-field lock designation: true freezes the field's values under
+/// the list's data lock, false keeps them display-editable.</summary>
+public sealed record UpdateOptionFieldRequest(bool DataLocked);
+
+/// <summary>Option-content-type change payload.</summary>
+public sealed record UpdateOptionContentTypeRequest(string ContentType);
 
 /// <summary>Every option key in the desired manual order.</summary>
 public sealed record ReorderOptionsRequest(IReadOnlyList<string>? Keys);

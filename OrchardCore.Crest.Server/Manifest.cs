@@ -47,7 +47,11 @@ using OrchardCore.Modules.Manifest;
     // IsAlwaysEnabled instead, which is all this feature actually needs (the theme has to
     // exist and be enabled so LegacyFrameThemeSelector can switch to it by Id at runtime;
     // its load order relative to this feature is irrelevant).
-    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Autoroute", "OrchardCore.ContentFields", "OrchardCore.Contents", "OrchardCore.DataLocalization", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.Icons"],
+    //   OrchardCore.ContentFields.Indexing.SQL -> TextFieldIndex/NumericFieldIndex/
+    //     BooleanFieldIndex rows, which ContentItemOptionSourceProvider joins for
+    //     Field:-path sort/filter pushdown. Without the feature the tables are empty
+    //     and a field-sorted picker would silently return no rows.
+    Dependencies = ["OrchardCore.Admin", "OrchardCore.AdminMenu", "OrchardCore.Autoroute", "OrchardCore.ContentFields", "OrchardCore.ContentFields.Indexing.SQL", "OrchardCore.Contents", "OrchardCore.DataLocalization", "OrchardCore.Indexing", "OrchardCore.Localization", "OrchardCore.Media", "OrchardCore.Menu", "OrchardCore.Navigation", "OrchardCore.Queries", "OrchardCore.Recipes", "OrchardCore.Security", "OrchardCore.Settings", "OrchardCore.Templates", "OrchardCore.Themes", "OrchardCore.Users", "OrchardCore.Crest.Icons"],
     IsAlwaysEnabled = true
 )]
 

@@ -271,7 +271,7 @@
             var visibleMenuItems = string.IsNullOrWhiteSpace(MenuFilter)
                 ? primaryNavMenuItems
                 : FilterItems(primaryNavMenuItems, MenuFilter);
-            var activeItem = FindBestActiveItem(menu.Items, route).Item;
+            var activeItem = FindBestActiveItem(menu.Items, NormalizePathOnly(route), route).Item;
             var activeItemKey = activeItem?.StableKey;
             var activeItemLink = activeItem?.Link;
 
@@ -306,11 +306,14 @@
             return "/";
         }
 
+        // Query kept: two menu entries can point at one page with different
+        // filter queries (per-type content links), so both the render cache key
+        // and the active-item match must see the query to tell them apart.
         return !string.IsNullOrWhiteSpace(BrowserPathAndQuery)
-            ? NormalizePathOnly(BrowserPathAndQuery)
+            ? NormalizeWithQuery(BrowserPathAndQuery)
             : Uri.TryCreate(Navigation.Uri, UriKind.Absolute, out var uri)
-                ? NormalizePathOnly(uri.PathAndQuery)
-                : NormalizePathOnly(Navigation.Uri);
+                ? NormalizeWithQuery(uri.PathAndQuery)
+                : NormalizeWithQuery(Navigation.Uri);
     }
 
     private void InvalidateMenuModel() => CachedMenuModel = null;
@@ -653,31 +656,21 @@
 
     private bool IsActive(DisplayMenuItem item) => ActiveItemKey == item.StableKey;
 
-    private DisplayMenuItem? FindBestActiveItem(IEnumerable<DisplayMenuItem> items)
-    {
-        var current = !string.IsNullOrWhiteSpace(BrowserPathAndQuery)
-            ? NormalizePathOnly(BrowserPathAndQuery)
-            : Uri.TryCreate(Navigation.Uri, UriKind.Absolute, out var uri)
-                ? NormalizePathOnly(uri.PathAndQuery)
-                : NormalizePathOnly(Navigation.Uri);
-        return FindBestActiveItem(items, current).Item;
-    }
-
-    private static (DisplayMenuItem? Item, int Score) FindBestActiveItem(IEnumerable<DisplayMenuItem> items, string current)
+    private static (DisplayMenuItem? Item, int Score) FindBestActiveItem(IEnumerable<DisplayMenuItem> items, string currentPath, string currentFull)
     {
         DisplayMenuItem? bestItem = null;
         var bestScore = -1;
 
         foreach (var item in items)
         {
-            var itemScore = GetActiveScore(item, current);
+            var itemScore = GetActiveScore(item, currentPath, currentFull);
             if (itemScore > bestScore)
             {
                 bestItem = item;
                 bestScore = itemScore;
             }
 
-            var childBest = FindBestActiveItem(item.Items, current);
+            var childBest = FindBestActiveItem(item.Items, currentPath, currentFull);
             if (childBest.Score > bestScore)
             {
                 bestItem = childBest.Item;
@@ -688,15 +681,32 @@
         return (bestItem, bestScore);
     }
 
-    private static int GetActiveScore(DisplayMenuItem item, string current)
+    private static int GetActiveScore(DisplayMenuItem item, string currentPath, string currentFull)
     {
         if (!item.HasLink || item.Link == "#")
         {
             return -1;
         }
 
-        var link = NormalizePathOnly(item.Link!);
-        return PathMatches(current, link) ? link.Length : -1;
+        var linkFull = NormalizeWithQuery(item.Link!);
+        var linkPath = NormalizePathOnly(item.Link!);
+
+        // An exact path+query match outranks every path-only match, so a
+        // query-carrying entry (a per-type "?type=X" content link) beats the
+        // unfiltered entry on its own page...
+        if (currentFull.Equals(linkFull, StringComparison.OrdinalIgnoreCase))
+        {
+            return linkFull.Length + 10000;
+        }
+
+        // ...and is active ONLY on that exact match - a path-only fallback would
+        // light it on every sibling view of the same page.
+        if (linkFull.Length != linkPath.Length)
+        {
+            return -1;
+        }
+
+        return PathMatches(currentPath, linkPath) ? linkPath.Length : -1;
     }
 
     private static bool PathMatches(string current, string link) =>
@@ -712,6 +722,15 @@
 
         path = path.StartsWith('/') ? path : '/' + path;
         return path.TrimEnd('/');
+    }
+
+    // Path plus query (fragment dropped): what distinguishes two menu entries
+    // pointing at the same page with different filters.
+    private static string NormalizeWithQuery(string value)
+    {
+        var parts = value.Split('#', 2)[0].Split('?', 2);
+        var path = NormalizePathOnly(parts[0]);
+        return parts.Length > 1 && parts[1].Length > 0 ? $"{path}?{parts[1]}" : path;
     }
 
     private static DisplayMenuItem? FindQuickAddSource(IEnumerable<DisplayMenuItem> items)
@@ -852,7 +871,10 @@
             return false;
         }
 
-        return item.StableKey == activeItemKey || string.Equals(NormalizePathOnly(item.Link!), NormalizePathOnly(activeItemLink), StringComparison.OrdinalIgnoreCase);
+        // Compare path AND query: two entries can share a page and differ only in
+        // their filter query (per-type content links), and both lighting up as
+        // active reads as a bug.
+        return item.StableKey == activeItemKey || string.Equals(NormalizeWithQuery(item.Link!), NormalizeWithQuery(activeItemLink), StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed record MenuRenderModel(

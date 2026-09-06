@@ -2,19 +2,18 @@
 // A deeply-nested primaryNavMenu item's flyout must render detached (fixed-position,
 // portalled outside the menu tree) rather than as an inline submenu, and must actually
 // hit-test at its rendered screen position on hover.
-// RETARGETED twice (Phase 8 triage, then the provider-menu import): earlier targets rode
-// on nesting that only existed in one tenant's accumulated layout overlay ("Platform" was a
-// custom root, not anything a fresh FruitfulSetup tenant has), and a fresh tenant's menu is
-// only three levels deep - no level >= FlyoutDepth (2) item has children at all. Rather than
-// depend on any particular tenant's layout, the check now BUILDS the geometry it needs: it
-// reparents the "Media" branch (which has children) under Design > Templates via the same
-// move API the editor uses, hovers it at level 2, and restores the layout afterwards.
+// RETARGETED three times (Phase 8 triage, the provider-menu import, then layout
+// independence): the geometry it needs is "a child-bearing item at rendered level 2
+// whose ancestors are inline-expandable" - FlyoutDepth is 2, and ancestors at level
+// >= 2 would themselves be flyout parents, unreachable by inline expansion. A tenant's
+// layout overlay may already provide that shape (any depth-2 node with children); when
+// it does not (a fresh stock tenant is only three levels deep), the check BUILDS the
+// geometry: it moves a child-bearing root under some depth-1 leaf via the same move
+// API the editor uses, and restores the layout afterwards.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
+const { clickForEffect } = require('../../harness/interactive');
 
 module.exports = async function run(page, ctx) {
-  const parentText = 'Media';
-  const childText = 'Library';
-
   async function moveNode(nodeId, parentNodeId, position) {
     const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
     return page.evaluate(async ({ nodeId, parentNodeId, position, antiforgery }) => {
@@ -28,28 +27,65 @@ module.exports = async function run(page, ctx) {
     }, { nodeId, parentNodeId, position, antiforgery });
   }
 
-  // Resolve the pieces from the live menu - keys are UniqueIds, not knowable up front.
-  const layout = await page.evaluate(async () => {
+  // Resolve geometry from the live menu - keys are UniqueIds, not knowable up front.
+  const plan = await page.evaluate(async () => {
     const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
     if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
     const data = await response.json();
     const menu = data.menus.find(candidate => candidate.id === '__crest_default_admin_menu');
-    const design = menu.nodes.find(node => node.text === 'Design');
-    const templates = (design?.items || []).find(node => node.text === 'Templates');
-    const media = menu.nodes.find(node => node.text === 'Media');
-    return {
-      templatesId: templates?.id ?? null,
-      mediaId: media?.id ?? null,
-      mediaIndex: menu.nodes.findIndex(node => node.text === 'Media'),
-    };
+    const enabled = nodes => (nodes || []).filter(node => node.enabled !== false);
+
+    // Preferred: a child-bearing node ALREADY at depth 2 (inline-expandable ancestors).
+    for (const root of enabled(menu.nodes)) {
+      if (root.id === 'new') continue;
+      for (const levelOne of enabled(root.items)) {
+        for (const levelTwo of enabled(levelOne.items)) {
+          const children = enabled(levelTwo.items);
+          if (children.length > 0) {
+            return {
+              build: null,
+              chain: [root.text, levelOne.text],
+              parentText: levelTwo.text,
+              childText: children[0].text,
+            };
+          }
+        }
+      }
+    }
+
+    // Otherwise build it: a child-bearing root moved under some depth-1 leaf.
+    const movable = enabled(menu.nodes).find(root =>
+      root.id !== 'new' && !String(root.id).startsWith('custom-') && enabled(root.items).length > 0);
+    for (const root of enabled(menu.nodes)) {
+      if (root.id === 'new' || !movable || root.id === movable.id) continue;
+      const leaf = enabled(root.items).find(node => enabled(node.items).length === 0 && node.id !== movable.id);
+      if (leaf) {
+        return {
+          build: {
+            nodeId: movable.id,
+            targetId: leaf.id,
+            restoreIndex: Math.max(0, menu.nodes.findIndex(node => node.id === movable.id)),
+          },
+          chain: [root.text, leaf.text],
+          parentText: movable.text,
+          childText: enabled(movable.items)[0].text,
+        };
+      }
+    }
+    return null;
   });
-  if (!layout.templatesId || !layout.mediaId) {
-    return [{ name: 'flyout-parent-found', pass: false, message: `missing Design > Templates or Media (${JSON.stringify(layout)})` }];
+
+  if (!plan) {
+    return [{ name: 'flyout-parent-found', pass: false, message: 'no depth-2 child-bearing node and no way to build one' }];
   }
 
-  // Design(0) > Templates(1) > Media(2, has children): the shallowest arrangement that puts a
-  // child-bearing item at FlyoutDepth.
-  await moveNode(layout.mediaId, layout.templatesId, 0);
+  if (plan.build) {
+    // Root(0) > leaf(1) > moved node(2, has children): the shallowest arrangement that
+    // puts a child-bearing item at FlyoutDepth.
+    await moveNode(plan.build.nodeId, plan.build.targetId, 0);
+  }
+
+  const { parentText, childText } = plan;
 
   try {
 
@@ -64,17 +100,15 @@ module.exports = async function run(page, ctx) {
   await page.mouse.move(900, 950);
   await page.locator('.primary-nav-menu__flyout--detached').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
 
-  // Expand Platform -> Settings so the nested Localization item renders. Collapsed children
-  // are not in the DOM at all (CrestPanelMenuItems renders them only when expanded),
-  // and the old .rz-expander/.rz-navigation-item-link structure is gone since the
-  // panel-menu refactor. clickForEffect covers the prerendered-inert-button race.
-  const { clickForEffect } = require('../../harness/interactive');
+  // Expand the resolved ancestor chain so the flyout parent renders. Collapsed children
+  // are not in the DOM at all (CrestPanelMenuItems renders them only when expanded).
+  // clickForEffect covers the prerendered-inert-button race.
   const expandLink = label =>
     primaryNavMenu.locator(`button.crest-panel-menu__item-link:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
   const itemContent = label =>
     primaryNavMenu.locator(`.crest-panel-menu__item-content:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
-  await clickForEffect(expandLink('Design'), itemContent('Templates'));
-  await clickForEffect(expandLink('Templates'), itemContent('Media'));
+  await clickForEffect(expandLink(plan.chain[0]), itemContent(plan.chain[1]));
+  await clickForEffect(expandLink(plan.chain[1]), itemContent(parentText));
   await page.waitForTimeout(250);
 
   const before = await primaryNavMenu.evaluate(
@@ -172,7 +206,9 @@ module.exports = async function run(page, ctx) {
   ];
 
   } finally {
-    // Put Media back at the root where it started, whatever happened above.
-    await moveNode(layout.mediaId, null, Math.max(0, layout.mediaIndex)).catch(() => {});
+    if (plan.build) {
+      // Put the moved branch back at the root where it started, whatever happened above.
+      await moveNode(plan.build.nodeId, null, plan.build.restoreIndex).catch(() => {});
+    }
   }
 };

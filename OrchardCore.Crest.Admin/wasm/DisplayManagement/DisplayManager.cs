@@ -49,7 +49,17 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     // BlazorAdminThemeMiddleware's server-side CanAccessAsync call.
     public bool IsRouteAuthorized(string uri)
     {
-        var path = "/" + navigation.ToBaseRelativePath(uri).TrimStart('/');
+        // Query/fragment are not part of the route: the server's gate matches on
+        // PathString (query-free), and templates never carry one. Without this
+        // trim, "/Contents/ContentItems?type=X" fails to match its own template.
+        var relative = navigation.ToBaseRelativePath(uri);
+        var trimAt = relative.IndexOfAny(['?', '#']);
+        if (trimAt >= 0)
+        {
+            relative = relative[..trimAt];
+        }
+
+        var path = "/" + relative.TrimStart('/');
         return Manifest?.AuthorizedRoutes?.Any(route => RouteMatches(route.Template, path)) == true;
     }
 

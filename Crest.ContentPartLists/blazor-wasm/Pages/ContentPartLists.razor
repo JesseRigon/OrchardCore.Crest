@@ -121,6 +121,40 @@
                                         <CrestText TextStyle="TextStyle.Caption" Text="@T["Makes the list read-only for this tenant: no relabels, no hiding, no reordering, no new options, no deletion."]" />
                                     </CrestStack>
                                 </CrestStack>
+                                @* The content type new options are created as - custom data
+                                   fields live on it. Machine surface: frozen under either lock,
+                                   and the server refuses retargeting a populated list. *@
+                                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" data-testid="option-content-type">
+                                    <CrestFormField Text="@T["Option type"]">
+                                        <CrestDropDown Value="@SelectedOptionType" TValue="string" Data="@OptionTypeChoices" TextProperty="Label" ValueProperty="Value"
+                                                       Change="@(value => SetOptionTypeAsync(value as string))"
+                                                       Disabled="@(IsBusy || SelectedEditLocked || SelectedDataLocked || OptionTypes.Length == 0)"
+                                                       Style="min-width: 11rem;" data-testid="option-content-type-dropdown" />
+                                    </CrestFormField>
+                                    <CrestText TextStyle="TextStyle.Caption" Style="max-width: 24rem;"
+                                               Text="@T["New options are created as this content type; its custom fields become the list's extra columns. Changeable while the list is empty (or already of that type)."]" />
+                                </CrestStack>
+                                @if (SelectedFields.Length > 0)
+                                {
+                                    @* Per-field lock designation, chosen by the admin building the
+                                       list. The designation is itself machine surface: frozen while
+                                       either lock is active. *@
+                                    <CrestStack Gap="0.5rem" data-testid="option-field-locks">
+                                        @foreach (var field in SelectedFields)
+                                        {
+                                            var current = field;
+                                            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                                <CrestSwitch Value="@current.DataLocked" Change="@(value => SetFieldLockAsync(current, (bool)value))"
+                                                             Disabled="@(IsBusy || SelectedEditLocked || SelectedDataLocked)"
+                                                             data-testid="@($"field-lock-{current.Name}")" />
+                                                <CrestStack Gap="0">
+                                                    <CrestText TextStyle="TextStyle.Body2" Text="@T["Treat {0} as machine data", current.DisplayName]" />
+                                                    <CrestText TextStyle="TextStyle.Caption" Text="@T["On: this field freezes with the categories & data lock, like Category and Value. Off: it stays editable like the labels."]" />
+                                                </CrestStack>
+                                            </CrestStack>
+                                        }
+                                    </CrestStack>
+                                }
                             </CrestStack>
                         </Header>
                         <ChildContent>
@@ -209,6 +243,45 @@
                                             }
                                         </Template>
                                     </CrestDataGridColumn>
+                                    @foreach (var field in SelectedFields)
+                                    {
+                                        var current = field;
+                                        <CrestDataGridColumn TItem="OptionModel" Title="@current.DisplayName">
+                                            <Template Context="option">
+                                                @if (SelectedEditLocked || (current.DataLocked && SelectedDataLocked))
+                                                {
+                                                    @* A DataLocked field is machine surface, frozen by the
+                                                       data lock like Category/Value - read-only, not disabled. *@
+                                                    <CrestText TextStyle="TextStyle.Body2" Text="@(FieldValue(option, current) ?? "—")" />
+                                                }
+                                                else if (current.Type == "BooleanField")
+                                                {
+                                                    @* Typed editor: the wire format stays stringified; the
+                                                       server's accessor stores the typed value. *@
+                                                    <CrestSwitch Value="@ParseBool(FieldValue(option, current))"
+                                                                 Change="@(value => SetFieldAsync(option, current, (bool)value ? "true" : "false"))"
+                                                                 Disabled="@IsBusy" />
+                                                }
+                                                else if (current.Type == "NumericField")
+                                                {
+                                                    <CrestNumeric TValue="decimal?"
+                                                                  Value="@ParseDecimal(FieldValue(option, current))"
+                                                                  Change="@(value => SetFieldAsync(option, current, value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty))"
+                                                                  Disabled="@IsBusy"
+                                                                  Style="width: 100%;" />
+                                                }
+                                                else
+                                                {
+                                                    @* Same draft pattern as the other columns; blank clears. *@
+                                                    <CrestTextBox Value="@FieldDraft(option, current)"
+                                                                  ValueChanged="@(value => OnFieldChanged(option, current, value))"
+                                                                  Change="@(value => SetFieldAsync(option, current, value))"
+                                                                  Disabled="@IsBusy"
+                                                                  Style="width: 100%;" />
+                                                }
+                                            </Template>
+                                        </CrestDataGridColumn>
+                                    }
                                     <CrestDataGridColumn TItem="OptionModel" Title="@T["Source"]" Width="8rem">
                                         <Template Context="option">
                                             <CrestBadge Text="@option.Source" BadgeStyle="@(option.Source == "Module" ? BadgeStyle.Info : BadgeStyle.Secondary)" />
@@ -237,6 +310,31 @@
                                     <CrestFormField Text="@T["Value (optional)"]">
                                         <CrestTextBox @bind-Value="NewOptionValue" Disabled="@IsBusy" />
                                     </CrestFormField>
+                                    @foreach (var field in SelectedFields)
+                                    {
+                                        var current = field;
+                                        <CrestFormField Text="@current.DisplayName">
+                                            @if (current.Type == "BooleanField")
+                                            {
+                                                <CrestSwitch Value="@ParseBool(NewFieldDraft(current))"
+                                                             Change="@(value => NewFieldDrafts[current.Name] = (bool)value ? "true" : "false")"
+                                                             Disabled="@IsBusy" />
+                                            }
+                                            else if (current.Type == "NumericField")
+                                            {
+                                                <CrestNumeric TValue="decimal?"
+                                                              Value="@ParseDecimal(NewFieldDraft(current))"
+                                                              Change="@(value => NewFieldDrafts[current.Name] = value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
+                                                              Disabled="@IsBusy" />
+                                            }
+                                            else
+                                            {
+                                                <CrestTextBox Value="@NewFieldDraft(current)"
+                                                              ValueChanged="@(value => NewFieldDrafts[current.Name] = value ?? string.Empty)"
+                                                              Disabled="@IsBusy" />
+                                            }
+                                        </CrestFormField>
+                                    }
                                     @if (SelectedDataLocked)
                                     {
                                         @* The category vocabulary is frozen under a data lock: tenant
@@ -306,6 +404,50 @@
 
     private bool SelectedDataLocked => LockActive(Selected?.DataLock);
     private bool SelectedEditLocked => LockActive(Selected?.EditLock);
+
+    private OptionFieldModel[] SelectedFields => Selected?.Fields ?? [];
+
+    private string[] OptionTypes = [];
+
+    private string SelectedOptionType => string.IsNullOrWhiteSpace(Selected?.OptionContentType) ? "Option" : Selected!.OptionContentType!;
+
+    private OptionTypeChoice[] OptionTypeChoices => [.. OptionTypes.Select(type => new OptionTypeChoice(type, type))];
+
+    private sealed record OptionTypeChoice(string Label, string Value);
+
+    private async Task SetOptionTypeAsync(string? contentType)
+    {
+        if (Selected is null || string.IsNullOrWhiteSpace(contentType)
+            || string.Equals(contentType, SelectedOptionType, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync(
+                $"api/crest/content-part-lists/{Uri.EscapeDataString(Selected.Key)}/option-content-type",
+                new { ContentType = contentType });
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, T["Content Part Lists"], T["Option type set to {0}.", contentType]);
+            await LoadAsync();
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
 
     // The frozen category vocabulary a data-locked list constrains additions to.
     private Choice[] CategoryChoices => Selected is null
@@ -387,6 +529,16 @@
         {
             Lists = await Http.GetFromJsonAsync<ContentPartListModel[]>("api/crest/content-part-lists") ?? [];
             SelectedKey = Lists.Any(list => list.Key == SelectedKey) ? SelectedKey : Lists.FirstOrDefault()?.Key;
+
+            try
+            {
+                OptionTypes = await Http.GetFromJsonAsync<string[]>("api/crest/content-part-lists/option-types") ?? [];
+            }
+            catch
+            {
+                // Without the listing the dropdown just stays disabled.
+                OptionTypes = [];
+            }
         }
         catch (Exception exception)
         {
@@ -405,6 +557,8 @@
         PluralDrafts.Clear();
         ValueDrafts.Clear();
         CategoryDrafts.Clear();
+        FieldDrafts.Clear();
+        NewFieldDrafts.Clear();
         ConfirmingDelete = false;
     }
 
@@ -484,6 +638,72 @@
                 ValueDrafts.Remove(option.Key);
                 await LoadAsync();
             });
+    }
+
+    // Custom data field drafts, keyed by option key + field name (the separator can
+    // appear in neither: option keys reject non-alphanumerics, field names are C#
+    // technical names).
+    private Dictionary<string, string> FieldDrafts { get; } = new(StringComparer.Ordinal);
+
+    // Add-row values for custom fields, keyed by field name.
+    private Dictionary<string, string> NewFieldDrafts { get; } = new(StringComparer.Ordinal);
+
+    private static string FieldDraftKey(OptionModel option, OptionFieldModel field) => $"{option.Key}\u0001{field.Name}";
+
+    private static string? FieldValue(OptionModel option, OptionFieldModel field) =>
+        option.Fields is not null && option.Fields.TryGetValue(field.Name, out var value) ? value : null;
+
+    private string FieldDraft(OptionModel option, OptionFieldModel field) =>
+        FieldDrafts.TryGetValue(FieldDraftKey(option, field), out var draft) ? draft : FieldValue(option, field) ?? string.Empty;
+
+    private void OnFieldChanged(OptionModel option, OptionFieldModel field, string? value) =>
+        FieldDrafts[FieldDraftKey(option, field)] = value ?? string.Empty;
+
+    private string NewFieldDraft(OptionFieldModel field) =>
+        NewFieldDrafts.TryGetValue(field.Name, out var draft) ? draft : string.Empty;
+
+    // Typed-cell parsing: the wire format is stringified (the server's accessor
+    // owns the typed conversion), these only shape the editors' bound values.
+    private static bool ParseBool(string? value) => bool.TryParse(value, out var flag) && flag;
+
+    private static decimal? ParseDecimal(string? value) =>
+        decimal.TryParse(value, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var number)
+            ? number
+            : null;
+
+    private async Task SetFieldAsync(OptionModel option, OptionFieldModel field, string? value)
+    {
+        if (Selected is null || (value ?? string.Empty) == (FieldValue(option, field) ?? string.Empty))
+        {
+            return;
+        }
+
+        var listKey = Selected.Key;
+        await SendAsync(
+            // A blank entry CLEARS the field, matching the plural/Value contract.
+            () => Http.PutAsJsonAsync($"api/crest/content-part-lists/{Uri.EscapeDataString(listKey)}/options/{Uri.EscapeDataString(option.Key)}",
+                new { DisplayText = (string?)null, Position = (int?)null, Hidden = (bool?)null, Fields = new Dictionary<string, string?> { [field.Name] = value ?? string.Empty } }),
+            T["{0} updated.", field.DisplayName],
+            async () =>
+            {
+                FieldDrafts.Remove(FieldDraftKey(option, field));
+                await LoadAsync();
+            });
+    }
+
+    private async Task SetFieldLockAsync(OptionFieldModel field, bool dataLocked)
+    {
+        if (Selected is null)
+        {
+            return;
+        }
+
+        var listKey = Selected.Key;
+        await SendAsync(
+            () => Http.PutAsJsonAsync($"api/crest/content-part-lists/{Uri.EscapeDataString(listKey)}/fields/{Uri.EscapeDataString(field.Name)}",
+                new { DataLocked = dataLocked }),
+            T["Field lock updated."],
+            LoadAsync);
     }
 
     // Same buffering as labels: the grid re-renders per keystroke, so category boxes

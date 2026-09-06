@@ -19,6 +19,7 @@ public sealed class ContentItemsController(
     IOrchardHelper orchardHelper,
     ISession session,
     IContentManager contentManager,
+    Crest.Services.CrestFieldVisibilityEnforcer visibilityEnforcer,
     IAuthorizationService authorizationService) : ControllerBase
 {
     private static readonly string[] DefaultViewFields =
@@ -35,7 +36,18 @@ public sealed class ContentItemsController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ListContent))
+        // A type-filtered list authorizes against a stand-in item of that type
+        // (stock's own AuthorizeContentTypeDefinitionsAsync pattern), so Securable
+        // types enforce their dynamic ListContent_{Type} permission through the
+        // standard handler chain; the unfiltered list keeps the global check.
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ListContent))
+            {
+                return Forbid();
+            }
+        }
+        else if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ListContent, await contentManager.NewAsync(contentType)))
         {
             return Forbid();
         }
@@ -151,6 +163,9 @@ public sealed class ContentItemsController(
         var item = await contentManager.NewAsync(request.ContentType);
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
+        // Clear-on-save: a field whose visibility condition is false must not keep a
+        // stale value the editor was hiding.
+        await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
         var created = await contentManager.CreateAsync(item, VersionOptions.Draft);
         if (!created) return Conflict();
         if (request.Publish && !await contentManager.PublishAsync(item)) return Conflict();
@@ -166,6 +181,7 @@ public sealed class ContentItemsController(
 
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
+        await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
         await contentManager.UpdateAsync(item);
         if (request.Publish && !item.Published && !await contentManager.PublishAsync(item)) return Conflict();
         return Ok(ContentItem.From(item));

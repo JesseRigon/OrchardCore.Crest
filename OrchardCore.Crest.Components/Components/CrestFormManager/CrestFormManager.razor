@@ -1,10 +1,12 @@
 @namespace Crest.Components.Forms
 @using System.Globalization
+@using System.Net.Http.Json
 @using System.Text.Json.Nodes
 @using Crest.Components.Models
+@using Crest.Components.Options
 @using Microsoft.AspNetCore.Components.Rendering
 @using Crest.Components.Primitives
-@using Crest.Components.Primitives
+@inject HttpClient Http
 
 @if (Content is null)
 {
@@ -17,7 +19,9 @@ else if (Metadata?.Parts is { Length: > 0 } parts)
         {
             <CrestFieldset Text="@part.DisplayName" AllowCollapse="true">
                 <CrestStack Gap="0.75rem">
-                    @foreach (var field in part.Fields.OrderBy(field => field.Position ?? string.Empty, StringComparer.OrdinalIgnoreCase))
+                    @foreach (var field in part.Fields
+                        .OrderBy(field => field.Position ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                        .Where(field => IsFieldVisible(part.Name, field)))
                     {
                         <div class="crest-form-manager__field">
                             @RenderField(part, field)
@@ -52,7 +56,9 @@ else
         {
             foreach (var field in part.Fields)
             {
-                if (!field.Required)
+                // A hidden field cannot be required: the user cannot see it, and the
+                // server clears its value on save anyway.
+                if (!field.Required || !IsFieldVisible(part.Name, field))
                 {
                     continue;
                 }
@@ -113,6 +119,24 @@ else
                 builder.AddAttribute(sequence++, "Style", "width: 100%;");
                 builder.CloseComponent();
                 break;
+            case "OptionPickerField":
+                builder.OpenComponent<CrestOptionPicker>(sequence++);
+                builder.AddAttribute(sequence++, "SourceKey", PickerSettings(field)?["SourceKey"]?.GetValue<string>() ?? string.Empty);
+                builder.AddAttribute(sequence++, "Columns", ParseColumns(PickerSettings(field)));
+                builder.AddAttribute(sequence++, "SelectedIds", GetSelectedIds(partName, field.Name));
+                builder.AddAttribute(sequence++, "SelectedIdsChanged", EventCallback.Factory.Create<IReadOnlyList<string>>(this, ids => SetSelectedIds(partName, field.Name, ids)));
+                builder.AddAttribute(sequence++, "Multiple", PickerSettings(field)?["Multiple"]?.GetValue<bool>() ?? false);
+                builder.AddAttribute(sequence++, "Required", field.Required);
+                builder.AddAttribute(sequence++, "Placeholder", PickerSettings(field)?["Placeholder"]?.GetValue<string>() ?? string.Empty);
+                builder.AddAttribute(sequence++, "Disabled", Disabled);
+                // The attachment identifies itself; the server loads its filters and
+                // resolves any ValueFrom against the state below.
+                builder.AddAttribute(sequence++, "ContentType", Metadata?.ContentType);
+                builder.AddAttribute(sequence++, "FieldName", field.Name);
+                builder.AddAttribute(sequence++, "EditorState", BuildEditorState(field));
+                builder.AddAttribute(sequence++, "TestId", $"picker-{partName}-{field.Name}");
+                builder.CloseComponent();
+                break;
             case "ContentPickerField":
                 builder.OpenComponent<CrestTextBox>(sequence++);
                 builder.AddAttribute(sequence++, "Value", GetPickerIds(partName, field.Name));
@@ -159,11 +183,229 @@ else
         var propertyName = field.FieldType switch
         {
             "ContentPickerField" => "ContentItemIds",
+            "OptionPickerField" => "SelectedIds",
             "TextField" => "Text",
             _ => "Value"
         };
 
         return Root[partName]?[field.Name]?[propertyName];
+    }
+
+    // --- Option pickers -------------------------------------------------------
+
+    private static JsonNode? PickerSettings(CrestContentFieldMetadata field) =>
+        field.Settings?["OptionPickerFieldSettings"];
+
+    private static IReadOnlyList<OptionPickerColumn> ParseColumns(JsonNode? pickerSettings)
+    {
+        if (pickerSettings?["Columns"] is not JsonArray columns)
+        {
+            return [];
+        }
+
+        return [.. columns
+            .Select(column => column is null ? null : new OptionPickerColumn(
+                column["Path"]?.GetValue<string>() ?? string.Empty,
+                column["Label"]?.GetValue<string>() ?? column["Path"]?.GetValue<string>() ?? string.Empty,
+                column["Width"]?.GetValue<string>(),
+                column["Visible"]?.GetValue<bool>() ?? true,
+                column["InChip"]?.GetValue<bool>() ?? false))
+            .Where(column => column is not null && column.Path.Length > 0)
+            .Select(column => column!)];
+    }
+
+    private IReadOnlyList<string> GetSelectedIds(string partName, string fieldName) =>
+        Root[partName]?[fieldName]?["SelectedIds"] is JsonArray ids
+            ? [.. ids.Select(id => id?.GetValue<string>()).Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!)]
+            : [];
+
+    private void SetSelectedIds(string partName, string fieldName, IReadOnlyList<string> ids)
+    {
+        GetOrCreateField(partName, fieldName)["SelectedIds"] =
+            new JsonArray([.. ids.Select(id => (JsonNode?)JsonValue.Create(id))]);
+        Errors.Remove(FieldKey(partName, fieldName));
+        // A parent's committed selection feeds dependent pickers (their EditorState
+        // re-keys) and visibility conditions - drop resolved keys so both re-evaluate.
+        ParentKeysCache.Clear();
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// The dependency values THIS picker's configured filters read (by ValueFrom), so
+    /// the server can resolve its cascade. Built from the filters in the field's own
+    /// settings - state changes re-render this, which is what re-queries a dependent
+    /// picker when its parent commits.
+    /// </summary>
+    private IReadOnlyDictionary<string, string[]>? BuildEditorState(CrestContentFieldMetadata field)
+    {
+        if (PickerSettings(field)?["Filters"] is not JsonArray filters || filters.Count == 0)
+        {
+            return null;
+        }
+
+        var state = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+        foreach (var filter in filters)
+        {
+            var valueFrom = filter?["ValueFrom"]?.GetValue<string>();
+            if (string.IsNullOrWhiteSpace(valueFrom) || state.ContainsKey(valueFrom))
+            {
+                continue;
+            }
+
+            state[valueFrom] = ReadPathValues(valueFrom);
+        }
+
+        return state.Count == 0 ? null : state;
+    }
+
+    // Paths are "Field" (the type's implicit part) or "Part.Field", matching the
+    // server's convention. A picker contributes its selected ids, scalars their value.
+    private string[] ReadPathValues(string path)
+    {
+        var segments = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length is 0 or > 2)
+        {
+            return [];
+        }
+
+        var partName = segments.Length == 2 ? segments[0] : Metadata?.ContentType ?? string.Empty;
+        var node = Root[partName]?[segments[^1]];
+        if (node is null)
+        {
+            return [];
+        }
+
+        if (node["SelectedIds"] is JsonArray ids)
+        {
+            return [.. ids.Select(id => id?.ToString()).Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!)];
+        }
+
+        var scalar = (node["Text"] ?? node["Value"])?.ToString();
+        return string.IsNullOrWhiteSpace(scalar) ? [] : [scalar];
+    }
+
+    // --- Field visibility -----------------------------------------------------
+
+    // Resolved parent comparison values, keyed by "path|ids". A null value means a
+    // resolve request is in flight; the field stays hidden until it lands rather
+    // than flashing into view with an unverified condition.
+    private readonly Dictionary<string, IReadOnlyList<string>?> ParentKeysCache = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Evaluates a field's CrestFieldVisibilitySettings against the live form.
+    /// Scalar parents compare their stored value; a picker parent's ids resolve to
+    /// option KEYS through the server (the identity rule - conditions name keys,
+    /// never ids or labels).
+    /// </summary>
+    private bool IsFieldVisible(string partName, CrestContentFieldMetadata field)
+    {
+        var settings = field.Settings?["CrestFieldVisibilitySettings"];
+        var path = settings?["Path"]?.GetValue<string>();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return true;
+        }
+
+        var raw = ReadPathValues(path);
+        var @operator = settings?["Operator"]?.GetValue<string>() ?? "Any";
+        if (string.Equals(@operator, "Any", StringComparison.OrdinalIgnoreCase))
+        {
+            return raw.Length > 0;
+        }
+
+        if (raw.Length == 0)
+        {
+            return false;
+        }
+
+        string[] keys = settings?["Keys"] is JsonArray keyArray
+            ? [.. keyArray.Select(key => key?.GetValue<string>()).Where(key => !string.IsNullOrWhiteSpace(key)).Select(key => key!)]
+            : [];
+        var parentValues = ResolveParentComparisonValues(path, raw);
+
+        return parentValues is not null
+            && parentValues.Any(value => keys.Any(key => string.Equals(key, value, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private IReadOnlyList<string>? ResolveParentComparisonValues(string path, string[] raw)
+    {
+        var parentField = FindFieldMetadata(path);
+        if (parentField is null)
+        {
+            return raw;
+        }
+
+        if (!string.Equals(parentField.FieldType, "OptionPickerField", StringComparison.Ordinal))
+        {
+            // Scalar parents: the stored value IS the comparison value.
+            return raw;
+        }
+
+        var sourceKey = PickerSettings(parentField)?["SourceKey"]?.GetValue<string>();
+        if (string.IsNullOrWhiteSpace(sourceKey))
+        {
+            return [];
+        }
+
+        var cacheKey = $"{path}|{string.Join(',', raw)}";
+        if (ParentKeysCache.TryGetValue(cacheKey, out var resolved))
+        {
+            return resolved;
+        }
+
+        // Mark in flight and resolve in the background; the re-render on completion
+        // re-evaluates visibility with real keys.
+        ParentKeysCache[cacheKey] = null;
+        _ = ResolveParentKeysAsync(cacheKey, sourceKey, raw);
+        return null;
+    }
+
+    private async Task ResolveParentKeysAsync(string cacheKey, string sourceKey, string[] ids)
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/crest/option-sources/resolve", new
+            {
+                SourceKey = sourceKey,
+                Ids = ids,
+                Columns = Array.Empty<string>(),
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var rows = await response.Content.ReadFromJsonAsync<OptionPickerRow[]>() ?? [];
+                ParentKeysCache[cacheKey] = [.. rows
+                    .Select(row => string.IsNullOrWhiteSpace(row.Key) ? row.Id : row.Key!)
+                    .Where(value => !string.IsNullOrWhiteSpace(value))];
+            }
+            else
+            {
+                // Fail closed: an unresolvable parent must not reveal the field.
+                ParentKeysCache[cacheKey] = [];
+            }
+        }
+        catch
+        {
+            ParentKeysCache[cacheKey] = [];
+        }
+
+        StateHasChanged();
+    }
+
+    private CrestContentFieldMetadata? FindFieldMetadata(string path)
+    {
+        var segments = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length is 0 or > 2)
+        {
+            return null;
+        }
+
+        var partName = segments.Length == 2 ? segments[0] : Metadata?.ContentType ?? string.Empty;
+        var part = Metadata?.Parts?.FirstOrDefault(candidate =>
+            string.Equals(candidate.Name, partName, StringComparison.OrdinalIgnoreCase));
+
+        return part?.Fields.FirstOrDefault(candidate =>
+            string.Equals(candidate.Name, segments[^1], StringComparison.OrdinalIgnoreCase));
     }
 
     private string? GetString(string partName, string fieldName, string propertyName)

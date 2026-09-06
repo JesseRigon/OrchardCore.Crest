@@ -1,0 +1,178 @@
+@namespace Crest.Admin.Components.Admin
+@using System.Net.Http.Json
+@using Crest.Components.Primitives
+@inject HttpClient Http
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Declarative show/hide condition for ANY field type: the field renders only while
+   a controlling sibling field's value satisfies the condition; the server clears a
+   hidden field's value on save. Definition work, gated server-side by
+   EditContentTypes, stored on the part's field definition (shared across every
+   type carrying the part - same rule as the field itself). *@
+<CrestCard data-testid="field-visibility-editor">
+    <CrestStack Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H6" Text="@T["Visibility: {0}", FieldName]" />
+            <CrestText TextStyle="TextStyle.Caption" Text="@($"{PartName} · {FieldName}")" />
+        </CrestStack>
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
+        }
+
+        @if (IsLoading)
+        {
+            <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else
+        {
+            <CrestText TextStyle="TextStyle.Caption" Text="@T["The field shows only while the controlling field's value satisfies the condition. While hidden it is exempt from required-validation, and its value is cleared when the item is saved."]" />
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                <CrestFormField Text="@T["Controlled by"]">
+                    <CrestDropDown @bind-Value="Path" TValue="string" Data="@SiblingFieldChoices" TextProperty="Label" ValueProperty="Value"
+                                   AllowClear="true" Placeholder="@T["Always visible"]" Disabled="@IsBusy" Style="width: 12rem;" data-testid="visibility-path" />
+                </CrestFormField>
+                @if (!string.IsNullOrWhiteSpace(Path))
+                {
+                    <CrestFormField Text="@T["Condition"]">
+                        <CrestDropDown @bind-Value="Operator" TValue="string" Data="@OperatorChoices" TextProperty="Label" ValueProperty="Value"
+                                       Disabled="@IsBusy" Style="width: 14rem;" data-testid="visibility-operator" />
+                    </CrestFormField>
+                }
+            </CrestStack>
+
+            @if (!string.IsNullOrWhiteSpace(Path) && Operator != "Any")
+            {
+                <CrestFormField Text="@T["Matching keys (option keys, not labels)"]">
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="0.35rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" data-testid="visibility-keys">
+                        @foreach (var key in Keys.ToArray())
+                        {
+                            var entry = key;
+                            <CrestBadge Text="@entry" BadgeStyle="BadgeStyle.Secondary" />
+                            <CrestButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Keys.Remove(entry))" Disabled="@IsBusy" />
+                        }
+                        <CrestTextBox @bind-Value="NewKey" Placeholder="@T["e.g. Voided"]" Disabled="@IsBusy" Style="width: 9rem;" />
+                        <CrestButton Icon="add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="AddKey" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewKey))" data-testid="visibility-add-key" />
+                    </CrestStack>
+                </CrestFormField>
+            }
+
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => OnClose.InvokeAsync())" Disabled="@IsBusy" />
+                <CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="visibility-save" />
+            </CrestStack>
+        }
+    </CrestStack>
+</CrestCard>
+
+@code {
+    [Parameter] public string PartName { get; set; } = string.Empty;
+    [Parameter] public string FieldName { get; set; } = string.Empty;
+
+    /// <summary>Sibling field names on the same part, offered as controlling fields.</summary>
+    [Parameter] public string[] SiblingFields { get; set; } = [];
+
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string? Path;
+    private string Operator = "Any";
+    private List<string> Keys = [];
+    private string NewKey = string.Empty;
+
+    private bool IsLoading;
+    private bool IsSaving;
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage;
+
+    private sealed record Choice(string Label, string Value);
+    private sealed record VisibilityModel(bool FieldExists, VisibilitySettings Settings);
+    private sealed class VisibilitySettings
+    {
+        public string? Path { get; set; }
+        public string Operator { get; set; } = "Any";
+        public string[] Keys { get; set; } = [];
+    }
+
+    private Choice[] SiblingFieldChoices => [.. SiblingFields
+        .Where(name => !string.Equals(name, FieldName, StringComparison.OrdinalIgnoreCase))
+        .Select(name => new Choice(name, name))];
+
+    private Choice[] OperatorChoices =>
+    [
+        new(T["Has any value"], "Any"),
+        new(T["Matches one of the keys"], "In"),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            var model = await Http.GetFromJsonAsync<VisibilityModel>(
+                $"api/crest/field-visibility?part={Uri.EscapeDataString(PartName)}&field={Uri.EscapeDataString(FieldName)}");
+            Path = model?.Settings.Path;
+            // Equals and In are the same test server-side; the editor shows one entry.
+            Operator = model?.Settings.Operator is "Equals" or "In" ? "In" : "Any";
+            Keys = [.. model?.Settings.Keys ?? []];
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void AddKey()
+    {
+        var key = NewKey.Trim();
+        if (key.Length > 0 && !Keys.Contains(key, StringComparer.OrdinalIgnoreCase))
+        {
+            Keys.Add(key);
+        }
+
+        NewKey = string.Empty;
+    }
+
+    private async Task SaveAsync()
+    {
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync("api/crest/field-visibility", new
+            {
+                Part = PartName,
+                Field = FieldName,
+                Settings = new
+                {
+                    Path = string.IsNullOrWhiteSpace(Path) ? null : Path,
+                    Operator,
+                    Keys = Keys.ToArray(),
+                },
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, T["Field visibility"], T["Visibility condition saved."]);
+            await OnSaved.InvokeAsync();
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+}

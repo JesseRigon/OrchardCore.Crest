@@ -26,6 +26,7 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
     public const string SubdivisionsKey = "global.subdivisions";
     public const string HonorificsKey = "global.honorifics";
     public const string NameSuffixesKey = "global.name-suffixes";
+    public const string UomRec20Key = "global.uom-rec20";
 
     public Task<int> CreateAsync()
     {
@@ -41,7 +42,7 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
             await SeedGlobalListsAsync(service);
         });
 
-        return Task.FromResult(5);
+        return Task.FromResult(6);
     }
 
     // Tenants that enabled the feature before the data locks and the Mass/Temperature
@@ -62,7 +63,7 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
             await BackfillPositionsAsync(service);
         });
 
-        return Task.FromResult(5);
+        return Task.FromResult(6);
     }
 
     // Tenants seeded while every option carried Position 0: give the manual order
@@ -74,7 +75,7 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
         ShellScope.AddDeferredTask(async scope =>
             await BackfillPositionsAsync(scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>()));
 
-        return Task.FromResult(5);
+        return Task.FromResult(6);
     }
 
     // Tenants seeded before units carried plural labels: fill in each unit's plural
@@ -103,7 +104,7 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
             }
         });
 
-        return Task.FromResult(5);
+        return Task.FromResult(6);
     }
 
     // Tenants seeded before the wider reference-data lists existed: seed them.
@@ -113,7 +114,17 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
         ShellScope.AddDeferredTask(async scope =>
             await SeedGlobalListsAsync(scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>()));
 
-        return Task.FromResult(5);
+        return Task.FromResult(6);
+    }
+
+    // Tenants seeded before the Rec 20 mapping dataset existed: seed it.
+    // SeedGlobalListsAsync covers everything, adds-only.
+    public Task<int> UpdateFrom5Async()
+    {
+        ShellScope.AddDeferredTask(async scope =>
+            await SeedGlobalListsAsync(scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>()));
+
+        return Task.FromResult(6);
     }
 
     private static async Task BackfillPositionsAsync(ICrestContentPartListService contentPartLists)
@@ -160,10 +171,11 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
             DataLock: true));
 
         // Based on UN/ECE Recommendation 20 CONTENT (deliberately not keyed to its
-        // codes - each/pallet/case-style trade codes are a mapping concern, and the
-        // Rec 20 map is a later, separate dataset). Categories are the DIMENSION the
-        // unit measures; the initial manual positions group by dimension, and an
-        // instance that wants category grouping sorts by the Category column.
+        // codes - each/pallet/case-style trade codes are a mapping concern; the
+        // Rec 20 map is the SEPARATE dataset seeded below as UomRec20Key).
+        // Categories are the DIMENSION the unit measures; the initial manual
+        // positions group by dimension, and an instance that wants category
+        // grouping sorts by the Category column.
         await contentPartLists.SeedAsync(new CrestContentPartListSeed(
             UnitsOfMeasureKey,
             "Units of measure",
@@ -171,6 +183,27 @@ public sealed class GlobalContentPartListsMigrations : DataMigration
                 .OrderBy(unit => unit.Category, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(unit => unit.Name, StringComparer.OrdinalIgnoreCase)
                 .Select(unit => new CrestOptionSeed(unit.Code, unit.Name, Category: unit.Category, DisplayTextPlural: unit.Plural))],
+            DataLock: true));
+
+        // The Rec 20 MAPPING dataset: key = the global.uom unit key, Value = the
+        // UN/CEFACT Recommendation 20 code (the machine datum EDI/trade documents
+        // need). Labels and categories mirror the uom list so the two read
+        // consistently. Units with no Rec 20 code (box, case, pack, pallet, roll -
+        // package types, Recommendation 21's domain) are simply ABSENT: absence
+        // means "no Rec 20 code", never a made-up one.
+        var uomNames = UnitsOfMeasure.ToDictionary(unit => unit.Code, unit => (unit.Name, unit.Category), StringComparer.OrdinalIgnoreCase);
+        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+            UomRec20Key,
+            "UN/CEFACT Rec 20 codes",
+            [.. GlobalReferenceData.UomRec20Codes
+                .Where(entry => uomNames.ContainsKey(entry.UnitKey))
+                .OrderBy(entry => uomNames[entry.UnitKey].Category, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(entry => uomNames[entry.UnitKey].Name, StringComparer.OrdinalIgnoreCase)
+                .Select(entry => new CrestOptionSeed(
+                    entry.UnitKey,
+                    uomNames[entry.UnitKey].Name,
+                    Category: uomNames[entry.UnitKey].Category,
+                    Value: entry.Code))],
             DataLock: true));
 
         // The wider reference-data lists (see GlobalReferenceData for sourcing and

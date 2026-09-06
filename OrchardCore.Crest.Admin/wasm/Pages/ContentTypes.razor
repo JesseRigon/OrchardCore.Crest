@@ -65,7 +65,14 @@
                                 <CrestText TextStyle="TextStyle.H5" Text="@SelectedType.DisplayName" />
                                 <CrestText TextStyle="TextStyle.Caption" Text="@SelectedType.Name" />
                             </CrestStack>
-                            <CrestButton Text="@T["Create content item"]" Icon="add" Size="ButtonSize.Small" Click="CreateContentItem" />
+                            <CrestStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                                @* Designation, not data: puts the type in the Content menu,
+                                   linking to the content-items page filtered to it. *@
+                                <CrestFormField Text="@T["Show in Content menu"]">
+                                    <CrestSwitch Value="@ShowInContentMenu" Change="@(value => SetMenuAsync((bool)value))" Disabled="@IsLoading" data-testid="show-in-content-menu" />
+                                </CrestFormField>
+                                <CrestButton Text="@T["Create content item"]" Icon="add" Size="ButtonSize.Small" Click="CreateContentItem" />
+                            </CrestStack>
                         </CrestStack>
                     </Header>
                     <ChildContent>
@@ -206,6 +213,23 @@
         || contentType.DisplayName.Contains(term, StringComparison.OrdinalIgnoreCase)
         || contentType.Parts.Any(part => part.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
             || part.Part.Fields.Any(field => field.Name.Contains(term, StringComparison.OrdinalIgnoreCase)));
+
+    // The designation is stored on the type definition's settings bag under the
+    // POCO's type name; the serializer omits default values, so absent = false.
+    private bool ShowInContentMenu =>
+        bool.TryParse(SelectedType?.Settings?["CrestContentTypeMenuSettings"]?["ShowInContentMenu"]?.ToString(), out var value) && value;
+
+    private async Task SetMenuAsync(bool show)
+    {
+        if (SelectedType is null)
+        {
+            return;
+        }
+
+        await SendAsync(
+            () => Http.PutAsJsonAsync($"api/crest/content-types/{Uri.EscapeDataString(SelectedType.Name)}/menu", new { ShowInContentMenu = show }),
+            show ? T["Added to the Content menu."] : T["Removed from the Content menu."]);
+    }
 
     private void CreateContentItem()
     {

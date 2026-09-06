@@ -10,7 +10,7 @@
 <CrestStack Gap="1rem" data-testid="content-items-page">
     <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
         <CrestStack Gap="0.25rem">
-            <CrestText TextStyle="TextStyle.H4" Text="@T["Content Items"]" />
+            <CrestText TextStyle="TextStyle.H4" Text="@PageHeading" />
             <CrestText TextStyle="TextStyle.Body2" Text="@T["Browse, filter, publish, unpublish, and remove content items."]" />
         </CrestStack>
         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
@@ -87,6 +87,15 @@
 </CrestStack>
 
 @code {
+    // The Content-menu entries for designated types link here with ?type=<Name>
+    // (query string, not a route segment, so the existing route registration and
+    // its permission gate cover the filtered view). Navigating between two such
+    // menu items reuses this component - only the query changes - so filter
+    // changes land in OnParametersSetAsync, not OnInitializedAsync.
+    [SupplyParameterFromQuery(Name = "type")]
+    public string? TypeFilter { get; set; }
+    private string? AppliedTypeFilter;
+
     private ContentItemListResult Result { get; set; } = ContentItemListResult.Empty;
     private ContentType[] ContentTypes { get; set; } = [];
     private string? SelectedContentType { get; set; }
@@ -106,10 +115,29 @@
     private FilterOption[] CreatableTypes => ContentTypes.Select(type => new FilterOption(type.Name, type.DisplayName)).ToArray();
     private int PageCount => Math.Max(1, (int)Math.Ceiling(Result.Total / (double)Result.PageSize));
 
+    private string PageHeading => (string.IsNullOrWhiteSpace(TypeFilter)
+        ? null
+        : ContentTypes.FirstOrDefault(type => string.Equals(type.Name, TypeFilter, StringComparison.OrdinalIgnoreCase))?.DisplayName)
+        ?? T["Content Items"];
+
     protected override async Task OnInitializedAsync()
     {
         ContentTypes = await Api.Crest.Rest.Content.Types.ListAsync();
+        AppliedTypeFilter = TypeFilter;
+        SelectedContentType = string.IsNullOrWhiteSpace(TypeFilter) ? SelectedContentType : TypeFilter;
         await LoadAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.Equals(TypeFilter, AppliedTypeFilter, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        AppliedTypeFilter = TypeFilter;
+        SelectedContentType = string.IsNullOrWhiteSpace(TypeFilter) ? null : TypeFilter;
+        await LoadAsync(1);
     }
 
     private async Task LoadAsync(int? page = null)

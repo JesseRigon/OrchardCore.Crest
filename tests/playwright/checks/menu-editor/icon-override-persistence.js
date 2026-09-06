@@ -49,56 +49,59 @@ module.exports = async function run(page, ctx) {
     if (!result.ok) throw new Error(`Updating ${node.text} failed: ${result.status} ${result.text}`);
   }
 
+  // Any two non-locked, non-custom root nodes serve: the contract under test is
+  // that two overrides persist independently, not anything about which nodes carry
+  // them. Literal Content/Design roots only exist on the stock arrangement - a
+  // tenant's imported layout overlay can move or rename anything.
   let nodes = await getRootNodes();
-  const content = nodes.find(node => node.text === 'Content');
-  const design = nodes.find(node => node.text === 'Design');
-  if (!content || !design) throw new Error('Expected Content and Design root menu nodes.');
+  const candidates = nodes.filter(node => node.id !== 'new' && !String(node.id).startsWith('custom-'));
+  if (candidates.length < 2) throw new Error(`Need two non-locked root menu nodes, found ${candidates.length}.`);
+  const firstId = candidates[0].id;
+  const secondId = candidates[candidates.length - 1].id;
+  const byId = (list, id) => list.find(node => node.id === id);
 
-  const original = { content: content.iconClass, design: design.iconClass };
+  const original = { first: byId(nodes, firstId).iconClass, second: byId(nodes, secondId).iconClass };
   let afterTwoUpdates;
-  let afterChangingContentAgain;
+  let afterChangingFirstAgain;
 
   try {
-    await updateNodeIcon(content, '@iconify:mdi:home');
+    await updateNodeIcon(byId(nodes, firstId), '@iconify:mdi:home');
     nodes = await getRootNodes();
-    await updateNodeIcon(nodes.find(node => node.text === 'Design'), '@iconify:mdi:wrench');
+    await updateNodeIcon(byId(nodes, secondId), '@iconify:mdi:wrench');
 
     nodes = await getRootNodes();
     afterTwoUpdates = {
-      content: nodes.find(node => node.text === 'Content')?.iconClass,
-      design: nodes.find(node => node.text === 'Design')?.iconClass,
+      first: byId(nodes, firstId)?.iconClass,
+      second: byId(nodes, secondId)?.iconClass,
     };
 
-    await updateNodeIcon(nodes.find(node => node.text === 'Content'), '@iconify:mdi:account');
+    await updateNodeIcon(byId(nodes, firstId), '@iconify:mdi:account');
 
     nodes = await getRootNodes();
-    afterChangingContentAgain = {
-      content: nodes.find(node => node.text === 'Content')?.iconClass,
-      design: nodes.find(node => node.text === 'Design')?.iconClass,
+    afterChangingFirstAgain = {
+      first: byId(nodes, firstId)?.iconClass,
+      second: byId(nodes, secondId)?.iconClass,
     };
   } finally {
+    // Always restore - an empty iconClass clears the override back to the default.
     const restoreNodes = await getRootNodes();
-    const restoreContent = restoreNodes.find(node => node.text === 'Content');
-    if (restoreContent && original.content) {
-      await updateNodeIcon(restoreContent, original.content).catch(() => {});
-    }
-    if (original.design) {
-      const latestNodes = await getRootNodes();
-      const restoreDesign = latestNodes.find(node => node.text === 'Design');
-      if (restoreDesign) await updateNodeIcon(restoreDesign, original.design).catch(() => {});
-    }
+    const restoreFirst = byId(restoreNodes, firstId);
+    if (restoreFirst) await updateNodeIcon(restoreFirst, original.first ?? '').catch(() => {});
+    const latestNodes = await getRootNodes();
+    const restoreSecond = byId(latestNodes, secondId);
+    if (restoreSecond) await updateNodeIcon(restoreSecond, original.second ?? '').catch(() => {});
   }
 
   return [
     {
       name: 'both-overrides-persist-independently',
-      pass: afterTwoUpdates.content === '@iconify:mdi:home' && afterTwoUpdates.design === '@iconify:mdi:wrench',
+      pass: afterTwoUpdates.first === '@iconify:mdi:home' && afterTwoUpdates.second === '@iconify:mdi:wrench',
       message: JSON.stringify(afterTwoUpdates),
     },
     {
       name: 'later-save-updates-only-its-own-node',
-      pass: afterChangingContentAgain.content === '@iconify:mdi:account' && afterChangingContentAgain.design === '@iconify:mdi:wrench',
-      message: JSON.stringify(afterChangingContentAgain),
+      pass: afterChangingFirstAgain.first === '@iconify:mdi:account' && afterChangingFirstAgain.second === '@iconify:mdi:wrench',
+      message: JSON.stringify(afterChangingFirstAgain),
     },
   ];
 };

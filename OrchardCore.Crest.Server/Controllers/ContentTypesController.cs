@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrchardCore.Contents;
 using OrchardCore.ContentManagement;
@@ -20,6 +21,42 @@ public sealed class ContentTypesController(
     IOptions<ContentOptions> contentOptions,
     IAuthorizationService authorization) : ControllerBase
 {
+    /// <summary>
+    /// Sets whether the type gets its own entry under the Content menu (the
+    /// generic content-items page filtered to it). Runs the provider-menu sync
+    /// afterwards: Crest's menu is materialized into the admin menu document
+    /// rather than rebuilt per request, and the automatic sync only runs once
+    /// per shell — without this the toggle would not surface until a recycle.
+    /// The sync is DEFERRED, not inline: the alter is only visible once this
+    /// scope's session commits, so an inline sync would read the pre-change
+    /// definitions and import the old state (verified live, both directions).
+    /// </summary>
+    [HttpPut("{contentType}/menu")]
+    public async Task<IActionResult> SetMenu(string contentType, [FromBody] SetContentTypeMenuRequest request)
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.EditContentTypes)) return Forbid();
+
+        var typeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(contentType);
+        if (typeDefinition is null)
+        {
+            return NotFound();
+        }
+
+        await contentDefinitionManager.AlterTypeDefinitionAsync(contentType, type => type
+            .MergeSettings<Crest.Settings.CrestContentTypeMenuSettings>(settings =>
+                settings.ShowInContentMenu = request.ShowInContentMenu));
+
+        // The ActionContext stays valid through request completion; the deferred
+        // scope supplies fresh services reading the committed definitions.
+        var actionContext = ControllerContext;
+        OrchardCore.Environment.Shell.Scope.ShellScope.AddDeferredTask(scope =>
+            scope.ServiceProvider
+                .GetRequiredService<Crest.Services.CrestProviderMenuSyncService>()
+                .SyncAsync(actionContext));
+
+        return NoContent();
+    }
+
     /// <summary>The registered content field types a field can be - what the
     /// definition screens offer in their field-type dropdown.</summary>
     [HttpGet("field-types")]
@@ -70,6 +107,14 @@ public sealed class ContentTypesController(
             ?? current?.Settings?["ContentPartFieldSettings"]?["DisplayName"]?.ToString()
             ?? request.Field;
 
+        // The remove/re-add dance would otherwise DESTROY every custom settings
+        // section on the field (visibility conditions, lock designations, picker
+        // settings). Carry them across the conversion: harmless when the new type
+        // ignores a section, and it restores intact if the type converts back.
+        // ContentPartFieldSettings is rebuilt from position/displayName above.
+        var preserved = current?.Settings?.DeepClone()?.AsObject();
+        preserved?.Remove("ContentPartFieldSettings");
+
         if (current is not null)
         {
             await contentDefinitionManager.AlterPartDefinitionAsync(request.Part, part => part.RemoveField(request.Field));
@@ -82,6 +127,11 @@ public sealed class ContentTypesController(
                 if (!string.IsNullOrWhiteSpace(position))
                 {
                     field.WithPosition(position);
+                }
+
+                if (preserved is { Count: > 0 })
+                {
+                    field.MergeSettings(preserved);
                 }
             }));
 
@@ -203,6 +253,9 @@ public sealed class ContentTypesController(
         return definition is null ? NotFound() : Ok(ContentType.From(definition));
     }
 }
+
+/// <summary>Content-menu designation payload for a type.</summary>
+public sealed record SetContentTypeMenuRequest(bool ShowInContentMenu);
 
 /// <summary>Field-type change payload. Part is the part DEFINITION name; a field
 /// that does not exist yet is created.</summary>

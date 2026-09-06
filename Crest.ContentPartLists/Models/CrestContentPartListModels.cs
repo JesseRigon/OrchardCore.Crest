@@ -12,14 +12,32 @@ public sealed record CrestContentPartListModel(
     string Source,
     string DataLock,
     string EditLock,
-    CrestOptionModel[] Options);
+    CrestOptionModel[] Options,
+    CrestOptionFieldModel[]? Fields = null,
+    string OptionContentType = "Option");
+
+/// <summary>A custom data field the list's option content type carries beyond the
+/// standard Key/Label/Plural/Category/Value surface. Fields are created at runtime
+/// through the Content Parts screen; <paramref name="PartName"/> is where the field
+/// lives on the option type (the write path needs it), <paramref name="Type"/> is the
+/// field type name (TextField, NumericField, ...), and
+/// <paramref name="DataLocked"/> carries the admin's per-field lock designation
+/// (see <see cref="Crest.Settings.CrestOptionFieldSettings"/>).</summary>
+public sealed record CrestOptionFieldModel(
+    string Name,
+    string DisplayName,
+    string PartName,
+    string Type,
+    bool DataLocked);
 
 /// <summary>A single option. <paramref name="Key"/> is what code compares;
 /// <paramref name="DisplayText"/> is what humans read. <paramref name="Category"/>
 /// is never null - uncategorized options carry
 /// <see cref="CrestOptionCategories.Uncategorized"/>.
 /// <paramref name="DisplayTextPlural"/> is null when the option has no distinct
-/// plural - readers fall back to <paramref name="DisplayText"/>.</summary>
+/// plural - readers fall back to <paramref name="DisplayText"/>.
+/// <paramref name="Fields"/> holds the option's custom data field values (keyed by
+/// field name, stringified), null when the option type declares no custom fields.</summary>
 public sealed record CrestOptionModel(
     string ContentItemId,
     string Key,
@@ -29,7 +47,8 @@ public sealed record CrestOptionModel(
     int Position,
     string Category,
     string? DisplayTextPlural = null,
-    string? Value = null);
+    string? Value = null,
+    IReadOnlyDictionary<string, string?>? Fields = null);
 
 /// <summary>A module's declaration of one option it ships in a set. A null
 /// <paramref name="Category"/> seeds as Uncategorized; a null

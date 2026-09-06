@@ -96,6 +96,10 @@
                                                                  Click="@(() => OpenPickerEditor(fieldName))"
                                                                  data-testid="configure-picker" />
                                                 }
+                                                @* Every field type can carry a visibility condition. *@
+                                                <CrestButton Text="@T["Visibility"]" Icon="visibility" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
+                                                             Click="@(() => OpenVisibilityEditor(fieldName))"
+                                                             data-testid="configure-visibility" />
                                             </div>
                                         }
                                     </div>
@@ -108,6 +112,15 @@
                                                                   SiblingFields="@SelectedPart.Part.Fields.Select(field => field.Name).ToArray()"
                                                                   OnSaved="OnPickerSavedAsync"
                                                                   OnClose="@(() => EditingField = null)" />
+                                }
+
+                                @if (EditingVisibilityField is not null)
+                                {
+                                    <FieldVisibilityEditor PartName="@SelectedPart.Name"
+                                                           FieldName="@EditingVisibilityField"
+                                                           SiblingFields="@SelectedPart.Part.Fields.Select(field => field.Name).ToArray()"
+                                                           OnSaved="OnVisibilitySavedAsync"
+                                                           OnClose="@(() => EditingVisibilityField = null)" />
                                 }
 
                                 <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
@@ -155,6 +168,7 @@
     private string? ErrorMessage { get; set; }
 
     private string? EditingField { get; set; }
+    private string? EditingVisibilityField { get; set; }
     private string NewFieldName { get; set; } = string.Empty;
     private string NewFieldType { get; set; } = "TextField";
     private string[] FieldTypes { get; set; } = [];
@@ -215,6 +229,7 @@
     {
         SelectedPartName = part.Name;
         EditingField = null;
+        EditingVisibilityField = null;
         return Task.CompletedTask;
     }
 
@@ -293,12 +308,28 @@
         }
     }
 
-    private void OpenPickerEditor(string fieldName) => EditingField = fieldName;
+    private void OpenPickerEditor(string fieldName)
+    {
+        EditingField = fieldName;
+        EditingVisibilityField = null;
+    }
 
     private async Task OnPickerSavedAsync()
     {
         EditingField = null;
         NewFieldName = string.Empty;
+        await LoadAsync();
+    }
+
+    private void OpenVisibilityEditor(string fieldName)
+    {
+        EditingVisibilityField = fieldName;
+        EditingField = null;
+    }
+
+    private async Task OnVisibilitySavedAsync()
+    {
+        EditingVisibilityField = null;
         await LoadAsync();
     }
 }

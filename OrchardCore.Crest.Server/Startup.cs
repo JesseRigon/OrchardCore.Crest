@@ -97,6 +97,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<CrestAdminSettingsNormalizer>();
         services.AddScoped<CrestTitleBarSettingsStore>();
         services.AddNavigationProvider<CrestAdminMenu>();
+        services.AddNavigationProvider<ContentTypesMenuNavigationProvider>();
         services.AddScoped<IIconProvider, IconifyIconProvider>();
         services.AddScoped<IIconProviderSettingsStore, CrestIconProviderSettingsStore>();
         services.AddSingleton<IIconifyLocalMirrorPathProvider, CrestIconifyLocalMirrorPathProvider>();
@@ -285,7 +286,13 @@ public sealed class Startup : StartupBase
         services.AddScoped<IOptionSourceScopeResolver, OptionSourceScopeResolver>();
         services.AddScoped<IOptionSourceProvider, UserOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, ContentItemOptionSourceProvider>();
+        services.AddScoped<IOptionSourceProvider, TimeZoneOptionSourceProvider>();
+        services.AddScoped<IOptionSourceProvider, CultureOptionSourceProvider>();
         services.AddScoped<OptionPickerFieldKeyResolver>();
+        // Parent id->key resolution behind cascading filters and field-visibility
+        // conditions, and the clear-on-save enforcement for hidden fields.
+        services.AddScoped<OptionParentValueResolver>();
+        services.AddScoped<CrestFieldVisibilityEnforcer>();
 
         // Per-content-type index partitioning: modules register the high-volume types
         // that get their own table, and the catch-all partition skips them.

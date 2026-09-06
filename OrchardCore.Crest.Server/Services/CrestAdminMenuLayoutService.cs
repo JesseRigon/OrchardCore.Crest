@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
 using Crest.Controllers;
+using OrchardCore.AdminMenu.Models;
+using OrchardCore.AdminMenu.Services;
 using OrchardCore.Data.Documents;
 using OrchardCore.Documents;
 using Crest.ViewModels;
@@ -9,6 +11,8 @@ namespace Crest.Services;
 
 public sealed class CrestAdminMenuLayoutService(
     IDocumentManager<CrestAdminMenuLayoutDocument> documents,
+    IDocumentManager<CrestProviderMenuSyncDocument> syncDocuments,
+    IAdminMenuService adminMenuService,
     ICrestAdminMenuLayoutInvalidator invalidator)
 {
     public const string DefaultMenuId = "__crest_default_admin_menu";
@@ -32,11 +36,20 @@ public sealed class CrestAdminMenuLayoutService(
     public async Task<CrestAdminMenuLayoutFile> ExportAsync()
     {
         var layout = await GetAsync();
+        var syncState = await syncDocuments.GetOrCreateImmutableAsync();
+
         return new CrestAdminMenuLayoutFile
         {
             Items = layout.Items.ToList(),
             CustomItems = layout.CustomItems.ToList(),
             Separators = layout.Separators.ToList(),
+            // The identity map that makes the GUID item keys above PORTABLE: without
+            // it, a fresh tenant's sync mints new UniqueIds and every override in
+            // Items orphans. Sorted so re-exports diff cleanly.
+            SyncEntries = syncState.Entries
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.Value.UniqueId))
+                .OrderBy(entry => entry.Key, StringComparer.Ordinal)
+                .ToDictionary(entry => entry.Key, entry => entry.Value.UniqueId, StringComparer.Ordinal),
         };
     }
 
@@ -47,6 +60,79 @@ public sealed class CrestAdminMenuLayoutService(
         layout.CustomItems = file.CustomItems ?? [];
         layout.Separators = file.Separators ?? [];
         await SaveAsync(layout);
+
+        if (file.SyncEntries is { Count: > 0 })
+        {
+            await ApplySyncEntriesAsync(file.SyncEntries);
+        }
+    }
+
+    /// <summary>
+    /// Restores imported node identities so the layout's GUID item keys resolve.
+    /// Two cases, making the import ORDER-INDEPENDENT relative to the provider menu
+    /// sync: a match key the sync has not seen yet is pre-seeded (disabled), so the
+    /// first sync creates its node UNDER the imported UniqueId; a match key whose
+    /// node already exists under a different UniqueId is REMAPPED in place - the
+    /// live node takes the imported identity, so overrides stored against it apply
+    /// from the next menu build.
+    /// </summary>
+    private async Task ApplySyncEntriesAsync(Dictionary<string, string> imported)
+    {
+        var state = await syncDocuments.GetOrCreateMutableAsync();
+        var list = await adminMenuService.LoadAdminMenuListAsync();
+        var menu = list.AdminMenu.FirstOrDefault(candidate =>
+            string.Equals(candidate.Name, CrestProviderMenuSyncService.ImportedMenuName, StringComparison.Ordinal));
+
+        var menuChanged = false;
+        var stateChanged = false;
+
+        foreach (var (matchKey, uniqueId) in imported)
+        {
+            if (string.IsNullOrWhiteSpace(matchKey) || string.IsNullOrWhiteSpace(uniqueId))
+            {
+                continue;
+            }
+
+            if (!state.Entries.TryGetValue(matchKey, out var entry))
+            {
+                state.Entries[matchKey] = new CrestProviderMenuSyncEntry
+                {
+                    UniqueId = uniqueId,
+                    // Not contributed by any provider YET - the next sync flips it on
+                    // and creates the node under this identity.
+                    Enabled = false,
+                };
+                stateChanged = true;
+                continue;
+            }
+
+            if (string.Equals(entry.UniqueId, uniqueId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // The sync already created this item under a different guid (it ran
+            // before the import). Move the LIVE node onto the imported identity.
+            var node = menu?.GetMenuItemById(entry.UniqueId);
+            if (node is not null)
+            {
+                node.UniqueId = uniqueId;
+                menuChanged = true;
+            }
+
+            entry.UniqueId = uniqueId;
+            stateChanged = true;
+        }
+
+        if (menuChanged && menu is not null)
+        {
+            await adminMenuService.SaveAsync(menu);
+        }
+
+        if (stateChanged)
+        {
+            await syncDocuments.UpdateAsync(state);
+        }
     }
 
     public async Task<NavigationMenu> ApplyAsync(NavigationMenu menu)
@@ -643,6 +729,17 @@ public sealed class CrestAdminMenuLayoutFile
     public List<CrestAdminMenuLayoutItem> Items { get; set; } = [];
     public List<CrestAdminMenuCustomItem> CustomItems { get; set; } = [];
     public List<CrestAdminMenuSeparator> Separators { get; set; } = [];
+
+    /// <summary>
+    /// Provider-sync identity map: match key (parent path + invariant caption) to
+    /// the AdminNode UniqueId it was imported as. This is what makes the GUID
+    /// <see cref="CrestAdminMenuLayoutItem.ItemKey"/>s portable across tenants -
+    /// import restores each node's identity (pre-seeding the sync state, or
+    /// remapping an already-created node), so overrides keyed by UniqueId resolve
+    /// on a fresh dataset instead of orphaning. Absent in files exported before
+    /// this existed; such layouts import as before, portable keys only.
+    /// </summary>
+    public Dictionary<string, string> SyncEntries { get; set; } = new(StringComparer.Ordinal);
 }
 
 // Available options are expected to grow (more anchor corners, responsive-size-specific

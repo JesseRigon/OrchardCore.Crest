@@ -67,6 +67,10 @@ public sealed class OptionPickerFilterModel
     public string Operator { get; set; } = "Equals";
     public string? Value { get; set; }
     public string? ValueFrom { get; set; }
+
+    /// <summary>Which parent-row column supplies the comparison value when the parent
+    /// is a picker; null or "Key" means the option's technical key.</summary>
+    public string? ValueFromColumn { get; set; }
     public bool RequireParentValue { get; set; } = true;
     public string OnParentChange { get; set; } = "WarnThenClear";
 }
@@ -74,7 +78,9 @@ public sealed class OptionPickerFilterModel
 /// <summary>A column an option source can offer (api/crest/option-sources/{key}/columns).</summary>
 public sealed record OptionSourceColumnModel(string Path, string Label, bool IsDefaultDisplay = false);
 
-/// <summary>An content part list as the management screens see it.</summary>
+/// <summary>An content part list as the management screens see it. Fields describes
+/// the custom data fields on the list's option content type (empty for lists whose
+/// option type carries none).</summary>
 public sealed record ContentPartListModel(
     string ContentItemId,
     string Key,
@@ -82,11 +88,25 @@ public sealed record ContentPartListModel(
     string Source,
     string DataLock,
     string EditLock,
-    OptionModel[] Options);
+    OptionModel[] Options,
+    OptionFieldModel[]? Fields = null,
+    string? OptionContentType = null);
+
+/// <summary>A custom data field on an option content type, mirroring the server's
+/// CrestOptionFieldModel. DataLocked is the admin's per-field designation: true means
+/// the field's values freeze with the list's data lock (machine surface).</summary>
+public sealed record OptionFieldModel(
+    string Name,
+    string DisplayName,
+    string PartName,
+    string Type,
+    bool DataLocked);
 
 /// <summary>A member of an content part list. Category is never null - options without an
 /// assigned category carry "Uncategorized". DisplayTextPlural is null when the option
-/// has no distinct plural (readers fall back to DisplayText).</summary>
+/// has no distinct plural (readers fall back to DisplayText). Fields holds the
+/// option's custom data field values by field name, null when the option type
+/// declares none.</summary>
 public sealed record OptionModel(
     string ContentItemId,
     string Key,
@@ -96,4 +116,5 @@ public sealed record OptionModel(
     int Position,
     string Category,
     string? DisplayTextPlural = null,
-    string? Value = null);
+    string? Value = null,
+    Dictionary<string, string?>? Fields = null);

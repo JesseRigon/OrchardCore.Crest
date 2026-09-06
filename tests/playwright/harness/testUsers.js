@@ -22,8 +22,23 @@ function testUserCredentials(suffix) {
 // Looks up by username first (GET api/crest/users?search=) and only creates if absent -
 // id is always resolved via that same id-based API (CrestUsersController.ListAsync),
 // never guessed or looked up by name after creation.
-async function ensureTestUser(page, baseUrl, suffix = '') {
+//
+// options.roles selects the identity's role set (default ['Administrator'] - see the
+// comment at the create call). When the user already exists with a DIFFERENT role set,
+// the roles are aligned via PUT api/crest/users/{id} - that diff-based save is the
+// role-switching fixture's lever, so a denial-path check can reuse one stable account
+// across runs without accumulating grants.
+async function ensureTestUser(page, baseUrl, suffix = '', options = {}) {
   const { username, password } = testUserCredentials(suffix);
+  // Culture resolution only happens inside the Blazor .Admin shell
+  // (DisplayManager/AppController.GetManifest requires AdminPermissions.
+  // AccessAdminPanel) - a role-less user can log in but gets "Access denied" on
+  // every /Admin route, which is useless for most checks. "Administrator" is the
+  // only stock role with isAdmin:true (confirmed via GET api/crest/roles); a
+  // throwaway dev-tenant test account having full admin rights is an acceptable
+  // trade-off as the default, matching every other Playwright check's use of the
+  // fixed `admin` account. Denial-path checks override this deliberately.
+  const roles = options.roles ?? ['Administrator'];
 
   const existing = await page.evaluate(async ({ baseUrl, username }) => {
     const response = await fetch(`${baseUrl}/api/crest/users?search=${encodeURIComponent(username)}`, {
@@ -35,12 +50,38 @@ async function ensureTestUser(page, baseUrl, suffix = '') {
   }, { baseUrl, username });
 
   if (existing) {
+    const sameRoles = Array.isArray(existing.roles)
+      && existing.roles.length === roles.length
+      && roles.every(role => existing.roles.includes(role));
+    if (!sameRoles) {
+      const antiforgery = await fetchAntiforgeryToken(page, baseUrl);
+      await page.evaluate(async ({ baseUrl, existing, roles, antiforgery }) => {
+        const headers = { 'Content-Type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken };
+        const response = await fetch(`${baseUrl}/api/crest/users/${encodeURIComponent(existing.id)}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({
+            userName: existing.userName,
+            email: existing.email,
+            phoneNumber: existing.phoneNumber,
+            emailConfirmed: existing.emailConfirmed,
+            isEnabled: true,
+            roles,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to set roles on '${existing.userName}': ${response.status} ${await response.text()}`);
+        }
+      }, { baseUrl, existing, roles, antiforgery });
+    }
+
     return { username, password, id: existing.id, created: false };
   }
 
   const antiforgery = await fetchAntiforgeryToken(page, baseUrl);
 
-  const created = await page.evaluate(async ({ baseUrl, username, password, antiforgery }) => {
+  const created = await page.evaluate(async ({ baseUrl, username, password, roles, antiforgery }) => {
     const headers = { 'Content-Type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken };
     const response = await fetch(`${baseUrl}/api/crest/users`, {
       method: 'POST',
@@ -51,15 +92,7 @@ async function ensureTestUser(page, baseUrl, suffix = '') {
         email: `${username}@fruitful.example.com`,
         emailConfirmed: true,
         isEnabled: true,
-        // Culture resolution only happens inside the Blazor .Admin shell
-        // (DisplayManager/AppController.GetManifest requires AdminPermissions.
-        // AccessAdminPanel) - a role-less user can log in but gets "Access denied" on
-        // every /Admin route, which is useless for these checks. "Administrator" is the
-        // only stock role with isAdmin:true (confirmed via GET api/crest/roles); a
-        // throwaway dev-tenant test account having full admin rights is an acceptable
-        // trade-off here, matching every other Playwright check's use of the fixed
-        // `admin` account.
-        roles: ['Administrator'],
+        roles,
         password,
       }),
     });
@@ -67,7 +100,7 @@ async function ensureTestUser(page, baseUrl, suffix = '') {
       throw new Error(`Failed to create user '${username}': ${response.status} ${await response.text()}`);
     }
     return response.json();
-  }, { baseUrl, username, password, antiforgery });
+  }, { baseUrl, username, password, roles, antiforgery });
 
   return { username, password, id: created.id, created: true };
 }

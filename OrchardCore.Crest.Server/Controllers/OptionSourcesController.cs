@@ -20,6 +20,7 @@ namespace Crest.Controllers;
 public sealed class OptionSourcesController(
     IEnumerable<IOptionSourceProvider> sourceProviders,
     IContentDefinitionManager contentDefinitionManager,
+    OptionParentValueResolver parentValues,
     IAuthorizationService authorizationService) : ControllerBase
 {
     /// <summary>
@@ -59,14 +60,17 @@ public sealed class OptionSourcesController(
 
         // Sort is an INSTANCE parameter: the request's explicit sort wins, else the
         // attachment's configured SortColumns, else the provider's natural order.
-        // The sort columns are unioned into the requested columns so their values are
-        // materialized for the comparison, whether or not the picker displays them.
+        // Sort columns AND filter paths are unioned into the requested columns so
+        // their values are materialized for the comparison, whether or not the
+        // picker displays them - a filter matched against a column the rows never
+        // carried would silently exclude everything.
         var settings = await GetFieldSettingsAsync(request.ContentType, request.FieldName);
         var sortColumns = request.SortColumns is { Count: > 0 }
             ? request.SortColumns
             : settings?.SortColumns ?? [];
         var columns = (request.Columns ?? [])
             .Union(sortColumns, StringComparer.OrdinalIgnoreCase)
+            .Union(FilterPaths(settings), StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         var rows = await provider.QueryAsync(
@@ -141,7 +145,9 @@ public sealed class OptionSourcesController(
         }
 
         var settings = await GetFieldSettingsAsync(request.ContentType, request.FieldName);
-        var resolution = OptionFilterResolver.Resolve(settings?.Filters, ToEditorState(request.EditorState));
+        var resolution = settings is null
+            ? OptionFilterResolution.Unrestricted
+            : await ResolveTranslatedAsync(request.ContentType!, settings, request.EditorState);
         var ids = request.SelectedIds ?? [];
 
         // Resolve by id rather than by query: a stale child may well be absent from
@@ -223,7 +229,23 @@ public sealed class OptionSourcesController(
         var settings = await GetFieldSettingsAsync(contentType, fieldName);
         return settings is null
             ? OptionFilterResolution.Unrestricted
-            : OptionFilterResolver.Resolve(settings.Filters, ToEditorState(editorState));
+            : await ResolveTranslatedAsync(contentType!, settings, editorState);
+    }
+
+    // Dependent filters compare MACHINE data, but a picker parent's editor state
+    // carries stored ids - translate id lists into the configured parent column
+    // (Key by default) through the parent's own source before resolving.
+    private async Task<OptionFilterResolution> ResolveTranslatedAsync(
+        string contentType,
+        OptionPickerFieldSettings settings,
+        IReadOnlyDictionary<string, string[]>? editorState)
+    {
+        var (filters, state) = await OptionDependentFilterTranslator.TranslateAsync(
+            settings.Filters,
+            ToEditorState(editorState),
+            (path, column, raw) => parentValues.ResolveAsync(contentType, path, column, raw, HttpContext.RequestAborted));
+
+        return OptionFilterResolver.Resolve(filters, state);
     }
 
     private async Task<OptionPickerFieldSettings?> GetFieldSettingsAsync(string? contentType, string? fieldName)

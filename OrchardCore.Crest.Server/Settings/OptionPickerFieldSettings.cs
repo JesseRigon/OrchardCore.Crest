@@ -93,6 +93,18 @@ public class OptionFilter
     public string? ValueFrom { get; set; }
 
     /// <summary>
+    /// Which column of the PARENT's selected rows supplies the comparison value, when
+    /// <see cref="ValueFrom"/> names an OptionPickerField. A picker field stores ids,
+    /// but logic compares machine data - so the parent's selection is resolved through
+    /// its own source and this column is read from the rows. Null or "Key" means the
+    /// option's technical Key (falling back to the row id for entity sources, whose id
+    /// IS their identity); any other value is a provider column path ("Value",
+    /// "Category", "Field:X"). Ignored for scalar parents - their stored value is
+    /// already the comparison value.
+    /// </summary>
+    public string? ValueFromColumn { get; set; }
+
+    /// <summary>
     /// What an EMPTY parent means. True: the child offers nothing until the parent is
     /// chosen. False: the filter is skipped and the child offers everything.
     /// <para>

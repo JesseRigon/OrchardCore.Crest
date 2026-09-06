@@ -34,18 +34,35 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
         /// never assigned one. Only content part lists have this - FK-backed sources
         /// don't.</summary>
         public const string Category = "Category";
+
+        /// <summary>Prefix for custom data fields on the list's option content type,
+        /// e.g. "Field:Color" - the same convention the content-item source uses for
+        /// values from an item's own document.</summary>
+        public const string FieldPrefix = "Field:";
     }
 
-    public Task<IReadOnlyList<OptionSourceColumnDescriptor>> DescribeColumnsAsync(string qualifier, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<OptionSourceColumnDescriptor>>(
-        [
+    public async Task<IReadOnlyList<OptionSourceColumnDescriptor>> DescribeColumnsAsync(string qualifier, CancellationToken cancellationToken = default)
+    {
+        var descriptors = new List<OptionSourceColumnDescriptor>
+        {
             new(Columns.DisplayText, "Label", IsDefaultDisplay: true),
             new(Columns.DisplayTextPlural, "Label (plural)"),
             new(Columns.OptionKey, "Key"),
             new(Columns.Value, "Value"),
             new(Columns.Source, "Source"),
             new(Columns.Category, "Category"),
-        ]);
+        };
+
+        // Custom fields on the list's option type are advertised per qualifier, so
+        // the settings UI offers them wherever THIS list is the source.
+        var list = await contentPartLists.GetAsync(qualifier, cancellationToken);
+        foreach (var field in list?.Fields ?? [])
+        {
+            descriptors.Add(new($"{Columns.FieldPrefix}{field.Name}", field.DisplayName));
+        }
+
+        return descriptors;
+    }
 
     public async Task<IReadOnlyList<OptionRow>> QueryAsync(OptionSourceQuery query, CancellationToken cancellationToken = default)
     {
@@ -98,6 +115,10 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
                 Columns.DisplayTextPlural => option.DisplayTextPlural ?? option.DisplayText,
                 Columns.Value => option.Value,
                 Columns.Category => option.Category,
+                _ when column.StartsWith(Columns.FieldPrefix, StringComparison.OrdinalIgnoreCase) =>
+                    option.Fields is not null && option.Fields.TryGetValue(column[Columns.FieldPrefix.Length..], out var fieldValue)
+                        ? fieldValue
+                        : null,
                 _ => null,
             };
         }

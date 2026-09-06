@@ -1,3 +1,5 @@
+using System.Text.Json.Dynamic;
+using System.Text.Json.Nodes;
 using Crest.Fields;
 using Crest.Migrations;
 using Crest.Models;
@@ -5,6 +7,7 @@ using Crest.Settings;
 using OrchardCore.ContentFields.Settings;
 using OrchardCore.ContentManagement;
 using OrchardCore.ContentManagement.Metadata;
+using OrchardCore.ContentManagement.Metadata.Models;
 using OrchardCore.ContentManagement.Metadata.Settings;
 using OrchardCore.ContentManagement.Records;
 using YesSql;
@@ -26,6 +29,10 @@ public sealed class CrestContentPartListService(
     // hot-path win without that risk.
     private readonly Dictionary<string, CrestContentPartListModel?> _byKey = new(CrestContentPartListRules.KeyComparer);
 
+    // Custom-field descriptors per option content type, memoized alongside _byKey for
+    // the same reason: the type definition is read for every model projection.
+    private readonly Dictionary<string, CrestOptionFieldModel[]> _fieldsByType = new(StringComparer.OrdinalIgnoreCase);
+
     public async Task<IReadOnlyList<CrestContentPartListModel>> ListAsync(CancellationToken cancellationToken = default)
     {
         var items = await session
@@ -33,7 +40,13 @@ public sealed class CrestContentPartListService(
                 index.ContentType == CrestContentPartListMigrations.ContentPartListContentType && index.Latest)
             .ListAsync();
 
-        return [.. items.Select(ToModel).OrderBy(list => list.DisplayText, StringComparer.CurrentCultureIgnoreCase)];
+        var models = new List<CrestContentPartListModel>();
+        foreach (var item in items)
+        {
+            models.Add(ToModel(item, await GetOptionFieldsAsync(item)));
+        }
+
+        return [.. models.OrderBy(list => list.DisplayText, StringComparer.CurrentCultureIgnoreCase)];
     }
 
     public async Task<CrestContentPartListModel?> GetAsync(string key, CancellationToken cancellationToken = default)
@@ -50,7 +63,7 @@ public sealed class CrestContentPartListService(
         }
 
         var item = await FindListItemAsync(normalized);
-        var model = item is null ? null : ToModel(item);
+        var model = item is null ? null : ToModel(item, await GetOptionFieldsAsync(item));
         _byKey[normalized] = model;
         return model;
     }
@@ -128,7 +141,7 @@ public sealed class CrestContentPartListService(
         }
 
         _byKey.Remove(listKey);
-        return ToModel(listItem);
+        return ToModel(listItem, await GetOptionFieldsAsync(listItem));
     }
 
     public async Task<CrestContentPartListModel> CreateListAsync(string key, string displayText, CancellationToken cancellationToken = default)
@@ -143,10 +156,10 @@ public sealed class CrestContentPartListService(
 
         var item = await CreateListItemAsync(normalized, displayText, CrestOptionSources.Tenant);
         _byKey.Remove(normalized);
-        return ToModel(item);
+        return ToModel(item, await GetOptionFieldsAsync(item));
     }
 
-    public async Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, string? displayTextPlural = null, string? value = null, CancellationToken cancellationToken = default)
+    public async Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, string? displayTextPlural = null, string? value = null, IReadOnlyDictionary<string, string?>? fields = null, CancellationToken cancellationToken = default)
     {
         var listItem = await RequireListItemAsync(listKey);
         var validation = CrestContentPartListRules.ValidateKey(optionKey, ToModel(listItem).Options.Select(option => option.Key));
@@ -155,18 +168,25 @@ public sealed class CrestContentPartListService(
             throw new InvalidOperationException(validation.Error);
         }
 
+        var descriptors = await GetOptionFieldsAsync(listItem);
         var normalized = CrestContentPartListRules.NormalizeKey(optionKey);
         var option = await AppendOptionAsync(listItem, normalized, displayText, position, CrestOptionSources.Tenant, category, displayTextPlural, value);
+        if (fields is { Count: > 0 })
+        {
+            WriteFields(option, fields, descriptors);
+        }
+
         await contentManager.UpdateAsync(listItem);
         await contentManager.PublishAsync(listItem);
         _byKey.Remove(CrestContentPartListRules.NormalizeKey(listKey));
 
-        return ToOptionModel(option);
+        return ToOptionModel(option, descriptors);
     }
 
-    public async Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, string? displayTextPlural = null, string? value = null, CancellationToken cancellationToken = default)
+    public async Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, string? displayTextPlural = null, string? value = null, IReadOnlyDictionary<string, string?>? fields = null, CancellationToken cancellationToken = default)
     {
         var listItem = await RequireListItemAsync(listKey);
+        var descriptors = await GetOptionFieldsAsync(listItem);
         var normalized = CrestContentPartListRules.NormalizeKey(optionKey);
         // The mutation MUST happen inside Alter. As<T>() materializes a part from the
         // item's JSON, so options fetched outside Alter are deserialized copies -
@@ -210,6 +230,11 @@ public sealed class CrestContentPartListService(
                         : (string.IsNullOrWhiteSpace(value) ? null : value.Trim());
                 });
             }
+
+            if (fields is { Count: > 0 })
+            {
+                WriteFields(option, fields, descriptors);
+            }
         });
 
         if (option is null)
@@ -221,7 +246,7 @@ public sealed class CrestContentPartListService(
         await contentManager.PublishAsync(listItem);
         _byKey.Remove(CrestContentPartListRules.NormalizeKey(listKey));
 
-        return ToOptionModel(option);
+        return ToOptionModel(option, descriptors);
     }
 
     public async Task<CrestContentPartListModel> ReorderOptionsAsync(string key, IReadOnlyList<string> orderedKeys, CancellationToken cancellationToken = default)
@@ -256,7 +281,7 @@ public sealed class CrestContentPartListService(
         await contentManager.PublishAsync(listItem);
         _byKey.Remove(CrestContentPartListRules.NormalizeKey(key));
 
-        return ToModel(listItem);
+        return ToModel(listItem, await GetOptionFieldsAsync(listItem));
     }
 
     public async Task<CrestContentPartListModel> UpdateListLocksAsync(string key, bool? dataLock, bool? editLock, CancellationToken cancellationToken = default)
@@ -273,7 +298,71 @@ public sealed class CrestContentPartListService(
         await contentManager.PublishAsync(listItem);
         _byKey.Remove(CrestContentPartListRules.NormalizeKey(key));
 
-        return ToModel(listItem);
+        return ToModel(listItem, await GetOptionFieldsAsync(listItem));
+    }
+
+    public async Task<CrestContentPartListModel> SetOptionFieldLockAsync(string listKey, string fieldName, bool dataLocked, CancellationToken cancellationToken = default)
+    {
+        var listItem = await RequireListItemAsync(listKey);
+        var descriptors = await GetOptionFieldsAsync(listItem);
+        var field = descriptors.FirstOrDefault(candidate => string.Equals(candidate.Name, fieldName, StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException($"The option type has no custom field named '{fieldName}'.");
+
+        // The designation lives ON the field definition (the option type is the
+        // list's), so it travels with the field the way any field setting does.
+        await contentDefinitionManager.AlterPartDefinitionAsync(field.PartName, part => part
+            .WithField(field.Name, builder => builder
+                .MergeSettings<CrestOptionFieldSettings>(settings => settings.DataLocked = dataLocked)));
+
+        _fieldsByType.Clear();
+        _byKey.Remove(CrestContentPartListRules.NormalizeKey(listKey));
+        return ToModel(listItem, await GetOptionFieldsAsync(listItem));
+    }
+
+    public async Task<IReadOnlyList<string>> GetOptionContentTypesAsync(CancellationToken cancellationToken = default)
+    {
+        // Eligible option types are the ones carrying CrestOptionPart - the part
+        // that holds Key/Category/Position/etc.; without it an option cannot
+        // round-trip through this service at all.
+        var definitions = await contentDefinitionManager.ListTypeDefinitionsAsync();
+        return [.. definitions
+            .Where(definition => definition.Parts.Any(part =>
+                string.Equals(part.PartDefinition.Name, nameof(CrestOptionPart), StringComparison.Ordinal)))
+            .Select(definition => definition.Name)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)];
+    }
+
+    public async Task<CrestContentPartListModel> SetOptionContentTypeAsync(string listKey, string contentType, CancellationToken cancellationToken = default)
+    {
+        var listItem = await RequireListItemAsync(listKey);
+        var typeName = contentType?.Trim() ?? string.Empty;
+
+        var eligible = await GetOptionContentTypesAsync(cancellationToken);
+        if (!eligible.Contains(typeName, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"'{typeName}' is not an option content type - it must exist and carry {nameof(CrestOptionPart)}.");
+        }
+
+        // Existing options keep their stored content type; retargeting a populated
+        // list would orphan their data behind the new type's field surface and make
+        // stale field names fail on update. Migrate-or-recreate is a deliberate,
+        // separate decision - refuse the silent version.
+        var options = listItem.As<CrestContentPartListPart>()?.Options ?? [];
+        var mismatched = options.FirstOrDefault(option => !string.Equals(option.ContentType, typeName, StringComparison.OrdinalIgnoreCase));
+        if (mismatched is not null)
+        {
+            throw new InvalidOperationException(
+                $"The list already has options of type '{mismatched.ContentType}'. The option type can only be set while the list is empty (or already of that type).");
+        }
+
+        listItem.Alter<CrestContentPartListPart>(part => part.OptionContentType = typeName);
+        await contentManager.UpdateAsync(listItem);
+        await contentManager.PublishAsync(listItem);
+
+        _fieldsByType.Clear();
+        _byKey.Remove(CrestContentPartListRules.NormalizeKey(listKey));
+        return ToModel(listItem, await GetOptionFieldsAsync(listItem));
     }
 
     // One mechanism, two authorities: this path is the TENANT authority, so a
@@ -313,7 +402,7 @@ public sealed class CrestContentPartListService(
         _byKey.Remove(CrestContentPartListRules.NormalizeKey(key));
     }
 
-    public async Task AttachToContentTypeAsync(string listKey, string contentType, string fieldName, string? displayName = null, CancellationToken cancellationToken = default)
+    public async Task AttachToContentTypeAsync(string listKey, string contentType, string fieldName, string? displayName = null, Action<OptionPickerFieldSettings>? configure = null, CancellationToken cancellationToken = default)
     {
         var listItem = await RequireListItemAsync(listKey);
 
@@ -346,6 +435,10 @@ public sealed class CrestContentPartListService(
                     {
                         settings.SourceKey = sourceKey;
                         settings.Multiple = false;
+                        // Caller-shaped settings (cascade filters, sort columns, ...)
+                        // apply after the defaults, and on every reattach - the
+                        // declaring migration owns them, so they are re-asserted.
+                        configure?.Invoke(settings);
                     });
 
                 // Keep the field where the editor already put it.
@@ -395,7 +488,11 @@ public sealed class CrestContentPartListService(
 
     private async Task<ContentItem> AppendOptionAsync(ContentItem listItem, string key, string displayText, int position, string source, string? category = null, string? displayTextPlural = null, string? value = null)
     {
-        var option = await contentManager.NewAsync(CrestContentPartListMigrations.OptionContentType);
+        // New options take the LIST's option content type (custom data fields live
+        // on it); the shared Option type is only the blank-value fallback.
+        var optionType = listItem.As<CrestContentPartListPart>()?.OptionContentType;
+        var option = await contentManager.NewAsync(
+            string.IsNullOrWhiteSpace(optionType) ? CrestContentPartListMigrations.OptionContentType : optionType);
         option.DisplayText = displayText;
         option.Alter<ContentPart>("TitlePart", part => part.Content.Title = displayText);
         option.Alter<CrestOptionPart>(part =>
@@ -413,7 +510,55 @@ public sealed class CrestContentPartListService(
         return option;
     }
 
-    private static CrestContentPartListModel ToModel(ContentItem item)
+    // The list's custom-field descriptors: every field on every part of its option
+    // content type, with the admin's per-field lock designation. Null-safe on the
+    // type name because pre-existing lists always used the shared Option type.
+    private async Task<CrestOptionFieldModel[]> GetOptionFieldsAsync(ContentItem listItem)
+    {
+        var optionContentType = listItem.As<CrestContentPartListPart>()?.OptionContentType;
+        var typeName = string.IsNullOrWhiteSpace(optionContentType)
+            ? CrestContentPartListMigrations.OptionContentType
+            : optionContentType;
+
+        if (_fieldsByType.TryGetValue(typeName, out var cached))
+        {
+            return cached;
+        }
+
+        var type = await contentDefinitionManager.GetTypeDefinitionAsync(typeName);
+        CrestOptionFieldModel[] fields = type is null
+            ? []
+            :
+            [
+                .. type.Parts.SelectMany(typePart => typePart.PartDefinition.Fields.Select(field => new CrestOptionFieldModel(
+                    field.Name,
+                    field.GetSettings<ContentPartFieldSettings>()?.DisplayName is { Length: > 0 } displayName ? displayName : field.Name,
+                    typePart.PartDefinition.Name,
+                    field.FieldDefinition.Name,
+                    field.GetSettings<CrestOptionFieldSettings>()?.DataLocked ?? false))),
+            ];
+
+        _fieldsByType[typeName] = fields;
+        return fields;
+    }
+
+    // Writes custom field values onto the option item. Must run where the option is
+    // LIVE - inside the list's Alter for updates (see UpdateOptionAsync's comment),
+    // or on a freshly created option before the list saves.
+    private static void WriteFields(ContentItem option, IReadOnlyDictionary<string, string?> values, CrestOptionFieldModel[] descriptors)
+    {
+        foreach (var (name, raw) in values)
+        {
+            var field = descriptors.FirstOrDefault(candidate => string.Equals(candidate.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? throw new InvalidOperationException($"The option type has no custom field named '{name}'.");
+
+            // Blank clears (ToFieldNode returns null), same contract as plural/Value.
+            var node = CrestOptionFieldAccessor.ToFieldNode(field.Type, field.Name, raw);
+            option.Alter<ContentPart>(field.PartName, part => part.Content[field.Name] = node);
+        }
+    }
+
+    private static CrestContentPartListModel ToModel(ContentItem item, CrestOptionFieldModel[]? fields = null)
     {
         var listPart = item.As<CrestContentPartListPart>();
         var options = listPart?.Options ?? [];
@@ -425,12 +570,32 @@ public sealed class CrestContentPartListService(
             listPart?.Source ?? CrestOptionSources.Tenant,
             string.IsNullOrEmpty(listPart?.DataLock) ? CrestContentPartListLockSources.None : listPart.DataLock,
             string.IsNullOrEmpty(listPart?.EditLock) ? CrestContentPartListLockSources.None : listPart.EditLock,
-            [.. CrestContentPartListRules.Ordered(options.Select(ToOptionModel))]);
+            [.. CrestContentPartListRules.Ordered(options.Select(option => ToOptionModel(option, fields)))],
+            fields ?? [],
+            string.IsNullOrWhiteSpace(listPart?.OptionContentType)
+                ? CrestContentPartListMigrations.OptionContentType
+                : listPart.OptionContentType);
     }
 
-    private static CrestOptionModel ToOptionModel(ContentItem option)
+    private static CrestOptionModel ToOptionModel(ContentItem option, CrestOptionFieldModel[]? fields = null)
     {
         var part = option.As<CrestOptionPart>();
+
+        IReadOnlyDictionary<string, string?>? fieldValues = null;
+        if (fields is { Length: > 0 })
+        {
+            // Same one-shot conversion as the content-item provider: Content is a
+            // dynamic view over the item's JSON, so read it as a JsonObject once.
+            JsonObject? document = option.Content is JsonDynamicObject dynamicObject
+                ? (JsonObject)dynamicObject
+                : option.Content as JsonObject;
+
+            fieldValues = fields.ToDictionary(
+                field => field.Name,
+                field => CrestOptionFieldAccessor.ReadValue(document, field.PartName, field.Name),
+                StringComparer.OrdinalIgnoreCase);
+        }
+
         return new CrestOptionModel(
             option.ContentItemId,
             CrestContentPartListRules.NormalizeKey(part?.Key),
@@ -440,6 +605,7 @@ public sealed class CrestContentPartListService(
             part?.Position ?? 0,
             CrestContentPartListRules.NormalizeCategory(part?.Category),
             string.IsNullOrWhiteSpace(part?.DisplayTextPlural) ? null : part.DisplayTextPlural.Trim(),
-            string.IsNullOrWhiteSpace(part?.Value) ? null : part.Value.Trim());
+            string.IsNullOrWhiteSpace(part?.Value) ? null : part.Value.Trim(),
+            fieldValues);
     }
 }

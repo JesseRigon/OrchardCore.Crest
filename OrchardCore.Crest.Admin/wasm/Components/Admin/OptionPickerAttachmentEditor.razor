@@ -118,7 +118,18 @@
                         <CrestStack Gap="0.35rem" Style="border-left: 2px solid var(--rz-base-300); padding-left: 0.75rem;">
                             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
                                 <CrestFormField Text="@T["Column"]">
-                                    <CrestTextBox @bind-Value="row.Path" Placeholder="@T["e.g. Key"]" Disabled="@IsBusy" Style="width: 10rem;" />
+                                    @* The source's advertised columns, same list the column section
+                                       offers; free text only when the source has none described or
+                                       the stored path is a custom one the source does not list. *@
+                                    @if (ColumnChoices.Length > 0 && (string.IsNullOrEmpty(row.Path) || ColumnChoices.Any(choice => choice.Value == row.Path)))
+                                    {
+                                        <CrestDropDown @bind-Value="row.Path" TValue="string" Data="@ColumnChoices" TextProperty="Label" ValueProperty="Value"
+                                                       Disabled="@IsBusy" Style="width: 11rem;" data-testid="picker-filter-path" />
+                                    }
+                                    else
+                                    {
+                                        <CrestTextBox @bind-Value="row.Path" Placeholder="@T["e.g. Key"]" Disabled="@IsBusy" Style="width: 10rem;" />
+                                    }
                                 </CrestFormField>
                                 <CrestFormField Text="@T["Operator"]">
                                     <CrestDropDown @bind-Value="row.Operator" TValue="string" Data="@OperatorChoices" TextProperty="Label" ValueProperty="Value" Disabled="@IsBusy" />
@@ -128,7 +139,7 @@
                                 </CrestFormField>
                                 <CrestFormField Text="@T["From field"]">
                                     <CrestDropDown @bind-Value="row.ValueFrom" TValue="string" Data="@SiblingFieldChoices" TextProperty="Label" ValueProperty="Value"
-                                                   AllowClear="true" Disabled="@IsBusy" Style="width: 11rem;" />
+                                                   AllowClear="true" Change="@(_ => OnParentChangedAsync(row))" Disabled="@IsBusy" Style="width: 11rem;" />
                                 </CrestFormField>
                                 <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Settings.Filters.Remove(row))" Disabled="@IsBusy" />
                             </CrestStack>
@@ -139,6 +150,17 @@
                                     <CrestFormField Text="@T["When the parent changes"]">
                                         <CrestDropDown @bind-Value="row.OnParentChange" TValue="string" Data="@ParentChangeChoices" TextProperty="Label" ValueProperty="Value" Disabled="@IsBusy" />
                                     </CrestFormField>
+                                    @if (ParentColumnChoicesFor(row.ValueFrom) is { Length: > 0 } parentColumns)
+                                    {
+                                        @* Which parent-row column supplies the comparison value.
+                                           Cleared/absent = the option's technical Key - the identity
+                                           rule's default. Only a picker parent offers columns; a
+                                           scalar parent passes its raw value through. *@
+                                        <CrestFormField Text="@T["Compare the parent's"]">
+                                            <CrestDropDown @bind-Value="row.ValueFromColumn" TValue="string" Data="@parentColumns" TextProperty="Label" ValueProperty="Value"
+                                                           AllowClear="true" Placeholder="@T["Key (default)"]" Disabled="@IsBusy" Style="width: 12rem;" data-testid="picker-valuefrom-column" />
+                                        </CrestFormField>
+                                    }
                                 </CrestStack>
                             }
                         </CrestStack>
@@ -197,6 +219,9 @@
         "contentpartlist" => T["Content part list"],
         "users" => T["Users"],
         "contentitem" => T["Content items"],
+        "currency" => T["Currencies"],
+        "timezone" => T["Time zones"],
+        "culture" => T["Cultures"],
         _ => provider,
     }, provider))];
 
@@ -254,6 +279,13 @@
             Qualifier = qualifier;
 
             await LoadSourceColumnsAsync();
+
+            // Existing dependent filters: load their parents' columns so the
+            // ValueFromColumn dropdown renders with the stored value visible.
+            foreach (var filter in Settings.Filters)
+            {
+                await EnsureParentColumnsAsync(filter.ValueFrom);
+            }
         }
         catch (Exception exception)
         {
@@ -295,6 +327,49 @@
         {
             // An unresolvable source (e.g. a half-typed content type) just offers no
             // column suggestions; paths can still be typed by hand.
+        }
+    }
+
+    // Parent-field source columns, fetched once per parent and cached for the
+    // editor's lifetime; empty = scalar parent (or unknown), no column choice.
+    private readonly Dictionary<string, OptionSourceColumnModel[]> ParentColumns = new(StringComparer.OrdinalIgnoreCase);
+
+    private Choice[] ParentColumnChoicesFor(string? parentField) =>
+        !string.IsNullOrWhiteSpace(parentField) && ParentColumns.TryGetValue(parentField, out var columns) && columns.Length > 0
+            ? [new Choice(T["Key (option key, default)"], "Key"), .. columns.Select(column => new Choice($"{column.Label} ({column.Path})", column.Path))]
+            : [];
+
+    private async Task OnParentChangedAsync(OptionPickerFilterModel row)
+    {
+        // A different parent projects different columns; the old choice is meaningless.
+        row.ValueFromColumn = null;
+        await EnsureParentColumnsAsync(row.ValueFrom);
+    }
+
+    private async Task EnsureParentColumnsAsync(string? parentField)
+    {
+        if (string.IsNullOrWhiteSpace(parentField) || ParentColumns.ContainsKey(parentField))
+        {
+            return;
+        }
+
+        ParentColumns[parentField] = [];
+        try
+        {
+            var parent = await Http.GetFromJsonAsync<OptionPickerAttachmentModel>(
+                $"api/crest/option-picker/attachment?part={Uri.EscapeDataString(PartName)}&field={Uri.EscapeDataString(parentField)}");
+
+            // Only a picker parent projects columns; a scalar parent's raw value
+            // passes straight through and there is nothing to choose.
+            if (parent is { IsOptionPicker: true } && !string.IsNullOrWhiteSpace(parent.Settings?.SourceKey))
+            {
+                ParentColumns[parentField] = await Http.GetFromJsonAsync<OptionSourceColumnModel[]>(
+                    $"api/crest/option-sources/{Uri.EscapeDataString(parent.Settings.SourceKey)}/columns") ?? [];
+            }
+        }
+        catch
+        {
+            // No suggestions; the default Key comparison still applies.
         }
     }
 

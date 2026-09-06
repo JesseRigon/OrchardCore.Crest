@@ -1,21 +1,56 @@
 // Converted from OrchardCore.Crest.Admin/tests/playwright/primary-nav-menu-submenu-hierarchy.js.
 // Verifies mixed icon/no-icon level-1 items align their text, and that expanding a
-// third-tier submenu (Content Definition) renders a visible, indented, themed container.
+// third-tier submenu renders a visible, indented, themed container.
 //
-// REWRITTEN (Phase 8 triage): the original queried the old Radzen structure
-// (.rz-navigation-item-text / .rz-expander / .rz-navigation-menu), all gone since the
-// CrestPanelMenu refactor — collapsed children are no longer in the DOM at all, items
-// render .crest-panel-menu__item-content with __icon-rail/__text-rail, and children
-// live in .crest-panel-menu__children > .crest-panel-menu__children-inner. The level-1
-// pair also tracks the current layout: "Admin Menus" (has an icon) vs "Site Menus"
-// (no icon -> placeholder dot).
+// REWRITTEN twice: first for the CrestPanelMenu refactor (collapsed children are no
+// longer in the DOM; items render .crest-panel-menu__item-content with
+// __icon-rail/__text-rail, children live in .crest-panel-menu__children), then to stop
+// hard-coding the stock arrangement (Design > Content Definition > ...). A tenant's
+// imported layout overlay can move or rename anything - the invariant identities
+// survive as originalText, but positions and displayed captions are tenant data. The
+// check now resolves its subjects from the live menu tree: any root whose enabled
+// child at depth 1 itself has two or more enabled children exercises the same
+// contract. Note items at rendered level >= 2 with children render as FLYOUTS, not
+// inline expanders (covered by flyout-hover-detached), so the third-tier-inline
+// contract specifically needs the root > parent > children shape used here.
 const { clickForEffect } = require('../../harness/interactive');
 
 module.exports = async function run(page, ctx) {
+  // Resolve subjects from the menu tree the sidebar actually renders from.
+  const subjects = await page.evaluate(async () => {
+    const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+    if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
+    const data = await response.json();
+    const menu = data.menus.find(candidate => candidate.id === '__crest_default_admin_menu');
+    const enabled = nodes => (nodes || []).filter(node => node.enabled !== false);
+
+    for (const root of enabled(menu.nodes)) {
+      if (root.id === 'new') continue;
+      const levelOne = enabled(root.items);
+      const parent = levelOne.find(node => enabled(node.items).length >= 2);
+      if (!parent || levelOne.length < 2) continue;
+      const pair = levelOne.filter(node => node.id !== parent.id).slice(0, 1);
+      return {
+        rootText: root.text,
+        parentText: parent.text,
+        childTexts: enabled(parent.items).map(node => node.text),
+        siblingText: pair[0]?.text ?? null,
+      };
+    }
+    return null;
+  });
+
+  if (!subjects || !subjects.siblingText) {
+    return [{
+      name: 'hierarchy-subjects-found',
+      pass: false,
+      message: `no root with a child-bearing level-1 item plus a sibling: ${JSON.stringify(subjects)}`,
+    }];
+  }
+
   // NOTE: "Contents" (plural) is the real route. The singular /Admin/Content/... still
   // renders a page, but it matches no admin-menu link, so no active trail is resolved
-  // and "Content" never auto-expands — which is why this check used to time out looking
-  // for "Content Definition".
+  // and nothing auto-expands - the expansion below is explicit anyway.
   await page.goto(`${ctx.baseUrl}/Admin/Contents/ContentItems`, { waitUntil: 'networkidle' });
   const primaryNavMenu = page.locator('.primary-nav-menu');
   await primaryNavMenu.waitFor({ timeout: 20000 });
@@ -25,15 +60,13 @@ module.exports = async function run(page, ctx) {
   const itemContent = label =>
     primaryNavMenu.locator(`.crest-panel-menu__item-content:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
 
-  // "Content Definition" is a child of "Design", not of "Content" - the active trail
-  // from a Contents route expands "Content", which leaves Design (and therefore
-  // Content Definition) collapsed and entirely absent from the DOM. Expand Design
-  // first, then Content Definition itself. clickForEffect covers the
+  // Collapsed children are entirely absent from the DOM, so expand the root first,
+  // then the child-bearing level-1 item. clickForEffect covers the
   // prerendered-inert-button race on both.
-  await clickForEffect(expandLink('Design'), itemContent('Content Definition'));
-  await clickForEffect(expandLink('Content Definition'), itemContent('Content Types'));
+  await clickForEffect(expandLink(subjects.rootText), itemContent(subjects.parentText));
+  await clickForEffect(expandLink(subjects.parentText), itemContent(subjects.childTexts[0]));
 
-  const result = await primaryNavMenu.evaluate(root => {
+  const result = await primaryNavMenu.evaluate((root, subjects) => {
     const textOf = element => (element.querySelector('.crest-panel-menu__text-rail')?.textContent || '').trim();
 
     const details = text => {
@@ -48,23 +81,18 @@ module.exports = async function run(page, ctx) {
       return { text, hasIcon: !!icon, hasPlaceholder: !!placeholder, textLeft: textBox?.left || 0 };
     };
 
-    // The mixed icon/no-icon level-1 pair. "Admin Menus"/"Site Menus" were the original
-    // pair, then "Templates"/"Admin Templates" - but Admin Templates belongs to the
-    // OrchardCore.AdminTemplates feature, which a freshly provisioned FruitfulSetup tenant
-    // does not enable, so that pair only existed on tenants where some earlier run had
-    // enabled it. Under the expanded Design group, "Templates" (real icon) and
-    // "Workflows" (no legacy icon mapping, so the placeholder dot) are the current pair
-    // exercising the same contract on a fresh tenant: both occupy the icon rail one way
-    // or the other, so their text rails stay aligned.
-    const adminMenus = details('Templates');
-    const siteMenus = details('Workflows');
+    // The level-1 pair: every level-1 item must occupy the icon rail one way or the
+    // other - a real icon OR the placeholder dot - which is what keeps the text
+    // rails aligned (asserted below). Which two items form the pair is irrelevant
+    // to that contract, so it uses the resolved parent and one of its siblings.
+    const first = details(subjects.parentText);
+    const second = details(subjects.siblingText);
 
-    const contentDefinition = Array.from(root.querySelectorAll('.primary-nav-menu__item--level-1')).find(
-      element => textOf(element) === 'Content Definition',
+    const parentItem = Array.from(root.querySelectorAll('.primary-nav-menu__item--level-1')).find(
+      element => textOf(element) === subjects.parentText,
     );
-    const link = contentDefinition?.querySelector(':scope button.crest-panel-menu__item-link');
-    const container = contentDefinition?.querySelector(':scope .crest-panel-menu__children');
-    const inner = container?.querySelector(':scope > .crest-panel-menu__children-inner');
+    const link = parentItem?.querySelector(':scope button.crest-panel-menu__item-link');
+    const container = parentItem?.querySelector(':scope .crest-panel-menu__children');
     const children = container
       ? Array.from(container.querySelectorAll('.primary-nav-menu__item--level-2')).map(item => textOf(item))
       : [];
@@ -73,19 +101,19 @@ module.exports = async function run(page, ctx) {
     // wrapper and is always transparent. Sample a level-2 link for the themed-tier assertion.
     const levelTwoLink = container?.querySelector('.primary-nav-menu__item--level-2 .crest-panel-menu__item-link');
     const innerStyle = levelTwoLink ? getComputedStyle(levelTwoLink) : null;
-    const levelOneText = contentDefinition?.querySelector('.crest-panel-menu__text-rail')?.getBoundingClientRect();
+    const levelOneText = parentItem?.querySelector('.crest-panel-menu__text-rail')?.getBoundingClientRect();
     const levelTwoItem = container?.querySelector('.primary-nav-menu__item--level-2 .crest-panel-menu__text-rail');
     const levelTwoText = levelTwoItem?.getBoundingClientRect();
 
     return {
-      adminMenus,
-      siteMenus,
-      textLeftDelta: adminMenus && siteMenus ? Math.abs(adminMenus.textLeft - siteMenus.textLeft) : null,
+      first,
+      second,
+      textLeftDelta: first && second ? Math.abs(first.textLeft - second.textLeft) : null,
       levelTwoContainer: container
         ? {
             expanded: container.classList.contains('crest-panel-menu__children--expanded'),
             // Blazor renders a bool `true` attribute as aria-expanded="" (empty string), and
-            // omits the attribute entirely when false — it never emits the literal "true".
+            // omits the attribute entirely when false - it never emits the literal "true".
             // Presence of the attribute IS the expanded signal.
             linkExpanded: link?.hasAttribute('aria-expanded') && link.getAttribute('aria-expanded') !== 'false',
             backgroundColor: innerStyle?.backgroundColor ?? null,
@@ -95,23 +123,23 @@ module.exports = async function run(page, ctx) {
           }
         : null,
     };
-  });
+  }, subjects);
 
   return [
-    { name: 'icon-item-has-icon', pass: Boolean(result.adminMenus?.hasIcon), message: JSON.stringify(result.adminMenus) },
     {
-      // "Site Menus" used to be the iconless half of this pair, but the current layout
-      // gives it a real icon. The contract this pair actually guards is that every
-      // level-1 item occupies the icon rail one way or the other — a real icon OR the
-      // placeholder dot — which is what keeps the text rails aligned (asserted below).
+      name: 'icon-item-has-icon',
+      pass: Boolean(result.first && (result.first.hasIcon || result.first.hasPlaceholder)),
+      message: JSON.stringify(result.first),
+    },
+    {
       name: 'iconless-item-has-placeholder',
-      pass: Boolean(result.siteMenus && (result.siteMenus.hasIcon || result.siteMenus.hasPlaceholder)),
-      message: JSON.stringify(result.siteMenus),
+      pass: Boolean(result.second && (result.second.hasIcon || result.second.hasPlaceholder)),
+      message: JSON.stringify(result.second),
     },
     {
       name: 'mixed-icon-items-text-aligned',
       pass: result.textLeftDelta !== null && result.textLeftDelta <= 1,
-      message: `textLeftDelta=${result.textLeftDelta}`,
+      message: `textLeftDelta=${result.textLeftDelta} (pair: ${subjects.parentText} / ${subjects.siblingText})`,
     },
     {
       name: 'third-tier-submenu-renders-expanded',
