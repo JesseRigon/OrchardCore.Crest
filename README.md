@@ -2,6 +2,25 @@
 
 OrchardCore.Crest is a multi-project Orchard Core module repository for hosting Blazor component systems inside Orchard.
 
+> **⚠ Requires a custom OrchardCore build (for now).** Crest depends on AdminNode
+> `UniqueId` modifications to OrchardCore's admin-menu system that are not yet in any
+> released OrchardCore package. The upstream pull request is
+> [OrchardCMS/OrchardCore#19771](https://github.com/OrchardCMS/OrchardCore/pull/19771)
+> — until it is merged (if ever), anyone hoping to try Crest must build OrchardCore
+> from [`jesse-forked/OrchardCore`](https://github.com/jesse-forked/OrchardCore) on
+> the custom **`Crest`** branch.
+>
+> How the linking works: this repository's `Directory.Packages.props` pins every
+> OrchardCore package to version **`3.0.2-local`**, a version that only exists in a
+> NuGet feed packed from that fork — so a restore against nuget.org fails loudly
+> instead of silently compiling against stock OrchardCore. Crest itself declares only
+> the package ids and that version; **where** the packages come from is the HOST
+> app's decision, via its `NuGet.config` package-source mapping (`OrchardCore*` →
+> the local feed). See the
+> [OrchardCore.Crest.Host](https://github.com/JesseRigon/OrchardCore.Crest.Host)
+> repository for a working host: its dev script clones the fork into `modules/` and
+> packs the feed automatically when no prebuilt feed is present.
+
 The repository is intentionally kept together for source management, but its projects are meant to remain independently packageable later.
 
 ```text
