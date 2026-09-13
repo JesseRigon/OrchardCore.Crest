@@ -4,7 +4,7 @@ namespace Crest.Fields;
 
 /// <summary>
 /// References one or more options drawn from an option SOURCE - a tenant-editable
-/// Option List, or any other source a provider exposes (users, content items...).
+/// Content part list, or any other source a provider exposes (users, content items...).
 /// </summary>
 /// <remarks>
 /// Stored data stays deliberately tiny: the source and the selected ids. What the
@@ -20,7 +20,7 @@ public class OptionPickerField : ContentField
     /// and is stored so a reader can resolve values without the type definition.</summary>
     public string SourceKey { get; set; } = string.Empty;
 
-    /// <summary>The selected option ids. For an Option List source these are Option
+    /// <summary>The selected option ids. For an Content part list source these are Option
     /// content item ids; code compares the option's Key, not this id.</summary>
     public string[] SelectedIds { get; set; } = [];
 }

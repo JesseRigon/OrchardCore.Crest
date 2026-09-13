@@ -1,6 +1,6 @@
 namespace Crest.Models;
 
-/// <summary>An Option List as callers see it. Options arrive in the list's MANUAL
+/// <summary>An Content part list as callers see it. Options arrive in the list's MANUAL
 /// order (Position); any other ordering is an instance concern - the consuming
 /// picker's SortColumns. <paramref name="DataLock"/> and <paramref name="EditLock"/>
 /// carry who placed each lock (<see cref="CrestContentPartListLockSources"/>), "None"

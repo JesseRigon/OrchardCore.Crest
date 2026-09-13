@@ -7,6 +7,7 @@ using OrchardCore.ContentManagement.Records;
 using OrchardCore.Contents;
 using OrchardCore.Security.Permissions;
 using YesSql;
+using YesSql.Services;
 using Crest.ViewModels;
 using ContentItem = Crest.ViewModels.ContentItem;
 
@@ -20,6 +21,7 @@ public sealed class ContentItemsController(
     ISession session,
     IContentManager contentManager,
     Crest.Services.CrestFieldVisibilityEnforcer visibilityEnforcer,
+    Crest.ContentGroups.CrestContentGroupService contentGroups,
     IAuthorizationService authorizationService) : ControllerBase
 {
     private static readonly string[] DefaultViewFields =
@@ -31,6 +33,7 @@ public sealed class ContentItemsController(
     [HttpGet]
     public async Task<ActionResult<ContentItemListResult>> ListAsync(
         [FromQuery] string? contentType = null,
+        [FromQuery] string? group = null,
         [FromQuery] string? status = null,
         [FromQuery] string? search = null,
         [FromQuery] int page = 1,
@@ -60,6 +63,34 @@ public sealed class ContentItemsController(
         if (!string.IsNullOrWhiteSpace(contentType))
         {
             query = query.With<ContentItemIndex>(index => index.ContentType == contentType);
+        }
+
+        // A group is a set of content SOURCES (types, option lists, ...), so it expands
+        // to "type in {..} OR item id in {..}". An unknown group is a 404, not an
+        // unfiltered list; a known group with nothing resolvable yields no rows.
+        if (!string.IsNullOrWhiteSpace(group))
+        {
+            var filter = await contentGroups.ResolveFilterAsync(group, HttpContext.RequestAborted);
+            if (filter is null)
+            {
+                return NotFound();
+            }
+
+            if (filter.IsEmpty)
+            {
+                return Ok(new ContentItemListResult([], 0, page, pageSize));
+            }
+
+            var groupTypes = filter.ContentTypes.ToArray();
+            var groupIds = filter.ContentItemIds.ToArray();
+            // One predicate on the already-joined index: YesSql's Any() emits a second
+            // alias for the same index and the SQL breaks; || on one With() does not.
+            query = (groupTypes.Length, groupIds.Length) switch
+            {
+                (> 0, 0) => query.With<ContentItemIndex>(index => index.ContentType.IsIn(groupTypes)),
+                (0, > 0) => query.With<ContentItemIndex>(index => index.ContentItemId.IsIn(groupIds)),
+                _ => query.With<ContentItemIndex>(index => index.ContentType.IsIn(groupTypes) || index.ContentItemId.IsIn(groupIds)),
+            };
         }
 
         if (!string.IsNullOrWhiteSpace(search))

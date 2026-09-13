@@ -13,7 +13,7 @@ namespace Crest.Controllers;
 // The provider-generic half of the picker API: rows, columns, dependencies and
 // selection validation for WHATEVER source a field is bound to (content part lists, users,
 // content items, ...). Lives in Crest.Server with the provider abstraction itself;
-// the Option List management CRUD lives in the Crest.ContentPartLists module.
+// the Content part list management CRUD lives in the Crest.ContentPartLists module.
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/option-sources")]

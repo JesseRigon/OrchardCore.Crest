@@ -14,7 +14,7 @@ namespace Crest.Services;
 /// <summary>
 /// Exposes content items of a given type as a picker source: "contentitem:Customer".
 /// This is the source behind entity dropdowns (customers, vendors, sites) as opposed
-/// to the fixed named choices an Option List holds.
+/// to the fixed named choices an Content part list holds.
 /// </summary>
 /// <remarks>
 /// <para>

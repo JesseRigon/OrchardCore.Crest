@@ -98,6 +98,11 @@ public sealed class Startup : StartupBase
         services.AddScoped<CrestTitleBarSettingsStore>();
         services.AddNavigationProvider<CrestAdminMenu>();
         services.AddNavigationProvider<ContentTypesMenuNavigationProvider>();
+        // Content groups: module-declared sets of content sources (types, option
+        // lists, ...) the admin groups by; tenant reshaping lives in a document.
+        services.AddScoped<Crest.ContentGroups.CrestContentGroupService>();
+        services.AddScoped<Crest.ContentGroups.IContentGroupEntryResolver, Crest.ContentGroups.ContentTypeGroupEntryResolver>();
+        services.AddNavigationProvider<Crest.ContentGroups.ContentGroupsMenuNavigationProvider>();
         services.AddScoped<IIconProvider, IconifyIconProvider>();
         services.AddScoped<IIconProviderSettingsStore, CrestIconProviderSettingsStore>();
         services.AddSingleton<IIconifyLocalMirrorPathProvider, CrestIconifyLocalMirrorPathProvider>();

@@ -26,8 +26,9 @@
 
     <CrestCard>
         <CrestRow Gap="0.75rem">
-            <CrestColumn Size="12" SizeMD="5"><CrestTextBox @bind-Value="SearchText" @oninput="OnSearchInput" Placeholder="@T["Search content titles..."]" Style="width: 100%;" /></CrestColumn>
-            <CrestColumn Size="12" SizeMD="3"><CrestDropDown @bind-Value="SelectedContentType" Data="ContentTypeOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></CrestColumn>
+            <CrestColumn Size="12" SizeMD="4"><CrestTextBox @bind-Value="SearchText" @oninput="OnSearchInput" Placeholder="@T["Search content titles..."]" Style="width: 100%;" /></CrestColumn>
+            <CrestColumn Size="12" SizeMD="2"><CrestDropDown @bind-Value="SelectedGroup" Data="GroupOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync(1))" Style="width: 100%;" data-testid="content-items-group-filter" /></CrestColumn>
+            <CrestColumn Size="12" SizeMD="2"><CrestDropDown @bind-Value="SelectedContentType" Data="ContentTypeOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" data-testid="content-items-type-filter" /></CrestColumn>
             <CrestColumn Size="12" SizeMD="2"><CrestDropDown @bind-Value="SelectedStatus" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></CrestColumn>
             <CrestColumn Size="12" SizeMD="2"><CrestText Text="@(T["{0:n0} items", Result.Total])" TextStyle="TextStyle.Caption" Style="line-height: 2.5rem;" /></CrestColumn>
         </CrestRow>
@@ -96,9 +97,18 @@
     public string? TypeFilter { get; set; }
     private string? AppliedTypeFilter;
 
+    // Group pages (tenant setting "content group pages in menu") link here with
+    // ?group=<key>; a group is a set of content SOURCES the modules declared, so the
+    // list is filtered server-side to whatever those sources cover.
+    [SupplyParameterFromQuery(Name = "group")]
+    public string? GroupFilter { get; set; }
+    private string? AppliedGroupFilter;
+
     private ContentItemListResult Result { get; set; } = ContentItemListResult.Empty;
     private ContentType[] ContentTypes { get; set; } = [];
+    private ContentGroup[] Groups { get; set; } = [];
     private string? SelectedContentType { get; set; }
+    private string? SelectedGroup { get; set; }
     private string SelectedStatus { get; set; } = "latest";
     private string? SearchText { get; set; }
     private bool IsLoading { get; set; }
@@ -112,31 +122,42 @@
 
     private FilterOption[] StatusOptions => [new("latest", T["Latest"]), new("published", T["Published"]), new("draft", T["Unpublished"])];
     private FilterOption[] ContentTypeOptions => [new(string.Empty, T["All content types"]), .. ContentTypes.Select(type => new FilterOption(type.Name, type.DisplayName))];
+    private FilterOption[] GroupOptions => [new(string.Empty, T["All groups"]), .. Groups.Where(group => !group.Hidden).Select(group => new FilterOption(group.Key, group.DisplayName))];
     private FilterOption[] CreatableTypes => ContentTypes.Select(type => new FilterOption(type.Name, type.DisplayName)).ToArray();
     private int PageCount => Math.Max(1, (int)Math.Ceiling(Result.Total / (double)Result.PageSize));
 
-    private string PageHeading => (string.IsNullOrWhiteSpace(TypeFilter)
-        ? null
-        : ContentTypes.FirstOrDefault(type => string.Equals(type.Name, TypeFilter, StringComparison.OrdinalIgnoreCase))?.DisplayName)
+    private string PageHeading =>
+        (string.IsNullOrWhiteSpace(TypeFilter)
+            ? null
+            : ContentTypes.FirstOrDefault(type => string.Equals(type.Name, TypeFilter, StringComparison.OrdinalIgnoreCase))?.DisplayName)
+        ?? (string.IsNullOrWhiteSpace(GroupFilter)
+            ? null
+            : Groups.FirstOrDefault(group => string.Equals(group.Key, GroupFilter, StringComparison.OrdinalIgnoreCase))?.DisplayName)
         ?? T["Content Items"];
 
     protected override async Task OnInitializedAsync()
     {
         ContentTypes = await Api.Crest.Rest.Content.Types.ListAsync();
+        Groups = await Api.Crest.Rest.ContentGroups.ListAsync();
         AppliedTypeFilter = TypeFilter;
+        AppliedGroupFilter = GroupFilter;
         SelectedContentType = string.IsNullOrWhiteSpace(TypeFilter) ? SelectedContentType : TypeFilter;
+        SelectedGroup = string.IsNullOrWhiteSpace(GroupFilter) ? SelectedGroup : GroupFilter;
         await LoadAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (string.Equals(TypeFilter, AppliedTypeFilter, StringComparison.Ordinal))
+        if (string.Equals(TypeFilter, AppliedTypeFilter, StringComparison.Ordinal)
+            && string.Equals(GroupFilter, AppliedGroupFilter, StringComparison.Ordinal))
         {
             return;
         }
 
         AppliedTypeFilter = TypeFilter;
+        AppliedGroupFilter = GroupFilter;
         SelectedContentType = string.IsNullOrWhiteSpace(TypeFilter) ? null : TypeFilter;
+        SelectedGroup = string.IsNullOrWhiteSpace(GroupFilter) ? null : GroupFilter;
         await LoadAsync(1);
     }
 
@@ -144,7 +165,7 @@
     {
         IsLoading = true;
         ErrorMessage = null;
-        try { Result = await Api.Crest.Rest.Content.Items.ListAsync(SelectedContentType, SelectedStatus, SearchText, page ?? Result.Page, Result.PageSize); }
+        try { Result = await Api.Crest.Rest.Content.Items.ListAsync(SelectedContentType, SelectedStatus, SearchText, page ?? Result.Page, Result.PageSize, SelectedGroup); }
         catch (Exception ex) { ErrorMessage = ex.Message; }
         finally { IsLoading = false; }
     }

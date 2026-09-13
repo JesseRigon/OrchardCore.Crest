@@ -3,7 +3,7 @@ using OrchardCore.ContentManagement;
 namespace Crest.Models;
 
 /// <summary>
-/// Marks a content item as an Option List - Crest's tenant-editable enum set.
+/// Marks a content item as an Content part list - Crest's tenant-editable enum set.
 /// </summary>
 /// <remarks>
 /// Deliberately parallel to Orchard's Taxonomy rather than built on it. Taxonomies

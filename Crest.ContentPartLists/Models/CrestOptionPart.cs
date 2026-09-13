@@ -3,7 +3,7 @@ using OrchardCore.ContentManagement;
 namespace Crest.Models;
 
 /// <summary>
-/// A member of an Option List.
+/// A member of an Content part list.
 /// </summary>
 /// <remarks>
 /// Identity rule: content stores ContentItemId, CODE compares <see cref="Key"/>,
@@ -54,7 +54,7 @@ public class CrestOptionPart : ContentPart
     /// </summary>
     public string Category { get; set; } = CrestOptionCategories.Uncategorized;
 
-    /// <summary>Back-reference to the owning Option List content item.</summary>
+    /// <summary>Back-reference to the owning Content part list content item.</summary>
     public string ContentPartListContentItemId { get; set; } = string.Empty;
 }
 

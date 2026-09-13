@@ -36,16 +36,16 @@ public sealed class CrestContentPartListMigrations(IContentDefinitionManager con
             .WithDescription("A member of an content part list. The key is what code matches on; the title is the editable label."));
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(OptionContentType, type => type
-            .DisplayedAs("Option")
+            .WithDisplayName("Option")
             .Versionable()
             .Securable()
             // Options exist inside their list, never standalone: not Creatable, not
-            // Listable - they are reached through their Option List.
+            // Listable - they are reached through their Content part list.
             .WithPart("TitlePart", part => part.WithPosition("0"))
             .WithPart(nameof(CrestOptionPart), part => part.WithPosition("1")));
 
         await contentDefinitionManager.AlterTypeDefinitionAsync(ContentPartListContentType, type => type
-            .DisplayedAs("Option List")
+            .WithDisplayName("Content part list")
             .Creatable()
             .Listable()
             .Versionable()
@@ -55,7 +55,7 @@ public sealed class CrestContentPartListMigrations(IContentDefinitionManager con
             .WithPart("TitlePart", part => part.WithPosition("0"))
             .WithPart(nameof(CrestContentPartListPart), part => part.WithPosition("1")));
 
-        return 2;
+        return 3;
     }
 
     // Tenants created against the first pass have TaxonomyPart stored on their
@@ -68,5 +68,15 @@ public sealed class CrestContentPartListMigrations(IContentDefinitionManager con
             .RemovePart("TaxonomyPart"));
 
         return 2;
+    }
+
+    // The list type's display name drifted from its part ("Content part list") when
+    // the feature was renamed; re-apply it so existing tenants stop reading "Content part list".
+    public async Task<int> UpdateFrom2Async()
+    {
+        await contentDefinitionManager.AlterTypeDefinitionAsync(ContentPartListContentType, type => type
+            .WithDisplayName("Content part list"));
+
+        return 3;
     }
 }

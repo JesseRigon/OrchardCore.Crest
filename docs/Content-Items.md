@@ -119,6 +119,44 @@ per-type pages can replace that per type later without touching the menu
 mechanism. Module-declared pages (e.g. Parties › Customers) are unaffected — this
 is the additive path for types no module owns.
 
+## Content groups — grouping by KIND of content, across modules
+
+Orchard's `ContentItem` has no category, and `ContentTypeSettings.Category` is a
+single per-type string only the Flows widget picker reads. Crest's grouping is
+therefore a property of the content SOURCE, never the item: a group is a named set
+of entries, each `{ kind, key }` — `type:Person`, `list:global.honorifics` — and
+what an entry covers is resolved at read time.
+
+- **Modules declare groups** through `IContentGroupProvider` (`Crest.ContentGroups`),
+  exactly like admin-menu providers feed one section: several modules may
+  `builder.Group("members")` and the entries merge; the first display name and
+  the lowest position win. Parties declares `parties` (Person, Organization, the
+  party vocabularies and the global name lists); Members declares `members`.
+- **Entry kinds are pluggable.** `IContentGroupEntryResolver` maps a kind to
+  content types and/or content-item ids. `type` ships in Crest.Server; `list`
+  ships in `Crest.ContentPartLists` (Server cannot reference the lists feature -
+  the resolver seam is what lets a feature teach the group system a new kind). An
+  entry whose key does not exist on the tenant stays in the group as
+  `resolved: false` rather than vanishing.
+- **The tenant reshapes, never redefines.** `CrestContentGroupsDocument`
+  (IDocumentManager) stores per-group overrides: display name, position, hidden,
+  entries added, provider entries removed, and wholly tenant-owned groups. Provider
+  defaults are re-derived from code on every read, so a module's later changes
+  still surface. Deleting a module-declared group only hides it (its key is the
+  module's contract); deleting a tenant-owned group removes it.
+- **API:** `api/crest/content-groups` (GET, `ListContent`), `POST` / `PUT {key}` /
+  `DELETE {key}` / `POST {key}/entries` / `DELETE {key}/entries/{kind}/{entryKey}`
+  and `GET|PUT settings` (`EditContentTypes`). `api/crest/content-items?group=<key>`
+  expands the group to `type IN (..) OR id IN (..)` (unknown group → 404; known
+  but empty → no rows). The All Content Items page carries a group dropdown and
+  honours `?group=` from the menu.
+- **Per-group pages are a tenant setting.** `CrestContentGroupsSettings
+  { AutoMenuPages }` (site settings; "Content group pages in menu" on Admin
+  settings). When on, `ContentGroupsMenuNavigationProvider` emits one Content
+  entry per visible group beside the per-type entries, so a tenant can work by
+  type, by group, or both. Same materialized-menu caveats as the per-type entries:
+  writes re-sync as a deferred task, and a group's display name is its sync key.
+
 ## Content Part Lists — the tenant-editable enum system
 
 Orchard has no central enum store. `TextFieldPredefinedListEditorSettings` stores

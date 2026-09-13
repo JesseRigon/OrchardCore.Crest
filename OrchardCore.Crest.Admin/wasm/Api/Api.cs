@@ -47,6 +47,7 @@ public interface IRestApi
     IQueriesApi Queries { get; }
     ITenantsApi Tenants { get; }
     IIconsApi Icons { get; }
+    IContentGroupsApi ContentGroups { get; }
 }
 
 public interface IAppApi
@@ -93,7 +94,7 @@ public interface IContentTypesApi
 
 public interface IContentItemsApi
 {
-    Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20);
+    Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20, string? group = null);
     Task<ContentItem?> GetAsync(string contentItemId);
     Task<ContentItem?> GetByHandleAsync(string handle);
     Task<ContentItem?> CreateAsync(ContentItemWriteRequest request);
@@ -254,6 +255,7 @@ public sealed class RestApi(HttpClient http, ICrestAntiforgeryTokenStore antifor
     public IQueriesApi Queries { get; } = new QueriesApi(http);
     public ITenantsApi Tenants { get; } = new TenantsApi(http);
     public IIconsApi Icons { get; } = new IconsApi(http);
+    public IContentGroupsApi ContentGroups { get; } = new ContentGroupsApi(http);
 }
 
 public sealed class AuthApi(HttpClient http, ICrestAntiforgeryTokenStore antiforgery) : IAuthApi
@@ -468,10 +470,11 @@ public sealed class ContentTypesApi(HttpClient http) : IContentTypesApi
 
 public sealed class ContentItemsApi(HttpClient http) : IContentItemsApi
 {
-    public async Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20)
+    public async Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20, string? group = null)
     {
         var query = new List<string> { $"page={page}", $"pageSize={pageSize}" };
         if (!string.IsNullOrWhiteSpace(contentType)) query.Add($"contentType={Uri.EscapeDataString(contentType)}");
+        if (!string.IsNullOrWhiteSpace(group)) query.Add($"group={Uri.EscapeDataString(group)}");
         if (!string.IsNullOrWhiteSpace(status)) query.Add($"status={Uri.EscapeDataString(status)}");
         if (!string.IsNullOrWhiteSpace(search)) query.Add($"search={Uri.EscapeDataString(search)}");
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, $"api/crest/content-items?{string.Join('&', query)}")));
@@ -724,6 +727,47 @@ public sealed class ThemesApi(HttpClient http) : IThemesApi
     {
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, uri)));
         return response.IsSuccessStatusCode;
+    }
+
+    private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
+    {
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        return request;
+    }
+}
+
+public interface IContentGroupsApi
+{
+    Task<ContentGroup[]> ListAsync();
+    Task<ContentGroupsSettings> GetSettingsAsync();
+    Task<ContentGroupsSettings?> UpdateSettingsAsync(ContentGroupsSettings settings);
+}
+
+public sealed class ContentGroupsApi(HttpClient http) : IContentGroupsApi
+{
+    public async Task<ContentGroup[]> ListAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/crest/content-groups")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<ContentGroup[]>() ?? []
+            : [];
+    }
+
+    public async Task<ContentGroupsSettings> GetSettingsAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/crest/content-groups/settings")));
+        return response.IsSuccessStatusCode
+            ? await response.Content.ReadFromJsonAsync<ContentGroupsSettings>() ?? new ContentGroupsSettings(false)
+            : new ContentGroupsSettings(false);
+    }
+
+    public async Task<ContentGroupsSettings?> UpdateSettingsAsync(ContentGroupsSettings settings)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Put, "api/crest/content-groups/settings")
+        {
+            Content = JsonContent.Create(settings),
+        }));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ContentGroupsSettings>() : null;
     }
 
     private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
@@ -1269,6 +1313,12 @@ public sealed record ContentItem(
     string Owner,
     string Author,
     JsonElement Content);
+
+/// <summary>A content group as `api/crest/content-groups` returns it: a set of content
+/// SOURCES (types, option lists) declared by modules and reshaped by the tenant.</summary>
+public sealed record ContentGroup(string Key, string DisplayName, int Position, bool Hidden, string Source, ContentGroupEntry[] Entries);
+public sealed record ContentGroupEntry(string Kind, string Key, string DisplayName, string Source, bool Resolved);
+public sealed record ContentGroupsSettings(bool AutoMenuPages);
 
 public sealed record ContentItemListResult(ContentItem[] Items, int Total, int Page, int PageSize)
 {

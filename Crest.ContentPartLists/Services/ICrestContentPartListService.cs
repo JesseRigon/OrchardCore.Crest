@@ -106,7 +106,7 @@ public interface ICrestContentPartListService
 
     /// <summary>
     /// Attaches a set to a content type as an OptionPickerField, so any type can
-    /// reference an Option List at runtime. <paramref name="configure"/> lets the
+    /// reference an Content part list at runtime. <paramref name="configure"/> lets the
     /// caller shape the attachment's picker settings (filters for cascades, sort
     /// columns, ...) after the defaults are applied; it runs on every (re)attach, so
     /// migrations declare the settings idempotently.
