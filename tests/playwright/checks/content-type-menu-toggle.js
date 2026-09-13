@@ -5,7 +5,8 @@ const { severeConsoleErrors, drainConsoleErrors } = require('../harness/instance
 // content-items page filtered to that type (?type=<Name>), and flipping it back
 // must remove it. The sync that materializes the entry is DEFERRED to the end of
 // the toggle request, so menu assertions reload-and-retry briefly. Type-agnostic:
-// uses whatever type the list shows first, and always restores the flag.
+// uses whatever type the list shows first, and always restores the flag. Only THAT
+// type's entry is asserted on - other types the tenant has designated keep theirs.
 module.exports = async function run(page, ctx) {
   const results = [];
 
@@ -13,27 +14,28 @@ module.exports = async function run(page, ctx) {
   // imported layout can nest the Content branch anywhere - so presence is asserted
   // against the navigation API (the same source the sidebar renders from), and the
   // filtered page is then driven through the entry's own URL.
-  async function findMenuEntry() {
-    return page.evaluate(async () => {
+  async function findMenuEntry(typeName) {
+    return page.evaluate(async typeName => {
       const response = await fetch('/api/crest/navigation/admin', { credentials: 'include' });
       if (!response.ok) return null;
       const data = await response.json();
       let found = null;
+      const wanted = `/Contents/ContentItems?type=${encodeURIComponent(typeName)}`;
       const walk = items => {
         for (const item of items || []) {
           const url = String(item.url || item.href || '');
-          if (url.includes('/Contents/ContentItems?type=')) found = { url, text: item.text || item.textKey || '' };
+          if (url.endsWith(wanted)) found = { url, text: item.text || item.textKey || '' };
           walk(item.items);
         }
       };
       walk(Array.isArray(data) ? data : data.items);
       return found;
-    });
+    }, typeName);
   }
 
-  async function waitForMenuState(present) {
+  async function waitForMenuState(typeName, present) {
     for (let attempt = 0; attempt < 10; attempt++) {
-      const entry = await findMenuEntry();
+      const entry = await findMenuEntry(typeName);
       if (!!entry === present) return entry || true;
       await page.waitForTimeout(1500);
     }
@@ -56,7 +58,7 @@ module.exports = async function run(page, ctx) {
 
   // ON: an entry appears in the admin navigation linking to the filtered list.
   await toggle.click();
-  const entry = await waitForMenuState(true);
+  const entry = await waitForMenuState(typeName, true);
   results.push({ name: 'toggle-on-adds-menu-entry', pass: !!entry, message: `type=${typeName}` });
 
   if (entry && entry.url) {
@@ -81,7 +83,7 @@ module.exports = async function run(page, ctx) {
   await page.locator('[data-testid="content-type-detail"]').waitFor({ timeout: 10000 });
   await toggle.waitFor({ timeout: 10000 });
   await toggle.click();
-  const removed = await waitForMenuState(false);
+  const removed = await waitForMenuState(typeName, false);
   results.push({ name: 'toggle-off-removes-menu-entry', pass: removed === true, message: `type=${typeName}` });
 
   const errors = severeConsoleErrors(drainConsoleErrors(ctx.consoleErrors));
