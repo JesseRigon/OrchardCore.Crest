@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Crest.Routing;
 using Crest.Services;
 using Crest.Extensions;
 using OrchardCore.Admin;
@@ -222,13 +223,18 @@ public sealed class BlazorAdminThemeMiddleware
             return;
         }
 
-        var isBlazorPageRoute = isLoginRoute
-            || (isAdminRoute && await IsBlazorRouteAsync(context, adminRemainder, context.Request.Query));
+        var (isAdminBlazorRoute, blazorRoute) = isAdminRoute
+            ? await MatchBlazorRouteAsync(context, adminRemainder, context.Request.Query)
+            : (false, null);
+        var isBlazorPageRoute = isLoginRoute || isAdminBlazorRoute;
 
         // Direct URL requests are authorized on the server. In-app navigation
         // uses the login manifest's batch as a fast UI guard, but that browser
         // state is deliberately never trusted as an authorization decision.
-        if (isBlazorPageRoute && isAdminRoute)
+        // A page marked [AllowAnonymous] (RouteComponentEntry.AllowsAnonymous) is
+        // public by declaration: no login redirect, no route authorization - its own
+        // API calls stay authorization-checked server-side like every other page's.
+        if (isBlazorPageRoute && isAdminRoute && blazorRoute?.AllowsAnonymous != true)
         {
             // Crest gates the admin shell before Orchard's later authentication
             // middleware. Authenticate the same Orchard application cookie here
@@ -341,18 +347,19 @@ public sealed class BlazorAdminThemeMiddleware
     // reusing the exact same table Crest.Routing.RouteGateMatcherPolicy consults) - this
     // middleware no longer scans .razor source files itself, avoiding two independent
     // "is this an Admin route" implementations drifting out of sync.
-    private static async Task<bool> IsBlazorRouteAsync(HttpContext context, PathString adminRemainder, IQueryCollection query)
+    // (matched, entry): the entry is null for the one non-table match below.
+    private static async Task<(bool Matched, RouteComponentEntry? Entry)> MatchBlazorRouteAsync(HttpContext context, PathString adminRemainder, IQueryCollection query)
     {
         var normalized = NormalizeRoute(adminRemainder.Value);
         if (string.Equals(normalized, "/settings", StringComparison.OrdinalIgnoreCase) &&
             string.Equals(query["groupId"], "SecurityHeaders", StringComparison.OrdinalIgnoreCase))
         {
-            return true;
+            return (true, null);
         }
 
-        var tableManager = context.RequestServices.GetRequiredService<Crest.Routing.IRouteComponentTableManager>();
+        var tableManager = context.RequestServices.GetRequiredService<IRouteComponentTableManager>();
         var table = await tableManager.GetRouteComponentTableAsync();
-        return table.TryMatch(new PathString(normalized), out _);
+        return table.TryMatch(new PathString(normalized), out var matched) ? (true, matched) : (false, null);
     }
 
     private static string NormalizeRoute(string? route)

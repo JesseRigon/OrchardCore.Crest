@@ -43,6 +43,7 @@
          execute in the browser; the assembly itself also loads server-side for SSR
          route discovery, which is fine - referencing the package doesn't require a
          browser host, invoking those APIs does. -->
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
   </ItemGroup>

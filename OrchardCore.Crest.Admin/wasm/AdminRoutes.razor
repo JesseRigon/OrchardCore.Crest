@@ -32,8 +32,13 @@
 </Router>
 
 @code {
+    // Shell-less: Admin's own chrome-free pages, plus any page declaring
+    // [AllowAnonymous] - the same marker the server gate (RouteComponentEntry
+    // .AllowsAnonymous, BlazorAdminThemeMiddleware) reads, so a public page a
+    // module contributes is public end to end without Crest knowing the module.
     private static bool IsShelllessRoute(RouteData routeData)
         => string.Equals(routeData.PageType.Name, "Login", StringComparison.Ordinal)
             || string.Equals(routeData.PageType.Name, "Home", StringComparison.Ordinal)
-            || string.Equals(routeData.PageType.Name, "LegacyHost", StringComparison.Ordinal);
+            || string.Equals(routeData.PageType.Name, "LegacyHost", StringComparison.Ordinal)
+            || routeData.PageType.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), inherit: false);
 }

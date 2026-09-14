@@ -68,6 +68,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<ICrestRequestAccess, CrestRequestAccess>();
         services.AddScoped<ICrestRoutePermissionProvider, CrestRoutePermissionProvider>();
         services.AddScoped<CrestRouteAuthorizationService>();
+        services.AddScoped<CrestLoginService>();
         services.AddScoped<ICrestPermissionInvalidator, CrestPermissionInvalidator>();
         services.AddScoped<ICrestAdminMenuLayoutInvalidator, CrestAdminMenuLayoutInvalidator>();
         services.AddScoped<IRoleUpdatedEventHandler, CrestRolePermissionInvalidationHandler>();

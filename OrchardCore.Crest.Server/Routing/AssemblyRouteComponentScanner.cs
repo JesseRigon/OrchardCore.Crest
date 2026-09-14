@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 
 namespace Crest.Routing;
@@ -18,6 +19,8 @@ public static class AssemblyRouteComponentScanner
                 continue;
             }
 
+            var allowsAnonymous = type.IsDefined(typeof(AllowAnonymousAttribute), inherit: false);
+
             foreach (var routeAttribute in type.GetCustomAttributes(typeof(RouteAttribute), inherit: false).Cast<RouteAttribute>())
             {
                 yield return new RouteComponentEntry(
@@ -25,7 +28,8 @@ public static class AssemblyRouteComponentScanner
                     type,
                     bucket,
                     IsDefaultLanding: defaultLandingRoutePattern is not null
-                        && string.Equals(routeAttribute.Template, defaultLandingRoutePattern, StringComparison.OrdinalIgnoreCase));
+                        && string.Equals(routeAttribute.Template, defaultLandingRoutePattern, StringComparison.OrdinalIgnoreCase),
+                    AllowsAnonymous: allowsAnonymous);
             }
         }
     }
