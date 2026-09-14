@@ -1,0 +1,17 @@
+<Project>
+  <!--
+    OrchardCore.Module.Targets / Theme.Targets embed "**\*" of the project folder as
+    resources. Crest nests test projects, WASM client libraries and themes INSIDE the
+    module folders (tests/, wasm/, blazor-wasm/, Themes/), so without this every module
+    DLL swallowed those projects' entire bin/obj output - OrchardCore.Crest.dll and
+    Crest.ContentPartLists.dll grew past 700 MB / 1.1 GB, got copied into every
+    referencing project's bin on every build, and were re-emitted on every build because
+    a nested obj/ was always newer than the last compile. Imported after the package
+    props (Directory.Build.targets), so the Remove wins.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Remove="tests\**;blazor-wasm\**;wasm\**;Themes\**;**\bin\**;**\obj\**" />
+    <Content Remove="tests\**;blazor-wasm\**;wasm\**;Themes\**;**\bin\**;**\obj\**" />
+    <None Remove="tests\**;blazor-wasm\**;wasm\**;Themes\**;**\bin\**;**\obj\**" />
+  </ItemGroup>
+</Project>
