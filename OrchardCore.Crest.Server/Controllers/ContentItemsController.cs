@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Nodes;
 using OrchardCore;
 using OrchardCore.ContentManagement;
+using System.Text.Json.Settings;
 using OrchardCore.ContentManagement.Records;
 using OrchardCore.Contents;
 using OrchardCore.Security.Permissions;
@@ -264,13 +265,13 @@ public sealed class ContentItemsController(
         return changed ? NoContent() : Conflict();
     }
 
+    // Goes through ContentItem.Merge rather than editing the JSON in place: NewAsync
+    // and GetAsync weld part objects into the item's element cache, and a cache that
+    // is not reset keeps serving those stale parts to everything that runs on save
+    // (index providers, handlers) instead of the content the request wrote.
     private static void ReplaceContent(OrchardCore.ContentManagement.ContentItem item, JsonObject? content)
     {
         item.Content.Clear();
-        if (content is null) return;
-        foreach (var property in content)
-        {
-            item.Content[property.Key] = property.Value?.DeepClone();
-        }
+        item.Merge(content?.DeepClone() ?? new JsonObject(), new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
     }
 }
