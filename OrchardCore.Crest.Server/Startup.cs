@@ -80,6 +80,9 @@ public sealed class Startup : StartupBase
         services.AddSingleton<CrestProviderMenuSyncGate>();
         services.AddScoped<CrestProviderMenuSyncService>();
         services.AddScoped<CrestProviderMenuSyncCoordinator>();
+        // Runs that import right after shell activation, before any admin request, so a fresh
+        // or reset tenant never renders its first admin menu from un-imported provider items.
+        services.AddScoped<IModularTenantEvents, CrestProviderMenuSyncTenantEvents>();
         // Upstream's admin node localization providers enumerate root nodes only, which both
         // hides child captions from the Translations editor and lets its wholesale Save delete
         // their stored translations - see plans/upstream-orchard-proposals.md #2/#3 (fruitful).

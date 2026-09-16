@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using OrchardCore.Data.Documents;
 
 namespace Crest.Services;
 
 /// <summary>
-/// Runs <see cref="CrestProviderMenuSyncService"/> once per shell, on the first request that
-/// needs the admin menu.
+/// Runs <see cref="CrestProviderMenuSyncService"/> once per shell: normally right after activation
+/// (<see cref="CrestProviderMenuSyncTenantEvents"/>), otherwise on the first request that needs
+/// the admin menu.
 /// </summary>
 /// <remarks>
 /// Call sites treat this as fire-and-forget bookkeeping: it is called before the menu is read so
@@ -16,6 +18,7 @@ namespace Crest.Services;
 public sealed class CrestProviderMenuSyncCoordinator(
     CrestProviderMenuSyncGate gate,
     CrestProviderMenuSyncService syncService,
+    IDocumentStore documentStore,
     ILogger<CrestProviderMenuSyncCoordinator> logger)
 {
     public async Task EnsureSyncedAsync(ActionContext actionContext)
@@ -30,6 +33,14 @@ public sealed class CrestProviderMenuSyncCoordinator(
             var result = await syncService.SyncAsync(actionContext);
             if (result.HasChanges)
             {
+                // Commit now rather than at the end of the scope. IDocumentManager only
+                // invalidates its memory cache after a commit, so the caller's own
+                // INavigationManager.BuildMenuAsync - which reads the admin menu list through the
+                // immutable, cached path - would otherwise still see the pre-import document and
+                // render provider slugs instead of node UniqueIds for exactly this one request.
+                // It also means a request aborted after this point has nothing left to lose.
+                await documentStore.CommitAsync();
+
                 logger.LogInformation(
                     "Imported provider navigation into the admin menu system: {Added} added, {Reenabled} re-enabled, {Disabled} disabled{Created}.",
                     result.Added,

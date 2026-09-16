@@ -7,15 +7,16 @@ namespace Crest.Services;
 /// The import has to run once per shell, not once per request. Registered as a singleton, whose
 /// lifetime in OrchardCore is the shell's: enabling or disabling a feature changes the shell
 /// descriptor, which releases the shell (see <c>ShellDescriptorManager.ChangedAsync</c>), so the
-/// next request builds a new container with a fresh instance of this gate and the import runs
+/// next shell builds a new container with a fresh instance of this gate and the import runs
 /// again - picking up exactly the features that just became available.
 ///
 /// <para>
-/// It cannot run at <c>IModularTenantEvents.ActivatedAsync</c>, which would be the obvious
-/// place: <c>INavigationManager.BuildMenuAsync</c> needs an <c>ActionContext</c> because it
-/// resolves each item's Href through <c>IUrlHelper</c>, and there is no request - and therefore
-/// no <c>HttpContext</c> - during activation. Deferring to the first request that needs the menu
-/// is what makes a real <c>ActionContext</c> available.
+/// Two callers claim it. <see cref="CrestProviderMenuSyncTenantEvents"/> claims it right after
+/// activation, in a deferred scope with a synthetic request context, so the import normally
+/// completes before any admin request arrives. The request path
+/// (<see cref="CrestProviderMenuSyncCoordinator"/> from the navigation and menu-editor
+/// controllers) is the fallback for the case where an admin request reaches the menu first,
+/// or the activation-time import failed and released the claim.
 /// </para>
 /// </remarks>
 public sealed class CrestProviderMenuSyncGate

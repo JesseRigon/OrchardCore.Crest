@@ -173,9 +173,21 @@ logged in fruitful's `plans/upstream-orchard-proposals.md` (#2 non-recursive enu
 #3 wholesale save). Should a translation still go missing, `sync-providers` refills any seeded
 entry on demand.
 
-**Timing.** The import runs once per shell, on the first request that reads the admin menu. It
-cannot run earlier: `INavigationManager.BuildMenuAsync` resolves each item's `Href` through
-`IUrlHelper` and so needs an `ActionContext`, which does not exist during tenant activation.
+**Timing.** The import runs once per shell, right after tenant activation
+(`CrestProviderMenuSyncTenantEvents`): activation itself has no request, and the import
+resolves each item's `Href` through `IUrlHelper`, so the work is deferred to a scope that runs
+once the activating scope completes, with a synthetic request context built the way
+OrchardCore's own background service builds one (`ShellContext.CreateHttpContext()`, the
+tenant pipeline built first so the endpoint data sources exist). That means a freshly
+provisioned or reset tenant has its provider items imported - under the UniqueIds a layout
+import pre-seeded - before the first admin request, instead of that request rendering the
+un-imported provider tree once and only the reload showing the layout.
+
+The request path (`CrestProviderMenuSyncCoordinator`, from the navigation and menu-editor
+controllers) stays as the fallback. When it does perform an import that changed anything, it
+commits the document store immediately: `IDocumentManager`'s memory cache is only invalidated
+after commit, so without that the request that ran the import would still build its menu from
+the pre-import document and render provider slugs instead of node UniqueIds.
 
 **Disabled features.** A disabled feature's items cannot be imported ahead of time — its services
 are never registered in the shell container (`CompositionStrategy` composes the container from
