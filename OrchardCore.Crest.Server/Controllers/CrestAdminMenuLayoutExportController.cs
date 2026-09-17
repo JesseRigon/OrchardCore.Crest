@@ -19,7 +19,11 @@ public sealed class CrestAdminMenuLayoutExportController(
 {
     public const string DefaultFileName = "crest-admin-menu-layout.json";
     private const string ExportEnabledKey = "Crest:AdminMenuLayoutExport:Enabled";
-    private const string RecipesDirectoryName = "recipes";
+    // Capital R: OrchardCore's ApplicationRecipeHarvester scans ContentRoot/Recipes,
+    // and that is case-sensitive on Linux. A lowercase name works on Windows/drvfs but
+    // on ext4 it silently creates a SECOND directory the harvester never reads, so the
+    // export looks like it succeeded while the tenant keeps loading the old layout.
+    private const string RecipesDirectoryName = "Recipes";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
