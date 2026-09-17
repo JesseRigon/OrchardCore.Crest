@@ -5,7 +5,10 @@ const fs = require('fs');
 const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..', '..', '..', '..');
-const exportFile = path.join(repoRoot, 'recipes', 'crest-admin-menu-layout.json');
+// Capital R: OrchardCore's ApplicationRecipeHarvester scans ContentRoot/Recipes, and
+// that is case-sensitive on Linux. The export controller writes there (Crest 3699b1e);
+// a lowercase name here would assert against a directory nothing writes to on ext4.
+const exportFile = path.join(repoRoot, 'Recipes', 'crest-admin-menu-layout.json');
 
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'networkidle' });
