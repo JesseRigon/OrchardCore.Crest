@@ -78,6 +78,20 @@ function printSummary(results) {
     console.log(`BASE ${r.suite} :: ${r.name} — ${r.message}`);
   }
 
+  // Where the time went: total per check (a check may yield many results, all stamped
+  // with the check's total), the slowest first. The suite is sequential, so this table
+  // is the whole story of its wall-clock.
+  const perCheck = new Map();
+  for (const r of results) {
+    if (typeof r.ms === 'number' && !perCheck.has(r.suite)) perCheck.set(r.suite, r.ms);
+  }
+  const total = [...perCheck.values()].reduce((a, b) => a + b, 0);
+  const slowest = [...perCheck.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15);
+  console.log(`\nChecks: ${perCheck.size} in ${(total / 1000).toFixed(1)}s. Slowest:`);
+  for (const [name, ms] of slowest) {
+    console.log(`  ${(ms / 1000).toFixed(1).padStart(6)}s  ${name}`);
+  }
+
   return failed.length === 0;
 }
 

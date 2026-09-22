@@ -55,6 +55,15 @@ public class CrestContentPartListPart : ContentPart
     /// <summary>The options themselves, contained in this item's own document -
     /// one read, no separate lifecycle.</summary>
     public List<ContentItem> Options { get; set; } = [];
+
+    /// <summary>
+    /// For a list whose standard rows live in the global store (plans/global.md): the
+    /// tenant's presentation overrides of those rows, keyed by option key. Never data -
+    /// a global option's Key, Value and Category are the standard's, so only label,
+    /// plural, hidden and position can differ per tenant. <see cref="Options"/> then
+    /// holds only the tenant's own ADDITIONS.
+    /// </summary>
+    public Dictionary<string, CrestOptionOverride> Overrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>
@@ -75,3 +84,13 @@ public static class CrestContentPartListLockSources
     public const string Module = "Module";
 }
 
+/// <summary>A tenant's override of one global option's presentation. Null members mean "as the standard says".</summary>
+public sealed class CrestOptionOverride
+{
+    public string? DisplayText { get; set; }
+    public string? DisplayTextPlural { get; set; }
+    public bool? Hidden { get; set; }
+    public int? Position { get; set; }
+
+    public bool IsEmpty => DisplayText is null && DisplayTextPlural is null && Hidden is null && Position is null;
+}

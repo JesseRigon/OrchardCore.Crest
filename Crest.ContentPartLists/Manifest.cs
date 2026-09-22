@@ -17,5 +17,5 @@ using OrchardCore.Modules.Manifest;
     Name = "Crest Content Part Lists",
     Description = "Named, tenant-editable sets of options that content types can reference. Ships shared global sets (country codes, units of measure) every enabling tenant receives.",
     Category = "OrchardCore.Crest",
-    Dependencies = ["OrchardCore.Crest", "OrchardCore.Contents", "OrchardCore.ContentFields"]
+    Dependencies = ["OrchardCore.Crest", "OrchardCore.Contents", "OrchardCore.ContentFields", "Crest.Global"]
 )]

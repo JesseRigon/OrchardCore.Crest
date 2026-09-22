@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "_comment": "US nodes below the county level that the Census county gazetteer does not carry, plus groupings. Places are Census place FIPS (Chicago 1714000 -> US-IL-14000) parented onto every county they straddle. Groupings are outside the hierarchy; membership is applied to the listed member nodes.",
+  "nodes": [
+    {
+      "nodeId": "US-IL-14000",
+      "country": "US",
+      "level": 4,
+      "kind": "Level",
+      "name": "Chicago",
+      "code": "1714000",
+      "parentIds": ["US-IL-031", "US-IL-043"],
+      "groupIds": [],
+      "latitude": 41.8375,
+      "longitude": -87.6866
+    },
+    {
+      "nodeId": "US-IL-RTA",
+      "country": "US",
+      "level": 0,
+      "kind": "Grouping",
+      "name": "Regional Transportation Authority (Chicago)",
+      "code": "RTA",
+      "parentIds": [],
+      "groupIds": []
+    }
+  ],
+  "groupMemberships": [
+    { "groupId": "US-IL-RTA", "nodeIds": ["US-IL-031", "US-IL-043", "US-IL-089", "US-IL-097", "US-IL-111", "US-IL-197"] }
+  ]
+}

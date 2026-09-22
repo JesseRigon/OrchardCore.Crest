@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Crest.Admin.Components.Admin
 @using Crest.Components.Primitives
+@using Crest.Components.Regions
 
 @* Phase 8: this was App.razor, the WASM SPA's root component mounted at #app by the
    old wasm/Program.cs. Under the Blazor Web App model it's the admin *Routes*
@@ -41,4 +42,12 @@
             || string.Equals(routeData.PageType.Name, "Home", StringComparison.Ordinal)
             || string.Equals(routeData.PageType.Name, "LegacyHost", StringComparison.Ordinal)
             || routeData.PageType.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), inherit: false);
+
+    protected override void OnInitialized()
+    {
+        // Downstream modules contribute components to pages they do not own through the
+        // page-region seam; discovery runs over the same module assemblies the Router uses.
+        PageRegionRegistry.Configure(CrestModuleAssemblyRegistry.Assemblies);
+        base.OnInitialized();
+    }
 }

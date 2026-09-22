@@ -1,0 +1,7638 @@
+{
+ "version": 1,
+ "lists": [
+  {
+   "key": "global.country-codes",
+   "displayText": "Country codes",
+   "dataLock": true,
+   "options": [
+    {
+     "key": "AF",
+     "displayText": "Afghanistan",
+     "position": 1
+    },
+    {
+     "key": "AL",
+     "displayText": "Albania",
+     "position": 2
+    },
+    {
+     "key": "DZ",
+     "displayText": "Algeria",
+     "position": 3
+    },
+    {
+     "key": "AS",
+     "displayText": "American Samoa",
+     "position": 4
+    },
+    {
+     "key": "AD",
+     "displayText": "Andorra",
+     "position": 5
+    },
+    {
+     "key": "AO",
+     "displayText": "Angola",
+     "position": 6
+    },
+    {
+     "key": "AI",
+     "displayText": "Anguilla",
+     "position": 7
+    },
+    {
+     "key": "AQ",
+     "displayText": "Antarctica",
+     "position": 8
+    },
+    {
+     "key": "AG",
+     "displayText": "Antigua and Barbuda",
+     "position": 9
+    },
+    {
+     "key": "AR",
+     "displayText": "Argentina",
+     "position": 10
+    },
+    {
+     "key": "AM",
+     "displayText": "Armenia",
+     "position": 11
+    },
+    {
+     "key": "AW",
+     "displayText": "Aruba",
+     "position": 12
+    },
+    {
+     "key": "AU",
+     "displayText": "Australia",
+     "position": 13
+    },
+    {
+     "key": "AT",
+     "displayText": "Austria",
+     "position": 14
+    },
+    {
+     "key": "AZ",
+     "displayText": "Azerbaijan",
+     "position": 15
+    },
+    {
+     "key": "BS",
+     "displayText": "Bahamas",
+     "position": 16
+    },
+    {
+     "key": "BH",
+     "displayText": "Bahrain",
+     "position": 17
+    },
+    {
+     "key": "BD",
+     "displayText": "Bangladesh",
+     "position": 18
+    },
+    {
+     "key": "BB",
+     "displayText": "Barbados",
+     "position": 19
+    },
+    {
+     "key": "BY",
+     "displayText": "Belarus",
+     "position": 20
+    },
+    {
+     "key": "BE",
+     "displayText": "Belgium",
+     "position": 21
+    },
+    {
+     "key": "BZ",
+     "displayText": "Belize",
+     "position": 22
+    },
+    {
+     "key": "BJ",
+     "displayText": "Benin",
+     "position": 23
+    },
+    {
+     "key": "BM",
+     "displayText": "Bermuda",
+     "position": 24
+    },
+    {
+     "key": "BT",
+     "displayText": "Bhutan",
+     "position": 25
+    },
+    {
+     "key": "BO",
+     "displayText": "Bolivia",
+     "position": 26
+    },
+    {
+     "key": "BQ",
+     "displayText": "Bonaire, Sint Eustatius and Saba",
+     "position": 27
+    },
+    {
+     "key": "BA",
+     "displayText": "Bosnia and Herzegovina",
+     "position": 28
+    },
+    {
+     "key": "BW",
+     "displayText": "Botswana",
+     "position": 29
+    },
+    {
+     "key": "BV",
+     "displayText": "Bouvet Island",
+     "position": 30
+    },
+    {
+     "key": "BR",
+     "displayText": "Brazil",
+     "position": 31
+    },
+    {
+     "key": "IO",
+     "displayText": "British Indian Ocean Territory",
+     "position": 32
+    },
+    {
+     "key": "BN",
+     "displayText": "Brunei Darussalam",
+     "position": 33
+    },
+    {
+     "key": "BG",
+     "displayText": "Bulgaria",
+     "position": 34
+    },
+    {
+     "key": "BF",
+     "displayText": "Burkina Faso",
+     "position": 35
+    },
+    {
+     "key": "BI",
+     "displayText": "Burundi",
+     "position": 36
+    },
+    {
+     "key": "CV",
+     "displayText": "Cabo Verde",
+     "position": 37
+    },
+    {
+     "key": "KH",
+     "displayText": "Cambodia",
+     "position": 38
+    },
+    {
+     "key": "CM",
+     "displayText": "Cameroon",
+     "position": 39
+    },
+    {
+     "key": "CA",
+     "displayText": "Canada",
+     "position": 40
+    },
+    {
+     "key": "KY",
+     "displayText": "Cayman Islands",
+     "position": 41
+    },
+    {
+     "key": "CF",
+     "displayText": "Central African Republic",
+     "position": 42
+    },
+    {
+     "key": "TD",
+     "displayText": "Chad",
+     "position": 43
+    },
+    {
+     "key": "CL",
+     "displayText": "Chile",
+     "position": 44
+    },
+    {
+     "key": "CN",
+     "displayText": "China",
+     "position": 45
+    },
+    {
+     "key": "CX",
+     "displayText": "Christmas Island",
+     "position": 46
+    },
+    {
+     "key": "CC",
+     "displayText": "Cocos (Keeling) Islands",
+     "position": 47
+    },
+    {
+     "key": "CO",
+     "displayText": "Colombia",
+     "position": 48
+    },
+    {
+     "key": "KM",
+     "displayText": "Comoros",
+     "position": 49
+    },
+    {
+     "key": "CG",
+     "displayText": "Congo",
+     "position": 50
+    },
+    {
+     "key": "CD",
+     "displayText": "Congo, Democratic Republic of the",
+     "position": 51
+    },
+    {
+     "key": "CK",
+     "displayText": "Cook Islands",
+     "position": 52
+    },
+    {
+     "key": "CR",
+     "displayText": "Costa Rica",
+     "position": 53
+    },
+    {
+     "key": "HR",
+     "displayText": "Croatia",
+     "position": 54
+    },
+    {
+     "key": "CU",
+     "displayText": "Cuba",
+     "position": 55
+    },
+    {
+     "key": "CW",
+     "displayText": "Curaçao",
+     "position": 56
+    },
+    {
+     "key": "CY",
+     "displayText": "Cyprus",
+     "position": 57
+    },
+    {
+     "key": "CZ",
+     "displayText": "Czechia",
+     "position": 58
+    },
+    {
+     "key": "CI",
+     "displayText": "Côte d'Ivoire",
+     "position": 59
+    },
+    {
+     "key": "DK",
+     "displayText": "Denmark",
+     "position": 60
+    },
+    {
+     "key": "DJ",
+     "displayText": "Djibouti",
+     "position": 61
+    },
+    {
+     "key": "DM",
+     "displayText": "Dominica",
+     "position": 62
+    },
+    {
+     "key": "DO",
+     "displayText": "Dominican Republic",
+     "position": 63
+    },
+    {
+     "key": "EC",
+     "displayText": "Ecuador",
+     "position": 64
+    },
+    {
+     "key": "EG",
+     "displayText": "Egypt",
+     "position": 65
+    },
+    {
+     "key": "SV",
+     "displayText": "El Salvador",
+     "position": 66
+    },
+    {
+     "key": "GQ",
+     "displayText": "Equatorial Guinea",
+     "position": 67
+    },
+    {
+     "key": "ER",
+     "displayText": "Eritrea",
+     "position": 68
+    },
+    {
+     "key": "EE",
+     "displayText": "Estonia",
+     "position": 69
+    },
+    {
+     "key": "SZ",
+     "displayText": "Eswatini",
+     "position": 70
+    },
+    {
+     "key": "ET",
+     "displayText": "Ethiopia",
+     "position": 71
+    },
+    {
+     "key": "FK",
+     "displayText": "Falkland Islands",
+     "position": 72
+    },
+    {
+     "key": "FO",
+     "displayText": "Faroe Islands",
+     "position": 73
+    },
+    {
+     "key": "FJ",
+     "displayText": "Fiji",
+     "position": 74
+    },
+    {
+     "key": "FI",
+     "displayText": "Finland",
+     "position": 75
+    },
+    {
+     "key": "FR",
+     "displayText": "France",
+     "position": 76
+    },
+    {
+     "key": "GF",
+     "displayText": "French Guiana",
+     "position": 77
+    },
+    {
+     "key": "PF",
+     "displayText": "French Polynesia",
+     "position": 78
+    },
+    {
+     "key": "TF",
+     "displayText": "French Southern Territories",
+     "position": 79
+    },
+    {
+     "key": "GA",
+     "displayText": "Gabon",
+     "position": 80
+    },
+    {
+     "key": "GM",
+     "displayText": "Gambia",
+     "position": 81
+    },
+    {
+     "key": "GE",
+     "displayText": "Georgia",
+     "position": 82
+    },
+    {
+     "key": "DE",
+     "displayText": "Germany",
+     "position": 83
+    },
+    {
+     "key": "GH",
+     "displayText": "Ghana",
+     "position": 84
+    },
+    {
+     "key": "GI",
+     "displayText": "Gibraltar",
+     "position": 85
+    },
+    {
+     "key": "GR",
+     "displayText": "Greece",
+     "position": 86
+    },
+    {
+     "key": "GL",
+     "displayText": "Greenland",
+     "position": 87
+    },
+    {
+     "key": "GD",
+     "displayText": "Grenada",
+     "position": 88
+    },
+    {
+     "key": "GP",
+     "displayText": "Guadeloupe",
+     "position": 89
+    },
+    {
+     "key": "GU",
+     "displayText": "Guam",
+     "position": 90
+    },
+    {
+     "key": "GT",
+     "displayText": "Guatemala",
+     "position": 91
+    },
+    {
+     "key": "GG",
+     "displayText": "Guernsey",
+     "position": 92
+    },
+    {
+     "key": "GN",
+     "displayText": "Guinea",
+     "position": 93
+    },
+    {
+     "key": "GW",
+     "displayText": "Guinea-Bissau",
+     "position": 94
+    },
+    {
+     "key": "GY",
+     "displayText": "Guyana",
+     "position": 95
+    },
+    {
+     "key": "HT",
+     "displayText": "Haiti",
+     "position": 96
+    },
+    {
+     "key": "HM",
+     "displayText": "Heard Island and McDonald Islands",
+     "position": 97
+    },
+    {
+     "key": "VA",
+     "displayText": "Holy See",
+     "position": 98
+    },
+    {
+     "key": "HN",
+     "displayText": "Honduras",
+     "position": 99
+    },
+    {
+     "key": "HK",
+     "displayText": "Hong Kong",
+     "position": 100
+    },
+    {
+     "key": "HU",
+     "displayText": "Hungary",
+     "position": 101
+    },
+    {
+     "key": "IS",
+     "displayText": "Iceland",
+     "position": 102
+    },
+    {
+     "key": "IN",
+     "displayText": "India",
+     "position": 103
+    },
+    {
+     "key": "ID",
+     "displayText": "Indonesia",
+     "position": 104
+    },
+    {
+     "key": "IR",
+     "displayText": "Iran",
+     "position": 105
+    },
+    {
+     "key": "IQ",
+     "displayText": "Iraq",
+     "position": 106
+    },
+    {
+     "key": "IE",
+     "displayText": "Ireland",
+     "position": 107
+    },
+    {
+     "key": "IM",
+     "displayText": "Isle of Man",
+     "position": 108
+    },
+    {
+     "key": "IL",
+     "displayText": "Israel",
+     "position": 109
+    },
+    {
+     "key": "IT",
+     "displayText": "Italy",
+     "position": 110
+    },
+    {
+     "key": "JM",
+     "displayText": "Jamaica",
+     "position": 111
+    },
+    {
+     "key": "JP",
+     "displayText": "Japan",
+     "position": 112
+    },
+    {
+     "key": "JE",
+     "displayText": "Jersey",
+     "position": 113
+    },
+    {
+     "key": "JO",
+     "displayText": "Jordan",
+     "position": 114
+    },
+    {
+     "key": "KZ",
+     "displayText": "Kazakhstan",
+     "position": 115
+    },
+    {
+     "key": "KE",
+     "displayText": "Kenya",
+     "position": 116
+    },
+    {
+     "key": "KI",
+     "displayText": "Kiribati",
+     "position": 117
+    },
+    {
+     "key": "KP",
+     "displayText": "Korea, Democratic People's Republic of",
+     "position": 118
+    },
+    {
+     "key": "KR",
+     "displayText": "Korea, Republic of",
+     "position": 119
+    },
+    {
+     "key": "KW",
+     "displayText": "Kuwait",
+     "position": 120
+    },
+    {
+     "key": "KG",
+     "displayText": "Kyrgyzstan",
+     "position": 121
+    },
+    {
+     "key": "LA",
+     "displayText": "Lao People's Democratic Republic",
+     "position": 122
+    },
+    {
+     "key": "LV",
+     "displayText": "Latvia",
+     "position": 123
+    },
+    {
+     "key": "LB",
+     "displayText": "Lebanon",
+     "position": 124
+    },
+    {
+     "key": "LS",
+     "displayText": "Lesotho",
+     "position": 125
+    },
+    {
+     "key": "LR",
+     "displayText": "Liberia",
+     "position": 126
+    },
+    {
+     "key": "LY",
+     "displayText": "Libya",
+     "position": 127
+    },
+    {
+     "key": "LI",
+     "displayText": "Liechtenstein",
+     "position": 128
+    },
+    {
+     "key": "LT",
+     "displayText": "Lithuania",
+     "position": 129
+    },
+    {
+     "key": "LU",
+     "displayText": "Luxembourg",
+     "position": 130
+    },
+    {
+     "key": "MO",
+     "displayText": "Macao",
+     "position": 131
+    },
+    {
+     "key": "MG",
+     "displayText": "Madagascar",
+     "position": 132
+    },
+    {
+     "key": "MW",
+     "displayText": "Malawi",
+     "position": 133
+    },
+    {
+     "key": "MY",
+     "displayText": "Malaysia",
+     "position": 134
+    },
+    {
+     "key": "MV",
+     "displayText": "Maldives",
+     "position": 135
+    },
+    {
+     "key": "ML",
+     "displayText": "Mali",
+     "position": 136
+    },
+    {
+     "key": "MT",
+     "displayText": "Malta",
+     "position": 137
+    },
+    {
+     "key": "MH",
+     "displayText": "Marshall Islands",
+     "position": 138
+    },
+    {
+     "key": "MQ",
+     "displayText": "Martinique",
+     "position": 139
+    },
+    {
+     "key": "MR",
+     "displayText": "Mauritania",
+     "position": 140
+    },
+    {
+     "key": "MU",
+     "displayText": "Mauritius",
+     "position": 141
+    },
+    {
+     "key": "YT",
+     "displayText": "Mayotte",
+     "position": 142
+    },
+    {
+     "key": "MX",
+     "displayText": "Mexico",
+     "position": 143
+    },
+    {
+     "key": "FM",
+     "displayText": "Micronesia",
+     "position": 144
+    },
+    {
+     "key": "MD",
+     "displayText": "Moldova",
+     "position": 145
+    },
+    {
+     "key": "MC",
+     "displayText": "Monaco",
+     "position": 146
+    },
+    {
+     "key": "MN",
+     "displayText": "Mongolia",
+     "position": 147
+    },
+    {
+     "key": "ME",
+     "displayText": "Montenegro",
+     "position": 148
+    },
+    {
+     "key": "MS",
+     "displayText": "Montserrat",
+     "position": 149
+    },
+    {
+     "key": "MA",
+     "displayText": "Morocco",
+     "position": 150
+    },
+    {
+     "key": "MZ",
+     "displayText": "Mozambique",
+     "position": 151
+    },
+    {
+     "key": "MM",
+     "displayText": "Myanmar",
+     "position": 152
+    },
+    {
+     "key": "NA",
+     "displayText": "Namibia",
+     "position": 153
+    },
+    {
+     "key": "NR",
+     "displayText": "Nauru",
+     "position": 154
+    },
+    {
+     "key": "NP",
+     "displayText": "Nepal",
+     "position": 155
+    },
+    {
+     "key": "NL",
+     "displayText": "Netherlands",
+     "position": 156
+    },
+    {
+     "key": "NC",
+     "displayText": "New Caledonia",
+     "position": 157
+    },
+    {
+     "key": "NZ",
+     "displayText": "New Zealand",
+     "position": 158
+    },
+    {
+     "key": "NI",
+     "displayText": "Nicaragua",
+     "position": 159
+    },
+    {
+     "key": "NE",
+     "displayText": "Niger",
+     "position": 160
+    },
+    {
+     "key": "NG",
+     "displayText": "Nigeria",
+     "position": 161
+    },
+    {
+     "key": "NU",
+     "displayText": "Niue",
+     "position": 162
+    },
+    {
+     "key": "NF",
+     "displayText": "Norfolk Island",
+     "position": 163
+    },
+    {
+     "key": "MK",
+     "displayText": "North Macedonia",
+     "position": 164
+    },
+    {
+     "key": "MP",
+     "displayText": "Northern Mariana Islands",
+     "position": 165
+    },
+    {
+     "key": "NO",
+     "displayText": "Norway",
+     "position": 166
+    },
+    {
+     "key": "OM",
+     "displayText": "Oman",
+     "position": 167
+    },
+    {
+     "key": "PK",
+     "displayText": "Pakistan",
+     "position": 168
+    },
+    {
+     "key": "PW",
+     "displayText": "Palau",
+     "position": 169
+    },
+    {
+     "key": "PS",
+     "displayText": "Palestine, State of",
+     "position": 170
+    },
+    {
+     "key": "PA",
+     "displayText": "Panama",
+     "position": 171
+    },
+    {
+     "key": "PG",
+     "displayText": "Papua New Guinea",
+     "position": 172
+    },
+    {
+     "key": "PY",
+     "displayText": "Paraguay",
+     "position": 173
+    },
+    {
+     "key": "PE",
+     "displayText": "Peru",
+     "position": 174
+    },
+    {
+     "key": "PH",
+     "displayText": "Philippines",
+     "position": 175
+    },
+    {
+     "key": "PN",
+     "displayText": "Pitcairn",
+     "position": 176
+    },
+    {
+     "key": "PL",
+     "displayText": "Poland",
+     "position": 177
+    },
+    {
+     "key": "PT",
+     "displayText": "Portugal",
+     "position": 178
+    },
+    {
+     "key": "PR",
+     "displayText": "Puerto Rico",
+     "position": 179
+    },
+    {
+     "key": "QA",
+     "displayText": "Qatar",
+     "position": 180
+    },
+    {
+     "key": "RO",
+     "displayText": "Romania",
+     "position": 181
+    },
+    {
+     "key": "RU",
+     "displayText": "Russian Federation",
+     "position": 182
+    },
+    {
+     "key": "RW",
+     "displayText": "Rwanda",
+     "position": 183
+    },
+    {
+     "key": "RE",
+     "displayText": "Réunion",
+     "position": 184
+    },
+    {
+     "key": "BL",
+     "displayText": "Saint Barthélemy",
+     "position": 185
+    },
+    {
+     "key": "SH",
+     "displayText": "Saint Helena, Ascension and Tristan da Cunha",
+     "position": 186
+    },
+    {
+     "key": "KN",
+     "displayText": "Saint Kitts and Nevis",
+     "position": 187
+    },
+    {
+     "key": "LC",
+     "displayText": "Saint Lucia",
+     "position": 188
+    },
+    {
+     "key": "MF",
+     "displayText": "Saint Martin (French part)",
+     "position": 189
+    },
+    {
+     "key": "PM",
+     "displayText": "Saint Pierre and Miquelon",
+     "position": 190
+    },
+    {
+     "key": "VC",
+     "displayText": "Saint Vincent and the Grenadines",
+     "position": 191
+    },
+    {
+     "key": "WS",
+     "displayText": "Samoa",
+     "position": 192
+    },
+    {
+     "key": "SM",
+     "displayText": "San Marino",
+     "position": 193
+    },
+    {
+     "key": "ST",
+     "displayText": "Sao Tome and Principe",
+     "position": 194
+    },
+    {
+     "key": "SA",
+     "displayText": "Saudi Arabia",
+     "position": 195
+    },
+    {
+     "key": "SN",
+     "displayText": "Senegal",
+     "position": 196
+    },
+    {
+     "key": "RS",
+     "displayText": "Serbia",
+     "position": 197
+    },
+    {
+     "key": "SC",
+     "displayText": "Seychelles",
+     "position": 198
+    },
+    {
+     "key": "SL",
+     "displayText": "Sierra Leone",
+     "position": 199
+    },
+    {
+     "key": "SG",
+     "displayText": "Singapore",
+     "position": 200
+    },
+    {
+     "key": "SX",
+     "displayText": "Sint Maarten (Dutch part)",
+     "position": 201
+    },
+    {
+     "key": "SK",
+     "displayText": "Slovakia",
+     "position": 202
+    },
+    {
+     "key": "SI",
+     "displayText": "Slovenia",
+     "position": 203
+    },
+    {
+     "key": "SB",
+     "displayText": "Solomon Islands",
+     "position": 204
+    },
+    {
+     "key": "SO",
+     "displayText": "Somalia",
+     "position": 205
+    },
+    {
+     "key": "ZA",
+     "displayText": "South Africa",
+     "position": 206
+    },
+    {
+     "key": "GS",
+     "displayText": "South Georgia and the South Sandwich Islands",
+     "position": 207
+    },
+    {
+     "key": "SS",
+     "displayText": "South Sudan",
+     "position": 208
+    },
+    {
+     "key": "ES",
+     "displayText": "Spain",
+     "position": 209
+    },
+    {
+     "key": "LK",
+     "displayText": "Sri Lanka",
+     "position": 210
+    },
+    {
+     "key": "SD",
+     "displayText": "Sudan",
+     "position": 211
+    },
+    {
+     "key": "SR",
+     "displayText": "Suriname",
+     "position": 212
+    },
+    {
+     "key": "SJ",
+     "displayText": "Svalbard and Jan Mayen",
+     "position": 213
+    },
+    {
+     "key": "SE",
+     "displayText": "Sweden",
+     "position": 214
+    },
+    {
+     "key": "CH",
+     "displayText": "Switzerland",
+     "position": 215
+    },
+    {
+     "key": "SY",
+     "displayText": "Syrian Arab Republic",
+     "position": 216
+    },
+    {
+     "key": "TW",
+     "displayText": "Taiwan",
+     "position": 217
+    },
+    {
+     "key": "TJ",
+     "displayText": "Tajikistan",
+     "position": 218
+    },
+    {
+     "key": "TZ",
+     "displayText": "Tanzania",
+     "position": 219
+    },
+    {
+     "key": "TH",
+     "displayText": "Thailand",
+     "position": 220
+    },
+    {
+     "key": "TL",
+     "displayText": "Timor-Leste",
+     "position": 221
+    },
+    {
+     "key": "TG",
+     "displayText": "Togo",
+     "position": 222
+    },
+    {
+     "key": "TK",
+     "displayText": "Tokelau",
+     "position": 223
+    },
+    {
+     "key": "TO",
+     "displayText": "Tonga",
+     "position": 224
+    },
+    {
+     "key": "TT",
+     "displayText": "Trinidad and Tobago",
+     "position": 225
+    },
+    {
+     "key": "TN",
+     "displayText": "Tunisia",
+     "position": 226
+    },
+    {
+     "key": "TM",
+     "displayText": "Turkmenistan",
+     "position": 227
+    },
+    {
+     "key": "TC",
+     "displayText": "Turks and Caicos Islands",
+     "position": 228
+    },
+    {
+     "key": "TV",
+     "displayText": "Tuvalu",
+     "position": 229
+    },
+    {
+     "key": "TR",
+     "displayText": "Türkiye",
+     "position": 230
+    },
+    {
+     "key": "UG",
+     "displayText": "Uganda",
+     "position": 231
+    },
+    {
+     "key": "UA",
+     "displayText": "Ukraine",
+     "position": 232
+    },
+    {
+     "key": "AE",
+     "displayText": "United Arab Emirates",
+     "position": 233
+    },
+    {
+     "key": "GB",
+     "displayText": "United Kingdom",
+     "position": 234
+    },
+    {
+     "key": "UM",
+     "displayText": "United States Minor Outlying Islands",
+     "position": 235
+    },
+    {
+     "key": "US",
+     "displayText": "United States of America",
+     "position": 236
+    },
+    {
+     "key": "UY",
+     "displayText": "Uruguay",
+     "position": 237
+    },
+    {
+     "key": "UZ",
+     "displayText": "Uzbekistan",
+     "position": 238
+    },
+    {
+     "key": "VU",
+     "displayText": "Vanuatu",
+     "position": 239
+    },
+    {
+     "key": "VE",
+     "displayText": "Venezuela",
+     "position": 240
+    },
+    {
+     "key": "VN",
+     "displayText": "Viet Nam",
+     "position": 241
+    },
+    {
+     "key": "VG",
+     "displayText": "Virgin Islands (British)",
+     "position": 242
+    },
+    {
+     "key": "VI",
+     "displayText": "Virgin Islands (U.S.)",
+     "position": 243
+    },
+    {
+     "key": "WF",
+     "displayText": "Wallis and Futuna",
+     "position": 244
+    },
+    {
+     "key": "EH",
+     "displayText": "Western Sahara",
+     "position": 245
+    },
+    {
+     "key": "YE",
+     "displayText": "Yemen",
+     "position": 246
+    },
+    {
+     "key": "ZM",
+     "displayText": "Zambia",
+     "position": 247
+    },
+    {
+     "key": "ZW",
+     "displayText": "Zimbabwe",
+     "position": 248
+    },
+    {
+     "key": "AX",
+     "displayText": "Åland Islands",
+     "position": 249
+    }
+   ]
+  },
+  {
+   "key": "global.uom",
+   "displayText": "Units of measure",
+   "dataLock": true,
+   "options": [
+    {
+     "key": "ac",
+     "displayText": "Acre",
+     "position": 1,
+     "category": "Area",
+     "displayTextPlural": "Acres"
+    },
+    {
+     "key": "ha",
+     "displayText": "Hectare",
+     "position": 2,
+     "category": "Area",
+     "displayTextPlural": "Hectares"
+    },
+    {
+     "key": "ft2",
+     "displayText": "Square foot",
+     "position": 3,
+     "category": "Area",
+     "displayTextPlural": "Square feet"
+    },
+    {
+     "key": "m2",
+     "displayText": "Square meter",
+     "position": 4,
+     "category": "Area",
+     "displayTextPlural": "Square meters"
+    },
+    {
+     "key": "bx",
+     "displayText": "Box",
+     "position": 5,
+     "category": "Count",
+     "displayTextPlural": "Boxes"
+    },
+    {
+     "key": "cs",
+     "displayText": "Case",
+     "position": 6,
+     "category": "Count",
+     "displayTextPlural": "Cases"
+    },
+    {
+     "key": "dz",
+     "displayText": "Dozen",
+     "position": 7,
+     "category": "Count",
+     "displayTextPlural": "Dozen"
+    },
+    {
+     "key": "ea",
+     "displayText": "Each",
+     "position": 8,
+     "category": "Count",
+     "displayTextPlural": "Each"
+    },
+    {
+     "key": "gro",
+     "displayText": "Gross",
+     "position": 9,
+     "category": "Count",
+     "displayTextPlural": "Gross"
+    },
+    {
+     "key": "pk",
+     "displayText": "Pack",
+     "position": 10,
+     "category": "Count",
+     "displayTextPlural": "Packs"
+    },
+    {
+     "key": "pr",
+     "displayText": "Pair",
+     "position": 11,
+     "category": "Count",
+     "displayTextPlural": "Pairs"
+    },
+    {
+     "key": "plt",
+     "displayText": "Pallet",
+     "position": 12,
+     "category": "Count",
+     "displayTextPlural": "Pallets"
+    },
+    {
+     "key": "rl",
+     "displayText": "Roll",
+     "position": 13,
+     "category": "Count",
+     "displayTextPlural": "Rolls"
+    },
+    {
+     "key": "st",
+     "displayText": "Set",
+     "position": 14,
+     "category": "Count",
+     "displayTextPlural": "Sets"
+    },
+    {
+     "key": "cm",
+     "displayText": "Centimeter",
+     "position": 15,
+     "category": "Length",
+     "displayTextPlural": "Centimeters"
+    },
+    {
+     "key": "ft",
+     "displayText": "Foot",
+     "position": 16,
+     "category": "Length",
+     "displayTextPlural": "Feet"
+    },
+    {
+     "key": "in",
+     "displayText": "Inch",
+     "position": 17,
+     "category": "Length",
+     "displayTextPlural": "Inches"
+    },
+    {
+     "key": "km",
+     "displayText": "Kilometer",
+     "position": 18,
+     "category": "Length",
+     "displayTextPlural": "Kilometers"
+    },
+    {
+     "key": "m",
+     "displayText": "Meter",
+     "position": 19,
+     "category": "Length",
+     "displayTextPlural": "Meters"
+    },
+    {
+     "key": "mi",
+     "displayText": "Mile",
+     "position": 20,
+     "category": "Length",
+     "displayTextPlural": "Miles"
+    },
+    {
+     "key": "mm",
+     "displayText": "Millimeter",
+     "position": 21,
+     "category": "Length",
+     "displayTextPlural": "Millimeters"
+    },
+    {
+     "key": "yd",
+     "displayText": "Yard",
+     "position": 22,
+     "category": "Length",
+     "displayTextPlural": "Yards"
+    },
+    {
+     "key": "g",
+     "displayText": "Gram",
+     "position": 23,
+     "category": "Mass",
+     "displayTextPlural": "Grams"
+    },
+    {
+     "key": "kg",
+     "displayText": "Kilogram",
+     "position": 24,
+     "category": "Mass",
+     "displayTextPlural": "Kilograms"
+    },
+    {
+     "key": "t",
+     "displayText": "Metric ton",
+     "position": 25,
+     "category": "Mass",
+     "displayTextPlural": "Metric tons"
+    },
+    {
+     "key": "mg",
+     "displayText": "Milligram",
+     "position": 26,
+     "category": "Mass",
+     "displayTextPlural": "Milligrams"
+    },
+    {
+     "key": "oz",
+     "displayText": "Ounce",
+     "position": 27,
+     "category": "Mass",
+     "displayTextPlural": "Ounces"
+    },
+    {
+     "key": "lb",
+     "displayText": "Pound",
+     "position": 28,
+     "category": "Mass",
+     "displayTextPlural": "Pounds"
+    },
+    {
+     "key": "ton",
+     "displayText": "Short ton",
+     "position": 29,
+     "category": "Mass",
+     "displayTextPlural": "Short tons"
+    },
+    {
+     "key": "cel",
+     "displayText": "Degree Celsius",
+     "position": 30,
+     "category": "Temperature",
+     "displayTextPlural": "Degrees Celsius"
+    },
+    {
+     "key": "fah",
+     "displayText": "Degree Fahrenheit",
+     "position": 31,
+     "category": "Temperature",
+     "displayTextPlural": "Degrees Fahrenheit"
+    },
+    {
+     "key": "kel",
+     "displayText": "Kelvin",
+     "position": 32,
+     "category": "Temperature",
+     "displayTextPlural": "Kelvins"
+    },
+    {
+     "key": "day",
+     "displayText": "Day",
+     "position": 33,
+     "category": "Time",
+     "displayTextPlural": "Days"
+    },
+    {
+     "key": "hr",
+     "displayText": "Hour",
+     "position": 34,
+     "category": "Time",
+     "displayTextPlural": "Hours"
+    },
+    {
+     "key": "min",
+     "displayText": "Minute",
+     "position": 35,
+     "category": "Time",
+     "displayTextPlural": "Minutes"
+    },
+    {
+     "key": "mo",
+     "displayText": "Month",
+     "position": 36,
+     "category": "Time",
+     "displayTextPlural": "Months"
+    },
+    {
+     "key": "s",
+     "displayText": "Second",
+     "position": 37,
+     "category": "Time",
+     "displayTextPlural": "Seconds"
+    },
+    {
+     "key": "wk",
+     "displayText": "Week",
+     "position": 38,
+     "category": "Time",
+     "displayTextPlural": "Weeks"
+    },
+    {
+     "key": "yr",
+     "displayText": "Year",
+     "position": 39,
+     "category": "Time",
+     "displayTextPlural": "Years"
+    },
+    {
+     "key": "cl",
+     "displayText": "Centiliter",
+     "position": 40,
+     "category": "Volume",
+     "displayTextPlural": "Centiliters"
+    },
+    {
+     "key": "ft3",
+     "displayText": "Cubic foot",
+     "position": 41,
+     "category": "Volume",
+     "displayTextPlural": "Cubic feet"
+    },
+    {
+     "key": "m3",
+     "displayText": "Cubic meter",
+     "position": 42,
+     "category": "Volume",
+     "displayTextPlural": "Cubic meters"
+    },
+    {
+     "key": "floz",
+     "displayText": "Fluid ounce",
+     "position": 43,
+     "category": "Volume",
+     "displayTextPlural": "Fluid ounces"
+    },
+    {
+     "key": "gal",
+     "displayText": "Gallon",
+     "position": 44,
+     "category": "Volume",
+     "displayTextPlural": "Gallons"
+    },
+    {
+     "key": "l",
+     "displayText": "Liter",
+     "position": 45,
+     "category": "Volume",
+     "displayTextPlural": "Liters"
+    },
+    {
+     "key": "ml",
+     "displayText": "Milliliter",
+     "position": 46,
+     "category": "Volume",
+     "displayTextPlural": "Milliliters"
+    },
+    {
+     "key": "pt",
+     "displayText": "Pint",
+     "position": 47,
+     "category": "Volume",
+     "displayTextPlural": "Pints"
+    },
+    {
+     "key": "qt",
+     "displayText": "Quart",
+     "position": 48,
+     "category": "Volume",
+     "displayTextPlural": "Quarts"
+    }
+   ]
+  },
+  {
+   "key": "global.uom-rec20",
+   "displayText": "UN/CEFACT Rec 20 codes",
+   "dataLock": true,
+   "options": [
+    {
+     "key": "ea",
+     "displayText": "Each",
+     "position": 1,
+     "category": "Count",
+     "displayTextPlural": "Each",
+     "value": "EA"
+    },
+    {
+     "key": "pr",
+     "displayText": "Pair",
+     "position": 2,
+     "category": "Count",
+     "displayTextPlural": "Pairs",
+     "value": "PR"
+    },
+    {
+     "key": "dz",
+     "displayText": "Dozen",
+     "position": 3,
+     "category": "Count",
+     "displayTextPlural": "Dozen",
+     "value": "DZN"
+    },
+    {
+     "key": "gro",
+     "displayText": "Gross",
+     "position": 4,
+     "category": "Count",
+     "displayTextPlural": "Gross",
+     "value": "GRO"
+    },
+    {
+     "key": "st",
+     "displayText": "Set",
+     "position": 5,
+     "category": "Count",
+     "displayTextPlural": "Sets",
+     "value": "SET"
+    },
+    {
+     "key": "mg",
+     "displayText": "Milligram",
+     "position": 6,
+     "category": "Mass",
+     "displayTextPlural": "Milligrams",
+     "value": "MGM"
+    },
+    {
+     "key": "g",
+     "displayText": "Gram",
+     "position": 7,
+     "category": "Mass",
+     "displayTextPlural": "Grams",
+     "value": "GRM"
+    },
+    {
+     "key": "kg",
+     "displayText": "Kilogram",
+     "position": 8,
+     "category": "Mass",
+     "displayTextPlural": "Kilograms",
+     "value": "KGM"
+    },
+    {
+     "key": "t",
+     "displayText": "Metric ton",
+     "position": 9,
+     "category": "Mass",
+     "displayTextPlural": "Metric tons",
+     "value": "TNE"
+    },
+    {
+     "key": "oz",
+     "displayText": "Ounce",
+     "position": 10,
+     "category": "Mass",
+     "displayTextPlural": "Ounces",
+     "value": "ONZ"
+    },
+    {
+     "key": "lb",
+     "displayText": "Pound",
+     "position": 11,
+     "category": "Mass",
+     "displayTextPlural": "Pounds",
+     "value": "LBR"
+    },
+    {
+     "key": "ton",
+     "displayText": "Short ton",
+     "position": 12,
+     "category": "Mass",
+     "displayTextPlural": "Short tons",
+     "value": "STN"
+    },
+    {
+     "key": "ml",
+     "displayText": "Milliliter",
+     "position": 13,
+     "category": "Volume",
+     "displayTextPlural": "Milliliters",
+     "value": "MLT"
+    },
+    {
+     "key": "cl",
+     "displayText": "Centiliter",
+     "position": 14,
+     "category": "Volume",
+     "displayTextPlural": "Centiliters",
+     "value": "CLT"
+    },
+    {
+     "key": "l",
+     "displayText": "Liter",
+     "position": 15,
+     "category": "Volume",
+     "displayTextPlural": "Liters",
+     "value": "LTR"
+    },
+    {
+     "key": "m3",
+     "displayText": "Cubic meter",
+     "position": 16,
+     "category": "Volume",
+     "displayTextPlural": "Cubic meters",
+     "value": "MTQ"
+    },
+    {
+     "key": "floz",
+     "displayText": "Fluid ounce",
+     "position": 17,
+     "category": "Volume",
+     "displayTextPlural": "Fluid ounces",
+     "value": "OZA"
+    },
+    {
+     "key": "pt",
+     "displayText": "Pint",
+     "position": 18,
+     "category": "Volume",
+     "displayTextPlural": "Pints",
+     "value": "PTL"
+    },
+    {
+     "key": "qt",
+     "displayText": "Quart",
+     "position": 19,
+     "category": "Volume",
+     "displayTextPlural": "Quarts",
+     "value": "QTL"
+    },
+    {
+     "key": "gal",
+     "displayText": "Gallon",
+     "position": 20,
+     "category": "Volume",
+     "displayTextPlural": "Gallons",
+     "value": "GLL"
+    },
+    {
+     "key": "ft3",
+     "displayText": "Cubic foot",
+     "position": 21,
+     "category": "Volume",
+     "displayTextPlural": "Cubic feet",
+     "value": "FTQ"
+    },
+    {
+     "key": "mm",
+     "displayText": "Millimeter",
+     "position": 22,
+     "category": "Length",
+     "displayTextPlural": "Millimeters",
+     "value": "MMT"
+    },
+    {
+     "key": "cm",
+     "displayText": "Centimeter",
+     "position": 23,
+     "category": "Length",
+     "displayTextPlural": "Centimeters",
+     "value": "CMT"
+    },
+    {
+     "key": "m",
+     "displayText": "Meter",
+     "position": 24,
+     "category": "Length",
+     "displayTextPlural": "Meters",
+     "value": "MTR"
+    },
+    {
+     "key": "km",
+     "displayText": "Kilometer",
+     "position": 25,
+     "category": "Length",
+     "displayTextPlural": "Kilometers",
+     "value": "KMT"
+    },
+    {
+     "key": "in",
+     "displayText": "Inch",
+     "position": 26,
+     "category": "Length",
+     "displayTextPlural": "Inches",
+     "value": "INH"
+    },
+    {
+     "key": "ft",
+     "displayText": "Foot",
+     "position": 27,
+     "category": "Length",
+     "displayTextPlural": "Feet",
+     "value": "FOT"
+    },
+    {
+     "key": "yd",
+     "displayText": "Yard",
+     "position": 28,
+     "category": "Length",
+     "displayTextPlural": "Yards",
+     "value": "YRD"
+    },
+    {
+     "key": "mi",
+     "displayText": "Mile",
+     "position": 29,
+     "category": "Length",
+     "displayTextPlural": "Miles",
+     "value": "SMI"
+    },
+    {
+     "key": "m2",
+     "displayText": "Square meter",
+     "position": 30,
+     "category": "Area",
+     "displayTextPlural": "Square meters",
+     "value": "MTK"
+    },
+    {
+     "key": "ha",
+     "displayText": "Hectare",
+     "position": 31,
+     "category": "Area",
+     "displayTextPlural": "Hectares",
+     "value": "HAR"
+    },
+    {
+     "key": "ft2",
+     "displayText": "Square foot",
+     "position": 32,
+     "category": "Area",
+     "displayTextPlural": "Square feet",
+     "value": "FTK"
+    },
+    {
+     "key": "ac",
+     "displayText": "Acre",
+     "position": 33,
+     "category": "Area",
+     "displayTextPlural": "Acres",
+     "value": "ACR"
+    },
+    {
+     "key": "s",
+     "displayText": "Second",
+     "position": 34,
+     "category": "Time",
+     "displayTextPlural": "Seconds",
+     "value": "SEC"
+    },
+    {
+     "key": "min",
+     "displayText": "Minute",
+     "position": 35,
+     "category": "Time",
+     "displayTextPlural": "Minutes",
+     "value": "MIN"
+    },
+    {
+     "key": "hr",
+     "displayText": "Hour",
+     "position": 36,
+     "category": "Time",
+     "displayTextPlural": "Hours",
+     "value": "HUR"
+    },
+    {
+     "key": "day",
+     "displayText": "Day",
+     "position": 37,
+     "category": "Time",
+     "displayTextPlural": "Days",
+     "value": "DAY"
+    },
+    {
+     "key": "wk",
+     "displayText": "Week",
+     "position": 38,
+     "category": "Time",
+     "displayTextPlural": "Weeks",
+     "value": "WEE"
+    },
+    {
+     "key": "mo",
+     "displayText": "Month",
+     "position": 39,
+     "category": "Time",
+     "displayTextPlural": "Months",
+     "value": "MON"
+    },
+    {
+     "key": "yr",
+     "displayText": "Year",
+     "position": 40,
+     "category": "Time",
+     "displayTextPlural": "Years",
+     "value": "ANN"
+    },
+    {
+     "key": "cel",
+     "displayText": "Degree Celsius",
+     "position": 41,
+     "category": "Temperature",
+     "displayTextPlural": "Degrees Celsius",
+     "value": "CEL"
+    },
+    {
+     "key": "fah",
+     "displayText": "Degree Fahrenheit",
+     "position": 42,
+     "category": "Temperature",
+     "displayTextPlural": "Degrees Fahrenheit",
+     "value": "FAH"
+    },
+    {
+     "key": "kel",
+     "displayText": "Kelvin",
+     "position": 43,
+     "category": "Temperature",
+     "displayTextPlural": "Kelvins",
+     "value": "KEL"
+    }
+   ]
+  },
+  {
+   "key": "global.phone-country-codes",
+   "displayText": "Phone country codes",
+   "dataLock": true,
+   "options": [
+    {
+     "key": "AD",
+     "displayText": "Andorra",
+     "position": 1,
+     "value": "+376"
+    },
+    {
+     "key": "AE",
+     "displayText": "United Arab Emirates",
+     "position": 2,
+     "value": "+971"
+    },
+    {
+     "key": "AF",
+     "displayText": "Afghanistan",
+     "position": 3,
+     "value": "+93"
+    },
+    {
+     "key": "AG",
+     "displayText": "Antigua and Barbuda",
+     "position": 4,
+     "value": "+1-268"
+    },
+    {
+     "key": "AI",
+     "displayText": "Anguilla",
+     "position": 5,
+     "value": "+1-264"
+    },
+    {
+     "key": "AL",
+     "displayText": "Albania",
+     "position": 6,
+     "value": "+355"
+    },
+    {
+     "key": "AM",
+     "displayText": "Armenia",
+     "position": 7,
+     "value": "+374"
+    },
+    {
+     "key": "AO",
+     "displayText": "Angola",
+     "position": 8,
+     "value": "+244"
+    },
+    {
+     "key": "AR",
+     "displayText": "Argentina",
+     "position": 9,
+     "value": "+54"
+    },
+    {
+     "key": "AS",
+     "displayText": "American Samoa",
+     "position": 10,
+     "value": "+1-684"
+    },
+    {
+     "key": "AT",
+     "displayText": "Austria",
+     "position": 11,
+     "value": "+43"
+    },
+    {
+     "key": "AU",
+     "displayText": "Australia",
+     "position": 12,
+     "value": "+61"
+    },
+    {
+     "key": "AW",
+     "displayText": "Aruba",
+     "position": 13,
+     "value": "+297"
+    },
+    {
+     "key": "AX",
+     "displayText": "Åland Islands",
+     "position": 14,
+     "value": "+358"
+    },
+    {
+     "key": "AZ",
+     "displayText": "Azerbaijan",
+     "position": 15,
+     "value": "+994"
+    },
+    {
+     "key": "BA",
+     "displayText": "Bosnia and Herzegovina",
+     "position": 16,
+     "value": "+387"
+    },
+    {
+     "key": "BB",
+     "displayText": "Barbados",
+     "position": 17,
+     "value": "+1-246"
+    },
+    {
+     "key": "BD",
+     "displayText": "Bangladesh",
+     "position": 18,
+     "value": "+880"
+    },
+    {
+     "key": "BE",
+     "displayText": "Belgium",
+     "position": 19,
+     "value": "+32"
+    },
+    {
+     "key": "BF",
+     "displayText": "Burkina Faso",
+     "position": 20,
+     "value": "+226"
+    },
+    {
+     "key": "BG",
+     "displayText": "Bulgaria",
+     "position": 21,
+     "value": "+359"
+    },
+    {
+     "key": "BH",
+     "displayText": "Bahrain",
+     "position": 22,
+     "value": "+973"
+    },
+    {
+     "key": "BI",
+     "displayText": "Burundi",
+     "position": 23,
+     "value": "+257"
+    },
+    {
+     "key": "BJ",
+     "displayText": "Benin",
+     "position": 24,
+     "value": "+229"
+    },
+    {
+     "key": "BL",
+     "displayText": "Saint Barthélemy",
+     "position": 25,
+     "value": "+590"
+    },
+    {
+     "key": "BM",
+     "displayText": "Bermuda",
+     "position": 26,
+     "value": "+1-441"
+    },
+    {
+     "key": "BN",
+     "displayText": "Brunei Darussalam",
+     "position": 27,
+     "value": "+673"
+    },
+    {
+     "key": "BO",
+     "displayText": "Bolivia",
+     "position": 28,
+     "value": "+591"
+    },
+    {
+     "key": "BQ",
+     "displayText": "Bonaire, Sint Eustatius and Saba",
+     "position": 29,
+     "value": "+599"
+    },
+    {
+     "key": "BR",
+     "displayText": "Brazil",
+     "position": 30,
+     "value": "+55"
+    },
+    {
+     "key": "BS",
+     "displayText": "Bahamas",
+     "position": 31,
+     "value": "+1-242"
+    },
+    {
+     "key": "BT",
+     "displayText": "Bhutan",
+     "position": 32,
+     "value": "+975"
+    },
+    {
+     "key": "BW",
+     "displayText": "Botswana",
+     "position": 33,
+     "value": "+267"
+    },
+    {
+     "key": "BY",
+     "displayText": "Belarus",
+     "position": 34,
+     "value": "+375"
+    },
+    {
+     "key": "BZ",
+     "displayText": "Belize",
+     "position": 35,
+     "value": "+501"
+    },
+    {
+     "key": "CA",
+     "displayText": "Canada",
+     "position": 36,
+     "value": "+1"
+    },
+    {
+     "key": "CC",
+     "displayText": "Cocos (Keeling) Islands",
+     "position": 37,
+     "value": "+61"
+    },
+    {
+     "key": "CD",
+     "displayText": "Congo, Democratic Republic of the",
+     "position": 38,
+     "value": "+243"
+    },
+    {
+     "key": "CF",
+     "displayText": "Central African Republic",
+     "position": 39,
+     "value": "+236"
+    },
+    {
+     "key": "CG",
+     "displayText": "Congo",
+     "position": 40,
+     "value": "+242"
+    },
+    {
+     "key": "CH",
+     "displayText": "Switzerland",
+     "position": 41,
+     "value": "+41"
+    },
+    {
+     "key": "CI",
+     "displayText": "Côte d'Ivoire",
+     "position": 42,
+     "value": "+225"
+    },
+    {
+     "key": "CK",
+     "displayText": "Cook Islands",
+     "position": 43,
+     "value": "+682"
+    },
+    {
+     "key": "CL",
+     "displayText": "Chile",
+     "position": 44,
+     "value": "+56"
+    },
+    {
+     "key": "CM",
+     "displayText": "Cameroon",
+     "position": 45,
+     "value": "+237"
+    },
+    {
+     "key": "CN",
+     "displayText": "China",
+     "position": 46,
+     "value": "+86"
+    },
+    {
+     "key": "CO",
+     "displayText": "Colombia",
+     "position": 47,
+     "value": "+57"
+    },
+    {
+     "key": "CR",
+     "displayText": "Costa Rica",
+     "position": 48,
+     "value": "+506"
+    },
+    {
+     "key": "CU",
+     "displayText": "Cuba",
+     "position": 49,
+     "value": "+53"
+    },
+    {
+     "key": "CV",
+     "displayText": "Cabo Verde",
+     "position": 50,
+     "value": "+238"
+    },
+    {
+     "key": "CW",
+     "displayText": "Curaçao",
+     "position": 51,
+     "value": "+599"
+    },
+    {
+     "key": "CX",
+     "displayText": "Christmas Island",
+     "position": 52,
+     "value": "+61"
+    },
+    {
+     "key": "CY",
+     "displayText": "Cyprus",
+     "position": 53,
+     "value": "+357"
+    },
+    {
+     "key": "CZ",
+     "displayText": "Czechia",
+     "position": 54,
+     "value": "+420"
+    },
+    {
+     "key": "DE",
+     "displayText": "Germany",
+     "position": 55,
+     "value": "+49"
+    },
+    {
+     "key": "DJ",
+     "displayText": "Djibouti",
+     "position": 56,
+     "value": "+253"
+    },
+    {
+     "key": "DK",
+     "displayText": "Denmark",
+     "position": 57,
+     "value": "+45"
+    },
+    {
+     "key": "DM",
+     "displayText": "Dominica",
+     "position": 58,
+     "value": "+1-767"
+    },
+    {
+     "key": "DO",
+     "displayText": "Dominican Republic",
+     "position": 59,
+     "value": "+1-809"
+    },
+    {
+     "key": "DZ",
+     "displayText": "Algeria",
+     "position": 60,
+     "value": "+213"
+    },
+    {
+     "key": "EC",
+     "displayText": "Ecuador",
+     "position": 61,
+     "value": "+593"
+    },
+    {
+     "key": "EE",
+     "displayText": "Estonia",
+     "position": 62,
+     "value": "+372"
+    },
+    {
+     "key": "EG",
+     "displayText": "Egypt",
+     "position": 63,
+     "value": "+20"
+    },
+    {
+     "key": "EH",
+     "displayText": "Western Sahara",
+     "position": 64,
+     "value": "+212"
+    },
+    {
+     "key": "ER",
+     "displayText": "Eritrea",
+     "position": 65,
+     "value": "+291"
+    },
+    {
+     "key": "ES",
+     "displayText": "Spain",
+     "position": 66,
+     "value": "+34"
+    },
+    {
+     "key": "ET",
+     "displayText": "Ethiopia",
+     "position": 67,
+     "value": "+251"
+    },
+    {
+     "key": "FI",
+     "displayText": "Finland",
+     "position": 68,
+     "value": "+358"
+    },
+    {
+     "key": "FJ",
+     "displayText": "Fiji",
+     "position": 69,
+     "value": "+679"
+    },
+    {
+     "key": "FK",
+     "displayText": "Falkland Islands",
+     "position": 70,
+     "value": "+500"
+    },
+    {
+     "key": "FM",
+     "displayText": "Micronesia",
+     "position": 71,
+     "value": "+691"
+    },
+    {
+     "key": "FO",
+     "displayText": "Faroe Islands",
+     "position": 72,
+     "value": "+298"
+    },
+    {
+     "key": "FR",
+     "displayText": "France",
+     "position": 73,
+     "value": "+33"
+    },
+    {
+     "key": "GA",
+     "displayText": "Gabon",
+     "position": 74,
+     "value": "+241"
+    },
+    {
+     "key": "GB",
+     "displayText": "United Kingdom",
+     "position": 75,
+     "value": "+44"
+    },
+    {
+     "key": "GD",
+     "displayText": "Grenada",
+     "position": 76,
+     "value": "+1-473"
+    },
+    {
+     "key": "GE",
+     "displayText": "Georgia",
+     "position": 77,
+     "value": "+995"
+    },
+    {
+     "key": "GF",
+     "displayText": "French Guiana",
+     "position": 78,
+     "value": "+594"
+    },
+    {
+     "key": "GG",
+     "displayText": "Guernsey",
+     "position": 79,
+     "value": "+44"
+    },
+    {
+     "key": "GH",
+     "displayText": "Ghana",
+     "position": 80,
+     "value": "+233"
+    },
+    {
+     "key": "GI",
+     "displayText": "Gibraltar",
+     "position": 81,
+     "value": "+350"
+    },
+    {
+     "key": "GL",
+     "displayText": "Greenland",
+     "position": 82,
+     "value": "+299"
+    },
+    {
+     "key": "GM",
+     "displayText": "Gambia",
+     "position": 83,
+     "value": "+220"
+    },
+    {
+     "key": "GN",
+     "displayText": "Guinea",
+     "position": 84,
+     "value": "+224"
+    },
+    {
+     "key": "GP",
+     "displayText": "Guadeloupe",
+     "position": 85,
+     "value": "+590"
+    },
+    {
+     "key": "GQ",
+     "displayText": "Equatorial Guinea",
+     "position": 86,
+     "value": "+240"
+    },
+    {
+     "key": "GR",
+     "displayText": "Greece",
+     "position": 87,
+     "value": "+30"
+    },
+    {
+     "key": "GT",
+     "displayText": "Guatemala",
+     "position": 88,
+     "value": "+502"
+    },
+    {
+     "key": "GU",
+     "displayText": "Guam",
+     "position": 89,
+     "value": "+1-671"
+    },
+    {
+     "key": "GW",
+     "displayText": "Guinea-Bissau",
+     "position": 90,
+     "value": "+245"
+    },
+    {
+     "key": "GY",
+     "displayText": "Guyana",
+     "position": 91,
+     "value": "+592"
+    },
+    {
+     "key": "HK",
+     "displayText": "Hong Kong",
+     "position": 92,
+     "value": "+852"
+    },
+    {
+     "key": "HN",
+     "displayText": "Honduras",
+     "position": 93,
+     "value": "+504"
+    },
+    {
+     "key": "HR",
+     "displayText": "Croatia",
+     "position": 94,
+     "value": "+385"
+    },
+    {
+     "key": "HT",
+     "displayText": "Haiti",
+     "position": 95,
+     "value": "+509"
+    },
+    {
+     "key": "HU",
+     "displayText": "Hungary",
+     "position": 96,
+     "value": "+36"
+    },
+    {
+     "key": "ID",
+     "displayText": "Indonesia",
+     "position": 97,
+     "value": "+62"
+    },
+    {
+     "key": "IE",
+     "displayText": "Ireland",
+     "position": 98,
+     "value": "+353"
+    },
+    {
+     "key": "IL",
+     "displayText": "Israel",
+     "position": 99,
+     "value": "+972"
+    },
+    {
+     "key": "IM",
+     "displayText": "Isle of Man",
+     "position": 100,
+     "value": "+44"
+    },
+    {
+     "key": "IN",
+     "displayText": "India",
+     "position": 101,
+     "value": "+91"
+    },
+    {
+     "key": "IO",
+     "displayText": "British Indian Ocean Territory",
+     "position": 102,
+     "value": "+246"
+    },
+    {
+     "key": "IQ",
+     "displayText": "Iraq",
+     "position": 103,
+     "value": "+964"
+    },
+    {
+     "key": "IR",
+     "displayText": "Iran",
+     "position": 104,
+     "value": "+98"
+    },
+    {
+     "key": "IS",
+     "displayText": "Iceland",
+     "position": 105,
+     "value": "+354"
+    },
+    {
+     "key": "IT",
+     "displayText": "Italy",
+     "position": 106,
+     "value": "+39"
+    },
+    {
+     "key": "JE",
+     "displayText": "Jersey",
+     "position": 107,
+     "value": "+44"
+    },
+    {
+     "key": "JM",
+     "displayText": "Jamaica",
+     "position": 108,
+     "value": "+1-876"
+    },
+    {
+     "key": "JO",
+     "displayText": "Jordan",
+     "position": 109,
+     "value": "+962"
+    },
+    {
+     "key": "JP",
+     "displayText": "Japan",
+     "position": 110,
+     "value": "+81"
+    },
+    {
+     "key": "KE",
+     "displayText": "Kenya",
+     "position": 111,
+     "value": "+254"
+    },
+    {
+     "key": "KG",
+     "displayText": "Kyrgyzstan",
+     "position": 112,
+     "value": "+996"
+    },
+    {
+     "key": "KH",
+     "displayText": "Cambodia",
+     "position": 113,
+     "value": "+855"
+    },
+    {
+     "key": "KI",
+     "displayText": "Kiribati",
+     "position": 114,
+     "value": "+686"
+    },
+    {
+     "key": "KM",
+     "displayText": "Comoros",
+     "position": 115,
+     "value": "+269"
+    },
+    {
+     "key": "KN",
+     "displayText": "Saint Kitts and Nevis",
+     "position": 116,
+     "value": "+1-869"
+    },
+    {
+     "key": "KP",
+     "displayText": "Korea, Democratic People's Republic of",
+     "position": 117,
+     "value": "+850"
+    },
+    {
+     "key": "KR",
+     "displayText": "Korea, Republic of",
+     "position": 118,
+     "value": "+82"
+    },
+    {
+     "key": "KW",
+     "displayText": "Kuwait",
+     "position": 119,
+     "value": "+965"
+    },
+    {
+     "key": "KY",
+     "displayText": "Cayman Islands",
+     "position": 120,
+     "value": "+1-345"
+    },
+    {
+     "key": "KZ",
+     "displayText": "Kazakhstan",
+     "position": 121,
+     "value": "+7"
+    },
+    {
+     "key": "LA",
+     "displayText": "Lao People's Democratic Republic",
+     "position": 122,
+     "value": "+856"
+    },
+    {
+     "key": "LB",
+     "displayText": "Lebanon",
+     "position": 123,
+     "value": "+961"
+    },
+    {
+     "key": "LC",
+     "displayText": "Saint Lucia",
+     "position": 124,
+     "value": "+1-758"
+    },
+    {
+     "key": "LI",
+     "displayText": "Liechtenstein",
+     "position": 125,
+     "value": "+423"
+    },
+    {
+     "key": "LK",
+     "displayText": "Sri Lanka",
+     "position": 126,
+     "value": "+94"
+    },
+    {
+     "key": "LR",
+     "displayText": "Liberia",
+     "position": 127,
+     "value": "+231"
+    },
+    {
+     "key": "LS",
+     "displayText": "Lesotho",
+     "position": 128,
+     "value": "+266"
+    },
+    {
+     "key": "LT",
+     "displayText": "Lithuania",
+     "position": 129,
+     "value": "+370"
+    },
+    {
+     "key": "LU",
+     "displayText": "Luxembourg",
+     "position": 130,
+     "value": "+352"
+    },
+    {
+     "key": "LV",
+     "displayText": "Latvia",
+     "position": 131,
+     "value": "+371"
+    },
+    {
+     "key": "LY",
+     "displayText": "Libya",
+     "position": 132,
+     "value": "+218"
+    },
+    {
+     "key": "MA",
+     "displayText": "Morocco",
+     "position": 133,
+     "value": "+212"
+    },
+    {
+     "key": "MC",
+     "displayText": "Monaco",
+     "position": 134,
+     "value": "+377"
+    },
+    {
+     "key": "MD",
+     "displayText": "Moldova",
+     "position": 135,
+     "value": "+373"
+    },
+    {
+     "key": "ME",
+     "displayText": "Montenegro",
+     "position": 136,
+     "value": "+382"
+    },
+    {
+     "key": "MF",
+     "displayText": "Saint Martin (French part)",
+     "position": 137,
+     "value": "+590"
+    },
+    {
+     "key": "MG",
+     "displayText": "Madagascar",
+     "position": 138,
+     "value": "+261"
+    },
+    {
+     "key": "MH",
+     "displayText": "Marshall Islands",
+     "position": 139,
+     "value": "+692"
+    },
+    {
+     "key": "MK",
+     "displayText": "North Macedonia",
+     "position": 140,
+     "value": "+389"
+    },
+    {
+     "key": "ML",
+     "displayText": "Mali",
+     "position": 141,
+     "value": "+223"
+    },
+    {
+     "key": "MM",
+     "displayText": "Myanmar",
+     "position": 142,
+     "value": "+95"
+    },
+    {
+     "key": "MN",
+     "displayText": "Mongolia",
+     "position": 143,
+     "value": "+976"
+    },
+    {
+     "key": "MO",
+     "displayText": "Macao",
+     "position": 144,
+     "value": "+853"
+    },
+    {
+     "key": "MP",
+     "displayText": "Northern Mariana Islands",
+     "position": 145,
+     "value": "+1-670"
+    },
+    {
+     "key": "MQ",
+     "displayText": "Martinique",
+     "position": 146,
+     "value": "+596"
+    },
+    {
+     "key": "MR",
+     "displayText": "Mauritania",
+     "position": 147,
+     "value": "+222"
+    },
+    {
+     "key": "MS",
+     "displayText": "Montserrat",
+     "position": 148,
+     "value": "+1-664"
+    },
+    {
+     "key": "MT",
+     "displayText": "Malta",
+     "position": 149,
+     "value": "+356"
+    },
+    {
+     "key": "MU",
+     "displayText": "Mauritius",
+     "position": 150,
+     "value": "+230"
+    },
+    {
+     "key": "MV",
+     "displayText": "Maldives",
+     "position": 151,
+     "value": "+960"
+    },
+    {
+     "key": "MW",
+     "displayText": "Malawi",
+     "position": 152,
+     "value": "+265"
+    },
+    {
+     "key": "MX",
+     "displayText": "Mexico",
+     "position": 153,
+     "value": "+52"
+    },
+    {
+     "key": "MY",
+     "displayText": "Malaysia",
+     "position": 154,
+     "value": "+60"
+    },
+    {
+     "key": "MZ",
+     "displayText": "Mozambique",
+     "position": 155,
+     "value": "+258"
+    },
+    {
+     "key": "NA",
+     "displayText": "Namibia",
+     "position": 156,
+     "value": "+264"
+    },
+    {
+     "key": "NC",
+     "displayText": "New Caledonia",
+     "position": 157,
+     "value": "+687"
+    },
+    {
+     "key": "NE",
+     "displayText": "Niger",
+     "position": 158,
+     "value": "+227"
+    },
+    {
+     "key": "NF",
+     "displayText": "Norfolk Island",
+     "position": 159,
+     "value": "+672"
+    },
+    {
+     "key": "NG",
+     "displayText": "Nigeria",
+     "position": 160,
+     "value": "+234"
+    },
+    {
+     "key": "NI",
+     "displayText": "Nicaragua",
+     "position": 161,
+     "value": "+505"
+    },
+    {
+     "key": "NL",
+     "displayText": "Netherlands",
+     "position": 162,
+     "value": "+31"
+    },
+    {
+     "key": "NO",
+     "displayText": "Norway",
+     "position": 163,
+     "value": "+47"
+    },
+    {
+     "key": "NP",
+     "displayText": "Nepal",
+     "position": 164,
+     "value": "+977"
+    },
+    {
+     "key": "NR",
+     "displayText": "Nauru",
+     "position": 165,
+     "value": "+674"
+    },
+    {
+     "key": "NU",
+     "displayText": "Niue",
+     "position": 166,
+     "value": "+683"
+    },
+    {
+     "key": "NZ",
+     "displayText": "New Zealand",
+     "position": 167,
+     "value": "+64"
+    },
+    {
+     "key": "OM",
+     "displayText": "Oman",
+     "position": 168,
+     "value": "+968"
+    },
+    {
+     "key": "PA",
+     "displayText": "Panama",
+     "position": 169,
+     "value": "+507"
+    },
+    {
+     "key": "PE",
+     "displayText": "Peru",
+     "position": 170,
+     "value": "+51"
+    },
+    {
+     "key": "PF",
+     "displayText": "French Polynesia",
+     "position": 171,
+     "value": "+689"
+    },
+    {
+     "key": "PG",
+     "displayText": "Papua New Guinea",
+     "position": 172,
+     "value": "+675"
+    },
+    {
+     "key": "PH",
+     "displayText": "Philippines",
+     "position": 173,
+     "value": "+63"
+    },
+    {
+     "key": "PK",
+     "displayText": "Pakistan",
+     "position": 174,
+     "value": "+92"
+    },
+    {
+     "key": "PL",
+     "displayText": "Poland",
+     "position": 175,
+     "value": "+48"
+    },
+    {
+     "key": "PM",
+     "displayText": "Saint Pierre and Miquelon",
+     "position": 176,
+     "value": "+508"
+    },
+    {
+     "key": "PR",
+     "displayText": "Puerto Rico",
+     "position": 177,
+     "value": "+1-787"
+    },
+    {
+     "key": "PS",
+     "displayText": "Palestine, State of",
+     "position": 178,
+     "value": "+970"
+    },
+    {
+     "key": "PT",
+     "displayText": "Portugal",
+     "position": 179,
+     "value": "+351"
+    },
+    {
+     "key": "PW",
+     "displayText": "Palau",
+     "position": 180,
+     "value": "+680"
+    },
+    {
+     "key": "PY",
+     "displayText": "Paraguay",
+     "position": 181,
+     "value": "+595"
+    },
+    {
+     "key": "QA",
+     "displayText": "Qatar",
+     "position": 182,
+     "value": "+974"
+    },
+    {
+     "key": "RE",
+     "displayText": "Réunion",
+     "position": 183,
+     "value": "+262"
+    },
+    {
+     "key": "RO",
+     "displayText": "Romania",
+     "position": 184,
+     "value": "+40"
+    },
+    {
+     "key": "RS",
+     "displayText": "Serbia",
+     "position": 185,
+     "value": "+381"
+    },
+    {
+     "key": "RU",
+     "displayText": "Russian Federation",
+     "position": 186,
+     "value": "+7"
+    },
+    {
+     "key": "RW",
+     "displayText": "Rwanda",
+     "position": 187,
+     "value": "+250"
+    },
+    {
+     "key": "SA",
+     "displayText": "Saudi Arabia",
+     "position": 188,
+     "value": "+966"
+    },
+    {
+     "key": "SB",
+     "displayText": "Solomon Islands",
+     "position": 189,
+     "value": "+677"
+    },
+    {
+     "key": "SC",
+     "displayText": "Seychelles",
+     "position": 190,
+     "value": "+248"
+    },
+    {
+     "key": "SD",
+     "displayText": "Sudan",
+     "position": 191,
+     "value": "+249"
+    },
+    {
+     "key": "SE",
+     "displayText": "Sweden",
+     "position": 192,
+     "value": "+46"
+    },
+    {
+     "key": "SG",
+     "displayText": "Singapore",
+     "position": 193,
+     "value": "+65"
+    },
+    {
+     "key": "SH",
+     "displayText": "Saint Helena, Ascension and Tristan da Cunha",
+     "position": 194,
+     "value": "+290"
+    },
+    {
+     "key": "SI",
+     "displayText": "Slovenia",
+     "position": 195,
+     "value": "+386"
+    },
+    {
+     "key": "SJ",
+     "displayText": "Svalbard and Jan Mayen",
+     "position": 196,
+     "value": "+47"
+    },
+    {
+     "key": "SK",
+     "displayText": "Slovakia",
+     "position": 197,
+     "value": "+421"
+    },
+    {
+     "key": "SL",
+     "displayText": "Sierra Leone",
+     "position": 198,
+     "value": "+232"
+    },
+    {
+     "key": "SM",
+     "displayText": "San Marino",
+     "position": 199,
+     "value": "+378"
+    },
+    {
+     "key": "SN",
+     "displayText": "Senegal",
+     "position": 200,
+     "value": "+221"
+    },
+    {
+     "key": "SO",
+     "displayText": "Somalia",
+     "position": 201,
+     "value": "+252"
+    },
+    {
+     "key": "SR",
+     "displayText": "Suriname",
+     "position": 202,
+     "value": "+597"
+    },
+    {
+     "key": "SS",
+     "displayText": "South Sudan",
+     "position": 203,
+     "value": "+211"
+    },
+    {
+     "key": "ST",
+     "displayText": "Sao Tome and Principe",
+     "position": 204,
+     "value": "+239"
+    },
+    {
+     "key": "SV",
+     "displayText": "El Salvador",
+     "position": 205,
+     "value": "+503"
+    },
+    {
+     "key": "SX",
+     "displayText": "Sint Maarten (Dutch part)",
+     "position": 206,
+     "value": "+1-721"
+    },
+    {
+     "key": "SY",
+     "displayText": "Syrian Arab Republic",
+     "position": 207,
+     "value": "+963"
+    },
+    {
+     "key": "SZ",
+     "displayText": "Eswatini",
+     "position": 208,
+     "value": "+268"
+    },
+    {
+     "key": "TC",
+     "displayText": "Turks and Caicos Islands",
+     "position": 209,
+     "value": "+1-649"
+    },
+    {
+     "key": "TD",
+     "displayText": "Chad",
+     "position": 210,
+     "value": "+235"
+    },
+    {
+     "key": "TG",
+     "displayText": "Togo",
+     "position": 211,
+     "value": "+228"
+    },
+    {
+     "key": "TH",
+     "displayText": "Thailand",
+     "position": 212,
+     "value": "+66"
+    },
+    {
+     "key": "TJ",
+     "displayText": "Tajikistan",
+     "position": 213,
+     "value": "+992"
+    },
+    {
+     "key": "TK",
+     "displayText": "Tokelau",
+     "position": 214,
+     "value": "+690"
+    },
+    {
+     "key": "TL",
+     "displayText": "Timor-Leste",
+     "position": 215,
+     "value": "+670"
+    },
+    {
+     "key": "TM",
+     "displayText": "Turkmenistan",
+     "position": 216,
+     "value": "+993"
+    },
+    {
+     "key": "TN",
+     "displayText": "Tunisia",
+     "position": 217,
+     "value": "+216"
+    },
+    {
+     "key": "TO",
+     "displayText": "Tonga",
+     "position": 218,
+     "value": "+676"
+    },
+    {
+     "key": "TR",
+     "displayText": "Türkiye",
+     "position": 219,
+     "value": "+90"
+    },
+    {
+     "key": "TT",
+     "displayText": "Trinidad and Tobago",
+     "position": 220,
+     "value": "+1-868"
+    },
+    {
+     "key": "TV",
+     "displayText": "Tuvalu",
+     "position": 221,
+     "value": "+688"
+    },
+    {
+     "key": "TW",
+     "displayText": "Taiwan",
+     "position": 222,
+     "value": "+886"
+    },
+    {
+     "key": "TZ",
+     "displayText": "Tanzania",
+     "position": 223,
+     "value": "+255"
+    },
+    {
+     "key": "UA",
+     "displayText": "Ukraine",
+     "position": 224,
+     "value": "+380"
+    },
+    {
+     "key": "UG",
+     "displayText": "Uganda",
+     "position": 225,
+     "value": "+256"
+    },
+    {
+     "key": "US",
+     "displayText": "United States of America",
+     "position": 226,
+     "value": "+1"
+    },
+    {
+     "key": "UY",
+     "displayText": "Uruguay",
+     "position": 227,
+     "value": "+598"
+    },
+    {
+     "key": "UZ",
+     "displayText": "Uzbekistan",
+     "position": 228,
+     "value": "+998"
+    },
+    {
+     "key": "VA",
+     "displayText": "Holy See",
+     "position": 229,
+     "value": "+39"
+    },
+    {
+     "key": "VC",
+     "displayText": "Saint Vincent and the Grenadines",
+     "position": 230,
+     "value": "+1-784"
+    },
+    {
+     "key": "VE",
+     "displayText": "Venezuela",
+     "position": 231,
+     "value": "+58"
+    },
+    {
+     "key": "VG",
+     "displayText": "Virgin Islands (British)",
+     "position": 232,
+     "value": "+1-284"
+    },
+    {
+     "key": "VI",
+     "displayText": "Virgin Islands (U.S.)",
+     "position": 233,
+     "value": "+1-340"
+    },
+    {
+     "key": "VN",
+     "displayText": "Viet Nam",
+     "position": 234,
+     "value": "+84"
+    },
+    {
+     "key": "VU",
+     "displayText": "Vanuatu",
+     "position": 235,
+     "value": "+678"
+    },
+    {
+     "key": "WF",
+     "displayText": "Wallis and Futuna",
+     "position": 236,
+     "value": "+681"
+    },
+    {
+     "key": "WS",
+     "displayText": "Samoa",
+     "position": 237,
+     "value": "+685"
+    },
+    {
+     "key": "YE",
+     "displayText": "Yemen",
+     "position": 238,
+     "value": "+967"
+    },
+    {
+     "key": "YT",
+     "displayText": "Mayotte",
+     "position": 239,
+     "value": "+262"
+    },
+    {
+     "key": "ZA",
+     "displayText": "South Africa",
+     "position": 240,
+     "value": "+27"
+    },
+    {
+     "key": "ZM",
+     "displayText": "Zambia",
+     "position": 241,
+     "value": "+260"
+    },
+    {
+     "key": "ZW",
+     "displayText": "Zimbabwe",
+     "position": 242,
+     "value": "+263"
+    }
+   ]
+  },
+  {
+   "key": "global.postal-formats",
+   "displayText": "Postal code formats",
+   "dataLock": true,
+   "options": [
+    {
+     "key": "AD",
+     "displayText": "Andorra",
+     "position": 1,
+     "value": "^AD\\d{3}$"
+    },
+    {
+     "key": "AR",
+     "displayText": "Argentina",
+     "position": 2,
+     "value": "^[A-Z]\\d{4}[A-Z]{3}$"
+    },
+    {
+     "key": "AT",
+     "displayText": "Austria",
+     "position": 3,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "AU",
+     "displayText": "Australia",
+     "position": 4,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "AZ",
+     "displayText": "Azerbaijan",
+     "position": 5,
+     "value": "^AZ ?\\d{4}$"
+    },
+    {
+     "key": "BD",
+     "displayText": "Bangladesh",
+     "position": 6,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "BE",
+     "displayText": "Belgium",
+     "position": 7,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "BG",
+     "displayText": "Bulgaria",
+     "position": 8,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "BR",
+     "displayText": "Brazil",
+     "position": 9,
+     "value": "^\\d{5}-?\\d{3}$"
+    },
+    {
+     "key": "BY",
+     "displayText": "Belarus",
+     "position": 10,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "CA",
+     "displayText": "Canada",
+     "position": 11,
+     "value": "^[A-Za-z]\\d[A-Za-z] ?\\d[A-Za-z]\\d$"
+    },
+    {
+     "key": "CH",
+     "displayText": "Switzerland",
+     "position": 12,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "CL",
+     "displayText": "Chile",
+     "position": 13,
+     "value": "^\\d{7}$"
+    },
+    {
+     "key": "CN",
+     "displayText": "China",
+     "position": 14,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "CO",
+     "displayText": "Colombia",
+     "position": 15,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "CR",
+     "displayText": "Costa Rica",
+     "position": 16,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "CY",
+     "displayText": "Cyprus",
+     "position": 17,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "CZ",
+     "displayText": "Czechia",
+     "position": 18,
+     "value": "^\\d{3} ?\\d{2}$"
+    },
+    {
+     "key": "DE",
+     "displayText": "Germany",
+     "position": 19,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "DK",
+     "displayText": "Denmark",
+     "position": 20,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "DO",
+     "displayText": "Dominican Republic",
+     "position": 21,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "DZ",
+     "displayText": "Algeria",
+     "position": 22,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "EC",
+     "displayText": "Ecuador",
+     "position": 23,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "EE",
+     "displayText": "Estonia",
+     "position": 24,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "EG",
+     "displayText": "Egypt",
+     "position": 25,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "ES",
+     "displayText": "Spain",
+     "position": 26,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "ET",
+     "displayText": "Ethiopia",
+     "position": 27,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "FI",
+     "displayText": "Finland",
+     "position": 28,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "FO",
+     "displayText": "Faroe Islands",
+     "position": 29,
+     "value": "^\\d{3}$"
+    },
+    {
+     "key": "FR",
+     "displayText": "France",
+     "position": 30,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "GB",
+     "displayText": "United Kingdom",
+     "position": 31,
+     "value": "^[A-Za-z]{1,2}\\d[A-Za-z\\d]? ?\\d[A-Za-z]{2}$"
+    },
+    {
+     "key": "GE",
+     "displayText": "Georgia",
+     "position": 32,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "GL",
+     "displayText": "Greenland",
+     "position": 33,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "GR",
+     "displayText": "Greece",
+     "position": 34,
+     "value": "^\\d{3} ?\\d{2}$"
+    },
+    {
+     "key": "GT",
+     "displayText": "Guatemala",
+     "position": 35,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "HR",
+     "displayText": "Croatia",
+     "position": 36,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "HT",
+     "displayText": "Haiti",
+     "position": 37,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "HU",
+     "displayText": "Hungary",
+     "position": 38,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "ID",
+     "displayText": "Indonesia",
+     "position": 39,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "IE",
+     "displayText": "Ireland",
+     "position": 40,
+     "value": "^[A-Za-z]\\d{2} ?[A-Za-z\\d]{4}$"
+    },
+    {
+     "key": "IL",
+     "displayText": "Israel",
+     "position": 41,
+     "value": "^\\d{7}$"
+    },
+    {
+     "key": "IN",
+     "displayText": "India",
+     "position": 42,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "IQ",
+     "displayText": "Iraq",
+     "position": 43,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "IR",
+     "displayText": "Iran",
+     "position": 44,
+     "value": "^\\d{5}-?\\d{5}$"
+    },
+    {
+     "key": "IS",
+     "displayText": "Iceland",
+     "position": 45,
+     "value": "^\\d{3}$"
+    },
+    {
+     "key": "IT",
+     "displayText": "Italy",
+     "position": 46,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "JO",
+     "displayText": "Jordan",
+     "position": 47,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "JP",
+     "displayText": "Japan",
+     "position": 48,
+     "value": "^\\d{3}-?\\d{4}$"
+    },
+    {
+     "key": "KE",
+     "displayText": "Kenya",
+     "position": 49,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "KG",
+     "displayText": "Kyrgyzstan",
+     "position": 50,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "KH",
+     "displayText": "Cambodia",
+     "position": 51,
+     "value": "^\\d{5,6}$"
+    },
+    {
+     "key": "KR",
+     "displayText": "Korea, Republic of",
+     "position": 52,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "KW",
+     "displayText": "Kuwait",
+     "position": 53,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "KZ",
+     "displayText": "Kazakhstan",
+     "position": 54,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "LA",
+     "displayText": "Lao People's Democratic Republic",
+     "position": 55,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "LB",
+     "displayText": "Lebanon",
+     "position": 56,
+     "value": "^\\d{4}( ?\\d{4})?$"
+    },
+    {
+     "key": "LI",
+     "displayText": "Liechtenstein",
+     "position": 57,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "LK",
+     "displayText": "Sri Lanka",
+     "position": 58,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "LT",
+     "displayText": "Lithuania",
+     "position": 59,
+     "value": "^LT-?\\d{5}$"
+    },
+    {
+     "key": "LU",
+     "displayText": "Luxembourg",
+     "position": 60,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "LV",
+     "displayText": "Latvia",
+     "position": 61,
+     "value": "^LV-?\\d{4}$"
+    },
+    {
+     "key": "MA",
+     "displayText": "Morocco",
+     "position": 62,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "MC",
+     "displayText": "Monaco",
+     "position": 63,
+     "value": "^980\\d{2}$"
+    },
+    {
+     "key": "MD",
+     "displayText": "Moldova",
+     "position": 64,
+     "value": "^MD-?\\d{4}$"
+    },
+    {
+     "key": "ME",
+     "displayText": "Montenegro",
+     "position": 65,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "MK",
+     "displayText": "North Macedonia",
+     "position": 66,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "MN",
+     "displayText": "Mongolia",
+     "position": 67,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "MT",
+     "displayText": "Malta",
+     "position": 68,
+     "value": "^[A-Za-z]{3} ?\\d{4}$"
+    },
+    {
+     "key": "MX",
+     "displayText": "Mexico",
+     "position": 69,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "MY",
+     "displayText": "Malaysia",
+     "position": 70,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "MZ",
+     "displayText": "Mozambique",
+     "position": 71,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "NG",
+     "displayText": "Nigeria",
+     "position": 72,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "NI",
+     "displayText": "Nicaragua",
+     "position": 73,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "NL",
+     "displayText": "Netherlands",
+     "position": 74,
+     "value": "^\\d{4} ?[A-Za-z]{2}$"
+    },
+    {
+     "key": "NO",
+     "displayText": "Norway",
+     "position": 75,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "NP",
+     "displayText": "Nepal",
+     "position": 76,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "NZ",
+     "displayText": "New Zealand",
+     "position": 77,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "PE",
+     "displayText": "Peru",
+     "position": 78,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "PH",
+     "displayText": "Philippines",
+     "position": 79,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "PK",
+     "displayText": "Pakistan",
+     "position": 80,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "PL",
+     "displayText": "Poland",
+     "position": 81,
+     "value": "^\\d{2}-?\\d{3}$"
+    },
+    {
+     "key": "PT",
+     "displayText": "Portugal",
+     "position": 82,
+     "value": "^\\d{4}-?\\d{3}$"
+    },
+    {
+     "key": "PY",
+     "displayText": "Paraguay",
+     "position": 83,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "RO",
+     "displayText": "Romania",
+     "position": 84,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "RS",
+     "displayText": "Serbia",
+     "position": 85,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "RU",
+     "displayText": "Russian Federation",
+     "position": 86,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "SA",
+     "displayText": "Saudi Arabia",
+     "position": 87,
+     "value": "^\\d{5}(-?\\d{4})?$"
+    },
+    {
+     "key": "SE",
+     "displayText": "Sweden",
+     "position": 88,
+     "value": "^\\d{3} ?\\d{2}$"
+    },
+    {
+     "key": "SG",
+     "displayText": "Singapore",
+     "position": 89,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "SI",
+     "displayText": "Slovenia",
+     "position": 90,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "SK",
+     "displayText": "Slovakia",
+     "position": 91,
+     "value": "^\\d{3} ?\\d{2}$"
+    },
+    {
+     "key": "SM",
+     "displayText": "San Marino",
+     "position": 92,
+     "value": "^4789\\d$"
+    },
+    {
+     "key": "SN",
+     "displayText": "Senegal",
+     "position": 93,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "SV",
+     "displayText": "El Salvador",
+     "position": 94,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "TH",
+     "displayText": "Thailand",
+     "position": 95,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "TN",
+     "displayText": "Tunisia",
+     "position": 96,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "TR",
+     "displayText": "Türkiye",
+     "position": 97,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "TW",
+     "displayText": "Taiwan",
+     "position": 98,
+     "value": "^\\d{3}(\\d{2,3})?$"
+    },
+    {
+     "key": "TZ",
+     "displayText": "Tanzania",
+     "position": 99,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "UA",
+     "displayText": "Ukraine",
+     "position": 100,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "US",
+     "displayText": "United States of America",
+     "position": 101,
+     "value": "^\\d{5}(-\\d{4})?$"
+    },
+    {
+     "key": "UY",
+     "displayText": "Uruguay",
+     "position": 102,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "UZ",
+     "displayText": "Uzbekistan",
+     "position": 103,
+     "value": "^\\d{6}$"
+    },
+    {
+     "key": "VA",
+     "displayText": "Holy See",
+     "position": 104,
+     "value": "^00120$"
+    },
+    {
+     "key": "VN",
+     "displayText": "Viet Nam",
+     "position": 105,
+     "value": "^\\d{5}$"
+    },
+    {
+     "key": "ZA",
+     "displayText": "South Africa",
+     "position": 106,
+     "value": "^\\d{4}$"
+    },
+    {
+     "key": "ZM",
+     "displayText": "Zambia",
+     "position": 107,
+     "value": "^\\d{5}$"
+    }
+   ]
+  },
+  {
+   "key": "global.languages",
+   "displayText": "Languages",
+   "dataLock": true,
+   "options": [
+    {
+     "key": "aa",
+     "displayText": "Afar",
+     "position": 1
+    },
+    {
+     "key": "ab",
+     "displayText": "Abkhazian",
+     "position": 2
+    },
+    {
+     "key": "ae",
+     "displayText": "Avestan",
+     "position": 3
+    },
+    {
+     "key": "af",
+     "displayText": "Afrikaans",
+     "position": 4
+    },
+    {
+     "key": "ak",
+     "displayText": "Akan",
+     "position": 5
+    },
+    {
+     "key": "am",
+     "displayText": "Amharic",
+     "position": 6
+    },
+    {
+     "key": "an",
+     "displayText": "Aragonese",
+     "position": 7
+    },
+    {
+     "key": "ar",
+     "displayText": "Arabic",
+     "position": 8
+    },
+    {
+     "key": "as",
+     "displayText": "Assamese",
+     "position": 9
+    },
+    {
+     "key": "av",
+     "displayText": "Avaric",
+     "position": 10
+    },
+    {
+     "key": "ay",
+     "displayText": "Aymara",
+     "position": 11
+    },
+    {
+     "key": "az",
+     "displayText": "Azerbaijani",
+     "position": 12
+    },
+    {
+     "key": "ba",
+     "displayText": "Bashkir",
+     "position": 13
+    },
+    {
+     "key": "be",
+     "displayText": "Belarusian",
+     "position": 14
+    },
+    {
+     "key": "bg",
+     "displayText": "Bulgarian",
+     "position": 15
+    },
+    {
+     "key": "bi",
+     "displayText": "Bislama",
+     "position": 16
+    },
+    {
+     "key": "bm",
+     "displayText": "Bambara",
+     "position": 17
+    },
+    {
+     "key": "bn",
+     "displayText": "Bengali",
+     "position": 18
+    },
+    {
+     "key": "bo",
+     "displayText": "Tibetan",
+     "position": 19
+    },
+    {
+     "key": "br",
+     "displayText": "Breton",
+     "position": 20
+    },
+    {
+     "key": "bs",
+     "displayText": "Bosnian",
+     "position": 21
+    },
+    {
+     "key": "ca",
+     "displayText": "Catalan",
+     "position": 22
+    },
+    {
+     "key": "ce",
+     "displayText": "Chechen",
+     "position": 23
+    },
+    {
+     "key": "ch",
+     "displayText": "Chamorro",
+     "position": 24
+    },
+    {
+     "key": "co",
+     "displayText": "Corsican",
+     "position": 25
+    },
+    {
+     "key": "cr",
+     "displayText": "Cree",
+     "position": 26
+    },
+    {
+     "key": "cs",
+     "displayText": "Czech",
+     "position": 27
+    },
+    {
+     "key": "cu",
+     "displayText": "Church Slavic",
+     "position": 28
+    },
+    {
+     "key": "cv",
+     "displayText": "Chuvash",
+     "position": 29
+    },
+    {
+     "key": "cy",
+     "displayText": "Welsh",
+     "position": 30
+    },
+    {
+     "key": "da",
+     "displayText": "Danish",
+     "position": 31
+    },
+    {
+     "key": "de",
+     "displayText": "German",
+     "position": 32
+    },
+    {
+     "key": "dv",
+     "displayText": "Divehi",
+     "position": 33
+    },
+    {
+     "key": "dz",
+     "displayText": "Dzongkha",
+     "position": 34
+    },
+    {
+     "key": "ee",
+     "displayText": "Ewe",
+     "position": 35
+    },
+    {
+     "key": "el",
+     "displayText": "Greek",
+     "position": 36
+    },
+    {
+     "key": "en",
+     "displayText": "English",
+     "position": 37
+    },
+    {
+     "key": "eo",
+     "displayText": "Esperanto",
+     "position": 38
+    },
+    {
+     "key": "es",
+     "displayText": "Spanish",
+     "position": 39
+    },
+    {
+     "key": "et",
+     "displayText": "Estonian",
+     "position": 40
+    },
+    {
+     "key": "eu",
+     "displayText": "Basque",
+     "position": 41
+    },
+    {
+     "key": "fa",
+     "displayText": "Persian",
+     "position": 42
+    },
+    {
+     "key": "ff",
+     "displayText": "Fulah",
+     "position": 43
+    },
+    {
+     "key": "fi",
+     "displayText": "Finnish",
+     "position": 44
+    },
+    {
+     "key": "fj",
+     "displayText": "Fijian",
+     "position": 45
+    },
+    {
+     "key": "fo",
+     "displayText": "Faroese",
+     "position": 46
+    },
+    {
+     "key": "fr",
+     "displayText": "French",
+     "position": 47
+    },
+    {
+     "key": "fy",
+     "displayText": "Western Frisian",
+     "position": 48
+    },
+    {
+     "key": "ga",
+     "displayText": "Irish",
+     "position": 49
+    },
+    {
+     "key": "gd",
+     "displayText": "Scottish Gaelic",
+     "position": 50
+    },
+    {
+     "key": "gl",
+     "displayText": "Galician",
+     "position": 51
+    },
+    {
+     "key": "gn",
+     "displayText": "Guarani",
+     "position": 52
+    },
+    {
+     "key": "gu",
+     "displayText": "Gujarati",
+     "position": 53
+    },
+    {
+     "key": "gv",
+     "displayText": "Manx",
+     "position": 54
+    },
+    {
+     "key": "ha",
+     "displayText": "Hausa",
+     "position": 55
+    },
+    {
+     "key": "he",
+     "displayText": "Hebrew",
+     "position": 56
+    },
+    {
+     "key": "hi",
+     "displayText": "Hindi",
+     "position": 57
+    },
+    {
+     "key": "ho",
+     "displayText": "Hiri Motu",
+     "position": 58
+    },
+    {
+     "key": "hr",
+     "displayText": "Croatian",
+     "position": 59
+    },
+    {
+     "key": "ht",
+     "displayText": "Haitian Creole",
+     "position": 60
+    },
+    {
+     "key": "hu",
+     "displayText": "Hungarian",
+     "position": 61
+    },
+    {
+     "key": "hy",
+     "displayText": "Armenian",
+     "position": 62
+    },
+    {
+     "key": "hz",
+     "displayText": "Herero",
+     "position": 63
+    },
+    {
+     "key": "ia",
+     "displayText": "Interlingua",
+     "position": 64
+    },
+    {
+     "key": "id",
+     "displayText": "Indonesian",
+     "position": 65
+    },
+    {
+     "key": "ie",
+     "displayText": "Interlingue",
+     "position": 66
+    },
+    {
+     "key": "ig",
+     "displayText": "Igbo",
+     "position": 67
+    },
+    {
+     "key": "ii",
+     "displayText": "Sichuan Yi",
+     "position": 68
+    },
+    {
+     "key": "ik",
+     "displayText": "Inupiaq",
+     "position": 69
+    },
+    {
+     "key": "io",
+     "displayText": "Ido",
+     "position": 70
+    },
+    {
+     "key": "is",
+     "displayText": "Icelandic",
+     "position": 71
+    },
+    {
+     "key": "it",
+     "displayText": "Italian",
+     "position": 72
+    },
+    {
+     "key": "iu",
+     "displayText": "Inuktitut",
+     "position": 73
+    },
+    {
+     "key": "ja",
+     "displayText": "Japanese",
+     "position": 74
+    },
+    {
+     "key": "jv",
+     "displayText": "Javanese",
+     "position": 75
+    },
+    {
+     "key": "ka",
+     "displayText": "Georgian",
+     "position": 76
+    },
+    {
+     "key": "kg",
+     "displayText": "Kongo",
+     "position": 77
+    },
+    {
+     "key": "ki",
+     "displayText": "Kikuyu",
+     "position": 78
+    },
+    {
+     "key": "kj",
+     "displayText": "Kuanyama",
+     "position": 79
+    },
+    {
+     "key": "kk",
+     "displayText": "Kazakh",
+     "position": 80
+    },
+    {
+     "key": "kl",
+     "displayText": "Kalaallisut",
+     "position": 81
+    },
+    {
+     "key": "km",
+     "displayText": "Khmer",
+     "position": 82
+    },
+    {
+     "key": "kn",
+     "displayText": "Kannada",
+     "position": 83
+    },
+    {
+     "key": "ko",
+     "displayText": "Korean",
+     "position": 84
+    },
+    {
+     "key": "kr",
+     "displayText": "Kanuri",
+     "position": 85
+    },
+    {
+     "key": "ks",
+     "displayText": "Kashmiri",
+     "position": 86
+    },
+    {
+     "key": "ku",
+     "displayText": "Kurdish",
+     "position": 87
+    },
+    {
+     "key": "kv",
+     "displayText": "Komi",
+     "position": 88
+    },
+    {
+     "key": "kw",
+     "displayText": "Cornish",
+     "position": 89
+    },
+    {
+     "key": "ky",
+     "displayText": "Kyrgyz",
+     "position": 90
+    },
+    {
+     "key": "la",
+     "displayText": "Latin",
+     "position": 91
+    },
+    {
+     "key": "lb",
+     "displayText": "Luxembourgish",
+     "position": 92
+    },
+    {
+     "key": "lg",
+     "displayText": "Ganda",
+     "position": 93
+    },
+    {
+     "key": "li",
+     "displayText": "Limburgish",
+     "position": 94
+    },
+    {
+     "key": "ln",
+     "displayText": "Lingala",
+     "position": 95
+    },
+    {
+     "key": "lo",
+     "displayText": "Lao",
+     "position": 96
+    },
+    {
+     "key": "lt",
+     "displayText": "Lithuanian",
+     "position": 97
+    },
+    {
+     "key": "lu",
+     "displayText": "Luba-Katanga",
+     "position": 98
+    },
+    {
+     "key": "lv",
+     "displayText": "Latvian",
+     "position": 99
+    },
+    {
+     "key": "mg",
+     "displayText": "Malagasy",
+     "position": 100
+    },
+    {
+     "key": "mh",
+     "displayText": "Marshallese",
+     "position": 101
+    },
+    {
+     "key": "mi",
+     "displayText": "Maori",
+     "position": 102
+    },
+    {
+     "key": "mk",
+     "displayText": "Macedonian",
+     "position": 103
+    },
+    {
+     "key": "ml",
+     "displayText": "Malayalam",
+     "position": 104
+    },
+    {
+     "key": "mn",
+     "displayText": "Mongolian",
+     "position": 105
+    },
+    {
+     "key": "mr",
+     "displayText": "Marathi",
+     "position": 106
+    },
+    {
+     "key": "ms",
+     "displayText": "Malay",
+     "position": 107
+    },
+    {
+     "key": "mt",
+     "displayText": "Maltese",
+     "position": 108
+    },
+    {
+     "key": "my",
+     "displayText": "Burmese",
+     "position": 109
+    },
+    {
+     "key": "na",
+     "displayText": "Nauru",
+     "position": 110
+    },
+    {
+     "key": "nb",
+     "displayText": "Norwegian Bokmål",
+     "position": 111
+    },
+    {
+     "key": "nd",
+     "displayText": "North Ndebele",
+     "position": 112
+    },
+    {
+     "key": "ne",
+     "displayText": "Nepali",
+     "position": 113
+    },
+    {
+     "key": "ng",
+     "displayText": "Ndonga",
+     "position": 114
+    },
+    {
+     "key": "nl",
+     "displayText": "Dutch",
+     "position": 115
+    },
+    {
+     "key": "nn",
+     "displayText": "Norwegian Nynorsk",
+     "position": 116
+    },
+    {
+     "key": "no",
+     "displayText": "Norwegian",
+     "position": 117
+    },
+    {
+     "key": "nr",
+     "displayText": "South Ndebele",
+     "position": 118
+    },
+    {
+     "key": "nv",
+     "displayText": "Navajo",
+     "position": 119
+    },
+    {
+     "key": "ny",
+     "displayText": "Chichewa",
+     "position": 120
+    },
+    {
+     "key": "oc",
+     "displayText": "Occitan",
+     "position": 121
+    },
+    {
+     "key": "oj",
+     "displayText": "Ojibwa",
+     "position": 122
+    },
+    {
+     "key": "om",
+     "displayText": "Oromo",
+     "position": 123
+    },
+    {
+     "key": "or",
+     "displayText": "Odia",
+     "position": 124
+    },
+    {
+     "key": "os",
+     "displayText": "Ossetian",
+     "position": 125
+    },
+    {
+     "key": "pa",
+     "displayText": "Punjabi",
+     "position": 126
+    },
+    {
+     "key": "pi",
+     "displayText": "Pali",
+     "position": 127
+    },
+    {
+     "key": "pl",
+     "displayText": "Polish",
+     "position": 128
+    },
+    {
+     "key": "ps",
+     "displayText": "Pashto",
+     "position": 129
+    },
+    {
+     "key": "pt",
+     "displayText": "Portuguese",
+     "position": 130
+    },
+    {
+     "key": "qu",
+     "displayText": "Quechua",
+     "position": 131
+    },
+    {
+     "key": "rm",
+     "displayText": "Romansh",
+     "position": 132
+    },
+    {
+     "key": "rn",
+     "displayText": "Rundi",
+     "position": 133
+    },
+    {
+     "key": "ro",
+     "displayText": "Romanian",
+     "position": 134
+    },
+    {
+     "key": "ru",
+     "displayText": "Russian",
+     "position": 135
+    },
+    {
+     "key": "rw",
+     "displayText": "Kinyarwanda",
+     "position": 136
+    },
+    {
+     "key": "sa",
+     "displayText": "Sanskrit",
+     "position": 137
+    },
+    {
+     "key": "sc",
+     "displayText": "Sardinian",
+     "position": 138
+    },
+    {
+     "key": "sd",
+     "displayText": "Sindhi",
+     "position": 139
+    },
+    {
+     "key": "se",
+     "displayText": "Northern Sami",
+     "position": 140
+    },
+    {
+     "key": "sg",
+     "displayText": "Sango",
+     "position": 141
+    },
+    {
+     "key": "si",
+     "displayText": "Sinhala",
+     "position": 142
+    },
+    {
+     "key": "sk",
+     "displayText": "Slovak",
+     "position": 143
+    },
+    {
+     "key": "sl",
+     "displayText": "Slovenian",
+     "position": 144
+    },
+    {
+     "key": "sm",
+     "displayText": "Samoan",
+     "position": 145
+    },
+    {
+     "key": "sn",
+     "displayText": "Shona",
+     "position": 146
+    },
+    {
+     "key": "so",
+     "displayText": "Somali",
+     "position": 147
+    },
+    {
+     "key": "sq",
+     "displayText": "Albanian",
+     "position": 148
+    },
+    {
+     "key": "sr",
+     "displayText": "Serbian",
+     "position": 149
+    },
+    {
+     "key": "ss",
+     "displayText": "Swati",
+     "position": 150
+    },
+    {
+     "key": "st",
+     "displayText": "Southern Sotho",
+     "position": 151
+    },
+    {
+     "key": "su",
+     "displayText": "Sundanese",
+     "position": 152
+    },
+    {
+     "key": "sv",
+     "displayText": "Swedish",
+     "position": 153
+    },
+    {
+     "key": "sw",
+     "displayText": "Swahili",
+     "position": 154
+    },
+    {
+     "key": "ta",
+     "displayText": "Tamil",
+     "position": 155
+    },
+    {
+     "key": "te",
+     "displayText": "Telugu",
+     "position": 156
+    },
+    {
+     "key": "tg",
+     "displayText": "Tajik",
+     "position": 157
+    },
+    {
+     "key": "th",
+     "displayText": "Thai",
+     "position": 158
+    },
+    {
+     "key": "ti",
+     "displayText": "Tigrinya",
+     "position": 159
+    },
+    {
+     "key": "tk",
+     "displayText": "Turkmen",
+     "position": 160
+    },
+    {
+     "key": "tl",
+     "displayText": "Tagalog",
+     "position": 161
+    },
+    {
+     "key": "tn",
+     "displayText": "Tswana",
+     "position": 162
+    },
+    {
+     "key": "to",
+     "displayText": "Tongan",
+     "position": 163
+    },
+    {
+     "key": "tr",
+     "displayText": "Turkish",
+     "position": 164
+    },
+    {
+     "key": "ts",
+     "displayText": "Tsonga",
+     "position": 165
+    },
+    {
+     "key": "tt",
+     "displayText": "Tatar",
+     "position": 166
+    },
+    {
+     "key": "tw",
+     "displayText": "Twi",
+     "position": 167
+    },
+    {
+     "key": "ty",
+     "displayText": "Tahitian",
+     "position": 168
+    },
+    {
+     "key": "ug",
+     "displayText": "Uyghur",
+     "position": 169
+    },
+    {
+     "key": "uk",
+     "displayText": "Ukrainian",
+     "position": 170
+    },
+    {
+     "key": "ur",
+     "displayText": "Urdu",
+     "position": 171
+    },
+    {
+     "key": "uz",
+     "displayText": "Uzbek",
+     "position": 172
+    },
+    {
+     "key": "ve",
+     "displayText": "Venda",
+     "position": 173
+    },
+    {
+     "key": "vi",
+     "displayText": "Vietnamese",
+     "position": 174
+    },
+    {
+     "key": "vo",
+     "displayText": "Volapük",
+     "position": 175
+    },
+    {
+     "key": "wa",
+     "displayText": "Walloon",
+     "position": 176
+    },
+    {
+     "key": "wo",
+     "displayText": "Wolof",
+     "position": 177
+    },
+    {
+     "key": "xh",
+     "displayText": "Xhosa",
+     "position": 178
+    },
+    {
+     "key": "yi",
+     "displayText": "Yiddish",
+     "position": 179
+    },
+    {
+     "key": "yo",
+     "displayText": "Yoruba",
+     "position": 180
+    },
+    {
+     "key": "za",
+     "displayText": "Zhuang",
+     "position": 181
+    },
+    {
+     "key": "zh",
+     "displayText": "Chinese",
+     "position": 182
+    },
+    {
+     "key": "zu",
+     "displayText": "Zulu",
+     "position": 183
+    }
+   ]
+  },
+  {
+   "key": "global.us-area-codes",
+   "displayText": "US area codes",
+   "dataLock": true,
+   "options": [
+    {
+     "key": "205",
+     "displayText": "205",
+     "position": 1,
+     "category": "Alabama"
+    },
+    {
+     "key": "251",
+     "displayText": "251",
+     "position": 2,
+     "category": "Alabama"
+    },
+    {
+     "key": "256",
+     "displayText": "256",
+     "position": 3,
+     "category": "Alabama"
+    },
+    {
+     "key": "334",
+     "displayText": "334",
+     "position": 4,
+     "category": "Alabama"
+    },
+    {
+     "key": "659",
+     "displayText": "659",
+     "position": 5,
+     "category": "Alabama"
+    },
+    {
+     "key": "938",
+     "displayText": "938",
+     "position": 6,
+     "category": "Alabama"
+    },
+    {
+     "key": "907",
+     "displayText": "907",
+     "position": 7,
+     "category": "Alaska"
+    },
+    {
+     "key": "480",
+     "displayText": "480",
+     "position": 8,
+     "category": "Arizona"
+    },
+    {
+     "key": "520",
+     "displayText": "520",
+     "position": 9,
+     "category": "Arizona"
+    },
+    {
+     "key": "602",
+     "displayText": "602",
+     "position": 10,
+     "category": "Arizona"
+    },
+    {
+     "key": "623",
+     "displayText": "623",
+     "position": 11,
+     "category": "Arizona"
+    },
+    {
+     "key": "928",
+     "displayText": "928",
+     "position": 12,
+     "category": "Arizona"
+    },
+    {
+     "key": "479",
+     "displayText": "479",
+     "position": 13,
+     "category": "Arkansas"
+    },
+    {
+     "key": "501",
+     "displayText": "501",
+     "position": 14,
+     "category": "Arkansas"
+    },
+    {
+     "key": "870",
+     "displayText": "870",
+     "position": 15,
+     "category": "Arkansas"
+    },
+    {
+     "key": "209",
+     "displayText": "209",
+     "position": 16,
+     "category": "California"
+    },
+    {
+     "key": "213",
+     "displayText": "213",
+     "position": 17,
+     "category": "California"
+    },
+    {
+     "key": "279",
+     "displayText": "279",
+     "position": 18,
+     "category": "California"
+    },
+    {
+     "key": "310",
+     "displayText": "310",
+     "position": 19,
+     "category": "California"
+    },
+    {
+     "key": "323",
+     "displayText": "323",
+     "position": 20,
+     "category": "California"
+    },
+    {
+     "key": "341",
+     "displayText": "341",
+     "position": 21,
+     "category": "California"
+    },
+    {
+     "key": "350",
+     "displayText": "350",
+     "position": 22,
+     "category": "California"
+    },
+    {
+     "key": "408",
+     "displayText": "408",
+     "position": 23,
+     "category": "California"
+    },
+    {
+     "key": "415",
+     "displayText": "415",
+     "position": 24,
+     "category": "California"
+    },
+    {
+     "key": "424",
+     "displayText": "424",
+     "position": 25,
+     "category": "California"
+    },
+    {
+     "key": "442",
+     "displayText": "442",
+     "position": 26,
+     "category": "California"
+    },
+    {
+     "key": "510",
+     "displayText": "510",
+     "position": 27,
+     "category": "California"
+    },
+    {
+     "key": "530",
+     "displayText": "530",
+     "position": 28,
+     "category": "California"
+    },
+    {
+     "key": "559",
+     "displayText": "559",
+     "position": 29,
+     "category": "California"
+    },
+    {
+     "key": "562",
+     "displayText": "562",
+     "position": 30,
+     "category": "California"
+    },
+    {
+     "key": "619",
+     "displayText": "619",
+     "position": 31,
+     "category": "California"
+    },
+    {
+     "key": "626",
+     "displayText": "626",
+     "position": 32,
+     "category": "California"
+    },
+    {
+     "key": "628",
+     "displayText": "628",
+     "position": 33,
+     "category": "California"
+    },
+    {
+     "key": "650",
+     "displayText": "650",
+     "position": 34,
+     "category": "California"
+    },
+    {
+     "key": "657",
+     "displayText": "657",
+     "position": 35,
+     "category": "California"
+    },
+    {
+     "key": "661",
+     "displayText": "661",
+     "position": 36,
+     "category": "California"
+    },
+    {
+     "key": "669",
+     "displayText": "669",
+     "position": 37,
+     "category": "California"
+    },
+    {
+     "key": "707",
+     "displayText": "707",
+     "position": 38,
+     "category": "California"
+    },
+    {
+     "key": "714",
+     "displayText": "714",
+     "position": 39,
+     "category": "California"
+    },
+    {
+     "key": "747",
+     "displayText": "747",
+     "position": 40,
+     "category": "California"
+    },
+    {
+     "key": "760",
+     "displayText": "760",
+     "position": 41,
+     "category": "California"
+    },
+    {
+     "key": "805",
+     "displayText": "805",
+     "position": 42,
+     "category": "California"
+    },
+    {
+     "key": "818",
+     "displayText": "818",
+     "position": 43,
+     "category": "California"
+    },
+    {
+     "key": "820",
+     "displayText": "820",
+     "position": 44,
+     "category": "California"
+    },
+    {
+     "key": "831",
+     "displayText": "831",
+     "position": 45,
+     "category": "California"
+    },
+    {
+     "key": "840",
+     "displayText": "840",
+     "position": 46,
+     "category": "California"
+    },
+    {
+     "key": "858",
+     "displayText": "858",
+     "position": 47,
+     "category": "California"
+    },
+    {
+     "key": "909",
+     "displayText": "909",
+     "position": 48,
+     "category": "California"
+    },
+    {
+     "key": "916",
+     "displayText": "916",
+     "position": 49,
+     "category": "California"
+    },
+    {
+     "key": "925",
+     "displayText": "925",
+     "position": 50,
+     "category": "California"
+    },
+    {
+     "key": "949",
+     "displayText": "949",
+     "position": 51,
+     "category": "California"
+    },
+    {
+     "key": "951",
+     "displayText": "951",
+     "position": 52,
+     "category": "California"
+    },
+    {
+     "key": "303",
+     "displayText": "303",
+     "position": 53,
+     "category": "Colorado"
+    },
+    {
+     "key": "719",
+     "displayText": "719",
+     "position": 54,
+     "category": "Colorado"
+    },
+    {
+     "key": "720",
+     "displayText": "720",
+     "position": 55,
+     "category": "Colorado"
+    },
+    {
+     "key": "970",
+     "displayText": "970",
+     "position": 56,
+     "category": "Colorado"
+    },
+    {
+     "key": "983",
+     "displayText": "983",
+     "position": 57,
+     "category": "Colorado"
+    },
+    {
+     "key": "203",
+     "displayText": "203",
+     "position": 58,
+     "category": "Connecticut"
+    },
+    {
+     "key": "475",
+     "displayText": "475",
+     "position": 59,
+     "category": "Connecticut"
+    },
+    {
+     "key": "860",
+     "displayText": "860",
+     "position": 60,
+     "category": "Connecticut"
+    },
+    {
+     "key": "959",
+     "displayText": "959",
+     "position": 61,
+     "category": "Connecticut"
+    },
+    {
+     "key": "302",
+     "displayText": "302",
+     "position": 62,
+     "category": "Delaware"
+    },
+    {
+     "key": "202",
+     "displayText": "202",
+     "position": 63,
+     "category": "District of Columbia"
+    },
+    {
+     "key": "771",
+     "displayText": "771",
+     "position": 64,
+     "category": "District of Columbia"
+    },
+    {
+     "key": "239",
+     "displayText": "239",
+     "position": 65,
+     "category": "Florida"
+    },
+    {
+     "key": "305",
+     "displayText": "305",
+     "position": 66,
+     "category": "Florida"
+    },
+    {
+     "key": "321",
+     "displayText": "321",
+     "position": 67,
+     "category": "Florida"
+    },
+    {
+     "key": "352",
+     "displayText": "352",
+     "position": 68,
+     "category": "Florida"
+    },
+    {
+     "key": "386",
+     "displayText": "386",
+     "position": 69,
+     "category": "Florida"
+    },
+    {
+     "key": "407",
+     "displayText": "407",
+     "position": 70,
+     "category": "Florida"
+    },
+    {
+     "key": "561",
+     "displayText": "561",
+     "position": 71,
+     "category": "Florida"
+    },
+    {
+     "key": "689",
+     "displayText": "689",
+     "position": 72,
+     "category": "Florida"
+    },
+    {
+     "key": "727",
+     "displayText": "727",
+     "position": 73,
+     "category": "Florida"
+    },
+    {
+     "key": "754",
+     "displayText": "754",
+     "position": 74,
+     "category": "Florida"
+    },
+    {
+     "key": "772",
+     "displayText": "772",
+     "position": 75,
+     "category": "Florida"
+    },
+    {
+     "key": "786",
+     "displayText": "786",
+     "position": 76,
+     "category": "Florida"
+    },
+    {
+     "key": "813",
+     "displayText": "813",
+     "position": 77,
+     "category": "Florida"
+    },
+    {
+     "key": "850",
+     "displayText": "850",
+     "position": 78,
+     "category": "Florida"
+    },
+    {
+     "key": "863",
+     "displayText": "863",
+     "position": 79,
+     "category": "Florida"
+    },
+    {
+     "key": "904",
+     "displayText": "904",
+     "position": 80,
+     "category": "Florida"
+    },
+    {
+     "key": "941",
+     "displayText": "941",
+     "position": 81,
+     "category": "Florida"
+    },
+    {
+     "key": "954",
+     "displayText": "954",
+     "position": 82,
+     "category": "Florida"
+    },
+    {
+     "key": "229",
+     "displayText": "229",
+     "position": 83,
+     "category": "Georgia"
+    },
+    {
+     "key": "404",
+     "displayText": "404",
+     "position": 84,
+     "category": "Georgia"
+    },
+    {
+     "key": "470",
+     "displayText": "470",
+     "position": 85,
+     "category": "Georgia"
+    },
+    {
+     "key": "478",
+     "displayText": "478",
+     "position": 86,
+     "category": "Georgia"
+    },
+    {
+     "key": "678",
+     "displayText": "678",
+     "position": 87,
+     "category": "Georgia"
+    },
+    {
+     "key": "706",
+     "displayText": "706",
+     "position": 88,
+     "category": "Georgia"
+    },
+    {
+     "key": "762",
+     "displayText": "762",
+     "position": 89,
+     "category": "Georgia"
+    },
+    {
+     "key": "770",
+     "displayText": "770",
+     "position": 90,
+     "category": "Georgia"
+    },
+    {
+     "key": "912",
+     "displayText": "912",
+     "position": 91,
+     "category": "Georgia"
+    },
+    {
+     "key": "943",
+     "displayText": "943",
+     "position": 92,
+     "category": "Georgia"
+    },
+    {
+     "key": "808",
+     "displayText": "808",
+     "position": 93,
+     "category": "Hawaii"
+    },
+    {
+     "key": "208",
+     "displayText": "208",
+     "position": 94,
+     "category": "Idaho"
+    },
+    {
+     "key": "986",
+     "displayText": "986",
+     "position": 95,
+     "category": "Idaho"
+    },
+    {
+     "key": "217",
+     "displayText": "217",
+     "position": 96,
+     "category": "Illinois"
+    },
+    {
+     "key": "224",
+     "displayText": "224",
+     "position": 97,
+     "category": "Illinois"
+    },
+    {
+     "key": "309",
+     "displayText": "309",
+     "position": 98,
+     "category": "Illinois"
+    },
+    {
+     "key": "312",
+     "displayText": "312",
+     "position": 99,
+     "category": "Illinois"
+    },
+    {
+     "key": "331",
+     "displayText": "331",
+     "position": 100,
+     "category": "Illinois"
+    },
+    {
+     "key": "447",
+     "displayText": "447",
+     "position": 101,
+     "category": "Illinois"
+    },
+    {
+     "key": "618",
+     "displayText": "618",
+     "position": 102,
+     "category": "Illinois"
+    },
+    {
+     "key": "630",
+     "displayText": "630",
+     "position": 103,
+     "category": "Illinois"
+    },
+    {
+     "key": "708",
+     "displayText": "708",
+     "position": 104,
+     "category": "Illinois"
+    },
+    {
+     "key": "773",
+     "displayText": "773",
+     "position": 105,
+     "category": "Illinois"
+    },
+    {
+     "key": "779",
+     "displayText": "779",
+     "position": 106,
+     "category": "Illinois"
+    },
+    {
+     "key": "815",
+     "displayText": "815",
+     "position": 107,
+     "category": "Illinois"
+    },
+    {
+     "key": "847",
+     "displayText": "847",
+     "position": 108,
+     "category": "Illinois"
+    },
+    {
+     "key": "872",
+     "displayText": "872",
+     "position": 109,
+     "category": "Illinois"
+    },
+    {
+     "key": "219",
+     "displayText": "219",
+     "position": 110,
+     "category": "Indiana"
+    },
+    {
+     "key": "260",
+     "displayText": "260",
+     "position": 111,
+     "category": "Indiana"
+    },
+    {
+     "key": "317",
+     "displayText": "317",
+     "position": 112,
+     "category": "Indiana"
+    },
+    {
+     "key": "463",
+     "displayText": "463",
+     "position": 113,
+     "category": "Indiana"
+    },
+    {
+     "key": "574",
+     "displayText": "574",
+     "position": 114,
+     "category": "Indiana"
+    },
+    {
+     "key": "765",
+     "displayText": "765",
+     "position": 115,
+     "category": "Indiana"
+    },
+    {
+     "key": "812",
+     "displayText": "812",
+     "position": 116,
+     "category": "Indiana"
+    },
+    {
+     "key": "930",
+     "displayText": "930",
+     "position": 117,
+     "category": "Indiana"
+    },
+    {
+     "key": "319",
+     "displayText": "319",
+     "position": 118,
+     "category": "Iowa"
+    },
+    {
+     "key": "515",
+     "displayText": "515",
+     "position": 119,
+     "category": "Iowa"
+    },
+    {
+     "key": "563",
+     "displayText": "563",
+     "position": 120,
+     "category": "Iowa"
+    },
+    {
+     "key": "641",
+     "displayText": "641",
+     "position": 121,
+     "category": "Iowa"
+    },
+    {
+     "key": "712",
+     "displayText": "712",
+     "position": 122,
+     "category": "Iowa"
+    },
+    {
+     "key": "316",
+     "displayText": "316",
+     "position": 123,
+     "category": "Kansas"
+    },
+    {
+     "key": "620",
+     "displayText": "620",
+     "position": 124,
+     "category": "Kansas"
+    },
+    {
+     "key": "785",
+     "displayText": "785",
+     "position": 125,
+     "category": "Kansas"
+    },
+    {
+     "key": "913",
+     "displayText": "913",
+     "position": 126,
+     "category": "Kansas"
+    },
+    {
+     "key": "270",
+     "displayText": "270",
+     "position": 127,
+     "category": "Kentucky"
+    },
+    {
+     "key": "364",
+     "displayText": "364",
+     "position": 128,
+     "category": "Kentucky"
+    },
+    {
+     "key": "502",
+     "displayText": "502",
+     "position": 129,
+     "category": "Kentucky"
+    },
+    {
+     "key": "606",
+     "displayText": "606",
+     "position": 130,
+     "category": "Kentucky"
+    },
+    {
+     "key": "859",
+     "displayText": "859",
+     "position": 131,
+     "category": "Kentucky"
+    },
+    {
+     "key": "225",
+     "displayText": "225",
+     "position": 132,
+     "category": "Louisiana"
+    },
+    {
+     "key": "318",
+     "displayText": "318",
+     "position": 133,
+     "category": "Louisiana"
+    },
+    {
+     "key": "337",
+     "displayText": "337",
+     "position": 134,
+     "category": "Louisiana"
+    },
+    {
+     "key": "504",
+     "displayText": "504",
+     "position": 135,
+     "category": "Louisiana"
+    },
+    {
+     "key": "985",
+     "displayText": "985",
+     "position": 136,
+     "category": "Louisiana"
+    },
+    {
+     "key": "207",
+     "displayText": "207",
+     "position": 137,
+     "category": "Maine"
+    },
+    {
+     "key": "240",
+     "displayText": "240",
+     "position": 138,
+     "category": "Maryland"
+    },
+    {
+     "key": "301",
+     "displayText": "301",
+     "position": 139,
+     "category": "Maryland"
+    },
+    {
+     "key": "410",
+     "displayText": "410",
+     "position": 140,
+     "category": "Maryland"
+    },
+    {
+     "key": "443",
+     "displayText": "443",
+     "position": 141,
+     "category": "Maryland"
+    },
+    {
+     "key": "667",
+     "displayText": "667",
+     "position": 142,
+     "category": "Maryland"
+    },
+    {
+     "key": "339",
+     "displayText": "339",
+     "position": 143,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "351",
+     "displayText": "351",
+     "position": 144,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "413",
+     "displayText": "413",
+     "position": 145,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "508",
+     "displayText": "508",
+     "position": 146,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "617",
+     "displayText": "617",
+     "position": 147,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "774",
+     "displayText": "774",
+     "position": 148,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "781",
+     "displayText": "781",
+     "position": 149,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "857",
+     "displayText": "857",
+     "position": 150,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "978",
+     "displayText": "978",
+     "position": 151,
+     "category": "Massachusetts"
+    },
+    {
+     "key": "231",
+     "displayText": "231",
+     "position": 152,
+     "category": "Michigan"
+    },
+    {
+     "key": "248",
+     "displayText": "248",
+     "position": 153,
+     "category": "Michigan"
+    },
+    {
+     "key": "269",
+     "displayText": "269",
+     "position": 154,
+     "category": "Michigan"
+    },
+    {
+     "key": "313",
+     "displayText": "313",
+     "position": 155,
+     "category": "Michigan"
+    },
+    {
+     "key": "517",
+     "displayText": "517",
+     "position": 156,
+     "category": "Michigan"
+    },
+    {
+     "key": "586",
+     "displayText": "586",
+     "position": 157,
+     "category": "Michigan"
+    },
+    {
+     "key": "616",
+     "displayText": "616",
+     "position": 158,
+     "category": "Michigan"
+    },
+    {
+     "key": "734",
+     "displayText": "734",
+     "position": 159,
+     "category": "Michigan"
+    },
+    {
+     "key": "810",
+     "displayText": "810",
+     "position": 160,
+     "category": "Michigan"
+    },
+    {
+     "key": "906",
+     "displayText": "906",
+     "position": 161,
+     "category": "Michigan"
+    },
+    {
+     "key": "947",
+     "displayText": "947",
+     "position": 162,
+     "category": "Michigan"
+    },
+    {
+     "key": "989",
+     "displayText": "989",
+     "position": 163,
+     "category": "Michigan"
+    },
+    {
+     "key": "218",
+     "displayText": "218",
+     "position": 164,
+     "category": "Minnesota"
+    },
+    {
+     "key": "320",
+     "displayText": "320",
+     "position": 165,
+     "category": "Minnesota"
+    },
+    {
+     "key": "507",
+     "displayText": "507",
+     "position": 166,
+     "category": "Minnesota"
+    },
+    {
+     "key": "612",
+     "displayText": "612",
+     "position": 167,
+     "category": "Minnesota"
+    },
+    {
+     "key": "651",
+     "displayText": "651",
+     "position": 168,
+     "category": "Minnesota"
+    },
+    {
+     "key": "763",
+     "displayText": "763",
+     "position": 169,
+     "category": "Minnesota"
+    },
+    {
+     "key": "952",
+     "displayText": "952",
+     "position": 170,
+     "category": "Minnesota"
+    },
+    {
+     "key": "228",
+     "displayText": "228",
+     "position": 171,
+     "category": "Mississippi"
+    },
+    {
+     "key": "601",
+     "displayText": "601",
+     "position": 172,
+     "category": "Mississippi"
+    },
+    {
+     "key": "662",
+     "displayText": "662",
+     "position": 173,
+     "category": "Mississippi"
+    },
+    {
+     "key": "769",
+     "displayText": "769",
+     "position": 174,
+     "category": "Mississippi"
+    },
+    {
+     "key": "314",
+     "displayText": "314",
+     "position": 175,
+     "category": "Missouri"
+    },
+    {
+     "key": "417",
+     "displayText": "417",
+     "position": 176,
+     "category": "Missouri"
+    },
+    {
+     "key": "573",
+     "displayText": "573",
+     "position": 177,
+     "category": "Missouri"
+    },
+    {
+     "key": "636",
+     "displayText": "636",
+     "position": 178,
+     "category": "Missouri"
+    },
+    {
+     "key": "660",
+     "displayText": "660",
+     "position": 179,
+     "category": "Missouri"
+    },
+    {
+     "key": "816",
+     "displayText": "816",
+     "position": 180,
+     "category": "Missouri"
+    },
+    {
+     "key": "406",
+     "displayText": "406",
+     "position": 181,
+     "category": "Montana"
+    },
+    {
+     "key": "308",
+     "displayText": "308",
+     "position": 182,
+     "category": "Nebraska"
+    },
+    {
+     "key": "402",
+     "displayText": "402",
+     "position": 183,
+     "category": "Nebraska"
+    },
+    {
+     "key": "531",
+     "displayText": "531",
+     "position": 184,
+     "category": "Nebraska"
+    },
+    {
+     "key": "702",
+     "displayText": "702",
+     "position": 185,
+     "category": "Nevada"
+    },
+    {
+     "key": "725",
+     "displayText": "725",
+     "position": 186,
+     "category": "Nevada"
+    },
+    {
+     "key": "775",
+     "displayText": "775",
+     "position": 187,
+     "category": "Nevada"
+    },
+    {
+     "key": "603",
+     "displayText": "603",
+     "position": 188,
+     "category": "New Hampshire"
+    },
+    {
+     "key": "201",
+     "displayText": "201",
+     "position": 189,
+     "category": "New Jersey"
+    },
+    {
+     "key": "551",
+     "displayText": "551",
+     "position": 190,
+     "category": "New Jersey"
+    },
+    {
+     "key": "609",
+     "displayText": "609",
+     "position": 191,
+     "category": "New Jersey"
+    },
+    {
+     "key": "640",
+     "displayText": "640",
+     "position": 192,
+     "category": "New Jersey"
+    },
+    {
+     "key": "732",
+     "displayText": "732",
+     "position": 193,
+     "category": "New Jersey"
+    },
+    {
+     "key": "848",
+     "displayText": "848",
+     "position": 194,
+     "category": "New Jersey"
+    },
+    {
+     "key": "856",
+     "displayText": "856",
+     "position": 195,
+     "category": "New Jersey"
+    },
+    {
+     "key": "862",
+     "displayText": "862",
+     "position": 196,
+     "category": "New Jersey"
+    },
+    {
+     "key": "908",
+     "displayText": "908",
+     "position": 197,
+     "category": "New Jersey"
+    },
+    {
+     "key": "973",
+     "displayText": "973",
+     "position": 198,
+     "category": "New Jersey"
+    },
+    {
+     "key": "505",
+     "displayText": "505",
+     "position": 199,
+     "category": "New Mexico"
+    },
+    {
+     "key": "575",
+     "displayText": "575",
+     "position": 200,
+     "category": "New Mexico"
+    },
+    {
+     "key": "212",
+     "displayText": "212",
+     "position": 201,
+     "category": "New York"
+    },
+    {
+     "key": "315",
+     "displayText": "315",
+     "position": 202,
+     "category": "New York"
+    },
+    {
+     "key": "332",
+     "displayText": "332",
+     "position": 203,
+     "category": "New York"
+    },
+    {
+     "key": "347",
+     "displayText": "347",
+     "position": 204,
+     "category": "New York"
+    },
+    {
+     "key": "363",
+     "displayText": "363",
+     "position": 205,
+     "category": "New York"
+    },
+    {
+     "key": "516",
+     "displayText": "516",
+     "position": 206,
+     "category": "New York"
+    },
+    {
+     "key": "518",
+     "displayText": "518",
+     "position": 207,
+     "category": "New York"
+    },
+    {
+     "key": "585",
+     "displayText": "585",
+     "position": 208,
+     "category": "New York"
+    },
+    {
+     "key": "607",
+     "displayText": "607",
+     "position": 209,
+     "category": "New York"
+    },
+    {
+     "key": "631",
+     "displayText": "631",
+     "position": 210,
+     "category": "New York"
+    },
+    {
+     "key": "646",
+     "displayText": "646",
+     "position": 211,
+     "category": "New York"
+    },
+    {
+     "key": "680",
+     "displayText": "680",
+     "position": 212,
+     "category": "New York"
+    },
+    {
+     "key": "716",
+     "displayText": "716",
+     "position": 213,
+     "category": "New York"
+    },
+    {
+     "key": "718",
+     "displayText": "718",
+     "position": 214,
+     "category": "New York"
+    },
+    {
+     "key": "838",
+     "displayText": "838",
+     "position": 215,
+     "category": "New York"
+    },
+    {
+     "key": "845",
+     "displayText": "845",
+     "position": 216,
+     "category": "New York"
+    },
+    {
+     "key": "914",
+     "displayText": "914",
+     "position": 217,
+     "category": "New York"
+    },
+    {
+     "key": "917",
+     "displayText": "917",
+     "position": 218,
+     "category": "New York"
+    },
+    {
+     "key": "929",
+     "displayText": "929",
+     "position": 219,
+     "category": "New York"
+    },
+    {
+     "key": "934",
+     "displayText": "934",
+     "position": 220,
+     "category": "New York"
+    },
+    {
+     "key": "252",
+     "displayText": "252",
+     "position": 221,
+     "category": "North Carolina"
+    },
+    {
+     "key": "336",
+     "displayText": "336",
+     "position": 222,
+     "category": "North Carolina"
+    },
+    {
+     "key": "704",
+     "displayText": "704",
+     "position": 223,
+     "category": "North Carolina"
+    },
+    {
+     "key": "743",
+     "displayText": "743",
+     "position": 224,
+     "category": "North Carolina"
+    },
+    {
+     "key": "828",
+     "displayText": "828",
+     "position": 225,
+     "category": "North Carolina"
+    },
+    {
+     "key": "910",
+     "displayText": "910",
+     "position": 226,
+     "category": "North Carolina"
+    },
+    {
+     "key": "919",
+     "displayText": "919",
+     "position": 227,
+     "category": "North Carolina"
+    },
+    {
+     "key": "980",
+     "displayText": "980",
+     "position": 228,
+     "category": "North Carolina"
+    },
+    {
+     "key": "984",
+     "displayText": "984",
+     "position": 229,
+     "category": "North Carolina"
+    },
+    {
+     "key": "701",
+     "displayText": "701",
+     "position": 230,
+     "category": "North Dakota"
+    },
+    {
+     "key": "216",
+     "displayText": "216",
+     "position": 231,
+     "category": "Ohio"
+    },
+    {
+     "key": "220",
+     "displayText": "220",
+     "position": 232,
+     "category": "Ohio"
+    },
+    {
+     "key": "234",
+     "displayText": "234",
+     "position": 233,
+     "category": "Ohio"
+    },
+    {
+     "key": "283",
+     "displayText": "283",
+     "position": 234,
+     "category": "Ohio"
+    },
+    {
+     "key": "326",
+     "displayText": "326",
+     "position": 235,
+     "category": "Ohio"
+    },
+    {
+     "key": "330",
+     "displayText": "330",
+     "position": 236,
+     "category": "Ohio"
+    },
+    {
+     "key": "380",
+     "displayText": "380",
+     "position": 237,
+     "category": "Ohio"
+    },
+    {
+     "key": "419",
+     "displayText": "419",
+     "position": 238,
+     "category": "Ohio"
+    },
+    {
+     "key": "440",
+     "displayText": "440",
+     "position": 239,
+     "category": "Ohio"
+    },
+    {
+     "key": "513",
+     "displayText": "513",
+     "position": 240,
+     "category": "Ohio"
+    },
+    {
+     "key": "567",
+     "displayText": "567",
+     "position": 241,
+     "category": "Ohio"
+    },
+    {
+     "key": "614",
+     "displayText": "614",
+     "position": 242,
+     "category": "Ohio"
+    },
+    {
+     "key": "740",
+     "displayText": "740",
+     "position": 243,
+     "category": "Ohio"
+    },
+    {
+     "key": "937",
+     "displayText": "937",
+     "position": 244,
+     "category": "Ohio"
+    },
+    {
+     "key": "405",
+     "displayText": "405",
+     "position": 245,
+     "category": "Oklahoma"
+    },
+    {
+     "key": "539",
+     "displayText": "539",
+     "position": 246,
+     "category": "Oklahoma"
+    },
+    {
+     "key": "572",
+     "displayText": "572",
+     "position": 247,
+     "category": "Oklahoma"
+    },
+    {
+     "key": "580",
+     "displayText": "580",
+     "position": 248,
+     "category": "Oklahoma"
+    },
+    {
+     "key": "918",
+     "displayText": "918",
+     "position": 249,
+     "category": "Oklahoma"
+    },
+    {
+     "key": "458",
+     "displayText": "458",
+     "position": 250,
+     "category": "Oregon"
+    },
+    {
+     "key": "503",
+     "displayText": "503",
+     "position": 251,
+     "category": "Oregon"
+    },
+    {
+     "key": "541",
+     "displayText": "541",
+     "position": 252,
+     "category": "Oregon"
+    },
+    {
+     "key": "971",
+     "displayText": "971",
+     "position": 253,
+     "category": "Oregon"
+    },
+    {
+     "key": "215",
+     "displayText": "215",
+     "position": 254,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "223",
+     "displayText": "223",
+     "position": 255,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "267",
+     "displayText": "267",
+     "position": 256,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "272",
+     "displayText": "272",
+     "position": 257,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "412",
+     "displayText": "412",
+     "position": 258,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "445",
+     "displayText": "445",
+     "position": 259,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "484",
+     "displayText": "484",
+     "position": 260,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "570",
+     "displayText": "570",
+     "position": 261,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "610",
+     "displayText": "610",
+     "position": 262,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "717",
+     "displayText": "717",
+     "position": 263,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "724",
+     "displayText": "724",
+     "position": 264,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "814",
+     "displayText": "814",
+     "position": 265,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "878",
+     "displayText": "878",
+     "position": 266,
+     "category": "Pennsylvania"
+    },
+    {
+     "key": "401",
+     "displayText": "401",
+     "position": 267,
+     "category": "Rhode Island"
+    },
+    {
+     "key": "803",
+     "displayText": "803",
+     "position": 268,
+     "category": "South Carolina"
+    },
+    {
+     "key": "839",
+     "displayText": "839",
+     "position": 269,
+     "category": "South Carolina"
+    },
+    {
+     "key": "843",
+     "displayText": "843",
+     "position": 270,
+     "category": "South Carolina"
+    },
+    {
+     "key": "854",
+     "displayText": "854",
+     "position": 271,
+     "category": "South Carolina"
+    },
+    {
+     "key": "864",
+     "displayText": "864",
+     "position": 272,
+     "category": "South Carolina"
+    },
+    {
+     "key": "605",
+     "displayText": "605",
+     "position": 273,
+     "category": "South Dakota"
+    },
+    {
+     "key": "423",
+     "displayText": "423",
+     "position": 274,
+     "category": "Tennessee"
+    },
+    {
+     "key": "615",
+     "displayText": "615",
+     "position": 275,
+     "category": "Tennessee"
+    },
+    {
+     "key": "629",
+     "displayText": "629",
+     "position": 276,
+     "category": "Tennessee"
+    },
+    {
+     "key": "731",
+     "displayText": "731",
+     "position": 277,
+     "category": "Tennessee"
+    },
+    {
+     "key": "865",
+     "displayText": "865",
+     "position": 278,
+     "category": "Tennessee"
+    },
+    {
+     "key": "901",
+     "displayText": "901",
+     "position": 279,
+     "category": "Tennessee"
+    },
+    {
+     "key": "931",
+     "displayText": "931",
+     "position": 280,
+     "category": "Tennessee"
+    },
+    {
+     "key": "210",
+     "displayText": "210",
+     "position": 281,
+     "category": "Texas"
+    },
+    {
+     "key": "214",
+     "displayText": "214",
+     "position": 282,
+     "category": "Texas"
+    },
+    {
+     "key": "254",
+     "displayText": "254",
+     "position": 283,
+     "category": "Texas"
+    },
+    {
+     "key": "281",
+     "displayText": "281",
+     "position": 284,
+     "category": "Texas"
+    },
+    {
+     "key": "325",
+     "displayText": "325",
+     "position": 285,
+     "category": "Texas"
+    },
+    {
+     "key": "346",
+     "displayText": "346",
+     "position": 286,
+     "category": "Texas"
+    },
+    {
+     "key": "361",
+     "displayText": "361",
+     "position": 287,
+     "category": "Texas"
+    },
+    {
+     "key": "409",
+     "displayText": "409",
+     "position": 288,
+     "category": "Texas"
+    },
+    {
+     "key": "430",
+     "displayText": "430",
+     "position": 289,
+     "category": "Texas"
+    },
+    {
+     "key": "432",
+     "displayText": "432",
+     "position": 290,
+     "category": "Texas"
+    },
+    {
+     "key": "469",
+     "displayText": "469",
+     "position": 291,
+     "category": "Texas"
+    },
+    {
+     "key": "512",
+     "displayText": "512",
+     "position": 292,
+     "category": "Texas"
+    },
+    {
+     "key": "682",
+     "displayText": "682",
+     "position": 293,
+     "category": "Texas"
+    },
+    {
+     "key": "713",
+     "displayText": "713",
+     "position": 294,
+     "category": "Texas"
+    },
+    {
+     "key": "726",
+     "displayText": "726",
+     "position": 295,
+     "category": "Texas"
+    },
+    {
+     "key": "737",
+     "displayText": "737",
+     "position": 296,
+     "category": "Texas"
+    },
+    {
+     "key": "806",
+     "displayText": "806",
+     "position": 297,
+     "category": "Texas"
+    },
+    {
+     "key": "817",
+     "displayText": "817",
+     "position": 298,
+     "category": "Texas"
+    },
+    {
+     "key": "830",
+     "displayText": "830",
+     "position": 299,
+     "category": "Texas"
+    },
+    {
+     "key": "832",
+     "displayText": "832",
+     "position": 300,
+     "category": "Texas"
+    },
+    {
+     "key": "903",
+     "displayText": "903",
+     "position": 301,
+     "category": "Texas"
+    },
+    {
+     "key": "915",
+     "displayText": "915",
+     "position": 302,
+     "category": "Texas"
+    },
+    {
+     "key": "936",
+     "displayText": "936",
+     "position": 303,
+     "category": "Texas"
+    },
+    {
+     "key": "940",
+     "displayText": "940",
+     "position": 304,
+     "category": "Texas"
+    },
+    {
+     "key": "945",
+     "displayText": "945",
+     "position": 305,
+     "category": "Texas"
+    },
+    {
+     "key": "956",
+     "displayText": "956",
+     "position": 306,
+     "category": "Texas"
+    },
+    {
+     "key": "972",
+     "displayText": "972",
+     "position": 307,
+     "category": "Texas"
+    },
+    {
+     "key": "979",
+     "displayText": "979",
+     "position": 308,
+     "category": "Texas"
+    },
+    {
+     "key": "385",
+     "displayText": "385",
+     "position": 309,
+     "category": "Utah"
+    },
+    {
+     "key": "435",
+     "displayText": "435",
+     "position": 310,
+     "category": "Utah"
+    },
+    {
+     "key": "801",
+     "displayText": "801",
+     "position": 311,
+     "category": "Utah"
+    },
+    {
+     "key": "802",
+     "displayText": "802",
+     "position": 312,
+     "category": "Vermont"
+    },
+    {
+     "key": "276",
+     "displayText": "276",
+     "position": 313,
+     "category": "Virginia"
+    },
+    {
+     "key": "434",
+     "displayText": "434",
+     "position": 314,
+     "category": "Virginia"
+    },
+    {
+     "key": "540",
+     "displayText": "540",
+     "position": 315,
+     "category": "Virginia"
+    },
+    {
+     "key": "571",
+     "displayText": "571",
+     "position": 316,
+     "category": "Virginia"
+    },
+    {
+     "key": "703",
+     "displayText": "703",
+     "position": 317,
+     "category": "Virginia"
+    },
+    {
+     "key": "757",
+     "displayText": "757",
+     "position": 318,
+     "category": "Virginia"
+    },
+    {
+     "key": "804",
+     "displayText": "804",
+     "position": 319,
+     "category": "Virginia"
+    },
+    {
+     "key": "206",
+     "displayText": "206",
+     "position": 320,
+     "category": "Washington"
+    },
+    {
+     "key": "253",
+     "displayText": "253",
+     "position": 321,
+     "category": "Washington"
+    },
+    {
+     "key": "360",
+     "displayText": "360",
+     "position": 322,
+     "category": "Washington"
+    },
+    {
+     "key": "425",
+     "displayText": "425",
+     "position": 323,
+     "category": "Washington"
+    },
+    {
+     "key": "509",
+     "displayText": "509",
+     "position": 324,
+     "category": "Washington"
+    },
+    {
+     "key": "564",
+     "displayText": "564",
+     "position": 325,
+     "category": "Washington"
+    },
+    {
+     "key": "304",
+     "displayText": "304",
+     "position": 326,
+     "category": "West Virginia"
+    },
+    {
+     "key": "681",
+     "displayText": "681",
+     "position": 327,
+     "category": "West Virginia"
+    },
+    {
+     "key": "262",
+     "displayText": "262",
+     "position": 328,
+     "category": "Wisconsin"
+    },
+    {
+     "key": "414",
+     "displayText": "414",
+     "position": 329,
+     "category": "Wisconsin"
+    },
+    {
+     "key": "534",
+     "displayText": "534",
+     "position": 330,
+     "category": "Wisconsin"
+    },
+    {
+     "key": "608",
+     "displayText": "608",
+     "position": 331,
+     "category": "Wisconsin"
+    },
+    {
+     "key": "715",
+     "displayText": "715",
+     "position": 332,
+     "category": "Wisconsin"
+    },
+    {
+     "key": "920",
+     "displayText": "920",
+     "position": 333,
+     "category": "Wisconsin"
+    },
+    {
+     "key": "307",
+     "displayText": "307",
+     "position": 334,
+     "category": "Wyoming"
+    },
+    {
+     "key": "684",
+     "displayText": "684",
+     "position": 335,
+     "category": "American Samoa"
+    },
+    {
+     "key": "671",
+     "displayText": "671",
+     "position": 336,
+     "category": "Guam"
+    },
+    {
+     "key": "670",
+     "displayText": "670",
+     "position": 337,
+     "category": "Northern Mariana Islands"
+    },
+    {
+     "key": "787",
+     "displayText": "787",
+     "position": 338,
+     "category": "Puerto Rico"
+    },
+    {
+     "key": "939",
+     "displayText": "939",
+     "position": 339,
+     "category": "Puerto Rico"
+    },
+    {
+     "key": "340",
+     "displayText": "340",
+     "position": 340,
+     "category": "U.S. Virgin Islands"
+    }
+   ]
+  },
+  {
+   "key": "global.subdivisions",
+   "displayText": "Country subdivisions",
+   "dataLock": true,
+   "options": [
+    {
+     "key": "US-AL",
+     "displayText": "Alabama",
+     "position": 1,
+     "category": "US",
+     "value": "AL"
+    },
+    {
+     "key": "US-AK",
+     "displayText": "Alaska",
+     "position": 2,
+     "category": "US",
+     "value": "AK"
+    },
+    {
+     "key": "US-AZ",
+     "displayText": "Arizona",
+     "position": 3,
+     "category": "US",
+     "value": "AZ"
+    },
+    {
+     "key": "US-AR",
+     "displayText": "Arkansas",
+     "position": 4,
+     "category": "US",
+     "value": "AR"
+    },
+    {
+     "key": "US-CA",
+     "displayText": "California",
+     "position": 5,
+     "category": "US",
+     "value": "CA"
+    },
+    {
+     "key": "US-CO",
+     "displayText": "Colorado",
+     "position": 6,
+     "category": "US",
+     "value": "CO"
+    },
+    {
+     "key": "US-CT",
+     "displayText": "Connecticut",
+     "position": 7,
+     "category": "US",
+     "value": "CT"
+    },
+    {
+     "key": "US-DE",
+     "displayText": "Delaware",
+     "position": 8,
+     "category": "US",
+     "value": "DE"
+    },
+    {
+     "key": "US-FL",
+     "displayText": "Florida",
+     "position": 9,
+     "category": "US",
+     "value": "FL"
+    },
+    {
+     "key": "US-GA",
+     "displayText": "Georgia",
+     "position": 10,
+     "category": "US",
+     "value": "GA"
+    },
+    {
+     "key": "US-HI",
+     "displayText": "Hawaii",
+     "position": 11,
+     "category": "US",
+     "value": "HI"
+    },
+    {
+     "key": "US-ID",
+     "displayText": "Idaho",
+     "position": 12,
+     "category": "US",
+     "value": "ID"
+    },
+    {
+     "key": "US-IL",
+     "displayText": "Illinois",
+     "position": 13,
+     "category": "US",
+     "value": "IL"
+    },
+    {
+     "key": "US-IN",
+     "displayText": "Indiana",
+     "position": 14,
+     "category": "US",
+     "value": "IN"
+    },
+    {
+     "key": "US-IA",
+     "displayText": "Iowa",
+     "position": 15,
+     "category": "US",
+     "value": "IA"
+    },
+    {
+     "key": "US-KS",
+     "displayText": "Kansas",
+     "position": 16,
+     "category": "US",
+     "value": "KS"
+    },
+    {
+     "key": "US-KY",
+     "displayText": "Kentucky",
+     "position": 17,
+     "category": "US",
+     "value": "KY"
+    },
+    {
+     "key": "US-LA",
+     "displayText": "Louisiana",
+     "position": 18,
+     "category": "US",
+     "value": "LA"
+    },
+    {
+     "key": "US-ME",
+     "displayText": "Maine",
+     "position": 19,
+     "category": "US",
+     "value": "ME"
+    },
+    {
+     "key": "US-MD",
+     "displayText": "Maryland",
+     "position": 20,
+     "category": "US",
+     "value": "MD"
+    },
+    {
+     "key": "US-MA",
+     "displayText": "Massachusetts",
+     "position": 21,
+     "category": "US",
+     "value": "MA"
+    },
+    {
+     "key": "US-MI",
+     "displayText": "Michigan",
+     "position": 22,
+     "category": "US",
+     "value": "MI"
+    },
+    {
+     "key": "US-MN",
+     "displayText": "Minnesota",
+     "position": 23,
+     "category": "US",
+     "value": "MN"
+    },
+    {
+     "key": "US-MS",
+     "displayText": "Mississippi",
+     "position": 24,
+     "category": "US",
+     "value": "MS"
+    },
+    {
+     "key": "US-MO",
+     "displayText": "Missouri",
+     "position": 25,
+     "category": "US",
+     "value": "MO"
+    },
+    {
+     "key": "US-MT",
+     "displayText": "Montana",
+     "position": 26,
+     "category": "US",
+     "value": "MT"
+    },
+    {
+     "key": "US-NE",
+     "displayText": "Nebraska",
+     "position": 27,
+     "category": "US",
+     "value": "NE"
+    },
+    {
+     "key": "US-NV",
+     "displayText": "Nevada",
+     "position": 28,
+     "category": "US",
+     "value": "NV"
+    },
+    {
+     "key": "US-NH",
+     "displayText": "New Hampshire",
+     "position": 29,
+     "category": "US",
+     "value": "NH"
+    },
+    {
+     "key": "US-NJ",
+     "displayText": "New Jersey",
+     "position": 30,
+     "category": "US",
+     "value": "NJ"
+    },
+    {
+     "key": "US-NM",
+     "displayText": "New Mexico",
+     "position": 31,
+     "category": "US",
+     "value": "NM"
+    },
+    {
+     "key": "US-NY",
+     "displayText": "New York",
+     "position": 32,
+     "category": "US",
+     "value": "NY"
+    },
+    {
+     "key": "US-NC",
+     "displayText": "North Carolina",
+     "position": 33,
+     "category": "US",
+     "value": "NC"
+    },
+    {
+     "key": "US-ND",
+     "displayText": "North Dakota",
+     "position": 34,
+     "category": "US",
+     "value": "ND"
+    },
+    {
+     "key": "US-OH",
+     "displayText": "Ohio",
+     "position": 35,
+     "category": "US",
+     "value": "OH"
+    },
+    {
+     "key": "US-OK",
+     "displayText": "Oklahoma",
+     "position": 36,
+     "category": "US",
+     "value": "OK"
+    },
+    {
+     "key": "US-OR",
+     "displayText": "Oregon",
+     "position": 37,
+     "category": "US",
+     "value": "OR"
+    },
+    {
+     "key": "US-PA",
+     "displayText": "Pennsylvania",
+     "position": 38,
+     "category": "US",
+     "value": "PA"
+    },
+    {
+     "key": "US-RI",
+     "displayText": "Rhode Island",
+     "position": 39,
+     "category": "US",
+     "value": "RI"
+    },
+    {
+     "key": "US-SC",
+     "displayText": "South Carolina",
+     "position": 40,
+     "category": "US",
+     "value": "SC"
+    },
+    {
+     "key": "US-SD",
+     "displayText": "South Dakota",
+     "position": 41,
+     "category": "US",
+     "value": "SD"
+    },
+    {
+     "key": "US-TN",
+     "displayText": "Tennessee",
+     "position": 42,
+     "category": "US",
+     "value": "TN"
+    },
+    {
+     "key": "US-TX",
+     "displayText": "Texas",
+     "position": 43,
+     "category": "US",
+     "value": "TX"
+    },
+    {
+     "key": "US-UT",
+     "displayText": "Utah",
+     "position": 44,
+     "category": "US",
+     "value": "UT"
+    },
+    {
+     "key": "US-VT",
+     "displayText": "Vermont",
+     "position": 45,
+     "category": "US",
+     "value": "VT"
+    },
+    {
+     "key": "US-VA",
+     "displayText": "Virginia",
+     "position": 46,
+     "category": "US",
+     "value": "VA"
+    },
+    {
+     "key": "US-WA",
+     "displayText": "Washington",
+     "position": 47,
+     "category": "US",
+     "value": "WA"
+    },
+    {
+     "key": "US-WV",
+     "displayText": "West Virginia",
+     "position": 48,
+     "category": "US",
+     "value": "WV"
+    },
+    {
+     "key": "US-WI",
+     "displayText": "Wisconsin",
+     "position": 49,
+     "category": "US",
+     "value": "WI"
+    },
+    {
+     "key": "US-WY",
+     "displayText": "Wyoming",
+     "position": 50,
+     "category": "US",
+     "value": "WY"
+    },
+    {
+     "key": "US-DC",
+     "displayText": "District of Columbia",
+     "position": 51,
+     "category": "US",
+     "value": "DC"
+    },
+    {
+     "key": "US-AS",
+     "displayText": "American Samoa",
+     "position": 52,
+     "category": "US",
+     "value": "AS"
+    },
+    {
+     "key": "US-GU",
+     "displayText": "Guam",
+     "position": 53,
+     "category": "US",
+     "value": "GU"
+    },
+    {
+     "key": "US-MP",
+     "displayText": "Northern Mariana Islands",
+     "position": 54,
+     "category": "US",
+     "value": "MP"
+    },
+    {
+     "key": "US-PR",
+     "displayText": "Puerto Rico",
+     "position": 55,
+     "category": "US",
+     "value": "PR"
+    },
+    {
+     "key": "US-VI",
+     "displayText": "U.S. Virgin Islands",
+     "position": 56,
+     "category": "US",
+     "value": "VI"
+    },
+    {
+     "key": "CA-AB",
+     "displayText": "Alberta",
+     "position": 57,
+     "category": "CA",
+     "value": "AB"
+    },
+    {
+     "key": "CA-BC",
+     "displayText": "British Columbia",
+     "position": 58,
+     "category": "CA",
+     "value": "BC"
+    },
+    {
+     "key": "CA-MB",
+     "displayText": "Manitoba",
+     "position": 59,
+     "category": "CA",
+     "value": "MB"
+    },
+    {
+     "key": "CA-NB",
+     "displayText": "New Brunswick",
+     "position": 60,
+     "category": "CA",
+     "value": "NB"
+    },
+    {
+     "key": "CA-NL",
+     "displayText": "Newfoundland and Labrador",
+     "position": 61,
+     "category": "CA",
+     "value": "NL"
+    },
+    {
+     "key": "CA-NS",
+     "displayText": "Nova Scotia",
+     "position": 62,
+     "category": "CA",
+     "value": "NS"
+    },
+    {
+     "key": "CA-NT",
+     "displayText": "Northwest Territories",
+     "position": 63,
+     "category": "CA",
+     "value": "NT"
+    },
+    {
+     "key": "CA-NU",
+     "displayText": "Nunavut",
+     "position": 64,
+     "category": "CA",
+     "value": "NU"
+    },
+    {
+     "key": "CA-ON",
+     "displayText": "Ontario",
+     "position": 65,
+     "category": "CA",
+     "value": "ON"
+    },
+    {
+     "key": "CA-PE",
+     "displayText": "Prince Edward Island",
+     "position": 66,
+     "category": "CA",
+     "value": "PE"
+    },
+    {
+     "key": "CA-QC",
+     "displayText": "Quebec",
+     "position": 67,
+     "category": "CA",
+     "value": "QC"
+    },
+    {
+     "key": "CA-SK",
+     "displayText": "Saskatchewan",
+     "position": 68,
+     "category": "CA",
+     "value": "SK"
+    },
+    {
+     "key": "CA-YT",
+     "displayText": "Yukon",
+     "position": 69,
+     "category": "CA",
+     "value": "YT"
+    }
+   ]
+  },
+  {
+   "key": "global.honorifics",
+   "displayText": "Honorifics",
+   "dataLock": false,
+   "options": [
+    {
+     "key": "Mr",
+     "displayText": "Mr.",
+     "position": 1
+    },
+    {
+     "key": "Mrs",
+     "displayText": "Mrs.",
+     "position": 2
+    },
+    {
+     "key": "Ms",
+     "displayText": "Ms.",
+     "position": 3
+    },
+    {
+     "key": "Mx",
+     "displayText": "Mx.",
+     "position": 4
+    },
+    {
+     "key": "Dr",
+     "displayText": "Dr.",
+     "position": 5
+    },
+    {
+     "key": "Prof",
+     "displayText": "Prof.",
+     "position": 6
+    },
+    {
+     "key": "Rev",
+     "displayText": "Rev.",
+     "position": 7
+    },
+    {
+     "key": "Hon",
+     "displayText": "Hon.",
+     "position": 8
+    },
+    {
+     "key": "Sir",
+     "displayText": "Sir",
+     "position": 9
+    },
+    {
+     "key": "Dame",
+     "displayText": "Dame",
+     "position": 10
+    }
+   ]
+  },
+  {
+   "key": "global.name-suffixes",
+   "displayText": "Name suffixes",
+   "dataLock": false,
+   "options": [
+    {
+     "key": "Jr",
+     "displayText": "Jr.",
+     "position": 1
+    },
+    {
+     "key": "Sr",
+     "displayText": "Sr.",
+     "position": 2
+    },
+    {
+     "key": "II",
+     "displayText": "II",
+     "position": 3
+    },
+    {
+     "key": "III",
+     "displayText": "III",
+     "position": 4
+    },
+    {
+     "key": "IV",
+     "displayText": "IV",
+     "position": 5
+    },
+    {
+     "key": "V",
+     "displayText": "V",
+     "position": 6
+    },
+    {
+     "key": "MD",
+     "displayText": "M.D.",
+     "position": 7
+    },
+    {
+     "key": "PhD",
+     "displayText": "Ph.D.",
+     "position": 8
+    },
+    {
+     "key": "Esq",
+     "displayText": "Esq.",
+     "position": 9
+    },
+    {
+     "key": "CPA",
+     "displayText": "CPA",
+     "position": 10
+    }
+   ]
+  },
+  {
+   "key": "items.base-classification",
+   "displayText": "Item base classification",
+   "dataLock": true,
+   "options": []
+  }
+ ]
+}

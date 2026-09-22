@@ -1,0 +1,464 @@
+{
+ "version": 1,
+ "maps": [
+  {
+   "country": "US",
+   "levels": [
+    {
+     "level": 1,
+     "label": "Country",
+     "isList": true,
+     "required": true,
+     "onForm": true
+    },
+    {
+     "level": 2,
+     "label": "State",
+     "isList": true,
+     "required": true,
+     "onForm": true
+    },
+    {
+     "level": 3,
+     "label": "County",
+     "isList": true,
+     "required": false,
+     "onForm": false
+    },
+    {
+     "level": 4,
+     "label": "City",
+     "isList": false,
+     "required": true,
+     "onForm": true
+    }
+   ],
+   "fields": [
+    {
+     "field": "Line1",
+     "label": "Address line 1",
+     "order": 1,
+     "required": true
+    },
+    {
+     "field": "Line2",
+     "label": "Address line 2",
+     "order": 2,
+     "required": false
+    },
+    {
+     "field": "Locality",
+     "label": "City",
+     "order": 3,
+     "required": true
+    },
+    {
+     "field": "Level2",
+     "label": "State",
+     "order": 4,
+     "required": true
+    },
+    {
+     "field": "PostalCode",
+     "label": "ZIP",
+     "order": 5,
+     "required": true
+    },
+    {
+     "field": "Level1",
+     "label": "Country",
+     "order": 6,
+     "required": true
+    }
+   ],
+   "postalCodePattern": "^\\d{5}(-\\d{4})?$",
+   "postalCodeLabel": "ZIP",
+   "localityLevel": 4
+  },
+  {
+   "country": "GB",
+   "levels": [
+    {
+     "level": 1,
+     "label": "Country",
+     "isList": true,
+     "required": true,
+     "onForm": true
+    },
+    {
+     "level": 2,
+     "label": "Nation",
+     "isList": true,
+     "required": false,
+     "onForm": false
+    },
+    {
+     "level": 3,
+     "label": "County",
+     "isList": true,
+     "required": false,
+     "onForm": true
+    },
+    {
+     "level": 4,
+     "label": "Post town",
+     "isList": false,
+     "required": true,
+     "onForm": true
+    }
+   ],
+   "fields": [
+    {
+     "field": "Line1",
+     "label": "Address line 1",
+     "order": 1,
+     "required": true
+    },
+    {
+     "field": "Line2",
+     "label": "Address line 2",
+     "order": 2,
+     "required": false
+    },
+    {
+     "field": "Locality",
+     "label": "Post town",
+     "order": 3,
+     "required": true
+    },
+    {
+     "field": "Level3",
+     "label": "County",
+     "order": 4,
+     "required": false
+    },
+    {
+     "field": "PostalCode",
+     "label": "Postcode",
+     "order": 5,
+     "required": true
+    },
+    {
+     "field": "Level1",
+     "label": "Country",
+     "order": 6,
+     "required": true
+    }
+   ],
+   "postalCodePattern": "^[A-Za-z]{1,2}\\d[A-Za-z\\d]? ?\\d[A-Za-z]{2}$",
+   "postalCodeLabel": "Postcode",
+   "localityLevel": 4
+  },
+  {
+   "country": "FR",
+   "levels": [
+    {
+     "level": 1,
+     "label": "Pays",
+     "isList": true,
+     "required": true,
+     "onForm": true
+    },
+    {
+     "level": 2,
+     "label": "Région",
+     "isList": true,
+     "required": false,
+     "onForm": false
+    },
+    {
+     "level": 3,
+     "label": "Département",
+     "isList": true,
+     "required": false,
+     "onForm": false
+    },
+    {
+     "level": 4,
+     "label": "Commune",
+     "isList": false,
+     "required": true,
+     "onForm": true
+    }
+   ],
+   "fields": [
+    {
+     "field": "Line1",
+     "label": "Ligne 1",
+     "order": 1,
+     "required": true
+    },
+    {
+     "field": "Line2",
+     "label": "Ligne 2",
+     "order": 2,
+     "required": false
+    },
+    {
+     "field": "PostalCode",
+     "label": "Code postal",
+     "order": 3,
+     "required": true
+    },
+    {
+     "field": "Locality",
+     "label": "Commune",
+     "order": 4,
+     "required": true
+    },
+    {
+     "field": "Level1",
+     "label": "Pays",
+     "order": 5,
+     "required": true
+    }
+   ],
+   "postalCodePattern": "^\\d{5}$",
+   "postalCodeLabel": "Code postal",
+   "localityLevel": 4
+  },
+  {
+   "country": "CA",
+   "levels": [
+    {
+     "level": 1,
+     "label": "Country",
+     "isList": true,
+     "required": true,
+     "onForm": true
+    },
+    {
+     "level": 2,
+     "label": "Province",
+     "isList": true,
+     "required": true,
+     "onForm": true
+    },
+    {
+     "level": 3,
+     "label": "Municipality",
+     "isList": false,
+     "required": true,
+     "onForm": true
+    }
+   ],
+   "fields": [
+    {
+     "field": "Line1",
+     "label": "Address line 1",
+     "order": 1,
+     "required": true
+    },
+    {
+     "field": "Line2",
+     "label": "Address line 2",
+     "order": 2,
+     "required": false
+    },
+    {
+     "field": "Locality",
+     "label": "Municipality",
+     "order": 3,
+     "required": true
+    },
+    {
+     "field": "Level2",
+     "label": "Province",
+     "order": 4,
+     "required": true
+    },
+    {
+     "field": "PostalCode",
+     "label": "Postal code",
+     "order": 5,
+     "required": true
+    },
+    {
+     "field": "Level1",
+     "label": "Country",
+     "order": 6,
+     "required": true
+    }
+   ],
+   "postalCodePattern": "^[A-Za-z]\\d[A-Za-z] ?\\d[A-Za-z]\\d$",
+   "postalCodeLabel": "Postal code",
+   "localityLevel": 3
+  },
+  {
+   "country": "*",
+   "levels": [
+    {
+     "level": 1,
+     "label": "Country",
+     "isList": true,
+     "required": true,
+     "onForm": true
+    },
+    {
+     "level": 2,
+     "label": "Region",
+     "isList": true,
+     "required": false,
+     "onForm": true
+    },
+    {
+     "level": 3,
+     "label": "Locality",
+     "isList": false,
+     "required": true,
+     "onForm": true
+    }
+   ],
+   "fields": [
+    {
+     "field": "Line1",
+     "label": "Address line 1",
+     "order": 1,
+     "required": true
+    },
+    {
+     "field": "Line2",
+     "label": "Address line 2",
+     "order": 2,
+     "required": false
+    },
+    {
+     "field": "Locality",
+     "label": "City / locality",
+     "order": 3,
+     "required": true
+    },
+    {
+     "field": "Level2",
+     "label": "Region",
+     "order": 4,
+     "required": false
+    },
+    {
+     "field": "PostalCode",
+     "label": "Postal code",
+     "order": 5,
+     "required": false
+    },
+    {
+     "field": "Level1",
+     "label": "Country",
+     "order": 6,
+     "required": true
+    }
+   ],
+   "postalCodePattern": null,
+   "postalCodeLabel": "Postal code",
+   "localityLevel": 3
+  }
+ ],
+ "postalPatterns": {
+  "AD": "^AD\\d{3}$",
+  "AR": "^[A-Z]\\d{4}[A-Z]{3}$",
+  "AT": "^\\d{4}$",
+  "AU": "^\\d{4}$",
+  "AZ": "^AZ ?\\d{4}$",
+  "BD": "^\\d{4}$",
+  "BE": "^\\d{4}$",
+  "BG": "^\\d{4}$",
+  "BR": "^\\d{5}-?\\d{3}$",
+  "BY": "^\\d{6}$",
+  "CA": "^[A-Za-z]\\d[A-Za-z] ?\\d[A-Za-z]\\d$",
+  "CH": "^\\d{4}$",
+  "CL": "^\\d{7}$",
+  "CN": "^\\d{6}$",
+  "CO": "^\\d{6}$",
+  "CR": "^\\d{5}$",
+  "CY": "^\\d{4}$",
+  "CZ": "^\\d{3} ?\\d{2}$",
+  "DE": "^\\d{5}$",
+  "DK": "^\\d{4}$",
+  "DO": "^\\d{5}$",
+  "DZ": "^\\d{5}$",
+  "EC": "^\\d{6}$",
+  "EE": "^\\d{5}$",
+  "EG": "^\\d{5}$",
+  "ES": "^\\d{5}$",
+  "ET": "^\\d{4}$",
+  "FI": "^\\d{5}$",
+  "FO": "^\\d{3}$",
+  "FR": "^\\d{5}$",
+  "GB": "^[A-Za-z]{1,2}\\d[A-Za-z\\d]? ?\\d[A-Za-z]{2}$",
+  "GE": "^\\d{4}$",
+  "GL": "^\\d{4}$",
+  "GR": "^\\d{3} ?\\d{2}$",
+  "GT": "^\\d{5}$",
+  "HR": "^\\d{5}$",
+  "HT": "^\\d{4}$",
+  "HU": "^\\d{4}$",
+  "ID": "^\\d{5}$",
+  "IE": "^[A-Za-z]\\d{2} ?[A-Za-z\\d]{4}$",
+  "IL": "^\\d{7}$",
+  "IN": "^\\d{6}$",
+  "IQ": "^\\d{5}$",
+  "IR": "^\\d{5}-?\\d{5}$",
+  "IS": "^\\d{3}$",
+  "IT": "^\\d{5}$",
+  "JO": "^\\d{5}$",
+  "JP": "^\\d{3}-?\\d{4}$",
+  "KE": "^\\d{5}$",
+  "KG": "^\\d{6}$",
+  "KH": "^\\d{5,6}$",
+  "KR": "^\\d{5}$",
+  "KW": "^\\d{5}$",
+  "KZ": "^\\d{6}$",
+  "LA": "^\\d{5}$",
+  "LB": "^\\d{4}( ?\\d{4})?$",
+  "LI": "^\\d{4}$",
+  "LK": "^\\d{5}$",
+  "LT": "^LT-?\\d{5}$",
+  "LU": "^\\d{4}$",
+  "LV": "^LV-?\\d{4}$",
+  "MA": "^\\d{5}$",
+  "MC": "^980\\d{2}$",
+  "MD": "^MD-?\\d{4}$",
+  "ME": "^\\d{5}$",
+  "MK": "^\\d{4}$",
+  "MN": "^\\d{5}$",
+  "MT": "^[A-Za-z]{3} ?\\d{4}$",
+  "MX": "^\\d{5}$",
+  "MY": "^\\d{5}$",
+  "MZ": "^\\d{4}$",
+  "NG": "^\\d{6}$",
+  "NI": "^\\d{5}$",
+  "NL": "^\\d{4} ?[A-Za-z]{2}$",
+  "NO": "^\\d{4}$",
+  "NP": "^\\d{5}$",
+  "NZ": "^\\d{4}$",
+  "PE": "^\\d{5}$",
+  "PH": "^\\d{4}$",
+  "PK": "^\\d{5}$",
+  "PL": "^\\d{2}-?\\d{3}$",
+  "PT": "^\\d{4}-?\\d{3}$",
+  "PY": "^\\d{4}$",
+  "RO": "^\\d{6}$",
+  "RS": "^\\d{5}$",
+  "RU": "^\\d{6}$",
+  "SA": "^\\d{5}(-?\\d{4})?$",
+  "SE": "^\\d{3} ?\\d{2}$",
+  "SG": "^\\d{6}$",
+  "SI": "^\\d{4}$",
+  "SK": "^\\d{3} ?\\d{2}$",
+  "SM": "^4789\\d$",
+  "SN": "^\\d{5}$",
+  "SV": "^\\d{4}$",
+  "TH": "^\\d{5}$",
+  "TN": "^\\d{4}$",
+  "TR": "^\\d{5}$",
+  "TW": "^\\d{3}(\\d{2,3})?$",
+  "TZ": "^\\d{5}$",
+  "UA": "^\\d{5}$",
+  "US": "^\\d{5}(-\\d{4})?$",
+  "UY": "^\\d{5}$",
+  "UZ": "^\\d{6}$",
+  "VA": "^00120$",
+  "VN": "^\\d{5}$",
+  "ZA": "^\\d{4}$",
+  "ZM": "^\\d{5}$"
+ }
+}

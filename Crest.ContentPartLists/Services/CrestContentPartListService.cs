@@ -10,18 +10,25 @@ using OrchardCore.ContentManagement.Metadata;
 using OrchardCore.ContentManagement.Metadata.Models;
 using OrchardCore.ContentManagement.Metadata.Settings;
 using OrchardCore.ContentManagement.Records;
+using Crest.Global.Lists;
 using YesSql;
 
 namespace Crest.Services;
 
-// Content Part Lists are stored as content items whose CrestContentPartListPart contains the
-// Option items directly, so tenants edit them like any other content and Orchard's own
-// version history records who changed what - no parallel override store, and no
-// dependency on the Taxonomies module.
+// Two kinds of list behind one contract (plans/global.md):
+//  - TENANT lists are content items whose CrestContentPartListPart holds the Option items
+//    directly; tenants edit them like any other content.
+//  - GLOBAL-BACKED lists have their standard rows in the tenant-less global store. The
+//    tenant's content item for such a key - created lazily on the first tenant write -
+//    holds only the tenant's ADDITIONS plus an Overrides map (label, plural, hidden,
+//    position) over the standard rows. Standard rows get deterministic ids
+//    (GlobalLists.OptionId) so pickers can store them without a tenant content item.
+// Consumers see one merged CrestContentPartListModel either way.
 public sealed class CrestContentPartListService(
     ISession session,
     IContentManager contentManager,
-    IContentDefinitionManager contentDefinitionManager) : ICrestContentPartListService
+    IContentDefinitionManager contentDefinitionManager,
+    IGlobalListReader globalLists) : ICrestContentPartListService
 {
     // Per-request memo only. Sets are read repeatedly while resolving a document's
     // lines, but they are content items a tenant may edit at any time, so caching
@@ -39,9 +46,19 @@ public sealed class CrestContentPartListService(
             .Query<ContentItem, ContentItemIndex>(index =>
                 index.ContentType == CrestContentPartListMigrations.ContentPartListContentType && index.Latest)
             .ListAsync();
+        var itemsByKey = items
+            .GroupBy(item => CrestContentPartListRules.NormalizeKey(item.As<CrestContentPartListPart>()?.Key), CrestContentPartListRules.KeyComparer)
+            .ToDictionary(group => group.Key, group => group.First(), CrestContentPartListRules.KeyComparer);
 
         var models = new List<CrestContentPartListModel>();
-        foreach (var item in items)
+        foreach (var global in await globalLists.ListAsync(cancellationToken))
+        {
+            var tenantItem = itemsByKey.GetValueOrDefault(global.Key);
+            itemsByKey.Remove(global.Key);
+            models.Add(Merge(global, tenantItem, tenantItem is null ? [] : await GetOptionFieldsAsync(tenantItem)));
+        }
+
+        foreach (var item in itemsByKey.Values)
         {
             models.Add(ToModel(item, await GetOptionFieldsAsync(item)));
         }
@@ -63,7 +80,17 @@ public sealed class CrestContentPartListService(
         }
 
         var item = await FindListItemAsync(normalized);
-        var model = item is null ? null : ToModel(item, await GetOptionFieldsAsync(item));
+        var global = await globalLists.GetAsync(normalized, cancellationToken);
+        CrestContentPartListModel? model;
+        if (global is not null)
+        {
+            model = Merge(global, item, item is null ? [] : await GetOptionFieldsAsync(item));
+        }
+        else
+        {
+            model = item is null ? null : ToModel(item, await GetOptionFieldsAsync(item));
+        }
+
         _byKey[normalized] = model;
         return model;
     }
@@ -97,6 +124,31 @@ public sealed class CrestContentPartListService(
         if (listKey.Length == 0)
         {
             throw new ArgumentException("A seeded content part list needs a key.", nameof(seed));
+        }
+
+        var global = await globalLists.GetAsync(listKey, cancellationToken);
+        if (global is not null)
+        {
+            // The standard rows are the global store's; a module seed can only layer
+            // tenant-store additions over them, and only for keys the standard lacks.
+            var merged = await GetAsync(listKey, cancellationToken) ?? throw new InvalidOperationException($"Global list '{listKey}' could not be read.");
+            var additions = CrestContentPartListRules.PlanSeed(seed, merged.Options);
+            if (additions.HasChanges)
+            {
+                var tenantItem = await FindListItemAsync(listKey) ?? await CreateListItemAsync(listKey, global.DisplayText, CrestOptionSources.Module);
+                var next = merged.Options.Length == 0 ? 0 : merged.Options.Max(option => option.Position) + 1;
+                foreach (var addition in additions.Additions)
+                {
+                    var position = addition.Position != 0 ? addition.Position : next++;
+                    await AppendOptionAsync(tenantItem, addition.Key, addition.DisplayText, position, CrestOptionSources.Module, addition.Category, addition.DisplayTextPlural, addition.Value);
+                }
+
+                await contentManager.UpdateAsync(tenantItem);
+                await contentManager.PublishAsync(tenantItem);
+            }
+
+            _byKey.Remove(listKey);
+            return (await GetAsync(listKey, cancellationToken))!;
         }
 
         var listItem = await FindListItemAsync(listKey)
@@ -161,8 +213,11 @@ public sealed class CrestContentPartListService(
 
     public async Task<CrestOptionModel> AddOptionAsync(string listKey, string optionKey, string displayText, int position = 0, string? category = null, string? displayTextPlural = null, string? value = null, IReadOnlyDictionary<string, string?>? fields = null, CancellationToken cancellationToken = default)
     {
-        var listItem = await RequireListItemAsync(listKey);
-        var validation = CrestContentPartListRules.ValidateKey(optionKey, ToModel(listItem).Options.Select(option => option.Key));
+        var merged = await GetAsync(listKey, cancellationToken)
+            ?? throw new InvalidOperationException($"There is no content part list with the key '{listKey}'.");
+        var listItem = await FindListItemAsync(merged.Key)
+            ?? await CreateListItemAsync(merged.Key, merged.DisplayText, CrestOptionSources.Module);
+        var validation = CrestContentPartListRules.ValidateKey(optionKey, merged.Options.Select(option => option.Key));
         if (!validation.IsValid)
         {
             throw new InvalidOperationException(validation.Error);
@@ -185,9 +240,46 @@ public sealed class CrestContentPartListService(
 
     public async Task<CrestOptionModel> UpdateOptionAsync(string listKey, string optionKey, string? displayText, int? position, bool? hidden, string? category = null, string? displayTextPlural = null, string? value = null, IReadOnlyDictionary<string, string?>? fields = null, CancellationToken cancellationToken = default)
     {
+        var normalized = CrestContentPartListRules.NormalizeKey(optionKey);
+        var global = await globalLists.GetAsync(CrestContentPartListRules.NormalizeKey(listKey), cancellationToken);
+        if (global is not null && global.Options.Any(candidate => CrestContentPartListRules.KeyComparer.Equals(candidate.Key, normalized)))
+        {
+            // A standard row: the tenant may change how it LOOKS, never what it IS.
+            if (category is not null || value is not null || fields is { Count: > 0 })
+            {
+                throw new InvalidOperationException($"'{optionKey}' is a standard option of the global list '{listKey}'; its category, value and data fields cannot be changed by a tenant. Label, plural, hidden and position can.");
+            }
+
+            var tenantItem = await FindListItemAsync(global.Key) ?? await CreateListItemAsync(global.Key, global.DisplayText, CrestOptionSources.Module);
+            tenantItem.Alter<CrestContentPartListPart>(part =>
+            {
+                if (!part.Overrides.TryGetValue(normalized, out var existing))
+                {
+                    existing = new CrestOptionOverride();
+                }
+
+                existing.DisplayText = displayText ?? existing.DisplayText;
+                existing.DisplayTextPlural = displayTextPlural is null ? existing.DisplayTextPlural : (string.IsNullOrWhiteSpace(displayTextPlural) ? null : displayTextPlural.Trim());
+                existing.Hidden = hidden ?? existing.Hidden;
+                existing.Position = position ?? existing.Position;
+                if (existing.IsEmpty)
+                {
+                    part.Overrides.Remove(normalized);
+                }
+                else
+                {
+                    part.Overrides[normalized] = existing;
+                }
+            });
+            await contentManager.UpdateAsync(tenantItem);
+            await contentManager.PublishAsync(tenantItem);
+            _byKey.Remove(global.Key);
+            var model = (await GetAsync(global.Key, cancellationToken))!;
+            return model.Options.First(option => CrestContentPartListRules.KeyComparer.Equals(option.Key, normalized));
+        }
+
         var listItem = await RequireListItemAsync(listKey);
         var descriptors = await GetOptionFieldsAsync(listItem);
-        var normalized = CrestContentPartListRules.NormalizeKey(optionKey);
         // The mutation MUST happen inside Alter. As<T>() materializes a part from the
         // item's JSON, so options fetched outside Alter are deserialized copies -
         // changing them updates nothing, and the save silently succeeds having written
@@ -251,10 +343,12 @@ public sealed class CrestContentPartListService(
 
     public async Task<CrestContentPartListModel> ReorderOptionsAsync(string key, IReadOnlyList<string> orderedKeys, CancellationToken cancellationToken = default)
     {
-        var listItem = await RequireListItemAsync(key);
+        var merged = await GetAsync(key, cancellationToken)
+            ?? throw new InvalidOperationException($"There is no content part list with the key '{key}'.");
+        var listItem = await FindListItemAsync(merged.Key)
+            ?? await CreateListItemAsync(merged.Key, merged.DisplayText, CrestOptionSources.Module);
 
-        var validation = CrestContentPartListRules.ValidateReorder(
-            ToModel(listItem).Options.Select(option => option.Key), orderedKeys);
+        var validation = CrestContentPartListRules.ValidateReorder(merged.Options.Select(option => option.Key), orderedKeys);
         if (!validation.IsValid)
         {
             throw new InvalidOperationException(validation.Error);
@@ -263,6 +357,27 @@ public sealed class CrestContentPartListService(
         var positionByKey = orderedKeys
             .Select((optionKey, index) => (Key: CrestContentPartListRules.NormalizeKey(optionKey), Position: index))
             .ToDictionary(entry => entry.Key, entry => entry.Position, CrestContentPartListRules.KeyComparer);
+
+        var global = await globalLists.GetAsync(merged.Key, cancellationToken);
+        if (global is not null)
+        {
+            listItem.Alter<CrestContentPartListPart>(part =>
+            {
+                foreach (var option in global.Options)
+                {
+                    if (positionByKey.TryGetValue(option.Key, out var position))
+                    {
+                        if (!part.Overrides.TryGetValue(option.Key, out var existing))
+                        {
+                            existing = new CrestOptionOverride();
+                        }
+
+                        existing.Position = position;
+                        part.Overrides[option.Key] = existing;
+                    }
+                }
+            });
+        }
 
         // Mutation must happen inside Alter - see UpdateOptionAsync's comment.
         listItem.Alter<CrestContentPartListPart>(part =>
@@ -281,7 +396,7 @@ public sealed class CrestContentPartListService(
         await contentManager.PublishAsync(listItem);
         _byKey.Remove(CrestContentPartListRules.NormalizeKey(key));
 
-        return ToModel(listItem, await GetOptionFieldsAsync(listItem));
+        return (await GetAsync(key, cancellationToken))!;
     }
 
     public async Task<CrestContentPartListModel> UpdateListLocksAsync(string key, bool? dataLock, bool? editLock, CancellationToken cancellationToken = default)
@@ -385,6 +500,11 @@ public sealed class CrestContentPartListService(
 
     public async Task DeleteListAsync(string key, CancellationToken cancellationToken = default)
     {
+        if (await globalLists.GetAsync(CrestContentPartListRules.NormalizeKey(key), cancellationToken) is not null)
+        {
+            throw new InvalidOperationException($"The content part list '{key}' is global reference data and cannot be deleted. Hide its options instead.");
+        }
+
         var listItem = await RequireListItemAsync(key);
 
         // A module-seeded list's key is that module's contract with code; deleting it
@@ -404,7 +524,10 @@ public sealed class CrestContentPartListService(
 
     public async Task AttachToContentTypeAsync(string listKey, string contentType, string fieldName, string? displayName = null, Action<OptionPickerFieldSettings>? configure = null, CancellationToken cancellationToken = default)
     {
-        var listItem = await RequireListItemAsync(listKey);
+        if (await GetAsync(listKey, cancellationToken) is null)
+        {
+            throw new InvalidOperationException($"There is no content part list with the key '{listKey}'.");
+        }
 
         var sourceKey = CrestOptionSourceKeys.ForContentPartList(CrestContentPartListRules.NormalizeKey(listKey));
 
@@ -556,6 +679,42 @@ public sealed class CrestContentPartListService(
             var node = CrestOptionFieldAccessor.ToFieldNode(field.Type, field.Name, raw);
             option.Alter<ContentPart>(field.PartName, part => part.Content[field.Name] = node);
         }
+    }
+
+    // The merged view of a global-backed list: standard rows (deterministic ids, Module
+    // source, overrides applied) plus the tenant item's own additions.
+    private static CrestContentPartListModel Merge(GlobalList global, ContentItem? tenantItem, CrestOptionFieldModel[] fields)
+    {
+        var tenantPart = tenantItem?.As<CrestContentPartListPart>();
+        var overrides = tenantPart?.Overrides ?? new Dictionary<string, CrestOptionOverride>(StringComparer.OrdinalIgnoreCase);
+
+        var standard = global.Options.Select(option =>
+        {
+            overrides.TryGetValue(option.Key, out var over);
+            return new CrestOptionModel(
+                GlobalLists.OptionId(global.Key, option.Key),
+                CrestContentPartListRules.NormalizeKey(option.Key),
+                over?.DisplayText ?? option.DisplayText,
+                CrestOptionSources.Module,
+                over?.Hidden ?? false,
+                over?.Position ?? option.Position,
+                CrestContentPartListRules.NormalizeCategory(option.Category),
+                string.IsNullOrWhiteSpace(over?.DisplayTextPlural ?? option.DisplayTextPlural) ? null : (over?.DisplayTextPlural ?? option.DisplayTextPlural)!.Trim(),
+                string.IsNullOrWhiteSpace(option.Value) ? null : option.Value.Trim(),
+                null);
+        });
+        var additions = (tenantPart?.Options ?? []).Select(option => ToOptionModel(option, fields));
+
+        return new CrestContentPartListModel(
+            tenantItem?.ContentItemId ?? GlobalLists.OptionId(global.Key, string.Empty),
+            CrestContentPartListRules.NormalizeKey(global.Key),
+            global.DisplayText,
+            CrestOptionSources.Module,
+            global.DataLock ? CrestContentPartListLockSources.Module : (string.IsNullOrEmpty(tenantPart?.DataLock) ? CrestContentPartListLockSources.None : tenantPart.DataLock),
+            string.IsNullOrEmpty(tenantPart?.EditLock) ? CrestContentPartListLockSources.None : tenantPart.EditLock,
+            [.. CrestContentPartListRules.Ordered(standard.Concat(additions))],
+            fields,
+            string.IsNullOrWhiteSpace(tenantPart?.OptionContentType) ? CrestContentPartListMigrations.OptionContentType : tenantPart.OptionContentType);
     }
 
     private static CrestContentPartListModel ToModel(ContentItem item, CrestOptionFieldModel[]? fields = null)

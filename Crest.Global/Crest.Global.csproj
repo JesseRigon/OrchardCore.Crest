@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Global</AssemblyName>
+    <RootNamespace>Crest.Global</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs" />
+  </ItemGroup>
+
+  <!-- The tenant-less reference-data store (plans/global.md). Host-level: the store is
+       built once per process and shared by every shell, on Orchard's own
+       DatabaseShellsSettingsSources pattern. OrchardCore.Data.YesSql is referenced for
+       the provider extensions (UseSqLite/UsePostgreSql/...) and SqliteHelper. -->
+  <ItemGroup>
+    <PackageReference Include="OrchardCore.Data" />
+    <PackageReference Include="OrchardCore.Data.YesSql" />
+    <PackageReference Include="OrchardCore.Module.Targets" />
+    <PackageReference Include="OrchardCore.Security" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+</Project>

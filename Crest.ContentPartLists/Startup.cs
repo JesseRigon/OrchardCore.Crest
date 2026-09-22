@@ -23,7 +23,7 @@ public sealed class Startup : StartupBase
         services.AddContentPart<CrestContentPartListPart>();
         services.AddContentPart<CrestOptionPart>();
         services.AddDataMigration<CrestContentPartListMigrations>();
-        services.AddDataMigration<GlobalContentPartListsMigrations>();
+        services.AddScoped<Crest.Global.Lists.IGlobalListReader, Crest.Global.Lists.GlobalListReader>();
         services.AddScoped<ICrestContentPartListService, CrestContentPartListService>();
 
         // Culture -> measurement system -> preferred units (CLDR-derived data);

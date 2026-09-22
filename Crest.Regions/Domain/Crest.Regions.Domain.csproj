@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Regions.Domain</AssemblyName>
+    <RootNamespace>Crest.Regions</RootNamespace>
+  </PropertyGroup>
+  <!-- Server-free: the addressing-map shape and the validation rules over it, shared by
+       the server and the Blazor WASM client so both resolve the same rules from the same
+       data (plans/regions-and-locations.md › Validation). Never reference OrchardCore. -->
+</Project>

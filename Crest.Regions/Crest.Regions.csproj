@@ -1,17 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <AssemblyName>Crest.ContentPartLists</AssemblyName>
-    <RootNamespace>Crest</RootNamespace>
+    <AssemblyName>Crest.Regions</AssemblyName>
+    <RootNamespace>Crest.Regions</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs" />
+    <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs;Domain/**/*.cs" />
   </ItemGroup>
 
+  <!-- Business Contexts, the geo tree and per-country addressing maps
+       (plans/regions-and-locations.md). Geo standard data lives in the global store
+       (Crest.Global); this module declares its schema and the tenant overlay. -->
   <ItemGroup>
     <PackageReference Include="OrchardCore.ContentFields" />
     <PackageReference Include="OrchardCore.ContentManagement" />
@@ -19,13 +22,13 @@
     <PackageReference Include="OrchardCore.Data" />
     <PackageReference Include="OrchardCore.Module.Targets" />
     <PackageReference Include="YesSql.Abstractions" />
+    <PackageReference Include="NetTopologySuite" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The picker abstraction (IOptionSourceProvider, OptionRow,
-         CrestOptionSourceKeys) and OptionPickerField live in Crest.Server; this module
-         plugs Content Part Lists in as one provider among several. -->
     <ProjectReference Include="../OrchardCore.Crest.Server/OrchardCore.Crest.csproj" />
     <ProjectReference Include="../Crest.Global/Crest.Global.csproj" />
+    <ProjectReference Include="Domain/Crest.Regions.Domain.csproj" />
   </ItemGroup>
+
 </Project>

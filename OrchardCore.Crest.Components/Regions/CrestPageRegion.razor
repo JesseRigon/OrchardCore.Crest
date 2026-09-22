@@ -1,0 +1,19 @@
+@namespace Crest.Components.Regions
+@using Microsoft.AspNetCore.Components
+
+@foreach (var contributor in PageRegionRegistry.For(Key))
+{
+    <DynamicComponent Type="@contributor.ComponentType" Parameters="@Parameters" />
+}
+
+@code {
+    public const string ContextParameterName = "Context";
+
+    /// <summary>The region's key, owned by the page's module.</summary>
+    [Parameter, EditorRequired] public string Key { get; set; } = string.Empty;
+
+    /// <summary>Whatever the page wants contributors to know - typically the content item id being edited.</summary>
+    [Parameter] public object? Context { get; set; }
+
+    private Dictionary<string, object?> Parameters => new() { [ContextParameterName] = Context };
+}

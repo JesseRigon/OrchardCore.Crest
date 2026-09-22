@@ -1,0 +1,3641 @@
+{
+ "version": 1,
+ "nodes": [
+  {
+   "nodeId": "AD",
+   "country": "AD",
+   "level": 1,
+   "kind": "Level",
+   "name": "Andorra",
+   "code": "AD",
+   "abbreviation": "AD",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AE",
+   "country": "AE",
+   "level": 1,
+   "kind": "Level",
+   "name": "United Arab Emirates",
+   "code": "AE",
+   "abbreviation": "AE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AF",
+   "country": "AF",
+   "level": 1,
+   "kind": "Level",
+   "name": "Afghanistan",
+   "code": "AF",
+   "abbreviation": "AF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AG",
+   "country": "AG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Antigua and Barbuda",
+   "code": "AG",
+   "abbreviation": "AG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AI",
+   "country": "AI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Anguilla",
+   "code": "AI",
+   "abbreviation": "AI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AL",
+   "country": "AL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Albania",
+   "code": "AL",
+   "abbreviation": "AL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AM",
+   "country": "AM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Armenia",
+   "code": "AM",
+   "abbreviation": "AM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AO",
+   "country": "AO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Angola",
+   "code": "AO",
+   "abbreviation": "AO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AQ",
+   "country": "AQ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Antarctica",
+   "code": "AQ",
+   "abbreviation": "AQ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AR",
+   "country": "AR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Argentina",
+   "code": "AR",
+   "abbreviation": "AR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AS",
+   "country": "AS",
+   "level": 1,
+   "kind": "Level",
+   "name": "American Samoa",
+   "code": "AS",
+   "abbreviation": "AS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AT",
+   "country": "AT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Austria",
+   "code": "AT",
+   "abbreviation": "AT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AU",
+   "country": "AU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Australia",
+   "code": "AU",
+   "abbreviation": "AU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AW",
+   "country": "AW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Aruba",
+   "code": "AW",
+   "abbreviation": "AW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AX",
+   "country": "AX",
+   "level": 1,
+   "kind": "Level",
+   "name": "Åland Islands",
+   "code": "AX",
+   "abbreviation": "AX",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "AZ",
+   "country": "AZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Azerbaijan",
+   "code": "AZ",
+   "abbreviation": "AZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BA",
+   "country": "BA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bosnia and Herzegovina",
+   "code": "BA",
+   "abbreviation": "BA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BB",
+   "country": "BB",
+   "level": 1,
+   "kind": "Level",
+   "name": "Barbados",
+   "code": "BB",
+   "abbreviation": "BB",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BD",
+   "country": "BD",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bangladesh",
+   "code": "BD",
+   "abbreviation": "BD",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BE",
+   "country": "BE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Belgium",
+   "code": "BE",
+   "abbreviation": "BE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BF",
+   "country": "BF",
+   "level": 1,
+   "kind": "Level",
+   "name": "Burkina Faso",
+   "code": "BF",
+   "abbreviation": "BF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BG",
+   "country": "BG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bulgaria",
+   "code": "BG",
+   "abbreviation": "BG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BH",
+   "country": "BH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bahrain",
+   "code": "BH",
+   "abbreviation": "BH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BI",
+   "country": "BI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Burundi",
+   "code": "BI",
+   "abbreviation": "BI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BJ",
+   "country": "BJ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Benin",
+   "code": "BJ",
+   "abbreviation": "BJ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BL",
+   "country": "BL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Saint Barthélemy",
+   "code": "BL",
+   "abbreviation": "BL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BM",
+   "country": "BM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bermuda",
+   "code": "BM",
+   "abbreviation": "BM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BN",
+   "country": "BN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Brunei Darussalam",
+   "code": "BN",
+   "abbreviation": "BN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BO",
+   "country": "BO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bolivia",
+   "code": "BO",
+   "abbreviation": "BO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BQ",
+   "country": "BQ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bonaire, Sint Eustatius and Saba",
+   "code": "BQ",
+   "abbreviation": "BQ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BR",
+   "country": "BR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Brazil",
+   "code": "BR",
+   "abbreviation": "BR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BS",
+   "country": "BS",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bahamas",
+   "code": "BS",
+   "abbreviation": "BS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BT",
+   "country": "BT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bhutan",
+   "code": "BT",
+   "abbreviation": "BT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BV",
+   "country": "BV",
+   "level": 1,
+   "kind": "Level",
+   "name": "Bouvet Island",
+   "code": "BV",
+   "abbreviation": "BV",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BW",
+   "country": "BW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Botswana",
+   "code": "BW",
+   "abbreviation": "BW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BY",
+   "country": "BY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Belarus",
+   "code": "BY",
+   "abbreviation": "BY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "BZ",
+   "country": "BZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Belize",
+   "code": "BZ",
+   "abbreviation": "BZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA",
+   "country": "CA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Canada",
+   "code": "CA",
+   "abbreviation": "CA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CC",
+   "country": "CC",
+   "level": 1,
+   "kind": "Level",
+   "name": "Cocos (Keeling) Islands",
+   "code": "CC",
+   "abbreviation": "CC",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CD",
+   "country": "CD",
+   "level": 1,
+   "kind": "Level",
+   "name": "Congo, Democratic Republic of the",
+   "code": "CD",
+   "abbreviation": "CD",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CF",
+   "country": "CF",
+   "level": 1,
+   "kind": "Level",
+   "name": "Central African Republic",
+   "code": "CF",
+   "abbreviation": "CF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CG",
+   "country": "CG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Congo",
+   "code": "CG",
+   "abbreviation": "CG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CH",
+   "country": "CH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Switzerland",
+   "code": "CH",
+   "abbreviation": "CH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CI",
+   "country": "CI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Côte d'Ivoire",
+   "code": "CI",
+   "abbreviation": "CI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CK",
+   "country": "CK",
+   "level": 1,
+   "kind": "Level",
+   "name": "Cook Islands",
+   "code": "CK",
+   "abbreviation": "CK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CL",
+   "country": "CL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Chile",
+   "code": "CL",
+   "abbreviation": "CL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CM",
+   "country": "CM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Cameroon",
+   "code": "CM",
+   "abbreviation": "CM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CN",
+   "country": "CN",
+   "level": 1,
+   "kind": "Level",
+   "name": "China",
+   "code": "CN",
+   "abbreviation": "CN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CO",
+   "country": "CO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Colombia",
+   "code": "CO",
+   "abbreviation": "CO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CR",
+   "country": "CR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Costa Rica",
+   "code": "CR",
+   "abbreviation": "CR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CU",
+   "country": "CU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Cuba",
+   "code": "CU",
+   "abbreviation": "CU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CV",
+   "country": "CV",
+   "level": 1,
+   "kind": "Level",
+   "name": "Cabo Verde",
+   "code": "CV",
+   "abbreviation": "CV",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CW",
+   "country": "CW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Curaçao",
+   "code": "CW",
+   "abbreviation": "CW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CX",
+   "country": "CX",
+   "level": 1,
+   "kind": "Level",
+   "name": "Christmas Island",
+   "code": "CX",
+   "abbreviation": "CX",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CY",
+   "country": "CY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Cyprus",
+   "code": "CY",
+   "abbreviation": "CY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CZ",
+   "country": "CZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Czechia",
+   "code": "CZ",
+   "abbreviation": "CZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "DE",
+   "country": "DE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Germany",
+   "code": "DE",
+   "abbreviation": "DE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "DJ",
+   "country": "DJ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Djibouti",
+   "code": "DJ",
+   "abbreviation": "DJ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "DK",
+   "country": "DK",
+   "level": 1,
+   "kind": "Level",
+   "name": "Denmark",
+   "code": "DK",
+   "abbreviation": "DK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "DM",
+   "country": "DM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Dominica",
+   "code": "DM",
+   "abbreviation": "DM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "DO",
+   "country": "DO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Dominican Republic",
+   "code": "DO",
+   "abbreviation": "DO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "DZ",
+   "country": "DZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Algeria",
+   "code": "DZ",
+   "abbreviation": "DZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "EC",
+   "country": "EC",
+   "level": 1,
+   "kind": "Level",
+   "name": "Ecuador",
+   "code": "EC",
+   "abbreviation": "EC",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "EE",
+   "country": "EE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Estonia",
+   "code": "EE",
+   "abbreviation": "EE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "EG",
+   "country": "EG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Egypt",
+   "code": "EG",
+   "abbreviation": "EG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "EH",
+   "country": "EH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Western Sahara",
+   "code": "EH",
+   "abbreviation": "EH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ER",
+   "country": "ER",
+   "level": 1,
+   "kind": "Level",
+   "name": "Eritrea",
+   "code": "ER",
+   "abbreviation": "ER",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ES",
+   "country": "ES",
+   "level": 1,
+   "kind": "Level",
+   "name": "Spain",
+   "code": "ES",
+   "abbreviation": "ES",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ET",
+   "country": "ET",
+   "level": 1,
+   "kind": "Level",
+   "name": "Ethiopia",
+   "code": "ET",
+   "abbreviation": "ET",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "FI",
+   "country": "FI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Finland",
+   "code": "FI",
+   "abbreviation": "FI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "FJ",
+   "country": "FJ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Fiji",
+   "code": "FJ",
+   "abbreviation": "FJ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "FK",
+   "country": "FK",
+   "level": 1,
+   "kind": "Level",
+   "name": "Falkland Islands",
+   "code": "FK",
+   "abbreviation": "FK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "FM",
+   "country": "FM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Micronesia",
+   "code": "FM",
+   "abbreviation": "FM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "FO",
+   "country": "FO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Faroe Islands",
+   "code": "FO",
+   "abbreviation": "FO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "FR",
+   "country": "FR",
+   "level": 1,
+   "kind": "Level",
+   "name": "France",
+   "code": "FR",
+   "abbreviation": "FR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GA",
+   "country": "GA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Gabon",
+   "code": "GA",
+   "abbreviation": "GA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GB",
+   "country": "GB",
+   "level": 1,
+   "kind": "Level",
+   "name": "United Kingdom",
+   "code": "GB",
+   "abbreviation": "GB",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GD",
+   "country": "GD",
+   "level": 1,
+   "kind": "Level",
+   "name": "Grenada",
+   "code": "GD",
+   "abbreviation": "GD",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GE",
+   "country": "GE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Georgia",
+   "code": "GE",
+   "abbreviation": "GE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GF",
+   "country": "GF",
+   "level": 1,
+   "kind": "Level",
+   "name": "French Guiana",
+   "code": "GF",
+   "abbreviation": "GF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GG",
+   "country": "GG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Guernsey",
+   "code": "GG",
+   "abbreviation": "GG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GH",
+   "country": "GH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Ghana",
+   "code": "GH",
+   "abbreviation": "GH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GI",
+   "country": "GI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Gibraltar",
+   "code": "GI",
+   "abbreviation": "GI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GL",
+   "country": "GL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Greenland",
+   "code": "GL",
+   "abbreviation": "GL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GM",
+   "country": "GM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Gambia",
+   "code": "GM",
+   "abbreviation": "GM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GN",
+   "country": "GN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Guinea",
+   "code": "GN",
+   "abbreviation": "GN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GP",
+   "country": "GP",
+   "level": 1,
+   "kind": "Level",
+   "name": "Guadeloupe",
+   "code": "GP",
+   "abbreviation": "GP",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GQ",
+   "country": "GQ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Equatorial Guinea",
+   "code": "GQ",
+   "abbreviation": "GQ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GR",
+   "country": "GR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Greece",
+   "code": "GR",
+   "abbreviation": "GR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GS",
+   "country": "GS",
+   "level": 1,
+   "kind": "Level",
+   "name": "South Georgia and the South Sandwich Islands",
+   "code": "GS",
+   "abbreviation": "GS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GT",
+   "country": "GT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Guatemala",
+   "code": "GT",
+   "abbreviation": "GT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GU",
+   "country": "GU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Guam",
+   "code": "GU",
+   "abbreviation": "GU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GW",
+   "country": "GW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Guinea-Bissau",
+   "code": "GW",
+   "abbreviation": "GW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "GY",
+   "country": "GY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Guyana",
+   "code": "GY",
+   "abbreviation": "GY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "HK",
+   "country": "HK",
+   "level": 1,
+   "kind": "Level",
+   "name": "Hong Kong",
+   "code": "HK",
+   "abbreviation": "HK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "HM",
+   "country": "HM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Heard Island and McDonald Islands",
+   "code": "HM",
+   "abbreviation": "HM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "HN",
+   "country": "HN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Honduras",
+   "code": "HN",
+   "abbreviation": "HN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "HR",
+   "country": "HR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Croatia",
+   "code": "HR",
+   "abbreviation": "HR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "HT",
+   "country": "HT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Haiti",
+   "code": "HT",
+   "abbreviation": "HT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "HU",
+   "country": "HU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Hungary",
+   "code": "HU",
+   "abbreviation": "HU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ID",
+   "country": "ID",
+   "level": 1,
+   "kind": "Level",
+   "name": "Indonesia",
+   "code": "ID",
+   "abbreviation": "ID",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IE",
+   "country": "IE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Ireland",
+   "code": "IE",
+   "abbreviation": "IE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IL",
+   "country": "IL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Israel",
+   "code": "IL",
+   "abbreviation": "IL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IM",
+   "country": "IM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Isle of Man",
+   "code": "IM",
+   "abbreviation": "IM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IN",
+   "country": "IN",
+   "level": 1,
+   "kind": "Level",
+   "name": "India",
+   "code": "IN",
+   "abbreviation": "IN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IO",
+   "country": "IO",
+   "level": 1,
+   "kind": "Level",
+   "name": "British Indian Ocean Territory",
+   "code": "IO",
+   "abbreviation": "IO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IQ",
+   "country": "IQ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Iraq",
+   "code": "IQ",
+   "abbreviation": "IQ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IR",
+   "country": "IR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Iran",
+   "code": "IR",
+   "abbreviation": "IR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IS",
+   "country": "IS",
+   "level": 1,
+   "kind": "Level",
+   "name": "Iceland",
+   "code": "IS",
+   "abbreviation": "IS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "IT",
+   "country": "IT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Italy",
+   "code": "IT",
+   "abbreviation": "IT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "JE",
+   "country": "JE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Jersey",
+   "code": "JE",
+   "abbreviation": "JE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "JM",
+   "country": "JM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Jamaica",
+   "code": "JM",
+   "abbreviation": "JM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "JO",
+   "country": "JO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Jordan",
+   "code": "JO",
+   "abbreviation": "JO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "JP",
+   "country": "JP",
+   "level": 1,
+   "kind": "Level",
+   "name": "Japan",
+   "code": "JP",
+   "abbreviation": "JP",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KE",
+   "country": "KE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Kenya",
+   "code": "KE",
+   "abbreviation": "KE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KG",
+   "country": "KG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Kyrgyzstan",
+   "code": "KG",
+   "abbreviation": "KG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KH",
+   "country": "KH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Cambodia",
+   "code": "KH",
+   "abbreviation": "KH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KI",
+   "country": "KI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Kiribati",
+   "code": "KI",
+   "abbreviation": "KI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KM",
+   "country": "KM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Comoros",
+   "code": "KM",
+   "abbreviation": "KM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KN",
+   "country": "KN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Saint Kitts and Nevis",
+   "code": "KN",
+   "abbreviation": "KN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KP",
+   "country": "KP",
+   "level": 1,
+   "kind": "Level",
+   "name": "Korea, Democratic People's Republic of",
+   "code": "KP",
+   "abbreviation": "KP",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KR",
+   "country": "KR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Korea, Republic of",
+   "code": "KR",
+   "abbreviation": "KR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KW",
+   "country": "KW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Kuwait",
+   "code": "KW",
+   "abbreviation": "KW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KY",
+   "country": "KY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Cayman Islands",
+   "code": "KY",
+   "abbreviation": "KY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "KZ",
+   "country": "KZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Kazakhstan",
+   "code": "KZ",
+   "abbreviation": "KZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LA",
+   "country": "LA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Lao People's Democratic Republic",
+   "code": "LA",
+   "abbreviation": "LA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LB",
+   "country": "LB",
+   "level": 1,
+   "kind": "Level",
+   "name": "Lebanon",
+   "code": "LB",
+   "abbreviation": "LB",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LC",
+   "country": "LC",
+   "level": 1,
+   "kind": "Level",
+   "name": "Saint Lucia",
+   "code": "LC",
+   "abbreviation": "LC",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LI",
+   "country": "LI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Liechtenstein",
+   "code": "LI",
+   "abbreviation": "LI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LK",
+   "country": "LK",
+   "level": 1,
+   "kind": "Level",
+   "name": "Sri Lanka",
+   "code": "LK",
+   "abbreviation": "LK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LR",
+   "country": "LR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Liberia",
+   "code": "LR",
+   "abbreviation": "LR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LS",
+   "country": "LS",
+   "level": 1,
+   "kind": "Level",
+   "name": "Lesotho",
+   "code": "LS",
+   "abbreviation": "LS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LT",
+   "country": "LT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Lithuania",
+   "code": "LT",
+   "abbreviation": "LT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LU",
+   "country": "LU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Luxembourg",
+   "code": "LU",
+   "abbreviation": "LU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LV",
+   "country": "LV",
+   "level": 1,
+   "kind": "Level",
+   "name": "Latvia",
+   "code": "LV",
+   "abbreviation": "LV",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "LY",
+   "country": "LY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Libya",
+   "code": "LY",
+   "abbreviation": "LY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MA",
+   "country": "MA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Morocco",
+   "code": "MA",
+   "abbreviation": "MA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MC",
+   "country": "MC",
+   "level": 1,
+   "kind": "Level",
+   "name": "Monaco",
+   "code": "MC",
+   "abbreviation": "MC",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MD",
+   "country": "MD",
+   "level": 1,
+   "kind": "Level",
+   "name": "Moldova",
+   "code": "MD",
+   "abbreviation": "MD",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ME",
+   "country": "ME",
+   "level": 1,
+   "kind": "Level",
+   "name": "Montenegro",
+   "code": "ME",
+   "abbreviation": "ME",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MF",
+   "country": "MF",
+   "level": 1,
+   "kind": "Level",
+   "name": "Saint Martin (French part)",
+   "code": "MF",
+   "abbreviation": "MF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MG",
+   "country": "MG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Madagascar",
+   "code": "MG",
+   "abbreviation": "MG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MH",
+   "country": "MH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Marshall Islands",
+   "code": "MH",
+   "abbreviation": "MH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MK",
+   "country": "MK",
+   "level": 1,
+   "kind": "Level",
+   "name": "North Macedonia",
+   "code": "MK",
+   "abbreviation": "MK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ML",
+   "country": "ML",
+   "level": 1,
+   "kind": "Level",
+   "name": "Mali",
+   "code": "ML",
+   "abbreviation": "ML",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MM",
+   "country": "MM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Myanmar",
+   "code": "MM",
+   "abbreviation": "MM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MN",
+   "country": "MN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Mongolia",
+   "code": "MN",
+   "abbreviation": "MN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MO",
+   "country": "MO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Macao",
+   "code": "MO",
+   "abbreviation": "MO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MP",
+   "country": "MP",
+   "level": 1,
+   "kind": "Level",
+   "name": "Northern Mariana Islands",
+   "code": "MP",
+   "abbreviation": "MP",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MQ",
+   "country": "MQ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Martinique",
+   "code": "MQ",
+   "abbreviation": "MQ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MR",
+   "country": "MR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Mauritania",
+   "code": "MR",
+   "abbreviation": "MR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MS",
+   "country": "MS",
+   "level": 1,
+   "kind": "Level",
+   "name": "Montserrat",
+   "code": "MS",
+   "abbreviation": "MS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MT",
+   "country": "MT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Malta",
+   "code": "MT",
+   "abbreviation": "MT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MU",
+   "country": "MU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Mauritius",
+   "code": "MU",
+   "abbreviation": "MU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MV",
+   "country": "MV",
+   "level": 1,
+   "kind": "Level",
+   "name": "Maldives",
+   "code": "MV",
+   "abbreviation": "MV",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MW",
+   "country": "MW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Malawi",
+   "code": "MW",
+   "abbreviation": "MW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MX",
+   "country": "MX",
+   "level": 1,
+   "kind": "Level",
+   "name": "Mexico",
+   "code": "MX",
+   "abbreviation": "MX",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MY",
+   "country": "MY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Malaysia",
+   "code": "MY",
+   "abbreviation": "MY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "MZ",
+   "country": "MZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Mozambique",
+   "code": "MZ",
+   "abbreviation": "MZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NA",
+   "country": "NA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Namibia",
+   "code": "NA",
+   "abbreviation": "NA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NC",
+   "country": "NC",
+   "level": 1,
+   "kind": "Level",
+   "name": "New Caledonia",
+   "code": "NC",
+   "abbreviation": "NC",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NE",
+   "country": "NE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Niger",
+   "code": "NE",
+   "abbreviation": "NE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NF",
+   "country": "NF",
+   "level": 1,
+   "kind": "Level",
+   "name": "Norfolk Island",
+   "code": "NF",
+   "abbreviation": "NF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NG",
+   "country": "NG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Nigeria",
+   "code": "NG",
+   "abbreviation": "NG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NI",
+   "country": "NI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Nicaragua",
+   "code": "NI",
+   "abbreviation": "NI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NL",
+   "country": "NL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Netherlands",
+   "code": "NL",
+   "abbreviation": "NL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NO",
+   "country": "NO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Norway",
+   "code": "NO",
+   "abbreviation": "NO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NP",
+   "country": "NP",
+   "level": 1,
+   "kind": "Level",
+   "name": "Nepal",
+   "code": "NP",
+   "abbreviation": "NP",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NR",
+   "country": "NR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Nauru",
+   "code": "NR",
+   "abbreviation": "NR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NU",
+   "country": "NU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Niue",
+   "code": "NU",
+   "abbreviation": "NU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "NZ",
+   "country": "NZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "New Zealand",
+   "code": "NZ",
+   "abbreviation": "NZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "OM",
+   "country": "OM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Oman",
+   "code": "OM",
+   "abbreviation": "OM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PA",
+   "country": "PA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Panama",
+   "code": "PA",
+   "abbreviation": "PA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PE",
+   "country": "PE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Peru",
+   "code": "PE",
+   "abbreviation": "PE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PF",
+   "country": "PF",
+   "level": 1,
+   "kind": "Level",
+   "name": "French Polynesia",
+   "code": "PF",
+   "abbreviation": "PF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PG",
+   "country": "PG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Papua New Guinea",
+   "code": "PG",
+   "abbreviation": "PG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PH",
+   "country": "PH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Philippines",
+   "code": "PH",
+   "abbreviation": "PH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PK",
+   "country": "PK",
+   "level": 1,
+   "kind": "Level",
+   "name": "Pakistan",
+   "code": "PK",
+   "abbreviation": "PK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PL",
+   "country": "PL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Poland",
+   "code": "PL",
+   "abbreviation": "PL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PM",
+   "country": "PM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Saint Pierre and Miquelon",
+   "code": "PM",
+   "abbreviation": "PM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PN",
+   "country": "PN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Pitcairn",
+   "code": "PN",
+   "abbreviation": "PN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PR",
+   "country": "PR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Puerto Rico",
+   "code": "PR",
+   "abbreviation": "PR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PS",
+   "country": "PS",
+   "level": 1,
+   "kind": "Level",
+   "name": "Palestine, State of",
+   "code": "PS",
+   "abbreviation": "PS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PT",
+   "country": "PT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Portugal",
+   "code": "PT",
+   "abbreviation": "PT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PW",
+   "country": "PW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Palau",
+   "code": "PW",
+   "abbreviation": "PW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "PY",
+   "country": "PY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Paraguay",
+   "code": "PY",
+   "abbreviation": "PY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "QA",
+   "country": "QA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Qatar",
+   "code": "QA",
+   "abbreviation": "QA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "RE",
+   "country": "RE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Réunion",
+   "code": "RE",
+   "abbreviation": "RE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "RO",
+   "country": "RO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Romania",
+   "code": "RO",
+   "abbreviation": "RO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "RS",
+   "country": "RS",
+   "level": 1,
+   "kind": "Level",
+   "name": "Serbia",
+   "code": "RS",
+   "abbreviation": "RS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "RU",
+   "country": "RU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Russian Federation",
+   "code": "RU",
+   "abbreviation": "RU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "RW",
+   "country": "RW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Rwanda",
+   "code": "RW",
+   "abbreviation": "RW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SA",
+   "country": "SA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Saudi Arabia",
+   "code": "SA",
+   "abbreviation": "SA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SB",
+   "country": "SB",
+   "level": 1,
+   "kind": "Level",
+   "name": "Solomon Islands",
+   "code": "SB",
+   "abbreviation": "SB",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SC",
+   "country": "SC",
+   "level": 1,
+   "kind": "Level",
+   "name": "Seychelles",
+   "code": "SC",
+   "abbreviation": "SC",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SD",
+   "country": "SD",
+   "level": 1,
+   "kind": "Level",
+   "name": "Sudan",
+   "code": "SD",
+   "abbreviation": "SD",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SE",
+   "country": "SE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Sweden",
+   "code": "SE",
+   "abbreviation": "SE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SG",
+   "country": "SG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Singapore",
+   "code": "SG",
+   "abbreviation": "SG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SH",
+   "country": "SH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Saint Helena, Ascension and Tristan da Cunha",
+   "code": "SH",
+   "abbreviation": "SH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SI",
+   "country": "SI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Slovenia",
+   "code": "SI",
+   "abbreviation": "SI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SJ",
+   "country": "SJ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Svalbard and Jan Mayen",
+   "code": "SJ",
+   "abbreviation": "SJ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SK",
+   "country": "SK",
+   "level": 1,
+   "kind": "Level",
+   "name": "Slovakia",
+   "code": "SK",
+   "abbreviation": "SK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SL",
+   "country": "SL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Sierra Leone",
+   "code": "SL",
+   "abbreviation": "SL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SM",
+   "country": "SM",
+   "level": 1,
+   "kind": "Level",
+   "name": "San Marino",
+   "code": "SM",
+   "abbreviation": "SM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SN",
+   "country": "SN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Senegal",
+   "code": "SN",
+   "abbreviation": "SN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SO",
+   "country": "SO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Somalia",
+   "code": "SO",
+   "abbreviation": "SO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SR",
+   "country": "SR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Suriname",
+   "code": "SR",
+   "abbreviation": "SR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SS",
+   "country": "SS",
+   "level": 1,
+   "kind": "Level",
+   "name": "South Sudan",
+   "code": "SS",
+   "abbreviation": "SS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ST",
+   "country": "ST",
+   "level": 1,
+   "kind": "Level",
+   "name": "Sao Tome and Principe",
+   "code": "ST",
+   "abbreviation": "ST",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SV",
+   "country": "SV",
+   "level": 1,
+   "kind": "Level",
+   "name": "El Salvador",
+   "code": "SV",
+   "abbreviation": "SV",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SX",
+   "country": "SX",
+   "level": 1,
+   "kind": "Level",
+   "name": "Sint Maarten (Dutch part)",
+   "code": "SX",
+   "abbreviation": "SX",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SY",
+   "country": "SY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Syrian Arab Republic",
+   "code": "SY",
+   "abbreviation": "SY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "SZ",
+   "country": "SZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Eswatini",
+   "code": "SZ",
+   "abbreviation": "SZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TC",
+   "country": "TC",
+   "level": 1,
+   "kind": "Level",
+   "name": "Turks and Caicos Islands",
+   "code": "TC",
+   "abbreviation": "TC",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TD",
+   "country": "TD",
+   "level": 1,
+   "kind": "Level",
+   "name": "Chad",
+   "code": "TD",
+   "abbreviation": "TD",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TF",
+   "country": "TF",
+   "level": 1,
+   "kind": "Level",
+   "name": "French Southern Territories",
+   "code": "TF",
+   "abbreviation": "TF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TG",
+   "country": "TG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Togo",
+   "code": "TG",
+   "abbreviation": "TG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TH",
+   "country": "TH",
+   "level": 1,
+   "kind": "Level",
+   "name": "Thailand",
+   "code": "TH",
+   "abbreviation": "TH",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TJ",
+   "country": "TJ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Tajikistan",
+   "code": "TJ",
+   "abbreviation": "TJ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TK",
+   "country": "TK",
+   "level": 1,
+   "kind": "Level",
+   "name": "Tokelau",
+   "code": "TK",
+   "abbreviation": "TK",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TL",
+   "country": "TL",
+   "level": 1,
+   "kind": "Level",
+   "name": "Timor-Leste",
+   "code": "TL",
+   "abbreviation": "TL",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TM",
+   "country": "TM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Turkmenistan",
+   "code": "TM",
+   "abbreviation": "TM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TN",
+   "country": "TN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Tunisia",
+   "code": "TN",
+   "abbreviation": "TN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TO",
+   "country": "TO",
+   "level": 1,
+   "kind": "Level",
+   "name": "Tonga",
+   "code": "TO",
+   "abbreviation": "TO",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TR",
+   "country": "TR",
+   "level": 1,
+   "kind": "Level",
+   "name": "Türkiye",
+   "code": "TR",
+   "abbreviation": "TR",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TT",
+   "country": "TT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Trinidad and Tobago",
+   "code": "TT",
+   "abbreviation": "TT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TV",
+   "country": "TV",
+   "level": 1,
+   "kind": "Level",
+   "name": "Tuvalu",
+   "code": "TV",
+   "abbreviation": "TV",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TW",
+   "country": "TW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Taiwan",
+   "code": "TW",
+   "abbreviation": "TW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "TZ",
+   "country": "TZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Tanzania",
+   "code": "TZ",
+   "abbreviation": "TZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "UA",
+   "country": "UA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Ukraine",
+   "code": "UA",
+   "abbreviation": "UA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "UG",
+   "country": "UG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Uganda",
+   "code": "UG",
+   "abbreviation": "UG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "UM",
+   "country": "UM",
+   "level": 1,
+   "kind": "Level",
+   "name": "United States Minor Outlying Islands",
+   "code": "UM",
+   "abbreviation": "UM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US",
+   "country": "US",
+   "level": 1,
+   "kind": "Level",
+   "name": "United States of America",
+   "code": "US",
+   "abbreviation": "US",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "UY",
+   "country": "UY",
+   "level": 1,
+   "kind": "Level",
+   "name": "Uruguay",
+   "code": "UY",
+   "abbreviation": "UY",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "UZ",
+   "country": "UZ",
+   "level": 1,
+   "kind": "Level",
+   "name": "Uzbekistan",
+   "code": "UZ",
+   "abbreviation": "UZ",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "VA",
+   "country": "VA",
+   "level": 1,
+   "kind": "Level",
+   "name": "Holy See",
+   "code": "VA",
+   "abbreviation": "VA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "VC",
+   "country": "VC",
+   "level": 1,
+   "kind": "Level",
+   "name": "Saint Vincent and the Grenadines",
+   "code": "VC",
+   "abbreviation": "VC",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "VE",
+   "country": "VE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Venezuela",
+   "code": "VE",
+   "abbreviation": "VE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "VG",
+   "country": "VG",
+   "level": 1,
+   "kind": "Level",
+   "name": "Virgin Islands (British)",
+   "code": "VG",
+   "abbreviation": "VG",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "VI",
+   "country": "VI",
+   "level": 1,
+   "kind": "Level",
+   "name": "Virgin Islands (U.S.)",
+   "code": "VI",
+   "abbreviation": "VI",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "VN",
+   "country": "VN",
+   "level": 1,
+   "kind": "Level",
+   "name": "Viet Nam",
+   "code": "VN",
+   "abbreviation": "VN",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "VU",
+   "country": "VU",
+   "level": 1,
+   "kind": "Level",
+   "name": "Vanuatu",
+   "code": "VU",
+   "abbreviation": "VU",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "WF",
+   "country": "WF",
+   "level": 1,
+   "kind": "Level",
+   "name": "Wallis and Futuna",
+   "code": "WF",
+   "abbreviation": "WF",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "WS",
+   "country": "WS",
+   "level": 1,
+   "kind": "Level",
+   "name": "Samoa",
+   "code": "WS",
+   "abbreviation": "WS",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "YE",
+   "country": "YE",
+   "level": 1,
+   "kind": "Level",
+   "name": "Yemen",
+   "code": "YE",
+   "abbreviation": "YE",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "YT",
+   "country": "YT",
+   "level": 1,
+   "kind": "Level",
+   "name": "Mayotte",
+   "code": "YT",
+   "abbreviation": "YT",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ZA",
+   "country": "ZA",
+   "level": 1,
+   "kind": "Level",
+   "name": "South Africa",
+   "code": "ZA",
+   "abbreviation": "ZA",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ZM",
+   "country": "ZM",
+   "level": 1,
+   "kind": "Level",
+   "name": "Zambia",
+   "code": "ZM",
+   "abbreviation": "ZM",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "ZW",
+   "country": "ZW",
+   "level": 1,
+   "kind": "Level",
+   "name": "Zimbabwe",
+   "code": "ZW",
+   "abbreviation": "ZW",
+   "parentIds": [],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-AL",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Alabama",
+   "code": "US-AL",
+   "abbreviation": "AL",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-AK",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Alaska",
+   "code": "US-AK",
+   "abbreviation": "AK",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-AZ",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Arizona",
+   "code": "US-AZ",
+   "abbreviation": "AZ",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-AR",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Arkansas",
+   "code": "US-AR",
+   "abbreviation": "AR",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-CA",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "California",
+   "code": "US-CA",
+   "abbreviation": "CA",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-CO",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Colorado",
+   "code": "US-CO",
+   "abbreviation": "CO",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-CT",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Connecticut",
+   "code": "US-CT",
+   "abbreviation": "CT",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-DE",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Delaware",
+   "code": "US-DE",
+   "abbreviation": "DE",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-FL",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Florida",
+   "code": "US-FL",
+   "abbreviation": "FL",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-GA",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Georgia",
+   "code": "US-GA",
+   "abbreviation": "GA",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-HI",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Hawaii",
+   "code": "US-HI",
+   "abbreviation": "HI",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-ID",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Idaho",
+   "code": "US-ID",
+   "abbreviation": "ID",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-IL",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Illinois",
+   "code": "US-IL",
+   "abbreviation": "IL",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-IN",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Indiana",
+   "code": "US-IN",
+   "abbreviation": "IN",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-IA",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Iowa",
+   "code": "US-IA",
+   "abbreviation": "IA",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-KS",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Kansas",
+   "code": "US-KS",
+   "abbreviation": "KS",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-KY",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Kentucky",
+   "code": "US-KY",
+   "abbreviation": "KY",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-LA",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Louisiana",
+   "code": "US-LA",
+   "abbreviation": "LA",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-ME",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Maine",
+   "code": "US-ME",
+   "abbreviation": "ME",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-MD",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Maryland",
+   "code": "US-MD",
+   "abbreviation": "MD",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-MA",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Massachusetts",
+   "code": "US-MA",
+   "abbreviation": "MA",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-MI",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Michigan",
+   "code": "US-MI",
+   "abbreviation": "MI",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-MN",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Minnesota",
+   "code": "US-MN",
+   "abbreviation": "MN",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-MS",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Mississippi",
+   "code": "US-MS",
+   "abbreviation": "MS",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-MO",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Missouri",
+   "code": "US-MO",
+   "abbreviation": "MO",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-MT",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Montana",
+   "code": "US-MT",
+   "abbreviation": "MT",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-NE",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Nebraska",
+   "code": "US-NE",
+   "abbreviation": "NE",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-NV",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Nevada",
+   "code": "US-NV",
+   "abbreviation": "NV",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-NH",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "New Hampshire",
+   "code": "US-NH",
+   "abbreviation": "NH",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-NJ",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "New Jersey",
+   "code": "US-NJ",
+   "abbreviation": "NJ",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-NM",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "New Mexico",
+   "code": "US-NM",
+   "abbreviation": "NM",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-NY",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "New York",
+   "code": "US-NY",
+   "abbreviation": "NY",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-NC",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "North Carolina",
+   "code": "US-NC",
+   "abbreviation": "NC",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-ND",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "North Dakota",
+   "code": "US-ND",
+   "abbreviation": "ND",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-OH",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Ohio",
+   "code": "US-OH",
+   "abbreviation": "OH",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-OK",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Oklahoma",
+   "code": "US-OK",
+   "abbreviation": "OK",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-OR",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Oregon",
+   "code": "US-OR",
+   "abbreviation": "OR",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-PA",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Pennsylvania",
+   "code": "US-PA",
+   "abbreviation": "PA",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-RI",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Rhode Island",
+   "code": "US-RI",
+   "abbreviation": "RI",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-SC",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "South Carolina",
+   "code": "US-SC",
+   "abbreviation": "SC",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-SD",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "South Dakota",
+   "code": "US-SD",
+   "abbreviation": "SD",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-TN",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Tennessee",
+   "code": "US-TN",
+   "abbreviation": "TN",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-TX",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Texas",
+   "code": "US-TX",
+   "abbreviation": "TX",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-UT",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Utah",
+   "code": "US-UT",
+   "abbreviation": "UT",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-VT",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Vermont",
+   "code": "US-VT",
+   "abbreviation": "VT",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-VA",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Virginia",
+   "code": "US-VA",
+   "abbreviation": "VA",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-WA",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Washington",
+   "code": "US-WA",
+   "abbreviation": "WA",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-WV",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "West Virginia",
+   "code": "US-WV",
+   "abbreviation": "WV",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-WI",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Wisconsin",
+   "code": "US-WI",
+   "abbreviation": "WI",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-WY",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Wyoming",
+   "code": "US-WY",
+   "abbreviation": "WY",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-DC",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "District of Columbia",
+   "code": "US-DC",
+   "abbreviation": "DC",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-AS",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "American Samoa",
+   "code": "US-AS",
+   "abbreviation": "AS",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-GU",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Guam",
+   "code": "US-GU",
+   "abbreviation": "GU",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-MP",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Northern Mariana Islands",
+   "code": "US-MP",
+   "abbreviation": "MP",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-PR",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "Puerto Rico",
+   "code": "US-PR",
+   "abbreviation": "PR",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "US-VI",
+   "country": "US",
+   "level": 2,
+   "kind": "Level",
+   "name": "U.S. Virgin Islands",
+   "code": "US-VI",
+   "abbreviation": "VI",
+   "parentIds": [
+    "US"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-AB",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Alberta",
+   "code": "CA-AB",
+   "abbreviation": "AB",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-BC",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "British Columbia",
+   "code": "CA-BC",
+   "abbreviation": "BC",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-MB",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Manitoba",
+   "code": "CA-MB",
+   "abbreviation": "MB",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-NB",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "New Brunswick",
+   "code": "CA-NB",
+   "abbreviation": "NB",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-NL",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Newfoundland and Labrador",
+   "code": "CA-NL",
+   "abbreviation": "NL",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-NS",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Nova Scotia",
+   "code": "CA-NS",
+   "abbreviation": "NS",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-NT",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Northwest Territories",
+   "code": "CA-NT",
+   "abbreviation": "NT",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-NU",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Nunavut",
+   "code": "CA-NU",
+   "abbreviation": "NU",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-ON",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Ontario",
+   "code": "CA-ON",
+   "abbreviation": "ON",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-PE",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Prince Edward Island",
+   "code": "CA-PE",
+   "abbreviation": "PE",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-QC",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Quebec",
+   "code": "CA-QC",
+   "abbreviation": "QC",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-SK",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Saskatchewan",
+   "code": "CA-SK",
+   "abbreviation": "SK",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  },
+  {
+   "nodeId": "CA-YT",
+   "country": "CA",
+   "level": 2,
+   "kind": "Level",
+   "name": "Yukon",
+   "code": "CA-YT",
+   "abbreviation": "YT",
+   "parentIds": [
+    "CA"
+   ],
+   "groupIds": []
+  }
+ ]
+}
