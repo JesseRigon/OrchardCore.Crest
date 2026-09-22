@@ -5,7 +5,7 @@ and how UI strings are translated. This covers the user-facing localization syst
 per-user language, culture-aware formatting, translated menus/components/content. It
 deliberately excludes anything ERP-specific (currency, tax, regions, business
 documents); that lives in the host's business/ERP design (fruitful:
-`plans/business-regions-and-accounting.md`).
+`plans/regions-and-locations.md`, `plans/accounting.md`, `plans/taxes.md`).
 
 ## Scope and boundary
 
