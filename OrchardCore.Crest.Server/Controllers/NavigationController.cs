@@ -1,5 +1,6 @@
 using Crest.Services;
 using Crest.Icons;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.Admin;
 using OrchardCore.Navigation;
@@ -32,6 +33,36 @@ public sealed class NavigationController(
         return Ok(await profileMenuService.BuildAsync(User, HttpContext.RequestAborted));
     }
 
+    // Self-service, like api/crest/localization/me: the current user's own hidden admin
+    // menu items. Not a management endpoint - there is no user id in the route.
+    [HttpGet("me/hidden")]
+    public async Task<ActionResult<CrestUserHiddenMenuItems>> GetMyHiddenItemsAsync()
+    {
+        var access = await requestAccess.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel);
+        if (access is null)
+        {
+            return Forbid();
+        }
+
+        var preferences = await access.GetRequiredService<CrestUserMenuPreferencesService>().GetAsync(User);
+        return Ok(new CrestUserHiddenMenuItems(preferences.HiddenItemKeys.ToArray()));
+    }
+
+    [HttpPut("me/hidden")]
+    public async Task<ActionResult<CrestUserHiddenMenuItems>> SetMyHiddenItemsAsync(CrestUserHiddenMenuItems request)
+    {
+        var access = await requestAccess.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel);
+        if (access is null)
+        {
+            return Forbid();
+        }
+
+        var saved = await access.GetRequiredService<CrestUserMenuPreferencesService>().SetHiddenItemKeysAsync(User, request.HiddenItemKeys ?? []);
+        return saved is null
+            ? StatusCode(StatusCodes.Status500InternalServerError)
+            : Ok(new CrestUserHiddenMenuItems(saved.HiddenItemKeys.ToArray()));
+    }
+
     [HttpGet("menus/{menuName}")]
     public async Task<ActionResult<NavigationMenu>> GetMenu(string menuName)
     {
@@ -41,44 +72,26 @@ public sealed class NavigationController(
             return Forbid();
         }
 
-        var navigationManager = access.GetRequiredService<INavigationManager>();
-        var layoutService = access.GetRequiredService<CrestAdminMenuLayoutService>();
         var primaryNavMenuSettingsStore = access.GetRequiredService<CrestPrimaryNavMenuSettingsStore>();
-        var adminSettingsNormalizer = access.GetRequiredService<CrestAdminSettingsNormalizer>();
         var iconController = access.GetRequiredService<CrestIconController>();
 
-        // Orchard builds, authorizes, and reduces this tree for the actual
-        // request user. Apply the tenant-wide Crest layout only afterwards.
-        if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
+        NavigationMenu menu;
+        if (string.Equals(menuName, CrestAdminMenuBuilder.MenuName, StringComparison.OrdinalIgnoreCase))
         {
-            await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
-            // Once per shell: import provider items as admin menu nodes (see the note in
-            // AdminMenusController's BuildDefaultNavigationMenuAsync for how Merge then keys the
-            // rendered items by UniqueId). Done here as well so the import happens on whichever
-            // of the sidebar or the menu editor is loaded first.
-            await access.GetRequiredService<CrestProviderMenuSyncCoordinator>().EnsureSyncedAsync(ControllerContext);
-        }
-
-        var items = await navigationManager.BuildMenuAsync(menuName, ControllerContext);
-
-        // Resolves each admin menu node's caption against the tenant translation store for the
-        // request culture - see NavigationItem.From and CrestMenuCaptionResolver for the
-        // MenuName restoration and hierarchical context fallback. With the data localization
-        // feature absent the resolver leaves captions untouched, so the menu renders rather
-        // than fails.
-        var captionResolver = access.GetRequiredService<CrestMenuCaptionResolver>();
-        await captionResolver.EnsureLoadedAsync();
-
-        var menu = new NavigationMenu(
-            menuName,
-            items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
-                .Select(item => NavigationItem.From(item, captionResolver))
-                .ToArray());
-
-        if (string.Equals(menuName, "admin", StringComparison.OrdinalIgnoreCase))
-        {
-            menu = await layoutService.ApplyAsync(menu);
+            await access.GetRequiredService<CrestAdminSettingsNormalizer>().EnsureNewMenuEnabledAsync();
+            menu = await access.GetRequiredService<CrestAdminMenuBuilder>().BuildAsync(ControllerContext, User);
             menu = menu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
+        }
+        else
+        {
+            var items = await access.GetRequiredService<INavigationManager>().BuildMenuAsync(menuName, ControllerContext);
+            var captionResolver = access.GetRequiredService<CrestMenuCaptionResolver>();
+            await captionResolver.EnsureLoadedAsync();
+            menu = new NavigationMenu(
+                menuName,
+                items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
+                    .Select(item => NavigationItem.From(item, captionResolver))
+                    .ToArray());
         }
 
         return Ok(await iconController.ResolveMenuIconsAsync(

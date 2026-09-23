@@ -8,6 +8,9 @@ namespace Crest.ViewModels;
 
 public sealed record NavigationMenu(string Name, NavigationItem[] Items, IconPack? Icons = null, NavigationSeparator[]? Separators = null, CrestPrimaryNavMenuSettings? PrimaryNavMenuSettings = null);
 
+/// <summary>The current user's own hidden admin-menu item keys (see CrestUserMenuPreferences).</summary>
+public sealed record CrestUserHiddenMenuItems(string[] HiddenItemKeys);
+
 public sealed record NavigationSeparator(string Key, string? ParentKey, int Order);
 
 public sealed record NavigationIcon(string? Key, string Library, string? Version, string? Style, string Name, string? SvgMarkup);

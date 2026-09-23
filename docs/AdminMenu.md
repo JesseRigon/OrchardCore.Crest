@@ -215,6 +215,18 @@ Two mechanisms supply that key, and `NavigationItem.Key` prefers the first:
   `NavigationManager.Merge` matches on, so it does not vary by culture. It is the fallback for
   items contributed by providers that set no `Id`.
 
+## Two hide layers: the tenant's and the user's
+
+The layout overlay above is tenant-wide: an item hidden there is gone for everyone. Under it
+sits a per-user layer, `CrestUserMenuPreferences.HiddenItemKeys` on `User.Properties` (the
+same place OrchardCore keeps a user's culture), edited only by its owner through
+`GET`/`PUT api/crest/navigation/me/hidden`. `CrestAdminMenuBuilder` assembles the served
+tree once for every consumer — the sidebar endpoint, the app manifest, and any page that
+lists what the menu lists — and applies the two layers in that order, both keyed by the served
+item key above. A page that mirrors part of the menu (Fruitful's All Parties lists the Parties
+branch's children as its panes) reads the tree with the user layer left off, so it can flag
+the user's own hidden items and offer them back, while an item the tenant hid is simply absent.
+
 ## Renames are per culture
 
 A rename is a translation of one caption, not a change of identity, so it is recorded against

@@ -10,7 +10,25 @@ const repoRoot = path.resolve(__dirname, '..', '..', '..', '..', '..', '..');
 // a lowercase name here would assert against a directory nothing writes to on ext4.
 const exportFile = path.join(repoRoot, 'Recipes', 'crest-admin-menu-layout.json');
 
+// The export file is a COMMITTED recipe input (the setup recipe imports it), and the
+// button writes it under the server's content root - the repo checkout, whichever
+// tenant the suite runs against. The suite's throwaway tenant must never replace the
+// committed layout with its own, so the file is snapshotted before the click and put
+// back afterwards (removed again when it did not exist).
 module.exports = async function run(page, ctx) {
+  const snapshot = fs.existsSync(exportFile) ? fs.readFileSync(exportFile) : null;
+  try {
+    return await exercise(page, ctx);
+  } finally {
+    if (snapshot === null) {
+      fs.rmSync(exportFile, { force: true });
+    } else {
+      fs.writeFileSync(exportFile, snapshot);
+    }
+  }
+};
+
+async function exercise(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'networkidle' });
   await page.locator('.admin-shell').waitFor({ timeout: 20000 });
   await page.getByRole('heading', { name: 'Admin Menus', exact: true }).waitFor({ timeout: 20000 });
@@ -38,4 +56,4 @@ module.exports = async function run(page, ctx) {
     { name: 'export-file-written', pass: fileExists, message: fileExists ? exportFile : `missing: ${exportFile}` },
     { name: 'export-has-items-arrays', pass: hasExpectedShape, message: itemCounts || 'file missing' },
   ];
-};
+}

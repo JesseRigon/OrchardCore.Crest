@@ -74,6 +74,8 @@ public sealed class Startup : StartupBase
         services.AddScoped<IRoleUpdatedEventHandler, CrestRolePermissionInvalidationHandler>();
         services.AddScoped<IThemeSelector, LegacyFrameThemeSelector>();
         services.AddScoped<CrestAdminMenuLayoutService>();
+        services.AddScoped<CrestUserMenuPreferencesService>();
+        services.AddScoped<CrestAdminMenuBuilder>();
         services.AddScoped<CrestAdminMenuTranslationService>();
         // Shell-lifetime, so the provider-menu import runs once per shell. A feature change
         // releases the shell, which is what makes the next shell re-import.

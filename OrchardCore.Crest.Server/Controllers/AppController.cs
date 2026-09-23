@@ -36,10 +36,9 @@ public sealed class AppController(
     IShellDescriptorManager shellDescriptorManager,
     IExtensionManager extensionManager,
     ISiteService siteService,
-    INavigationManager navigationManager,
     IOptions<AdminOptions> adminOptions,
     IAuthorizationService authorization,
-    CrestAdminMenuLayoutService layoutService,
+    CrestAdminMenuBuilder adminMenuBuilder,
     CrestPrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
     CrestAdminSettingsNormalizer adminSettingsNormalizer,
     CrestTitleBarSettingsStore titleBarSettingsStore,
@@ -60,18 +59,11 @@ public sealed class AppController(
         var featureIds = descriptor.Features.Select(feature => feature.Id).Order(StringComparer.Ordinal).ToArray();
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
         var tenants = await GetAvailableTenantsAsync();
-        var adminItems = await navigationManager.BuildMenuAsync("admin", ControllerContext);
         var userDefaultCulture = await GetUserDefaultCultureAsync();
         var adminDefaultCulture = site.As<CrestLocalizationSettings>().AdminDefaultCulture;
         var cultureSelector = await CultureSelector.FromAsync(HttpContext, shellSettings, serviceProvider.GetService<ILocalizationService>(), userDefaultCulture, adminDefaultCulture);
         var profileMenu = await profileMenuService.BuildAsync(User, HttpContext.RequestAborted);
-        // Same caption resolution as NavigationController.GetMenu - the manifest's copy of the
-        // admin menu must agree with the sidebar endpoint for the same request culture.
-        var captionResolver = serviceProvider.GetRequiredService<CrestMenuCaptionResolver>();
-        await captionResolver.EnsureLoadedAsync();
-        var adminMenu = await layoutService.ApplyAsync(new NavigationMenu("admin", adminItems.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
-            .Select(item => NavigationItem.From(item, captionResolver))
-            .ToArray()));
+        var adminMenu = await adminMenuBuilder.BuildAsync(ControllerContext, User);
         adminMenu = adminMenu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
         adminMenu = await iconController.ResolveMenuIconsAsync(
             adminMenu,
